@@ -1,4 +1,4 @@
-import { Play, Star } from 'lucide-react';
+import { Clock, Eye } from 'lucide-react';
 import { Movie, TVShow } from '../types';
 import { WatchlistButton } from './WatchlistButton';
 
@@ -10,59 +10,44 @@ interface ContentCardProps {
 
 export function ContentCard({ content, type, onPlayClick }: ContentCardProps) {
   return (
-    <div className="group relative rounded-lg overflow-hidden bg-slate-900 transition-all hover:scale-105 hover:z-10">
-      <div className="aspect-[2/3] relative overflow-hidden">
+    <div className="group cursor-pointer" onClick={onPlayClick}>
+      <div className="relative aspect-video bg-gray-200 rounded-xl overflow-hidden mb-3">
         <img
           src={content.poster_url}
           alt={content.title}
-          className="w-full h-full object-cover transition-transform group-hover:scale-110"
+          className="w-full h-full object-cover"
         />
 
-        <div className="absolute top-2 right-2 z-10">
-          <WatchlistButton filmId={content.id} size="md" />
+        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
+          {content.runtime_min}m
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-        <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="flex items-center space-x-2 mb-2">
-            <button
-              onClick={onPlayClick}
-              className="p-2 bg-white text-slate-950 rounded-full hover:bg-slate-200 transition-colors"
-            >
-              <Play className="w-4 h-4 fill-current" />
-            </button>
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+            <span className="text-white font-medium">Watch Now</span>
           </div>
+        </div>
+
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <WatchlistButton filmId={content.id} size="sm" />
         </div>
       </div>
 
-      <div className="p-4 space-y-2">
-        <h3 className="font-semibold text-white line-clamp-1">{content.title}</h3>
-
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-1 text-yellow-400">
-            <Star className="w-4 h-4 fill-current" />
-            <span className="text-white font-medium">{content.rating}</span>
+      <div className="flex gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-gray-900 line-clamp-2 mb-1 text-sm">
+            {content.title}
+          </h3>
+          <p className="text-xs text-gray-600 mb-1">{content.studio_label}</p>
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <div className="flex items-center gap-1">
+              <Eye className="w-3 h-3" />
+              <span>{(content as any).views?.toLocaleString() || '0'} views</span>
+            </div>
+            <span>•</span>
+            <span>{content.release_year}</span>
           </div>
-          <span className="text-slate-400">{content.release_year}</span>
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          {content.genres.slice(0, 2).map((genre) => (
-            <span
-              key={genre}
-              className="text-xs px-2 py-1 bg-slate-800 text-slate-300 rounded"
-            >
-              {genre}
-            </span>
-          ))}
-        </div>
-
-        {type === 'tv_show' && 'seasons' in content && (
-          <p className="text-sm text-slate-400">
-            {content.seasons} Season{content.seasons > 1 ? 's' : ''}
-          </p>
-        )}
       </div>
     </div>
   );

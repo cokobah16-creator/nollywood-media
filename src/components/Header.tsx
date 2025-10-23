@@ -1,6 +1,6 @@
-import { Search, Film, Home, Library, Tv, Music, Sparkles, User, LogOut, Shield } from 'lucide-react';
+import { Search, Menu, Film, User, Bell, Video } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AuthModal } from './AuthModal';
@@ -11,22 +11,13 @@ export function Header() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
-  };
-
-  const isActive = (path: string) => location.pathname === path;
-
-  const handleSignOut = async () => {
-    await signOut();
-    setShowUserMenu(false);
-    navigate('/');
   };
 
   const openAuthModal = (mode: 'login' | 'signup') => {
@@ -41,158 +32,111 @@ export function Header() {
         onClose={() => setShowAuthModal(false)}
         initialMode={authMode}
       />
-    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-slate-950 via-slate-950/95 to-transparent">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-8">
-            <Link to="/" className="flex items-center space-x-2">
-              <Film className="w-8 h-8 text-red-600" />
-              <span className="text-2xl font-bold text-white tracking-tight">NaijaMation</span>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 h-14">
+          <div className="flex items-center gap-4">
+            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <Menu className="w-6 h-6 text-gray-700" />
+            </button>
+            <Link to="/" className="flex items-center gap-2">
+              <Film className="w-6 h-6 text-red-600" />
+              <span className="text-xl font-semibold text-gray-900">NaijaMation</span>
             </Link>
-
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link
-                to="/"
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  isActive('/')
-                    ? 'text-white bg-white/10'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Home className="w-4 h-4" />
-                <span className="font-medium">Home</span>
-              </Link>
-
-              <Link
-                to="/catalog"
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  isActive('/catalog')
-                    ? 'text-white bg-white/10'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Library className="w-4 h-4" />
-                <span className="font-medium">Full Catalog</span>
-              </Link>
-
-              <Link
-                to="/content/series"
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  location.pathname === '/content/series'
-                    ? 'text-white bg-white/10'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Tv className="w-4 h-4" />
-                <span className="font-medium">Series</span>
-              </Link>
-
-              <Link
-                to="/content/anime"
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  location.pathname === '/content/anime'
-                    ? 'text-white bg-white/10'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Sparkles className="w-4 h-4" />
-                <span className="font-medium">Anime</span>
-              </Link>
-
-              <Link
-                to="/content/music"
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  location.pathname === '/content/music'
-                    ? 'text-white bg-white/10'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Music className="w-4 h-4" />
-                <span className="font-medium">Music</span>
-              </Link>
-            </nav>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex-1 max-w-2xl mx-4">
             <form onSubmit={handleSearch} className="flex items-center">
-              <div className="relative">
+              <div className="flex w-full">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search movies, shows..."
-                  className="bg-slate-900/50 text-white placeholder-slate-400 rounded-full pl-10 pr-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
+                  placeholder="Search"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-l-full focus:outline-none focus:border-blue-500 text-gray-900"
                 />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-full hover:bg-gray-200 transition-colors"
+                >
+                  <Search className="w-5 h-5 text-gray-700" />
+                </button>
               </div>
             </form>
+          </div>
 
+          <div className="flex items-center gap-2">
             {user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 rounded-full bg-slate-900/50 px-4 py-2 hover:bg-slate-800 transition-colors"
-                >
-                  <User className="w-4 h-4" />
-                  <span className="text-sm font-medium">{user.email?.split('@')[0]}</span>
+              <>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    title="Admin Dashboard"
+                  >
+                    <Video className="w-6 h-6 text-gray-700" />
+                  </Link>
+                )}
+                <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <Bell className="w-6 h-6 text-gray-700" />
                 </button>
-
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
-                    <div className="p-3 border-b border-slate-700">
-                      <p className="text-sm text-slate-400">Signed in as</p>
-                      <p className="text-sm font-medium text-white truncate">{user.email}</p>
-                    </div>
-                    <div className="p-2">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-semibold hover:bg-red-700 transition-colors"
+                  >
+                    {user.email?.charAt(0).toUpperCase()}
+                  </button>
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl py-2">
+                      <div className="px-4 py-3 border-b border-gray-200">
+                        <p className="text-sm font-semibold text-gray-900">{user.email?.split('@')[0]}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      </div>
                       <Link
                         to="/account/profile"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center space-x-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 text-gray-700"
                       >
-                        <User className="w-4 h-4" />
-                        <span>My Account</span>
+                        <User className="w-5 h-5" />
+                        <span className="text-sm">My Account</span>
                       </Link>
-                      {isAdmin && (
-                        <Link
-                          to="/admin"
-                          onClick={() => setShowUserMenu(false)}
-                          className="flex items-center space-x-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
-                        >
-                          <Shield className="w-4 h-4" />
-                          <span>Admin Dashboard</span>
-                        </Link>
-                      )}
-                      <button
-                        onClick={handleSignOut}
-                        className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                      <Link
+                        to="/account/watchlist"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 text-gray-700"
                       >
-                        <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
+                        <Video className="w-5 h-5" />
+                        <span className="text-sm">My Watchlist</span>
+                      </Link>
+                      <div className="border-t border-gray-200 my-2"></div>
+                      <button
+                        onClick={async () => {
+                          await useAuth.getState().signOut();
+                          setShowUserMenu(false);
+                          navigate('/');
+                        }}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+                      >
+                        Sign out
                       </button>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => openAuthModal('login')}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors"
                 >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => openAuthModal('signup')}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
-                >
-                  Sign Up
+                  <User className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-600">Sign in</span>
                 </button>
               </div>
             )}
           </div>
         </div>
-      </div>
-    </header>
+      </header>
     </>
   );
 }

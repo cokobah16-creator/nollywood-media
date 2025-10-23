@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, ThumbsUp, Send } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Eye } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { MP4Video } from "../components/MP4Video";
+import { ContentCard } from "../components/ContentCard";
+import { WatchlistButton } from "../components/WatchlistButton";
 
 interface Film {
   id: string;
@@ -18,6 +20,8 @@ interface Film {
   director: string;
   cast_members: string;
   video_url: string;
+  studio_label: string;
+  views: number;
 }
 
 interface Comment {
@@ -40,20 +44,21 @@ export default function WatchPage() {
   const navigate = useNavigate();
   const [film, setFilm] = useState<Film | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [relatedFilms, setRelatedFilms] = useState<Film[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
-  const [userRating, setUserRating] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   useEffect(() => {
     if (id) {
       loadFilmAndComments();
+      loadRelatedFilms();
     }
   }, [id, user]);
 
   const loadFilmAndComments = async () => {
     try {
-      // Load film
       const { data: filmData, error: filmError } = await supabase
         .from("films")
         .select("*")
@@ -63,7 +68,6 @@ export default function WatchPage() {
       if (filmError) throw filmError;
       setFilm(filmData);
 
-      // Load comments with profiles and like counts
       await loadComments();
     } catch (error) {
       console.error("Error loading film:", error);
@@ -81,11 +85,11 @@ export default function WatchPage() {
           user_profile:user_profiles(display_name, avatar_url)
         `)
         .eq("film_id", id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(20);
 
       if (error) throw error;
 
-      // Get like counts and user's likes for each comment
       const commentsWithLikes = await Promise.all(
         (commentsData || []).map(async (comment) => {
           const { count } = await supabase
@@ -118,6 +122,21 @@ export default function WatchPage() {
     }
   };
 
+  const loadRelatedFilms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("films")
+        .select("*")
+        .neq("id", id)
+        .limit(10);
+
+      if (error) throw error;
+      setRelatedFilms(data || []);
+    } catch (error) {
+      console.error("Error loading related films:", error);
+    }
+  };
+
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -132,13 +151,11 @@ export default function WatchPage() {
         film_id: id,
         user_id: user.id,
         content: commentText.trim(),
-        rating: userRating > 0 ? userRating : null,
       });
 
       if (error) throw error;
 
       setCommentText("");
-      setUserRating(0);
       await loadComments();
     } catch (error: any) {
       console.error("Error submitting comment:", error);
@@ -148,14 +165,17 @@ export default function WatchPage() {
     }
   };
 
-  const handleLikeComment = async (commentId: string, currentlyLiked: boolean) => {
+  const handleLikeComment = async (commentId: string) => {
     if (!user) {
       alert("Please sign in to like comments");
       return;
     }
 
     try {
-      if (currentlyLiked) {
+      const comment = comments.find((c) => c.id === commentId);
+      if (!comment) return;
+
+      if (comment.user_has_liked) {
         await supabase
           .from("comment_likes")
           .delete()
@@ -170,258 +190,176 @@ export default function WatchPage() {
 
       await loadComments();
     } catch (error) {
-      console.error("Error toggling like:", error);
+      console.error("Error liking comment:", error);
     }
   };
 
-  if (loading) {
+  if (loading || !film) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
-        <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-red-600 mx-auto"></div>
-          <p>Loading...</p>
-        </div>
+      <div className="bg-white min-h-screen pt-14 flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
       </div>
     );
   }
-
-  if (!film) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Film not found</h1>
-          <Link to="/" className="mt-4 inline-block text-red-600 hover:underline">
-            Return to Home
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const averageRating =
-    comments.length > 0
-      ? comments.filter((c) => c.rating).reduce((sum, c) => sum + (c.rating || 0), 0) /
-        comments.filter((c) => c.rating).length
-      : 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-16">
-      <div className="container mx-auto px-4 py-6">
-        <Link
-          to="/"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </Link>
-
-        {/* Video Player */}
-        <div className="mb-8">
-          {film.video_url ? (
-            <MP4Video
-              src={film.video_url}
-              poster={film.poster_url}
-              title={film.title}
-            />
-          ) : (
-            <div className="aspect-video bg-slate-900 rounded-lg flex items-center justify-center">
-              <p className="text-slate-400">Video URL not configured</p>
-            </div>
-          )}
-        </div>
-
-        {/* Film Info */}
-        <div className="mb-8 rounded-lg border border-slate-800 bg-slate-900 p-6">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h1 className="mb-2 text-3xl font-bold text-white">{film.title}</h1>
-              <div className="flex items-center gap-4 text-sm text-slate-300">
-                <span className="rounded bg-red-600 px-2 py-1 text-xs font-semibold">
-                  {film.rating}
-                </span>
-                <span>{film.release_year}</span>
-                <span>{film.runtime_min} min</span>
-                <span className="font-semibold text-yellow-400">{film.genre}</span>
-              </div>
-            </div>
-            {averageRating > 0 && (
-              <div className="text-center">
-                <div className="flex items-center gap-1 text-yellow-400">
-                  <Star className="h-6 w-6 fill-current" />
-                  <span className="text-2xl font-bold">{averageRating.toFixed(1)}</span>
-                </div>
-                <p className="text-xs text-slate-400">
-                  {comments.filter((c) => c.rating).length} ratings
-                </p>
-              </div>
-            )}
-          </div>
-
-          <p className="mb-4 text-lg font-semibold text-slate-200">{film.logline}</p>
-
-          {film.synopsis && (
-            <div className="mb-4">
-              <h3 className="mb-2 font-semibold text-white">Synopsis</h3>
-              <p className="text-slate-300">{film.synopsis}</p>
-            </div>
-          )}
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {film.director && (
-              <div>
-                <span className="font-semibold text-slate-400">Director:</span>{" "}
-                <span className="text-white">{film.director}</span>
-              </div>
-            )}
-            {film.cast_members && (
-              <div>
-                <span className="font-semibold text-slate-400">Cast:</span>{" "}
-                <span className="text-white">{film.cast_members}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Comments Section */}
-        <div className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-          <h2 className="mb-6 text-2xl font-bold text-white">
-            Comments ({comments.length})
-          </h2>
-
-          {/* Comment Form */}
-          {user ? (
-            <form onSubmit={handleSubmitComment} className="mb-8">
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-semibold text-slate-300">
-                  Your Rating (Optional)
-                </label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setUserRating(star)}
-                      className="transition-transform hover:scale-110"
-                    >
-                      <Star
-                        className={`h-8 w-8 ${
-                          star <= userRating
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-slate-600"
-                        }`}
-                      />
-                    </button>
-                  ))}
-                  {userRating > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setUserRating(0)}
-                      className="ml-2 text-sm text-slate-400 hover:text-white"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Share your thoughts..."
-                  rows={3}
-                  className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-400 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/20"
-                />
-                <button
-                  type="submit"
-                  disabled={submitting || !commentText.trim()}
-                  className="flex items-center gap-2 rounded-lg bg-red-600 px-6 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
-                >
-                  <Send className="h-4 w-4" />
-                  Post
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="mb-8 rounded-lg border border-slate-700 bg-slate-800 p-4 text-center">
-              <p className="text-slate-400">
-                <button
-                  onClick={() => navigate("/")}
-                  className="text-red-600 hover:text-red-500 font-semibold"
-                >
-                  Sign in
-                </button>{" "}
-                to leave a comment
-              </p>
-            </div>
-          )}
-
-          {/* Comments List */}
-          <div className="space-y-4">
-            {comments.length === 0 ? (
-              <p className="text-center text-slate-400">
-                No comments yet. Be the first to share your thoughts!
-              </p>
+    <div className="bg-white min-h-screen pt-14">
+      <div className="flex">
+        <div className="flex-1 max-w-6xl px-6 py-6">
+          <div className="aspect-video bg-black rounded-xl overflow-hidden mb-4">
+            {film.video_url ? (
+              <MP4Video src={film.video_url} poster={film.poster_url} />
             ) : (
-              comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className="rounded-lg border border-slate-800 bg-slate-800/50 p-4"
-                >
-                  <div className="mb-2 flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      {comment.user_profile?.avatar_url ? (
-                        <img
-                          src={comment.user_profile.avatar_url}
-                          alt={comment.user_profile.display_name || "User"}
-                          className="h-10 w-10 rounded-full"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-700">
-                          <span className="font-semibold text-white">
-                            {(comment.user_profile?.display_name || "U")[0].toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-semibold text-white">
-                          {comment.user_profile?.display_name || "Anonymous User"}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          {new Date(comment.created_at).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    {comment.rating && (
-                      <div className="flex items-center gap-1 text-yellow-400">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="font-semibold">{comment.rating}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <p className="mb-3 text-slate-200">{comment.content}</p>
-
-                  <button
-                    onClick={() =>
-                      handleLikeComment(comment.id, comment.user_has_liked)
-                    }
-                    className={`flex items-center gap-2 rounded-lg px-3 py-1 text-sm transition-colors ${
-                      comment.user_has_liked
-                        ? "bg-red-600 text-white"
-                        : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                    }`}
-                  >
-                    <ThumbsUp className="h-4 w-4" />
-                    <span>{comment.likes_count}</span>
-                  </button>
-                </div>
-              ))
+              <div className="w-full h-full flex items-center justify-center text-white">
+                Video not available
+              </div>
             )}
+          </div>
+
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">{film.title}</h1>
+
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3 text-sm text-gray-600">
+              <div className="flex items-center gap-1">
+                <Eye className="w-4 h-4" />
+                <span>{film.views?.toLocaleString() || '0'} views</span>
+              </div>
+              <span>•</span>
+              <span>{new Date().toLocaleDateString()}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors">
+                <ThumbsUp className="w-5 h-5" />
+                <span>Like</span>
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors">
+                <ThumbsDown className="w-5 h-5" />
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors">
+                <Share2 className="w-5 h-5" />
+                <span>Share</span>
+              </button>
+              <WatchlistButton filmId={film.id} size="md" />
+              <button className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-gray-100 rounded-xl p-4 mb-6">
+            <div className="flex gap-3 mb-2">
+              <span className="font-semibold text-gray-900">{film.studio_label}</span>
+            </div>
+            <p className={`text-sm text-gray-900 ${!showFullDescription ? 'line-clamp-2' : ''}`}>
+              {film.synopsis || film.logline}
+            </p>
+            <button
+              onClick={() => setShowFullDescription(!showFullDescription)}
+              className="text-sm font-semibold text-gray-900 mt-2"
+            >
+              {showFullDescription ? 'Show less' : 'Show more'}
+            </button>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {comments.length} Comments
+            </h3>
+
+            {user && (
+              <form onSubmit={handleSubmitComment} className="flex gap-4 mb-6">
+                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="w-full border-b border-gray-300 pb-2 focus:border-gray-900 focus:outline-none text-sm"
+                  />
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => setCommentText("")}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting || !commentText.trim()}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Comment
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            <div className="space-y-4">
+              {comments.map((comment) => (
+                <div key={comment.id} className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0"></div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-semibold text-gray-900">
+                        {comment.user_profile?.display_name || 'User'}
+                      </span>
+                      <span className="text-xs text-gray-600">
+                        {new Date(comment.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-900 mb-2">{comment.content}</p>
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => handleLikeComment(comment.id)}
+                        className={`flex items-center gap-2 text-sm ${
+                          comment.user_has_liked ? 'text-blue-600' : 'text-gray-700'
+                        }`}
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                        <span>{comment.likes_count || ''}</span>
+                      </button>
+                      <button className="flex items-center gap-2 text-sm text-gray-700">
+                        <ThumbsDown className="w-4 h-4" />
+                      </button>
+                      <button className="text-sm font-medium text-gray-700">Reply</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="w-96 px-4 py-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Related</h3>
+          <div className="space-y-3">
+            {relatedFilms.map((relatedFilm) => (
+              <div key={relatedFilm.id} className="flex gap-2 cursor-pointer" onClick={() => navigate(`/watch/${relatedFilm.id}`)}>
+                <div className="w-40 aspect-video bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src={relatedFilm.poster_url || '/placeholder.jpg'}
+                    alt={relatedFilm.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">
+                    {relatedFilm.title}
+                  </h4>
+                  <p className="text-xs text-gray-600">{relatedFilm.studio_label}</p>
+                  <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
+                    <Eye className="w-3 h-3" />
+                    <span>{relatedFilm.views?.toLocaleString() || '0'} views</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

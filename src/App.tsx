@@ -2,6 +2,7 @@ import { CatalogProvider } from "./context/CatalogProvider";
 import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "./components/Header";
+import { Sidebar } from "./components/Sidebar";
 import { Footer } from "./components/Footer";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Home from "./pages/Home";
@@ -62,8 +63,9 @@ export default function App() {
             </Route>
 
             <Route path="*" element={
-              <div className="flex min-h-screen flex-col bg-slate-950">
+              <div className="flex min-h-screen flex-col bg-white">
                 <Header />
+                <Sidebar />
                 <div className="flex-1">
                   <Routes>
                     <Route path="/" element={<Home />} />
@@ -75,7 +77,6 @@ export default function App() {
                     <Route path="/watch/:id" element={<WatchPage />} />
                   </Routes>
                 </div>
-                <Footer />
               </div>
             } />
           </Routes>
