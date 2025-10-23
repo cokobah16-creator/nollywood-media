@@ -8,6 +8,7 @@ import { Play, Info } from "lucide-react";
 export default function Home() {
   const [films, setFilms] = useState<Film[]>([]);
   const [featuredFilm, setFeaturedFilm] = useState<Film | null>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { filmCatalog } = useCatalog();
 
@@ -16,6 +17,7 @@ export default function Home() {
       setFilms(filmCatalog);
       const randomFilm = filmCatalog[Math.floor(Math.random() * filmCatalog.length)];
       setFeaturedFilm(randomFilm);
+      setLoading(false);
     }
   }, [filmCatalog]);
 
@@ -33,16 +35,8 @@ export default function Home() {
       filter: (f: Film) => f.setting_region?.toLowerCase().includes('nigeria')
     },
     {
-      title: 'TV Series',
-      filter: (f: Film) => f.tags?.toLowerCase().includes('series') || f.tags?.toLowerCase().includes('anthology')
-    },
-    {
-      title: 'Anime Collection',
-      filter: (f: Film) => f.tags?.toLowerCase().includes('anime')
-    },
-    {
-      title: 'Music & Concerts',
-      filter: (f: Film) => f.tags?.toLowerCase().includes('music') || f.tags?.toLowerCase().includes('concert')
+      title: 'All Movies',
+      filter: (f: Film) => true
     },
     {
       title: 'Romance',
@@ -60,16 +54,20 @@ export default function Home() {
       title: 'Comedy',
       filter: (f: Film) => f.genre.includes('Comedy')
     },
-    {
-      title: 'Horror & Supernatural',
-      filter: (f: Film) => f.genre.includes('Horror')
-    },
   ];
+
+  if (loading) {
+    return (
+      <div className="bg-white min-h-screen pt-14 lg:pl-60 flex items-center justify-center">
+        <div className="text-gray-600 text-lg">Loading content...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen pt-14 lg:pl-60">
       {featuredFilm && (
-        <div className="relative h-[70vh] -mt-14 pt-14 mb-8">
+        <div className="relative h-[60vh] md:h-[70vh] bg-gray-900">
           <div className="absolute inset-0">
             <img
               src={featuredFilm.poster_url || '/placeholder.jpg'}
@@ -82,35 +80,35 @@ export default function Home() {
 
           <div className="relative h-full flex items-center px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 drop-shadow-lg">
                 {featuredFilm.title}
               </h1>
-              <p className="text-lg text-gray-200 mb-6 line-clamp-3 drop-shadow-lg">
+              <p className="text-base sm:text-lg text-gray-200 mb-4 line-clamp-2 sm:line-clamp-3 drop-shadow-lg">
                 {featuredFilm.logline || featuredFilm.synopsis}
               </p>
-              <div className="flex items-center gap-4 mb-6">
-                <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-sm rounded font-medium">
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
+                <span className="px-2 sm:px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs sm:text-sm rounded font-medium">
                   {featuredFilm.rating}
                 </span>
-                <span className="text-white text-sm">{featuredFilm.release_year}</span>
-                <span className="text-white text-sm">{featuredFilm.runtime_min} min</span>
-                <span className="px-3 py-1 bg-red-600 text-white text-sm rounded font-medium">
+                <span className="text-white text-xs sm:text-sm">{featuredFilm.release_year}</span>
+                <span className="text-white text-xs sm:text-sm">{featuredFilm.runtime_min} min</span>
+                <span className="px-2 sm:px-3 py-1 bg-red-600 text-white text-xs sm:text-sm rounded font-medium">
                   {featuredFilm.genre}
                 </span>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <button
                   onClick={() => navigate(`/watch/${featuredFilm.id}`)}
-                  className="flex items-center gap-2 px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
+                  className="flex items-center gap-2 px-4 sm:px-8 py-2 sm:py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg text-sm sm:text-base"
                 >
-                  <Play className="w-5 h-5 fill-white" />
+                  <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white" />
                   Watch Now
                 </button>
                 <button
                   onClick={() => navigate(`/watch/${featuredFilm.id}`)}
-                  className="flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg font-semibold transition-all border border-white/40"
+                  className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg font-semibold transition-all border border-white/40 text-sm sm:text-base"
                 >
-                  <Info className="w-5 h-5" />
+                  <Info className="w-4 h-4 sm:w-5 sm:h-5" />
                   More Info
                 </button>
               </div>
@@ -119,7 +117,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="relative z-10 -mt-20">
+      <div className="py-8">
         {categories.map((category) => {
           const categoryFilms = films.filter(category.filter);
           if (categoryFilms.length === 0) return null;
@@ -132,6 +130,12 @@ export default function Home() {
             />
           );
         })}
+
+        {films.length === 0 && !loading && (
+          <div className="text-center py-20">
+            <p className="text-gray-600 text-lg">No content available</p>
+          </div>
+        )}
       </div>
     </div>
   );

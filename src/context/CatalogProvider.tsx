@@ -3,6 +3,7 @@ import { Film, FilterSpec, SortKey, filterFilms } from "../lib/catalog";
 
 interface CatalogContextValue {
   films: Film[];
+  filmCatalog: Film[];
   loading: boolean;
   error: Error | null;
   filter: (where: FilterSpec, sort?: SortKey) => Film[];
@@ -36,7 +37,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <CatalogContext.Provider value={{ films, loading, error, filter }}>
+    <CatalogContext.Provider value={{ films, filmCatalog: films, loading, error, filter }}>
       {children}
     </CatalogContext.Provider>
   );
