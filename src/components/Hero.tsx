@@ -4,9 +4,10 @@ import { Movie } from '../types';
 interface HeroProps {
   movie: Movie;
   onPlayClick: () => void;
+  onMoreInfoClick?: () => void;
 }
 
-export function Hero({ movie, onPlayClick }: HeroProps) {
+export function Hero({ movie, onPlayClick, onMoreInfoClick }: HeroProps) {
   return (
     <div className="relative h-screen">
       <div className="absolute inset-0">
@@ -65,7 +66,10 @@ export function Hero({ movie, onPlayClick }: HeroProps) {
               <span>Play Now</span>
             </button>
 
-            <button className="flex items-center space-x-2 px-8 py-3 bg-slate-800/80 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors backdrop-blur-sm">
+            <button
+              onClick={onMoreInfoClick || onPlayClick}
+              className="flex items-center space-x-2 px-8 py-3 bg-slate-800/80 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors backdrop-blur-sm"
+            >
               <Info className="w-5 h-5" />
               <span>More Info</span>
             </button>

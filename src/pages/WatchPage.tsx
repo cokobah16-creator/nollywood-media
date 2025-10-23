@@ -84,7 +84,7 @@ export default function WatchPage() {
         .from("film_comments")
         .select(`
           *,
-          user_profile:user_profiles(display_name, avatar_url)
+          user_profile:user_profiles!film_comments_user_id_fkey(display_name, avatar_url)
         `)
         .eq("film_id", id)
         .order("created_at", { ascending: false })

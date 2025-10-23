@@ -52,7 +52,7 @@ export function StudioComments() {
         .from('film_comments')
         .select(`
           *,
-          user_profile:user_profiles(display_name)
+          user_profile:user_profiles!film_comments_user_id_fkey(display_name)
         `)
         .in('film_id', filmIds)
         .order('created_at', { ascending: false });
