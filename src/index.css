@@ -7,6 +7,31 @@
     @apply bg-slate-950 text-white;
   }
 
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  textarea,
+  select {
+    @apply text-gray-900 !important;
+  }
+
+  input[type="text"]::placeholder,
+  input[type="email"]::placeholder,
+  input[type="password"]::placeholder,
+  input[type="number"]::placeholder,
+  input[type="url"]::placeholder,
+  input[type="tel"]::placeholder,
+  input[type="search"]::placeholder,
+  textarea::placeholder {
+    @apply text-gray-400 !important;
+  }
+
   * {
     scrollbar-width: thin;
     scrollbar-color: rgb(51, 65, 85) transparent;
