@@ -1,34 +1,102 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { Upload as UploadIcon, Film, Image, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { Upload as UploadIcon, Film, Image, CheckCircle, AlertTriangle, X, FileVideo, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function Upload() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    logline: '',
-    genre: '',
+    category: '',
     tags: '',
-    runtime_min: '',
-    video_url: '',
-    thumbnail_url: '',
-    poster_url: '',
     creator_confirmation: false,
   });
 
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
-  const genres = [
-    'Action', 'Comedy', 'Drama', 'Romance', 'Thriller',
-    'Horror', 'Sci-Fi', 'Animation', 'Documentary', 'Fantasy'
+  const categories = [
+    'Film', 'Short Film', 'Series Episode', 'Documentary',
+    'Animation', 'Music Video', 'Tutorial', 'Other'
   ];
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const videoFile = files.find(f => f.type.startsWith('video/'));
+
+    if (videoFile) {
+      if (videoFile.size > 2147483648) {
+        setError('Video file must be less than 2GB');
+        return;
+      }
+      setVideoFile(videoFile);
+    }
+  };
+
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2147483648) {
+        setError('Video file must be less than 2GB');
+        return;
+      }
+      if (!file.type.startsWith('video/')) {
+        setError('Please select a valid video file');
+        return;
+      }
+      setVideoFile(file);
+      setError(null);
+    }
+  };
+
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10485760) {
+        setError('Thumbnail must be less than 10MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+      setThumbnailFile(file);
+      setError(null);
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,43 +106,96 @@ export function Upload() {
       return;
     }
 
+    if (!videoFile) {
+      setError('Please select a video file to upload');
+      return;
+    }
+
     if (!formData.creator_confirmation) {
-      setError('You must confirm that this content is AI-generated and created by you');
+      setError('You must confirm content ownership and guidelines');
       return;
     }
 
     setLoading(true);
     setError(null);
+    setUploadProgress(0);
 
     try {
+      const videoExt = videoFile.name.split('.').pop();
+      const videoFileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${videoExt}`;
+
+      setUploadProgress(10);
+
+      const { error: videoUploadError } = await supabase.storage
+        .from('user-content')
+        .upload(videoFileName, videoFile, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (videoUploadError) throw videoUploadError;
+
+      setUploadProgress(50);
+
+      let thumbnailPath = null;
+      if (thumbnailFile) {
+        const thumbExt = thumbnailFile.name.split('.').pop();
+        const thumbFileName = `${user.id}/${Date.now()}-thumb.${thumbExt}`;
+
+        const { error: thumbUploadError } = await supabase.storage
+          .from('thumbnails')
+          .upload(thumbFileName, thumbnailFile);
+
+        if (!thumbUploadError) {
+          thumbnailPath = thumbFileName;
+        }
+      }
+
+      setUploadProgress(70);
+
+      const { data: { publicUrl: videoUrl } } = supabase.storage
+        .from('user-content')
+        .getPublicUrl(videoFileName);
+
+      let thumbnailUrl = null;
+      if (thumbnailPath) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('thumbnails')
+          .getPublicUrl(thumbnailPath);
+        thumbnailUrl = publicUrl;
+      }
+
       const tagsArray = formData.tags
         .split(',')
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
 
-      const { data, error: uploadError } = await supabase
-        .from('user_uploads')
+      setUploadProgress(90);
+
+      const { error: dbError } = await supabase
+        .from('user_content_uploads')
         .insert({
           user_id: user.id,
           title: formData.title,
           description: formData.description,
-          logline: formData.logline,
-          genre: formData.genre,
+          category: formData.category,
           tags: tagsArray,
-          runtime_min: formData.runtime_min ? parseInt(formData.runtime_min) : null,
-          video_url: formData.video_url || null,
-          thumbnail_url: formData.thumbnail_url || null,
-          poster_url: formData.poster_url || null,
-          creator_confirmation: formData.creator_confirmation,
-          ai_verification_status: 'pending',
-          status: 'pending',
-        })
-        .select()
-        .single();
+          video_filename: videoFile.name,
+          video_path: videoFileName,
+          video_url: videoUrl,
+          thumbnail_path: thumbnailPath,
+          thumbnail_url: thumbnailUrl,
+          file_size: videoFile.size,
+          status: 'processing',
+          moderation_status: 'pending',
+          visibility: 'private',
+        });
 
-      if (uploadError) throw uploadError;
+      if (dbError) throw dbError;
 
+      setUploadProgress(100);
       setSuccess(true);
+
       setTimeout(() => {
         navigate('/account/my-uploads');
       }, 2000);
@@ -104,10 +225,10 @@ export function Upload() {
             <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Upload Submitted Successfully!
+            Upload Successful!
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Your content has been submitted for moderation. You'll be notified once it's reviewed.
+            Your video has been uploaded and is pending moderation. You'll be notified once it's reviewed.
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Redirecting to your uploads...
@@ -121,10 +242,10 @@ export function Upload() {
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Upload Your Content
+          Upload Your Video
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Share your AI-generated content with the community. All uploads are reviewed by our moderation team.
+          Share your content with the community. Upload MP4 videos up to 2GB.
         </p>
       </div>
 
@@ -136,11 +257,12 @@ export function Upload() {
               Content Guidelines
             </h3>
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-              <li>• Content must be AI-generated and created by you</li>
-              <li>• No copyrighted material or unauthorized content</li>
-              <li>• Content must comply with our Terms of Service</li>
-              <li>• Inappropriate or offensive content will be rejected</li>
-              <li>• Videos should be in MP4 or HLS format</li>
+              <li>• Upload original content you have rights to</li>
+              <li>• Maximum file size: 2GB</li>
+              <li>• Supported formats: MP4, WebM, MOV</li>
+              <li>• No copyrighted material without permission</li>
+              <li>• Content must comply with Terms of Service</li>
+              <li>• All uploads are reviewed before publishing</li>
             </ul>
           </div>
         </div>
@@ -157,6 +279,72 @@ export function Upload() {
       )}
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-6">
+        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <FileVideo className="h-5 w-5" />
+            Video File
+          </h3>
+
+          {!videoFile ? (
+            <div
+              className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${
+                dragActive
+                  ? 'border-red-500 bg-red-500/10'
+                  : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <div className="flex flex-col items-center">
+                <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-full mb-4">
+                  <UploadIcon className="w-8 h-8 text-gray-600 dark:text-gray-400" />
+                </div>
+                <p className="text-gray-900 dark:text-white font-medium mb-2">
+                  Drag and drop your video here
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  or click to browse (MP4, WebM, MOV up to 2GB)
+                </p>
+                <button
+                  type="button"
+                  onClick={() => videoInputRef.current?.click()}
+                  className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                  disabled={loading}
+                >
+                  Select Video File
+                </button>
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  onChange={handleVideoSelect}
+                  className="hidden"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FileVideo className="w-8 h-8 text-red-600" />
+                <div>
+                  <p className="text-gray-900 dark:text-white font-medium">{videoFile.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{formatFileSize(videoFile.size)}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVideoFile(null)}
+                className="text-red-600 hover:text-red-700 transition-colors"
+                disabled={loading}
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+        </div>
+
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Title <span className="text-red-500">*</span>
@@ -168,28 +356,13 @@ export function Upload() {
             value={formData.title}
             onChange={handleChange}
             required
+            maxLength={100}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="Enter content title"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="logline" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Logline <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="logline"
-            name="logline"
-            type="text"
-            value={formData.logline}
-            onChange={handleChange}
-            required
-            maxLength={150}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="One-line summary (max 150 characters)"
+            placeholder="Enter video title"
+            disabled={loading}
           />
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {formData.logline.length}/150 characters
+            {formData.title.length}/100 characters
           </p>
         </div>
 
@@ -204,124 +377,121 @@ export function Upload() {
             onChange={handleChange}
             required
             rows={4}
+            maxLength={1000}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="Detailed description of your content"
+            placeholder="Describe your video content"
+            disabled={loading}
           />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {formData.description.length}/1000 characters
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="genre" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Genre <span className="text-red-500">*</span>
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Category <span className="text-red-500">*</span>
             </label>
             <select
-              id="genre"
-              name="genre"
-              value={formData.genre}
+              id="category"
+              name="category"
+              value={formData.category}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              disabled={loading}
             >
-              <option value="">Select genre</option>
-              {genres.map(genre => (
-                <option key={genre} value={genre}>{genre}</option>
+              <option value="">Select category</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label htmlFor="runtime_min" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Runtime (minutes)
+            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tags
             </label>
             <input
-              id="runtime_min"
-              name="runtime_min"
-              type="number"
-              value={formData.runtime_min}
+              id="tags"
+              name="tags"
+              type="text"
+              value={formData.tags}
               onChange={handleChange}
-              min="1"
-              max="300"
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="e.g., 90"
+              placeholder="action, drama, thriller"
+              disabled={loading}
             />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Separate with commas
+            </p>
           </div>
         </div>
 
         <div>
-          <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Tags
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <Image className="inline w-4 h-4 mr-1" />
+            Thumbnail (Optional)
           </label>
+
+          {!thumbnailFile ? (
+            <button
+              type="button"
+              onClick={() => thumbnailInputRef.current?.click()}
+              className="w-full px-4 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors text-gray-600 dark:text-gray-400"
+              disabled={loading}
+            >
+              <div className="flex flex-col items-center">
+                <Image className="w-8 h-8 mb-2" />
+                <span className="text-sm">Click to select thumbnail image</span>
+                <span className="text-xs mt-1">JPG, PNG (max 10MB)</span>
+              </div>
+            </button>
+          ) : (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Image className="w-6 h-6 text-red-600" />
+                <div>
+                  <p className="text-gray-900 dark:text-white font-medium">{thumbnailFile.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{formatFileSize(thumbnailFile.size)}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setThumbnailFile(null)}
+                className="text-red-600 hover:text-red-700 transition-colors"
+                disabled={loading}
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
+          )}
           <input
-            id="tags"
-            name="tags"
-            type="text"
-            value={formData.tags}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="e.g., AI-generated, animation, sci-fi (comma-separated)"
+            ref={thumbnailInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleThumbnailSelect}
+            className="hidden"
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Separate tags with commas
-          </p>
         </div>
 
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Film className="h-5 w-5" />
-            Media URLs
-          </h3>
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="video_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Video URL <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="video_url"
-                name="video_url"
-                type="url"
-                value={formData.video_url}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="https://example.com/video.mp4"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Direct link to your video file (MP4, HLS)
-              </p>
+        {loading && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+            <div className="flex justify-between text-sm text-blue-900 dark:text-blue-100 mb-2">
+              <span>Uploading video...</span>
+              <span>{uploadProgress}%</span>
             </div>
-
-            <div>
-              <label htmlFor="poster_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Poster Image URL
-              </label>
-              <input
-                id="poster_url"
-                name="poster_url"
-                type="url"
-                value={formData.poster_url}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="https://example.com/poster.jpg"
-              />
+            <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+              <div
+                className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
             </div>
-
-            <div>
-              <label htmlFor="thumbnail_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Thumbnail URL
-              </label>
-              <input
-                id="thumbnail_url"
-                name="thumbnail_url"
-                type="url"
-                value={formData.thumbnail_url}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="https://example.com/thumbnail.jpg"
-              />
-            </div>
+            <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
+              Please don't close this page while uploading...
+            </p>
           </div>
-        </div>
+        )}
 
         <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
           <div className="flex items-start gap-3">
@@ -333,14 +503,15 @@ export function Upload() {
               onChange={handleChange}
               required
               className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+              disabled={loading}
             />
             <label htmlFor="creator_confirmation" className="text-sm text-gray-700 dark:text-gray-300">
               <span className="font-medium">I confirm that:</span>
               <ul className="mt-1 space-y-1 text-gray-600 dark:text-gray-400">
-                <li>• This content is AI-generated</li>
-                <li>• I am the original creator of this content</li>
-                <li>• This content does not infringe on any copyrights</li>
-                <li>• This content complies with the Terms of Service</li>
+                <li>• I own the rights to this content or have permission to upload it</li>
+                <li>• This content does not infringe on any copyrights or trademarks</li>
+                <li>• This content complies with the platform's Terms of Service</li>
+                <li>• I understand that inappropriate content will be removed</li>
               </ul>
             </label>
           </div>
@@ -351,23 +522,24 @@ export function Upload() {
             type="button"
             onClick={() => navigate('/account')}
             className="px-6 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium"
+            disabled={loading}
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !videoFile}
             className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Submitting...
+                Uploading...
               </>
             ) : (
               <>
                 <UploadIcon className="h-4 w-4" />
-                Submit for Review
+                Upload Video
               </>
             )}
           </button>
