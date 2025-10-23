@@ -37,6 +37,9 @@ import { MyUploads } from "./pages/account/MyUploads";
 import { UserUploads } from "./pages/admin/UserUploads";
 import { Notifications } from "./pages/account/Notifications";
 import { Subscription } from "./pages/account/Subscription";
+import { StudioLayout } from "./pages/studio/StudioLayout";
+import { StudioDashboard } from "./pages/studio/Dashboard";
+import { AddFilm } from "./pages/admin/AddFilm";
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -59,12 +62,21 @@ export default function App() {
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="films" element={<AdminFilms />} />
               <Route path="films/:id" element={<FilmEditor />} />
+              <Route path="films/new" element={<AddFilm />} />
               <Route path="upload" element={<AdminUpload />} />
               <Route path="moderation" element={<AdminModeration />} />
               <Route path="compliance" element={<AdminCompliance />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="settings" element={<AdminSettings />} />
               <Route path="user-uploads" element={<UserUploads />} />
+            </Route>
+
+            <Route path="/studio" element={
+              <ProtectedRoute>
+                <StudioLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<StudioDashboard />} />
             </Route>
 
             <Route path="/account" element={

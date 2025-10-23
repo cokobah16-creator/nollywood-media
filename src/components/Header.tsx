@@ -1,4 +1,4 @@
-import { Search, Menu, Film, User, Bell, Video } from 'lucide-react';
+import { Search, Menu, Film, User, Bell, Video, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -114,6 +114,14 @@ export function Header({ onMenuClick }: HeaderProps) {
                       >
                         <Video className="w-5 h-5" />
                         <span className="text-sm">My Watchlist</span>
+                      </Link>
+                      <Link
+                        to="/studio"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 text-gray-700"
+                      >
+                        <BarChart3 className="w-5 h-5" />
+                        <span className="text-sm">Creator Studio</span>
                       </Link>
                       <div className="border-t border-gray-200 my-2"></div>
                       <button
