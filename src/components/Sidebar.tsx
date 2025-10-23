@@ -1,4 +1,4 @@
-import { Home, Compass, Film, Tv, Music, Sparkles, X } from 'lucide-react';
+import { Home, Compass, Film, Tv, Music, Sparkles, X, TrendingUp, Clock, Upload, Star } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
@@ -29,6 +29,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const mainLinks = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Compass, label: 'Explore', path: '/catalog' },
+    { icon: TrendingUp, label: 'Trending', path: '/trending' },
+    { icon: Clock, label: 'Continue Watching', path: '/account/history' },
   ];
 
   const contentLinks = [
@@ -36,6 +38,11 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     { icon: Tv, label: 'Series', path: '/content/series' },
     { icon: Sparkles, label: 'Anime', path: '/content/anime' },
     { icon: Music, label: 'Music', path: '/content/music' },
+  ];
+
+  const creatorLinks = [
+    { icon: Upload, label: 'Upload Content', path: '/account/upload' },
+    { icon: Star, label: 'My Uploads', path: '/account/my-uploads' },
   ];
 
   const handleLinkClick = () => {
@@ -95,6 +102,29 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               Browse
             </h3>
             {contentLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={handleLinkClick}
+                className={`flex items-center gap-6 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  isActive(link.path)
+                    ? 'bg-gray-100 dark:bg-gray-800 font-medium text-gray-900 dark:text-white'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:translate-x-1'
+                }`}
+              >
+                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm">{link.label}</span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="border-t border-gray-200 dark:border-gray-800 my-2"></div>
+
+          <div className="px-3 py-2">
+            <h3 className="px-3 mb-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Creator
+            </h3>
+            {creatorLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}

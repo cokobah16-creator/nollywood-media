@@ -32,6 +32,9 @@ import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Terms } from "./pages/Terms";
 import { Privacy } from "./pages/Privacy";
+import { Upload } from "./pages/account/Upload";
+import { MyUploads } from "./pages/account/MyUploads";
+import { UserUploads } from "./pages/admin/UserUploads";
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -59,6 +62,7 @@ export default function App() {
               <Route path="compliance" element={<AdminCompliance />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="user-uploads" element={<UserUploads />} />
             </Route>
 
             <Route path="/account" element={
@@ -69,6 +73,8 @@ export default function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="history" element={<WatchHistory />} />
               <Route path="watchlist" element={<Watchlist />} />
+              <Route path="upload" element={<Upload />} />
+              <Route path="my-uploads" element={<MyUploads />} />
             </Route>
 
             <Route path="*" element={
