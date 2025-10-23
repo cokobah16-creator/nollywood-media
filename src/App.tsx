@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CatalogProvider } from "./context/CatalogProvider";
 import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -29,6 +30,8 @@ import { WatchHistory } from "./pages/account/WatchHistory";
 import { Watchlist } from "./pages/account/Watchlist";
 
 export default function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <AuthProvider>
       <CatalogProvider>
@@ -63,9 +66,9 @@ export default function App() {
             </Route>
 
             <Route path="*" element={
-              <div className="flex min-h-screen flex-col bg-white">
-                <Header />
-                <Sidebar />
+              <div className="flex min-h-screen flex-col bg-white dark:bg-gray-900">
+                <Header onMenuClick={() => setSidebarOpen(true)} />
+                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
                 <div className="flex-1">
                   <Routes>
                     <Route path="/" element={<Home />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Shield, Lock, Mail, ArrowLeft } from 'lucide-react';
+import { Shield, Lock, Mail, ArrowLeft, Film } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export function AdminLogin() {
@@ -66,11 +66,16 @@ export function AdminLogin() {
       <div className="flex min-h-[calc(100vh-120px)] items-center justify-center px-4">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-600">
-              <Shield className="h-8 w-8 text-white" />
+            <div className="mx-auto mb-4 flex items-center justify-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 shadow-lg shadow-red-600/50">
+                <Film className="h-7 w-7 text-white" />
+              </div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-800 border-2 border-red-600 shadow-lg">
+                <Shield className="h-7 w-7 text-red-600" />
+              </div>
             </div>
-            <h1 className="mb-2 text-3xl font-bold text-white">Admin Portal</h1>
-            <p className="text-slate-400">Sign in to access the admin dashboard</p>
+            <h1 className="mb-2 text-3xl font-bold text-white">NaijaMation Admin</h1>
+            <p className="text-slate-400">Secure access to the admin dashboard</p>
           </div>
 
           <div className="rounded-lg border border-slate-800 bg-slate-900 p-8 shadow-2xl">

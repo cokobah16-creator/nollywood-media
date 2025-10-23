@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCatalog } from "../context/CatalogProvider";
 import { Film } from "../lib/catalog";
 import { ContentSlider } from "../components/ContentSlider";
+import { AdSpace } from "../components/AdSpace";
 import { Play, Info } from "lucide-react";
 
 export default function Home() {
@@ -118,16 +119,29 @@ export default function Home() {
       )}
 
       <div className="py-8">
-        {categories.map((category) => {
+        {categories.map((category, index) => {
           const categoryFilms = films.filter(category.filter);
           if (categoryFilms.length === 0) return null;
 
           return (
-            <ContentSlider
-              key={category.title}
-              title={category.title}
-              films={categoryFilms}
-            />
+            <div key={category.title}>
+              <ContentSlider
+                title={category.title}
+                films={categoryFilms}
+              />
+
+              {index === 2 && (
+                <div className="my-8 px-4 sm:px-6 lg:px-8">
+                  <AdSpace variant="leaderboard" />
+                </div>
+              )}
+
+              {index === 5 && (
+                <div className="my-8 px-4 sm:px-6 lg:px-8">
+                  <AdSpace variant="banner" />
+                </div>
+              )}
+            </div>
           );
         })}
 

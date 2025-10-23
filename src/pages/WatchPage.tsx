@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Eye } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Eye, Play } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { MP4Video } from "../components/MP4Video";
 import { ContentCard } from "../components/ContentCard";
 import { WatchlistButton } from "../components/WatchlistButton";
+import { AdSpace } from "../components/AdSpace";
 
 interface Film {
   id: string;
@@ -203,15 +204,26 @@ export default function WatchPage() {
   }
 
   return (
-    <div className="bg-white min-h-screen pt-14">
-      <div className="flex">
-        <div className="flex-1 max-w-6xl px-6 py-6">
-          <div className="aspect-video bg-black rounded-xl overflow-hidden mb-4">
+    <div className="bg-white dark:bg-gray-900 min-h-screen pt-14 lg:pl-60">
+      <div className="flex gap-6">
+        <div className="flex-1 max-w-6xl px-4 sm:px-6 py-6">
+          <div className="aspect-video bg-black rounded-xl overflow-hidden mb-4 relative">
             {film.video_url ? (
               <MP4Video src={film.video_url} poster={film.poster_url} />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-white">
-                Video not available
+              <div className="w-full h-full relative">
+                <img
+                  src={film.poster_url}
+                  alt={film.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white">
+                  <div className="bg-red-600 p-4 rounded-full mb-4">
+                    <Play className="w-12 h-12 fill-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Video Coming Soon</h3>
+                  <p className="text-gray-300 text-sm">This content will be available shortly</p>
+                </div>
               </div>
             )}
           </div>
@@ -336,10 +348,14 @@ export default function WatchPage() {
           </div>
         </div>
 
-        <div className="w-96 px-4 py-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Related</h3>
+        <div className="hidden lg:block w-96 px-4 py-6">
+          <div className="mb-6">
+            <AdSpace variant="rectangle" />
+          </div>
+
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Related</h3>
           <div className="space-y-3">
-            {relatedFilms.map((relatedFilm) => (
+            {relatedFilms.slice(0, 8).map((relatedFilm) => (
               <div key={relatedFilm.id} className="flex gap-2 cursor-pointer" onClick={() => navigate(`/watch/${relatedFilm.id}`)}>
                 <div className="w-40 aspect-video bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                   <img

@@ -5,7 +5,11 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AuthModal } from './AuthModal';
 
-export function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -32,11 +36,14 @@ export function Header() {
         onClose={() => setShowAuthModal(false)}
         initialMode={authMode}
       />
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between px-4 h-14">
           <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <Menu className="w-6 h-6 text-gray-700" />
+            <button
+              onClick={onMenuClick}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors lg:hidden"
+            >
+              <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
             </button>
             <Link to="/" className="flex items-center gap-2">
               <Film className="w-6 h-6 text-red-600" />
