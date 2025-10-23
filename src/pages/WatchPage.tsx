@@ -3,10 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Eye, Play } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { MP4Video } from "../components/MP4Video";
+import { EnhancedVideoPlayer } from "../components/EnhancedVideoPlayer";
 import { ContentCard } from "../components/ContentCard";
 import { WatchlistButton } from "../components/WatchlistButton";
 import { AdSpace } from "../components/AdSpace";
+import { StarRating } from "../components/StarRating";
 
 interface Film {
   id: string;
@@ -209,7 +210,11 @@ export default function WatchPage() {
         <div className="flex-1 max-w-6xl px-4 sm:px-6 py-6">
           <div className="aspect-video bg-black rounded-xl overflow-hidden mb-4 relative">
             {film.video_url ? (
-              <MP4Video src={film.video_url} poster={film.poster_url} />
+              <EnhancedVideoPlayer
+                src={film.video_url}
+                poster={film.poster_url}
+                filmId={film.id}
+              />
             ) : (
               <div className="w-full h-full relative">
                 <img
@@ -259,19 +264,24 @@ export default function WatchPage() {
             </div>
           </div>
 
-          <div className="bg-gray-100 rounded-xl p-4 mb-6">
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-6">
             <div className="flex gap-3 mb-2">
-              <span className="font-semibold text-gray-900">{film.studio_label}</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{film.studio_label}</span>
             </div>
-            <p className={`text-sm text-gray-900 ${!showFullDescription ? 'line-clamp-2' : ''}`}>
+            <p className={`text-sm text-gray-900 dark:text-gray-300 ${!showFullDescription ? 'line-clamp-2' : ''}`}>
               {film.synopsis || film.logline}
             </p>
             <button
               onClick={() => setShowFullDescription(!showFullDescription)}
-              className="text-sm font-semibold text-gray-900 mt-2"
+              className="text-sm font-semibold text-gray-900 dark:text-white mt-2"
             >
               {showFullDescription ? 'Show less' : 'Show more'}
             </button>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Rate this content</h3>
+            <StarRating filmId={film.id} size="lg" />
           </div>
 
           <div className="mb-6">

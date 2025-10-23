@@ -28,6 +28,10 @@ import { AccountLayout } from "./pages/account/AccountLayout";
 import { Profile } from "./pages/account/Profile";
 import { WatchHistory } from "./pages/account/WatchHistory";
 import { Watchlist } from "./pages/account/Watchlist";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
+import { Terms } from "./pages/Terms";
+import { Privacy } from "./pages/Privacy";
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,6 +42,8 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             <Route path="/admin" element={
               <ProtectedRoute requireAdmin>
@@ -78,6 +84,8 @@ export default function App() {
                     <Route path="/content/:type" element={<ContentTypePage />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/watch/:id" element={<WatchPage />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/privacy" element={<Privacy />} />
                   </Routes>
                 </div>
                 <Footer />
