@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
-import { Film, Check, X, Home } from 'lucide-react';
+import { Film, Check, X, Home, Image, Trash2 } from 'lucide-react';
 
 export function AddFilm() {
   const navigate = useNavigate();
+  const posterInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     title: '',
     logline: '',
@@ -21,11 +24,11 @@ export function AddFilm() {
     studio_label: '',
     tags: '',
     video_url: '',
-    poster_url: '',
-    thumbnail_url: '',
     status: 'published',
   });
 
+  const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -42,12 +45,91 @@ export function AddFilm() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handlePosterSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10485760) {
+        setError('Poster image must be less than 10MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+      setPosterFile(file);
+      setError(null);
+    }
+  };
+
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10485760) {
+        setError('Thumbnail image must be less than 10MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+      setThumbnailFile(file);
+      setError(null);
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
+      if (!posterFile) {
+        setError('Please select a poster image');
+        setLoading(false);
+        return;
+      }
+
+      const posterExt = posterFile.name.split('.').pop();
+      const posterFileName = `films/${Date.now()}-poster.${posterExt}`;
+
+      const { error: posterUploadError } = await supabase.storage
+        .from('thumbnails')
+        .upload(posterFileName, posterFile);
+
+      if (posterUploadError) throw posterUploadError;
+
+      const { data: { publicUrl: posterUrl } } = supabase.storage
+        .from('thumbnails')
+        .getPublicUrl(posterFileName);
+
+      let thumbnailPath = null;
+      let thumbnailUrl = posterUrl;
+
+      if (thumbnailFile) {
+        const thumbExt = thumbnailFile.name.split('.').pop();
+        const thumbFileName = `films/${Date.now()}-thumb.${thumbExt}`;
+
+        const { error: thumbUploadError } = await supabase.storage
+          .from('thumbnails')
+          .upload(thumbFileName, thumbnailFile);
+
+        if (!thumbUploadError) {
+          thumbnailPath = thumbFileName;
+          const { data: { publicUrl } } = supabase.storage
+            .from('thumbnails')
+            .getPublicUrl(thumbFileName);
+          thumbnailUrl = publicUrl;
+        }
+      }
+
       const filmData = {
         id: `film-${Date.now()}`,
         title: formData.title,
@@ -65,8 +147,9 @@ export function AddFilm() {
         studio_label: formData.studio_label,
         tags: formData.tags,
         video_url: formData.video_url,
-        poster_url: formData.poster_url,
-        thumbnail_url: formData.thumbnail_url || formData.poster_url,
+        poster_url: posterUrl,
+        poster_path: posterFileName,
+        thumbnail_url: thumbnailUrl,
         status: formData.status,
         views: 0,
         created_at: new Date().toISOString(),
@@ -151,6 +234,7 @@ export function AddFilm() {
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder="Enter film title"
+              disabled={loading}
             />
           </div>
 
@@ -167,6 +251,7 @@ export function AddFilm() {
               maxLength={150}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder="One-line summary (max 150 characters)"
+              disabled={loading}
             />
             <p className="text-xs text-gray-500 mt-1">{formData.logline.length}/150</p>
           </div>
@@ -182,6 +267,7 @@ export function AddFilm() {
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder="Detailed description"
+              disabled={loading}
             />
           </div>
 
@@ -195,6 +281,7 @@ export function AddFilm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              disabled={loading}
             >
               <option value="">Select genre</option>
               {genres.map(genre => (
@@ -213,6 +300,7 @@ export function AddFilm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              disabled={loading}
             >
               <option value="">Select rating</option>
               {ratings.map(rating => (
@@ -234,6 +322,7 @@ export function AddFilm() {
               min="1900"
               max={new Date().getFullYear() + 5}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              disabled={loading}
             />
           </div>
 
@@ -249,6 +338,7 @@ export function AddFilm() {
               required
               min="1"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              disabled={loading}
             />
           </div>
 
@@ -263,6 +353,7 @@ export function AddFilm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              disabled={loading}
             />
           </div>
 
@@ -277,6 +368,7 @@ export function AddFilm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              disabled={loading}
             />
           </div>
 
@@ -291,6 +383,7 @@ export function AddFilm() {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder="Comma-separated"
+              disabled={loading}
             />
           </div>
 
@@ -304,6 +397,7 @@ export function AddFilm() {
               value={formData.director}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              disabled={loading}
             />
           </div>
 
@@ -318,6 +412,7 @@ export function AddFilm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              disabled={loading}
             />
           </div>
 
@@ -332,6 +427,7 @@ export function AddFilm() {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder="Comma-separated cast members"
+              disabled={loading}
             />
           </div>
 
@@ -346,6 +442,7 @@ export function AddFilm() {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder="Comma-separated tags"
+              disabled={loading}
             />
           </div>
 
@@ -360,36 +457,101 @@ export function AddFilm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="https://example.com/video.mp4"
+              placeholder="https://example.com/video.mp4 or use Upload tab to upload video"
+              disabled={loading}
             />
           </div>
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Poster URL <span className="text-red-500">*</span>
+              <Image className="inline w-4 h-4 mr-1" />
+              Poster Image <span className="text-red-500">*</span>
             </label>
+
+            {!posterFile ? (
+              <button
+                type="button"
+                onClick={() => posterInputRef.current?.click()}
+                className="w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors text-gray-600"
+                disabled={loading}
+              >
+                <div className="flex flex-col items-center">
+                  <Image className="w-8 h-8 mb-2" />
+                  <span className="text-sm font-medium">Click to select poster image</span>
+                  <span className="text-xs mt-1">JPG, PNG, WebP (max 10MB)</span>
+                </div>
+              </button>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Image className="w-6 h-6 text-red-600" />
+                  <div>
+                    <p className="text-gray-900 font-medium">{posterFile.name}</p>
+                    <p className="text-sm text-gray-600">{formatFileSize(posterFile.size)}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPosterFile(null)}
+                  className="text-red-600 hover:text-red-700 transition-colors"
+                  disabled={loading}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            )}
             <input
-              type="url"
-              name="poster_url"
-              value={formData.poster_url}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="https://example.com/poster.jpg"
+              ref={posterInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handlePosterSelect}
+              className="hidden"
             />
           </div>
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Thumbnail URL
+              <Image className="inline w-4 h-4 mr-1" />
+              Thumbnail Image (Optional)
             </label>
+
+            {!thumbnailFile ? (
+              <button
+                type="button"
+                onClick={() => thumbnailInputRef.current?.click()}
+                className="w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors text-gray-600"
+                disabled={loading}
+              >
+                <div className="flex flex-col items-center">
+                  <Image className="w-6 h-6 mb-2" />
+                  <span className="text-sm">Click to select thumbnail (uses poster if empty)</span>
+                </div>
+              </button>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Image className="w-6 h-6 text-red-600" />
+                  <div>
+                    <p className="text-gray-900 font-medium">{thumbnailFile.name}</p>
+                    <p className="text-sm text-gray-600">{formatFileSize(thumbnailFile.size)}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setThumbnailFile(null)}
+                  className="text-red-600 hover:text-red-700 transition-colors"
+                  disabled={loading}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            )}
             <input
-              type="url"
-              name="thumbnail_url"
-              value={formData.thumbnail_url}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="https://example.com/thumbnail.jpg (optional, uses poster if empty)"
+              ref={thumbnailInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleThumbnailSelect}
+              className="hidden"
             />
           </div>
 
@@ -403,6 +565,7 @@ export function AddFilm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              disabled={loading}
             >
               <option value="published">Published</option>
               <option value="draft">Draft</option>
@@ -415,12 +578,13 @@ export function AddFilm() {
             type="button"
             onClick={() => navigate('/admin/films')}
             className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium"
+            disabled={loading}
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !posterFile}
             className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
