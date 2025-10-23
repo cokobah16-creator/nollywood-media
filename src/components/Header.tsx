@@ -15,7 +15,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,9 +83,13 @@ export function Header({ onMenuClick }: HeaderProps) {
                     <Video className="w-6 h-6 text-gray-700" />
                   </Link>
                 )}
-                <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <Link
+                  to="/account/notifications"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  title="Notifications"
+                >
                   <Bell className="w-6 h-6 text-gray-700" />
-                </button>
+                </Link>
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
@@ -126,8 +130,8 @@ export function Header({ onMenuClick }: HeaderProps) {
                       <div className="border-t border-gray-200 my-2"></div>
                       <button
                         onClick={async () => {
-                          await useAuth.getState().signOut();
                           setShowUserMenu(false);
+                          await signOut();
                           navigate('/');
                         }}
                         className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"

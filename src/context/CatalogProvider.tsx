@@ -24,7 +24,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       const { data, error: dbError } = await supabase
         .from('films')
         .select('*')
-        .eq('status', 'published')
+        .in('status', ['published', 'unlisted'])
         .order('created_at', { ascending: false });
 
       if (dbError) throw dbError;
