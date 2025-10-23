@@ -4,13 +4,13 @@
 
 ### 1. bitrus@gadzama.com
 - **Status**: ✅ Active Admin
-- **Password**: 000000 (update via Supabase Authentication dashboard)
+- **Password**: admin00 (update via Supabase Authentication dashboard)
 - **Role**: Admin
 - **Setup**: Completed via database
 
 ### 2. admin@admin.com
 - **Status**: ⏳ Needs to be created
-- **Password**: 000000
+- **Password**: admin00
 - **Role**: Admin
 
 ## To Create admin@admin.com Account
@@ -19,7 +19,7 @@
 2. Click "Sign Up" in the header
 3. Enter:
    - Email: `admin@admin.com`
-   - Password: `000000`
+   - Password: `admin00`
 4. Click "Create Account"
 5. The account will be created (email verification may be required depending on Supabase settings)
 6. Once created, run this SQL in Supabase to make it an admin:

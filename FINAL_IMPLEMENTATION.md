@@ -91,11 +91,11 @@ Complete streaming platform with comments, ratings, and admin content management
 **Admin Accounts:**
 1. **bitrus@gadzama.com**
    - Status: ✅ Active
-   - Password: 000000
+   - Password: admin00
    - Role: Admin
-   
+
 2. **admin@admin.com**
-   - Password: 000000
+   - Password: admin00
    - Instructions provided for signup
    - Auto-redirect to /admin on login
 
@@ -105,7 +105,7 @@ For bitrus@gadzama.com, update password in Supabase:
 2. Navigate to Authentication → Users
 3. Find bitrus@gadzama.com
 4. Click "..." menu → Reset Password
-5. Set new password to: 000000
+5. Set new password to: admin00
 
 ### 6. Database Structure ✅
 

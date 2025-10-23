@@ -51,7 +51,7 @@ Separate admin login portal with comprehensive footer navigation for NaijaMation
 **For Admins:**
 1. Scroll to footer on any page
 2. Click "Admin Portal" link
-3. Enter credentials (email/password: 000000)
+3. Enter credentials (password: admin00)
 4. Auto-redirected to `/admin`
 
 **For Users:**
