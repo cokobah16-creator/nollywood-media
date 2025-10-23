@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 interface AuthModalProps {
@@ -15,8 +16,23 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
+
+  const checkIsAdmin = async (userId: string): Promise<boolean> => {
+    try {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      return data?.role === 'admin' || data?.role === 'super_admin';
+    } catch {
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,11 +42,15 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
 
     try {
       if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+
+        if (data.user && await checkIsAdmin(data.user.id)) {
+          navigate('/admin');
+        }
         onClose();
       } else if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({

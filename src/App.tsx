@@ -17,6 +17,10 @@ import { FilmEditor } from "./pages/admin/FilmEditor";
 import { AdminUsers } from "./pages/admin/Users";
 import { AdminAnalytics } from "./pages/admin/Analytics";
 import { AdminSettings } from "./pages/admin/Settings";
+import { AccountLayout } from "./pages/account/AccountLayout";
+import { Profile } from "./pages/account/Profile";
+import { WatchHistory } from "./pages/account/WatchHistory";
+import { Watchlist } from "./pages/account/Watchlist";
 
 export default function App() {
   return (
@@ -35,6 +39,16 @@ export default function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="settings" element={<AdminSettings />} />
+            </Route>
+
+            <Route path="/account" element={
+              <ProtectedRoute>
+                <AccountLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="profile" element={<Profile />} />
+              <Route path="history" element={<WatchHistory />} />
+              <Route path="watchlist" element={<Watchlist />} />
             </Route>
 
             <Route path="*" element={

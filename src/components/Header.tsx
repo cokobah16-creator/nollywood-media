@@ -144,6 +144,14 @@ export function Header() {
                       <p className="text-sm font-medium text-white truncate">{user.email}</p>
                     </div>
                     <div className="p-2">
+                      <Link
+                        to="/account/profile"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center space-x-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>My Account</span>
+                      </Link>
                       {isAdmin && (
                         <Link
                           to="/admin"
