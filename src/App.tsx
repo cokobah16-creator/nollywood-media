@@ -39,7 +39,16 @@ import { Notifications } from "./pages/account/Notifications";
 import { Subscription } from "./pages/account/Subscription";
 import { StudioLayout } from "./pages/studio/StudioLayout";
 import { StudioDashboard } from "./pages/studio/Dashboard";
+import { StudioAnalytics } from "./pages/studio/Analytics";
+import { StudioContent } from "./pages/studio/Content";
+import { StudioSubscribers } from "./pages/studio/Subscribers";
+import { StudioComments } from "./pages/studio/Comments";
+import { StudioEarn } from "./pages/studio/Earn";
 import { AddFilm } from "./pages/admin/AddFilm";
+import AboutUs from "./pages/AboutUs";
+import Careers from "./pages/Careers";
+import Contact from "./pages/Contact";
+import HelpCenter from "./pages/HelpCenter";
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -77,7 +86,17 @@ export default function App() {
               </ProtectedRoute>
             }>
               <Route index element={<StudioDashboard />} />
+              <Route path="analytics" element={<StudioAnalytics />} />
+              <Route path="content" element={<StudioContent />} />
+              <Route path="subscribers" element={<StudioSubscribers />} />
+              <Route path="comments" element={<StudioComments />} />
+              <Route path="earn" element={<StudioEarn />} />
             </Route>
+
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/help" element={<HelpCenter />} />
 
             <Route path="/account" element={
               <ProtectedRoute>
