@@ -47,7 +47,7 @@ export function Header() {
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-2">
               <Film className="w-8 h-8 text-red-600" />
-              <span className="text-2xl font-bold text-white tracking-tight">Naija</span>
+              <span className="text-2xl font-bold text-white tracking-tight">NaijaMation</span>
             </Link>
 
             <nav className="hidden md:flex items-center space-x-6">

@@ -21,6 +21,7 @@ interface FilmData {
   studio_label: string;
   tags: string;
   content_type: string;
+  video_url: string;
 }
 
 export function FilmEditor() {
@@ -46,6 +47,7 @@ export function FilmEditor() {
     studio_label: '',
     tags: '',
     content_type: 'film',
+    video_url: '',
   });
 
   const [loading, setLoading] = useState(!isNew);
@@ -182,8 +184,28 @@ export function FilmEditor() {
                 name="poster_url"
                 value={formData.poster_url}
                 onChange={handleChange}
+                placeholder="https://example.com/poster.jpg"
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/20"
               />
+            </div>
+
+            <div className="md:col-span-2">
+              <label htmlFor="video_url" className="block text-sm font-medium text-slate-300 mb-2">
+                Video URL (MP4) *
+              </label>
+              <input
+                type="url"
+                id="video_url"
+                name="video_url"
+                value={formData.video_url}
+                onChange={handleChange}
+                required
+                placeholder="https://example.com/video.mp4"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/20"
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                Direct link to MP4 video file. Supports standard MP4 format.
+              </p>
             </div>
 
             <div className="md:col-span-2">
