@@ -13,11 +13,9 @@ interface StreamData {
 
 export default function WatchPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { films, filter } = useCatalog();
   const [streamData, setStreamData] = useState<StreamData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const film = films.find((f) => f.id === id);
 
@@ -85,11 +83,11 @@ fetch("/streams.sample.json")
     );
   }
 
-  if (error || !streamData) {
+  if (!streamData) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">{error || "Stream not available"}</h1>
+          <h1 className="text-2xl font-bold">Stream not available</h1>
           <p className="mt-2 text-slate-400">This title is not available for streaming yet.</p>
           <Link
             to="/"

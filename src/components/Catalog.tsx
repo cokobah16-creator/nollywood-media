@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Search, X, Filter } from "lucide-react";
 import { Film } from "../lib/catalog";
 import { useCatalog } from "../context/CatalogProvider";
