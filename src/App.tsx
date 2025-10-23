@@ -77,6 +77,7 @@ export default function App() {
                     <Route path="/watch/:id" element={<WatchPage />} />
                   </Routes>
                 </div>
+                <Footer />
               </div>
             } />
           </Routes>
