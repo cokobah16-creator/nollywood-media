@@ -1,27 +1,58 @@
-import { useState, useEffect } from 'react';
-import { User, Mail, Calendar, Save } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { Camera, Save, Mail, MapPin, Phone, Calendar, Globe, MessageSquare, Heart } from 'lucide-react';
 
 interface UserProfile {
   display_name: string;
   avatar_url: string;
   bio: string;
+  city: string;
+  country: string;
+  date_of_birth: string;
+  phone_number: string;
+  favorite_genres: string[];
+  social_links: {
+    twitter?: string;
+    instagram?: string;
+    facebook?: string;
+  };
+}
+
+interface UserStats {
+  watchlistCount: number;
+  historyCount: number;
+  commentsCount: number;
+  likesGiven: number;
 }
 
 export function Profile() {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState<UserStats>({
+    watchlistCount: 0,
+    historyCount: 0,
+    commentsCount: 0,
+    likesGiven: 0,
+  });
   const [profile, setProfile] = useState<UserProfile>({
     display_name: '',
     avatar_url: '',
     bio: '',
+    city: '',
+    country: '',
+    date_of_birth: '',
+    phone_number: '',
+    favorite_genres: [],
+    social_links: {},
   });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const genres = ['Action', 'Comedy', 'Drama', 'Romance', 'Thriller', 'Horror', 'Sci-Fi', 'Fantasy', 'Documentary', 'Anime'];
 
   useEffect(() => {
     loadProfile();
+    loadStats();
   }, [user]);
 
   const loadProfile = async () => {
@@ -41,6 +72,12 @@ export function Profile() {
           display_name: data.display_name || '',
           avatar_url: data.avatar_url || '',
           bio: data.bio || '',
+          city: data.city || '',
+          country: data.country || '',
+          date_of_birth: data.date_of_birth || '',
+          phone_number: data.phone_number || '',
+          favorite_genres: data.favorite_genres || [],
+          social_links: data.social_links || {},
         });
       }
     } catch (error) {
@@ -50,161 +87,263 @@ export function Profile() {
     }
   };
 
+  const loadStats = async () => {
+    if (!user) return;
+
+    try {
+      const [watchlistRes, historyRes, commentsRes, likesRes] = await Promise.all([
+        supabase.from('user_watchlist').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('user_watch_history').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('film_comments').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('comment_likes').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+      ]);
+
+      setStats({
+        watchlistCount: watchlistRes.count || 0,
+        historyCount: historyRes.count || 0,
+        commentsCount: commentsRes.count || 0,
+        likesGiven: likesRes.count || 0,
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     setSaving(true);
-    setMessage(null);
-
     try {
       const { error } = await supabase
         .from('user_profiles')
         .upsert({
           user_id: user.id,
           ...profile,
+          updated_at: new Date().toISOString(),
         });
 
       if (error) throw error;
-
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      alert('Profile updated successfully!');
     } catch (error: any) {
       console.error('Error saving profile:', error);
-      setMessage({ type: 'error', text: error.message || 'Failed to save profile' });
+      alert('Failed to save profile: ' + error.message);
     } finally {
       setSaving(false);
     }
   };
 
+  const toggleGenre = (genre: string) => {
+    setProfile({
+      ...profile,
+      favorite_genres: profile.favorite_genres.includes(genre)
+        ? profile.favorite_genres.filter(g => g !== genre)
+        : [...profile.favorite_genres, genre]
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-red-600 mx-auto"></div>
-          <p className="text-slate-400">Loading profile...</p>
-        </div>
+        <div className="text-gray-600">Loading profile...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white">Profile</h1>
-        <p className="mt-2 text-slate-400">Manage your personal information</p>
-      </div>
-
-      {message && (
-        <div
-          className={`rounded-lg border p-4 ${
-            message.type === 'success'
-              ? 'border-green-500/20 bg-green-500/10 text-green-400'
-              : 'border-red-500/20 bg-red-500/10 text-red-400'
-          }`}
-        >
-          {message.text}
+    <div className="max-w-4xl">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="p-6 border-b border-gray-200">
+          <h1 className="text-2xl font-semibold text-gray-900">My Profile</h1>
+          <p className="text-sm text-gray-600 mt-1">Manage your account information and preferences</p>
         </div>
-      )}
 
-      <form onSubmit={handleSave} className="space-y-6 rounded-lg border border-slate-800 bg-slate-900 p-6">
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              <Mail className="inline h-4 w-4 mr-2" />
-              Email (cannot be changed)
-            </label>
-            <input
-              type="email"
-              value={user?.email || ''}
-              disabled
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-slate-400 cursor-not-allowed"
-            />
+        <div className="p-6">
+          <div className="grid md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-lg p-4 border border-red-100">
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <MessageSquare className="w-5 h-5 text-red-600" />
+                  <p className="text-2xl font-bold text-red-600">{stats.watchlistCount}</p>
+                </div>
+                <p className="text-xs text-gray-600">Watchlist</p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-100">
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <Globe className="w-5 h-5 text-blue-600" />
+                  <p className="text-2xl font-bold text-blue-600">{stats.historyCount}</p>
+                </div>
+                <p className="text-xs text-gray-600">Videos Watched</p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100">
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <MessageSquare className="w-5 h-5 text-green-600" />
+                  <p className="text-2xl font-bold text-green-600">{stats.commentsCount}</p>
+                </div>
+                <p className="text-xs text-gray-600">Comments</p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <Heart className="w-5 h-5 text-purple-600" />
+                  <p className="text-2xl font-bold text-purple-600">{stats.likesGiven}</p>
+                </div>
+                <p className="text-xs text-gray-600">Likes Given</p>
+              </div>
+            </div>
           </div>
 
-          <div className="md:col-span-2">
-            <label htmlFor="display_name" className="block text-sm font-medium text-slate-300 mb-2">
-              <User className="inline h-4 w-4 mr-2" />
-              Display Name
-            </label>
-            <input
-              type="text"
-              id="display_name"
-              value={profile.display_name}
-              onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
-              placeholder="Your public display name"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-400 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/20"
-            />
-          </div>
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="flex items-start gap-6">
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 border-4 border-white shadow-lg">
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-red-600 text-white text-4xl font-bold">
+                      {profile.display_name.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="absolute bottom-0 right-0 p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+              </div>
 
-          <div className="md:col-span-2">
-            <label htmlFor="avatar_url" className="block text-sm font-medium text-slate-300 mb-2">
-              Avatar URL
-            </label>
-            <input
-              type="url"
-              id="avatar_url"
-              value={profile.avatar_url}
-              onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })}
-              placeholder="https://example.com/avatar.jpg"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-400 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/20"
-            />
-            {profile.avatar_url && (
-              <div className="mt-3">
-                <img
-                  src={profile.avatar_url}
-                  alt="Avatar preview"
-                  className="h-20 w-20 rounded-full object-cover border-2 border-slate-700"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+                <input
+                  type="text"
+                  value={profile.display_name}
+                  onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="Your display name"
+                />
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-600">
+                    <Mail className="w-4 h-4" />
+                    <span>{user?.email}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+              <textarea
+                value={profile.bio}
+                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                placeholder="Tell us about yourself..."
+              />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <MapPin className="w-4 h-4 inline mr-1" />
+                  City
+                </label>
+                <input
+                  type="text"
+                  value={profile.city}
+                  onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="Lagos"
                 />
               </div>
-            )}
-          </div>
 
-          <div className="md:col-span-2">
-            <label htmlFor="bio" className="block text-sm font-medium text-slate-300 mb-2">
-              Bio
-            </label>
-            <textarea
-              id="bio"
-              value={profile.bio}
-              onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-              placeholder="Tell us about yourself..."
-              rows={4}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-400 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/20"
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Globe className="w-4 h-4 inline mr-1" />
+                  Country
+                </label>
+                <input
+                  type="text"
+                  value={profile.country}
+                  onChange={(e) => setProfile({ ...profile, country: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="Nigeria"
+                />
+              </div>
+            </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              <Calendar className="inline h-4 w-4 mr-2" />
-              Member Since
-            </label>
-            <input
-              type="text"
-              value={user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              }) : ''}
-              disabled
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-slate-400 cursor-not-allowed"
-            />
-          </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Calendar className="w-4 h-4 inline mr-1" />
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={profile.date_of_birth}
+                  onChange={(e) => setProfile({ ...profile, date_of_birth: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Phone className="w-4 h-4 inline mr-1" />
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={profile.phone_number}
+                  onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="+234 XXX XXX XXXX"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Favorite Genres</label>
+              <div className="flex flex-wrap gap-2">
+                {genres.map((genre) => (
+                  <button
+                    key={genre}
+                    type="button"
+                    onClick={() => toggleGenre(genre)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      profile.favorite_genres.includes(genre)
+                        ? 'bg-red-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-gray-200">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-5 h-5" />
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
         </div>
-
-        <div className="flex justify-end pt-4 border-t border-slate-800">
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex items-center space-x-2 rounded-lg bg-red-600 px-6 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
-          >
-            <Save className="h-4 w-4" />
-            <span>{saving ? 'Saving...' : 'Save Changes'}</span>
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }
