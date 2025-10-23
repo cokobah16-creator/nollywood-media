@@ -1,4 +1,4 @@
-# Nollywood Streaming Platform
+# Naija - Nollywood Streaming Platform
 
 A modern, full-featured streaming platform for Nollywood films with comprehensive admin CMS, user authentication, and content management.
 

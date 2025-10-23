@@ -1,5 +1,6 @@
-import { Play, Plus, Star } from 'lucide-react';
+import { Play, Star } from 'lucide-react';
 import { Movie, TVShow } from '../types';
+import { WatchlistButton } from './WatchlistButton';
 
 interface ContentCardProps {
   content: Movie | TVShow;
@@ -17,6 +18,10 @@ export function ContentCard({ content, type, onPlayClick }: ContentCardProps) {
           className="w-full h-full object-cover transition-transform group-hover:scale-110"
         />
 
+        <div className="absolute top-2 right-2 z-10">
+          <WatchlistButton filmId={content.id} size="md" />
+        </div>
+
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
         <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -26,9 +31,6 @@ export function ContentCard({ content, type, onPlayClick }: ContentCardProps) {
               className="p-2 bg-white text-slate-950 rounded-full hover:bg-slate-200 transition-colors"
             >
               <Play className="w-4 h-4 fill-current" />
-            </button>
-            <button className="p-2 bg-slate-800/90 text-white rounded-full hover:bg-slate-700 transition-colors backdrop-blur-sm">
-              <Plus className="w-4 h-4" />
             </button>
           </div>
         </div>

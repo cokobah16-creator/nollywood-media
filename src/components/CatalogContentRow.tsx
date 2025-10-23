@@ -1,5 +1,6 @@
 import { Film, FilterSpec, SortKey } from "../lib/catalog";
 import { useCatalog } from "../context/CatalogProvider";
+import { WatchlistButton } from "./WatchlistButton";
 
 interface CatalogContentRowProps {
   title: string;
@@ -44,6 +45,9 @@ export function CatalogContentRow({
             style={{ width: "200px" }}
           >
             <div className="relative aspect-[2/3] overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900">
+              <div className="absolute top-2 right-2 z-10">
+                <WatchlistButton filmId={film.id} size="sm" />
+              </div>
               {film.poster_url ? (
                 <>
                   <img
