@@ -60,7 +60,7 @@ export function AddFilm() {
         setting_region: formData.country,
         languages_audio: formData.languages_audio,
         languages_subtitles: formData.languages_subtitles || formData.languages_audio,
-        cast: formData.cast,
+        cast_members: formData.cast,
         director: formData.director,
         studio_label: formData.studio_label,
         tags: formData.tags,
