@@ -49,7 +49,7 @@ export function StudioComments() {
       const filmIds = uploads.map(u => u.id);
 
       let query = supabase
-        .from('comments')
+        .from('film_comments')
         .select(`
           *,
           user_profile:user_profiles(display_name)
@@ -66,10 +66,15 @@ export function StudioComments() {
       const { data, error } = await query;
       if (error) throw error;
 
+      const uploadsMap = uploads.reduce((acc, u) => {
+        acc[u.id] = u.title;
+        return acc;
+      }, {} as Record<string, string>);
+
       const commentsWithFilm = (data || []).map(c => ({
         ...c,
         likes_count: 0,
-        film: { title: 'Video Title' }
+        film: { title: uploadsMap[c.film_id] || 'Video' }
       }));
 
       setComments(commentsWithFilm);
@@ -85,7 +90,7 @@ export function StudioComments() {
 
     try {
       const { error } = await supabase
-        .from('comments')
+        .from('film_comments')
         .delete()
         .eq('id', commentId);
 

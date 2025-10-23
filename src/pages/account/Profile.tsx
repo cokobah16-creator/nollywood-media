@@ -227,7 +227,7 @@ export function Profile() {
                   type="text"
                   value={profile.display_name}
                   onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
                   placeholder="Your display name"
                 />
 
@@ -247,7 +247,7 @@ export function Profile() {
                 value={profile.bio}
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-gray-900"
                 placeholder="Tell us about yourself..."
               />
             </div>
@@ -262,7 +262,7 @@ export function Profile() {
                   type="text"
                   value={profile.city}
                   onChange={(e) => setProfile({ ...profile, city: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
                   placeholder="Lagos"
                 />
               </div>
@@ -276,7 +276,7 @@ export function Profile() {
                   type="text"
                   value={profile.country}
                   onChange={(e) => setProfile({ ...profile, country: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
                   placeholder="Nigeria"
                 />
               </div>
@@ -292,7 +292,7 @@ export function Profile() {
                   type="date"
                   value={profile.date_of_birth}
                   onChange={(e) => setProfile({ ...profile, date_of_birth: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
                 />
               </div>
 
@@ -305,7 +305,7 @@ export function Profile() {
                   type="tel"
                   value={profile.phone_number}
                   onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
                   placeholder="+234 XXX XXX XXXX"
                 />
               </div>

@@ -44,6 +44,7 @@ import { StudioContent } from "./pages/studio/Content";
 import { StudioSubscribers } from "./pages/studio/Subscribers";
 import { StudioComments } from "./pages/studio/Comments";
 import { StudioEarn } from "./pages/studio/Earn";
+import { StudioSettings } from "./pages/studio/Settings";
 import { AddFilm } from "./pages/admin/AddFilm";
 import AboutUs from "./pages/AboutUs";
 import Careers from "./pages/Careers";
@@ -94,6 +95,7 @@ export default function App() {
               <Route path="subscribers" element={<StudioSubscribers />} />
               <Route path="comments" element={<StudioComments />} />
               <Route path="earn" element={<StudioEarn />} />
+              <Route path="settings" element={<StudioSettings />} />
             </Route>
 
             <Route path="/about" element={<AboutUs />} />
