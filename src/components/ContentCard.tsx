@@ -1,6 +1,7 @@
 import { Clock, Eye, Play } from 'lucide-react';
 import { Movie, TVShow } from '../types';
 import { WatchlistButton } from './WatchlistButton';
+import { LazyImage } from './LazyImage';
 
 interface ContentCardProps {
   content: Movie | TVShow;
@@ -12,7 +13,7 @@ export function ContentCard({ content, type, onPlayClick }: ContentCardProps) {
   return (
     <div className="group cursor-pointer" onClick={onPlayClick}>
       <div className="relative aspect-video bg-gray-200 rounded-xl overflow-hidden mb-3 shadow-sm hover:shadow-md transition-all duration-300">
-        <img
+        <LazyImage
           src={content.poster_url}
           alt={content.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCatalog } from "../context/CatalogProvider";
 import { Film } from "../lib/catalog";
@@ -22,40 +22,43 @@ export default function Home() {
     }
   }, [filmCatalog]);
 
-  const categories = [
-    {
-      title: 'Trending Now',
-      filter: (f: Film) => f.release_year >= new Date().getFullYear() - 1
-    },
-    {
-      title: 'New Releases',
-      filter: (f: Film) => f.release_year === new Date().getFullYear()
-    },
-    {
-      title: 'Nigerian Movies',
-      filter: (f: Film) => f.setting_region?.toLowerCase().includes('nigeria')
-    },
-    {
-      title: 'All Movies',
-      filter: (f: Film) => true
-    },
-    {
-      title: 'Romance',
-      filter: (f: Film) => f.genre.includes('Romance')
-    },
-    {
-      title: 'Drama',
-      filter: (f: Film) => f.genre.includes('Drama')
-    },
-    {
-      title: 'Action & Thriller',
-      filter: (f: Film) => f.genre.includes('Action') || f.genre.includes('Thriller')
-    },
-    {
-      title: 'Comedy',
-      filter: (f: Film) => f.genre.includes('Comedy')
-    },
-  ];
+  const categories = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return [
+      {
+        title: 'Trending Now',
+        filter: (f: Film) => f.release_year >= currentYear - 1
+      },
+      {
+        title: 'New Releases',
+        filter: (f: Film) => f.release_year === currentYear
+      },
+      {
+        title: 'Nigerian Movies',
+        filter: (f: Film) => f.setting_region?.toLowerCase().includes('nigeria')
+      },
+      {
+        title: 'All Movies',
+        filter: (f: Film) => true
+      },
+      {
+        title: 'Romance',
+        filter: (f: Film) => f.genre.includes('Romance')
+      },
+      {
+        title: 'Drama',
+        filter: (f: Film) => f.genre.includes('Drama')
+      },
+      {
+        title: 'Action & Thriller',
+        filter: (f: Film) => f.genre.includes('Action') || f.genre.includes('Thriller')
+      },
+      {
+        title: 'Comedy',
+        filter: (f: Film) => f.genre.includes('Comedy')
+      },
+    ];
+  }, []);
 
   if (loading) {
     return (

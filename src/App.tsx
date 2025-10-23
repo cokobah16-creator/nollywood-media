@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { CatalogProvider } from "./context/CatalogProvider";
 import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -7,52 +7,62 @@ import { Sidebar } from "./components/Sidebar";
 import { Footer } from "./components/Footer";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Home from "./pages/Home";
-import GenrePage from "./pages/GenrePage";
-import RegionPage from "./pages/RegionPage";
-import SearchPage from "./pages/SearchPage";
-import WatchPage from "./pages/WatchPage";
-import ContentTypePage from "./pages/ContentTypePage";
-import Catalog from "./components/Catalog";
-import { AdminLogin } from "./pages/AdminLogin";
-import { AdminLayout } from "./pages/admin/AdminLayout";
-import { AdminDashboard } from "./pages/admin/Dashboard";
-import { AdminFilms } from "./pages/admin/Films";
-import { FilmEditor } from "./pages/admin/FilmEditor";
-import { AdminUsers } from "./pages/admin/Users";
-import { AdminAnalytics } from "./pages/admin/Analytics";
-import { AdminSettings } from "./pages/admin/Settings";
-import { AdminUpload } from "./pages/admin/Upload";
-import { AdminModeration } from "./pages/admin/Moderation";
-import { AdminCompliance } from "./pages/admin/Compliance";
-import { AccountLayout } from "./pages/account/AccountLayout";
-import { Profile } from "./pages/account/Profile";
-import { WatchHistory } from "./pages/account/WatchHistory";
-import { Watchlist } from "./pages/account/Watchlist";
-import { ForgotPassword } from "./pages/ForgotPassword";
-import { ResetPassword } from "./pages/ResetPassword";
-import { Terms } from "./pages/Terms";
-import { Privacy } from "./pages/Privacy";
-import { Upload } from "./pages/account/Upload";
-import { MyUploads } from "./pages/account/MyUploads";
-import { UserUploads } from "./pages/admin/UserUploads";
-import { Notifications } from "./pages/account/Notifications";
-import { Subscription } from "./pages/account/Subscription";
-import { StudioLayout } from "./pages/studio/StudioLayout";
-import { StudioDashboard } from "./pages/studio/Dashboard";
-import { StudioAnalytics } from "./pages/studio/Analytics";
-import { StudioContent } from "./pages/studio/Content";
-import { StudioSubscribers } from "./pages/studio/Subscribers";
-import { StudioComments } from "./pages/studio/Comments";
-import { StudioEarn } from "./pages/studio/Earn";
-import { StudioSettings } from "./pages/studio/Settings";
-import { AddFilm } from "./pages/admin/AddFilm";
-import AboutUs from "./pages/AboutUs";
-import Careers from "./pages/Careers";
-import Contact from "./pages/Contact";
-import HelpCenter from "./pages/HelpCenter";
-import Explore from "./pages/Explore";
-import Trending from "./pages/Trending";
-import ContinueWatching from "./pages/ContinueWatching";
+
+const GenrePage = lazy(() => import("./pages/GenrePage"));
+const RegionPage = lazy(() => import("./pages/RegionPage"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+const WatchPage = lazy(() => import("./pages/WatchPage"));
+const ContentTypePage = lazy(() => import("./pages/ContentTypePage"));
+const Catalog = lazy(() => import("./components/Catalog"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin").then(m => ({ default: m.AdminLogin })));
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard").then(m => ({ default: m.AdminDashboard })));
+const AdminFilms = lazy(() => import("./pages/admin/Films").then(m => ({ default: m.AdminFilms })));
+const FilmEditor = lazy(() => import("./pages/admin/FilmEditor").then(m => ({ default: m.FilmEditor })));
+const AdminUsers = lazy(() => import("./pages/admin/Users").then(m => ({ default: m.AdminUsers })));
+const AdminAnalytics = lazy(() => import("./pages/admin/Analytics").then(m => ({ default: m.AdminAnalytics })));
+const AdminSettings = lazy(() => import("./pages/admin/Settings").then(m => ({ default: m.AdminSettings })));
+const AdminUpload = lazy(() => import("./pages/admin/Upload").then(m => ({ default: m.AdminUpload })));
+const AdminModeration = lazy(() => import("./pages/admin/Moderation").then(m => ({ default: m.AdminModeration })));
+const AdminCompliance = lazy(() => import("./pages/admin/Compliance").then(m => ({ default: m.AdminCompliance })));
+const AccountLayout = lazy(() => import("./pages/account/AccountLayout").then(m => ({ default: m.AccountLayout })));
+const Profile = lazy(() => import("./pages/account/Profile").then(m => ({ default: m.Profile })));
+const WatchHistory = lazy(() => import("./pages/account/WatchHistory").then(m => ({ default: m.WatchHistory })));
+const Watchlist = lazy(() => import("./pages/account/Watchlist").then(m => ({ default: m.Watchlist })));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword").then(m => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import("./pages/ResetPassword").then(m => ({ default: m.ResetPassword })));
+const Terms = lazy(() => import("./pages/Terms").then(m => ({ default: m.Terms })));
+const Privacy = lazy(() => import("./pages/Privacy").then(m => ({ default: m.Privacy })));
+const Upload = lazy(() => import("./pages/account/Upload").then(m => ({ default: m.Upload })));
+const MyUploads = lazy(() => import("./pages/account/MyUploads").then(m => ({ default: m.MyUploads })));
+const UserUploads = lazy(() => import("./pages/admin/UserUploads").then(m => ({ default: m.UserUploads })));
+const Notifications = lazy(() => import("./pages/account/Notifications").then(m => ({ default: m.Notifications })));
+const Subscription = lazy(() => import("./pages/account/Subscription").then(m => ({ default: m.Subscription })));
+const StudioLayout = lazy(() => import("./pages/studio/StudioLayout").then(m => ({ default: m.StudioLayout })));
+const StudioDashboard = lazy(() => import("./pages/studio/Dashboard").then(m => ({ default: m.StudioDashboard })));
+const StudioAnalytics = lazy(() => import("./pages/studio/Analytics").then(m => ({ default: m.StudioAnalytics })));
+const StudioContent = lazy(() => import("./pages/studio/Content").then(m => ({ default: m.StudioContent })));
+const StudioSubscribers = lazy(() => import("./pages/studio/Subscribers").then(m => ({ default: m.StudioSubscribers })));
+const StudioComments = lazy(() => import("./pages/studio/Comments").then(m => ({ default: m.StudioComments })));
+const StudioEarn = lazy(() => import("./pages/studio/Earn").then(m => ({ default: m.StudioEarn })));
+const StudioSettings = lazy(() => import("./pages/studio/Settings").then(m => ({ default: m.StudioSettings })));
+const AddFilm = lazy(() => import("./pages/admin/AddFilm").then(m => ({ default: m.AddFilm })));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
+const Careers = lazy(() => import("./pages/Careers"));
+const Contact = lazy(() => import("./pages/Contact"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const Explore = lazy(() => import("./pages/Explore"));
+const Trending = lazy(() => import("./pages/Trending"));
+const ContinueWatching = lazy(() => import("./pages/ContinueWatching"));
+
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen bg-slate-950">
+    <div className="text-center">
+      <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mb-4"></div>
+      <p className="text-slate-400">Loading...</p>
+    </div>
+  </div>
+);
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,10 +71,11 @@ export default function App() {
     <AuthProvider>
       <CatalogProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
             <Route path="/admin" element={
               <ProtectedRoute requireAdmin>
@@ -144,7 +155,8 @@ export default function App() {
                 <Footer />
               </div>
             } />
-          </Routes>
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </CatalogProvider>
     </AuthProvider>
