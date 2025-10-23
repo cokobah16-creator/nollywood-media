@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
-import { Play, Clock, X } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Play, Clock, X, Home } from 'lucide-react';
 
 interface WatchProgress {
   id: string;
@@ -124,7 +124,16 @@ export default function ContinueWatching() {
     <div className="min-h-screen bg-black text-white">
       <div className="pt-20 pb-10 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Continue Watching</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold">Continue Watching</h1>
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Home</span>
+            </Link>
+          </div>
           <p className="text-gray-400">Pick up right where you left off</p>
         </div>
 

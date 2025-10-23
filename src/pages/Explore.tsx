@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { FilmRow } from '../components/FilmRow';
-import { Film } from 'lucide-react';
+import { Film, Home } from 'lucide-react';
 
 interface Film {
   id: string;
@@ -227,7 +228,16 @@ export default function Explore() {
     <div className="min-h-screen bg-black text-white">
       <div className="pt-20 pb-10">
         <div className="px-4 sm:px-6 lg:px-8 mb-8">
-          <h1 className="text-3xl font-bold mb-2">Explore</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold">Explore</h1>
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Home</span>
+            </Link>
+          </div>
           <p className="text-gray-400">
             {user ? 'Personalized recommendations just for you' : 'Discover amazing content'}
           </p>

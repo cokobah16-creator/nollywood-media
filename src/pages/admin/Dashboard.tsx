@@ -73,7 +73,7 @@ export function AdminDashboard() {
         supabase.from('user_uploads').select('id, status, created_at', { count: 'exact' }),
         supabase.from('playback_events').select('id', { count: 'exact' }),
         supabase.from('ratings').select('stars', { count: 'exact' }),
-        supabase.from('comments').select('id', { count: 'exact' }),
+        supabase.from('film_comments').select('id', { count: 'exact' }),
         supabase.from('subscriptions').select('id').eq('status', 'active'),
       ]);
 

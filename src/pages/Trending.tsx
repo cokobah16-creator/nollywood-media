@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { FilmRow } from '../components/FilmRow';
-import { TrendingUp, Flame, Clock, Eye } from 'lucide-react';
+import { TrendingUp, Flame, Clock, Eye, Home } from 'lucide-react';
 
 interface Film {
   id: string;
@@ -199,9 +200,18 @@ export default function Trending() {
     <div className="min-h-screen bg-black text-white">
       <div className="pt-20 pb-10">
         <div className="px-4 sm:px-6 lg:px-8 mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Flame className="h-8 w-8 text-red-600" />
-            <h1 className="text-3xl font-bold">Trending</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Flame className="h-8 w-8 text-red-600" />
+              <h1 className="text-3xl font-bold">Trending</h1>
+            </div>
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Home</span>
+            </Link>
           </div>
           <p className="text-gray-400">What's hot right now on NaijaMation</p>
         </div>

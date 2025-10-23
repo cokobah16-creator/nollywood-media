@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { User, Clock, Bookmark, Upload, Film, Settings, Bell, CreditCard } from 'lucide-react';
+import { User, Clock, Bookmark, Upload, Film, Settings, Bell, CreditCard, Home } from 'lucide-react';
 
 export function AccountLayout() {
   const location = useLocation();
@@ -24,13 +24,22 @@ export function AccountLayout() {
     <div className="min-h-screen bg-white dark:bg-gray-900 pt-14 lg:pl-60">
       <div className="px-4 sm:px-6 py-6">
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-red-600 rounded-lg">
-              <User className="h-6 w-6 text-white" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-600 rounded-lg">
+                <User className="h-6 w-6 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                My Account
+              </h1>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              My Account
-            </h1>
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Home</span>
+            </Link>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
             Manage your profile, content, and preferences
