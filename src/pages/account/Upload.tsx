@@ -172,7 +172,7 @@ export function Upload() {
 
       setUploadProgress(90);
 
-      const { error: dbError } = await supabase
+      const { data: uploadData, error: dbError } = await supabase
         .from('user_content_uploads')
         .insert({
           user_id: user.id,
@@ -189,9 +189,17 @@ export function Upload() {
           status: 'processing',
           moderation_status: 'pending',
           visibility: 'private',
-        });
+        })
+        .select();
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database insert error:', dbError);
+        throw new Error(`Failed to save upload: ${dbError.message}`);
+      }
+
+      if (!uploadData || uploadData.length === 0) {
+        throw new Error('Upload was not saved to database.');
+      }
 
       setUploadProgress(100);
       setSuccess(true);

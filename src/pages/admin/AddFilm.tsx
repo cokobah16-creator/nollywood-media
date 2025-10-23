@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { Film, Check, X, Home, Image, Trash2, FileVideo, Upload as UploadIcon } from 'lucide-react';
@@ -9,6 +9,8 @@ export function AddFilm() {
   const posterInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingRole, setCheckingRole] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     logline: '',
@@ -41,6 +43,33 @@ export function AddFilm() {
   ];
 
   const ratings = ['G', 'PG', 'PG-13', 'R', 'NC-17', 'NR'];
+
+  useEffect(() => {
+    checkAdminRole();
+  }, []);
+
+  async function checkAdminRole() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setCheckingRole(false);
+        return;
+      }
+
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['admin', 'super_admin'])
+        .maybeSingle();
+
+      setIsAdmin(!!roleData);
+      setCheckingRole(false);
+    } catch (error) {
+      console.error('Error checking admin role:', error);
+      setCheckingRole(false);
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -204,11 +233,19 @@ export function AddFilm() {
         created_at: new Date().toISOString(),
       };
 
-      const { error: insertError } = await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from('films')
-        .insert(filmData);
+        .insert(filmData)
+        .select();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Database insert error:', insertError);
+        throw new Error(`Failed to save film: ${insertError.message}. You may need admin permissions.`);
+      }
+
+      if (!insertData || insertData.length === 0) {
+        throw new Error('Film was not saved. Please check your admin permissions.');
+      }
 
       setUploadProgress(100);
       setSuccess(true);
@@ -259,6 +296,21 @@ export function AddFilm() {
           Back to Home
         </Link>
       </div>
+
+      {!checkingRole && !isAdmin && (
+        <div className="mb-6 rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-4">
+          <div className="flex items-start gap-3">
+            <X className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-yellow-900 mb-1">Admin Access Required</p>
+              <p className="text-sm text-yellow-700">
+                You need admin permissions to add films. Your uploads will fail without admin role.
+                Please contact an administrator to grant you access.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 flex items-start gap-3">
