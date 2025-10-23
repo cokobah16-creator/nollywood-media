@@ -68,6 +68,25 @@ export default function Home() {
     );
   }
 
+  if (!films || films.length === 0) {
+    return (
+      <div className="bg-white min-h-screen pt-14 lg:pl-60 flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">No Content Available</h2>
+          <p className="text-gray-600 mb-6">
+            There are no published films yet. Upload your first film to get started!
+          </p>
+          <button
+            onClick={() => navigate('/admin/films/new')}
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+          >
+            Upload Your First Film
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white min-h-screen pt-14 lg:pl-60">
       {featuredFilm && (

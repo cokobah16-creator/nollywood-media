@@ -2,6 +2,8 @@ export interface Film {
   id: string;
   title: string;
   poster_url?: string;
+  thumbnail_url?: string;
+  video_url?: string;
   logline: string;
   synopsis?: string;
   genre: string;
@@ -11,10 +13,12 @@ export interface Film {
   setting_region: string;
   languages_audio: string;
   languages_subtitles: string;
-  cast?: string;
+  cast_members?: string;
   director?: string;
   studio_label: string;
   tags?: string;
+  views?: number;
+  created_at?: string;
   poster_prompt?: string;
   thumbnail_prompt?: string;
   trailer_prompt?: string;
