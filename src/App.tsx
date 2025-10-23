@@ -35,6 +35,8 @@ import { Privacy } from "./pages/Privacy";
 import { Upload } from "./pages/account/Upload";
 import { MyUploads } from "./pages/account/MyUploads";
 import { UserUploads } from "./pages/admin/UserUploads";
+import { Notifications } from "./pages/account/Notifications";
+import { Subscription } from "./pages/account/Subscription";
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -75,6 +77,8 @@ export default function App() {
               <Route path="watchlist" element={<Watchlist />} />
               <Route path="upload" element={<Upload />} />
               <Route path="my-uploads" element={<MyUploads />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="subscription" element={<Subscription />} />
             </Route>
 
             <Route path="*" element={

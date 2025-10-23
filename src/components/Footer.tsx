@@ -16,6 +16,7 @@ export function Footer() {
       { label: 'Contact Us', path: '/contact' },
       { label: 'Terms of Service', path: '/terms' },
       { label: 'Privacy Policy', path: '/privacy' },
+      { label: 'Admin Login', path: '/admin/login' },
     ],
     Content: [
       { label: 'Movies', path: '/content/film' },
