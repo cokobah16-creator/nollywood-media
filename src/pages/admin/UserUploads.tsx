@@ -69,6 +69,10 @@ export function UserUploads() {
       return;
     }
 
+    if (action === 'approve' && !confirm('Are you sure you want to approve this upload? It will be published to the platform.')) {
+      return;
+    }
+
     setProcessing(true);
 
     try {

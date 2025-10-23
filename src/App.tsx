@@ -49,6 +49,9 @@ import AboutUs from "./pages/AboutUs";
 import Careers from "./pages/Careers";
 import Contact from "./pages/Contact";
 import HelpCenter from "./pages/HelpCenter";
+import Explore from "./pages/Explore";
+import Trending from "./pages/Trending";
+import ContinueWatching from "./pages/ContinueWatching";
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -97,6 +100,13 @@ export default function App() {
             <Route path="/careers" element={<Careers />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/help" element={<HelpCenter />} />
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/trending" element={<Trending />} />
+            <Route path="/continue-watching" element={
+              <ProtectedRoute>
+                <ContinueWatching />
+              </ProtectedRoute>
+            } />
 
             <Route path="/account" element={
               <ProtectedRoute>
