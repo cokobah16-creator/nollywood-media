@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Eye, Play } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Eye, Play, Maximize } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { EnhancedVideoPlayer } from "../components/EnhancedVideoPlayer";
@@ -51,13 +51,60 @@ export default function WatchPage() {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [theaterMode, setTheaterMode] = useState(false);
+  const [commentSort, setCommentSort] = useState<'newest' | 'popular'>('newest');
+  const [userLiked, setUserLiked] = useState(false);
+  const [userDisliked, setUserDisliked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [dislikeCount, setDislikeCount] = useState(0);
+  const [averageRating, setAverageRating] = useState<number | null>(null);
+  const [totalRatings, setTotalRatings] = useState(0);
 
   useEffect(() => {
     if (id) {
       loadFilmAndComments();
       loadRelatedFilms();
+      loadRatings();
+      loadLikeStatus();
     }
   }, [id, user]);
+
+  const loadRatings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('content_ratings')
+        .select('rating')
+        .eq('film_id', id);
+
+      if (!error && data && data.length > 0) {
+        const sum = data.reduce((acc, r) => acc + r.rating, 0);
+        setAverageRating(sum / data.length);
+        setTotalRatings(data.length);
+      }
+    } catch (error) {
+      console.error('Error loading ratings:', error);
+    }
+  };
+
+  const loadLikeStatus = async () => {
+    if (!user) return;
+
+    try {
+      const { data } = await supabase
+        .from('film_likes')
+        .select('like_type')
+        .eq('film_id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (data) {
+        setUserLiked(data.like_type === 'like');
+        setUserDisliked(data.like_type === 'dislike');
+      }
+    } catch (error) {
+      console.error('Error loading like status:', error);
+    }
+  };
 
   const loadFilmAndComments = async () => {
     try {
@@ -139,6 +186,41 @@ export default function WatchPage() {
     }
   };
 
+  const handleLike = async (type: 'like' | 'dislike') => {
+    if (!user) {
+      alert('Please sign in to rate this content');
+      return;
+    }
+
+    try {
+      const isCurrentlyLiked = type === 'like' ? userLiked : userDisliked;
+
+      if (isCurrentlyLiked) {
+        await supabase
+          .from('film_likes')
+          .delete()
+          .eq('film_id', id)
+          .eq('user_id', user.id);
+
+        setUserLiked(false);
+        setUserDisliked(false);
+      } else {
+        await supabase
+          .from('film_likes')
+          .upsert({
+            film_id: id,
+            user_id: user.id,
+            like_type: type,
+          }, { onConflict: 'film_id,user_id' });
+
+        setUserLiked(type === 'like');
+        setUserDisliked(type === 'dislike');
+      }
+    } catch (error) {
+      console.error('Error updating like:', error);
+    }
+  };
+
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -204,11 +286,18 @@ export default function WatchPage() {
     );
   }
 
+  const sortedComments = [...comments].sort((a, b) => {
+    if (commentSort === 'popular') {
+      return b.likes_count - a.likes_count;
+    }
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
   return (
-    <div className="bg-white dark:bg-gray-900 min-h-screen pt-14 lg:pl-60">
-      <div className="flex gap-6">
-        <div className="flex-1 max-w-6xl px-4 sm:px-6 py-6">
-          <div className="aspect-video bg-black rounded-xl overflow-hidden mb-4 relative">
+    <div className={`bg-white dark:bg-gray-900 min-h-screen pt-14 ${!theaterMode ? 'lg:pl-60' : ''}`}>
+      <div className={`flex gap-6 ${theaterMode ? 'max-w-full' : ''}`}>
+        <div className={`flex-1 px-4 sm:px-6 py-6 ${theaterMode ? 'max-w-full' : 'max-w-6xl'}`}>
+          <div className={`bg-black rounded-xl overflow-hidden mb-4 relative ${theaterMode ? 'h-screen' : 'aspect-video'}`}>
             {film.video_url ? (
               <EnhancedVideoPlayer
                 src={film.video_url}
@@ -233,34 +322,65 @@ export default function WatchPage() {
             )}
           </div>
 
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">{film.title}</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{film.title}</h1>
+            <button
+              onClick={() => setTheaterMode(!theaterMode)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-sm font-medium transition-colors text-gray-900 dark:text-white"
+              title={theaterMode ? "Exit Theater Mode" : "Theater Mode"}
+            >
+              <Maximize className="w-4 h-4" />
+              {!theaterMode && <span className="hidden sm:inline">Theater</span>}
+            </button>
+          </div>
 
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3 text-sm text-gray-600">
+            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
                 <span>{film.views?.toLocaleString() || '0'} views</span>
               </div>
               <span>•</span>
-              <span>{new Date().toLocaleDateString()}</span>
+              {averageRating && (
+                <>
+                  <div className="flex items-center gap-1">
+                    <span className="text-yellow-500">★</span>
+                    <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                    <span className="text-gray-400">({totalRatings})</span>
+                  </div>
+                  <span>•</span>
+                </>
+              )}
+              <span>{film.release_year}</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors">
-                <ThumbsUp className="w-5 h-5" />
+              <button
+                onClick={() => handleLike('like')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  userLiked
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-900 dark:text-white hover:text-blue-600'
+                }`}
+              >
+                <ThumbsUp className={`w-5 h-5 ${userLiked ? 'fill-current' : ''}`} />
                 <span>Like</span>
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors">
-                <ThumbsDown className="w-5 h-5" />
+              <button
+                onClick={() => handleLike('dislike')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all ${
+                  userDisliked
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-900 dark:text-white hover:text-red-600'
+                }`}
+              >
+                <ThumbsDown className={`w-5 h-5 ${userDisliked ? 'fill-current' : ''}`} />
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 rounded-full text-sm font-medium transition-all text-gray-900 dark:text-white">
                 <Share2 className="w-5 h-5" />
-                <span>Share</span>
+                <span className="hidden sm:inline">Share</span>
               </button>
               <WatchlistButton filmId={film.id} size="md" />
-              <button className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
             </div>
           </div>
 
@@ -285,9 +405,33 @@ export default function WatchPage() {
           </div>
 
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {comments.length} Comments
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {comments.length} Comments
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCommentSort('newest')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                    commentSort === 'newest'
+                      ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  Newest
+                </button>
+                <button
+                  onClick={() => setCommentSort('popular')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                    commentSort === 'popular'
+                      ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  Popular
+                </button>
+              </div>
+            </div>
 
             {user && (
               <form onSubmit={handleSubmitComment} className="flex gap-4 mb-6">
@@ -323,7 +467,7 @@ export default function WatchPage() {
             )}
 
             <div className="space-y-4">
-              {comments.map((comment) => (
+              {sortedComments.map((comment) => (
                 <div key={comment.id} className="flex gap-4">
                   <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0"></div>
                   <div className="flex-1">

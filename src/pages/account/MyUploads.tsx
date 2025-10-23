@@ -8,14 +8,17 @@ interface UserUpload {
   id: string;
   title: string;
   description: string;
-  genre: string;
+  category: string;
   status: string;
-  ai_verification_status: string;
+  moderation_status: string;
+  visibility: string;
   created_at: string;
   moderation_notes: string | null;
   rejection_reason: string | null;
-  view_count: number;
-  poster_url: string | null;
+  views: number;
+  likes: number;
+  thumbnail_url: string | null;
+  video_url: string | null;
 }
 
 export function MyUploads() {
@@ -36,18 +39,20 @@ export function MyUploads() {
 
     try {
       let query = supabase
-        .from('user_uploads')
+        .from('user_content_uploads')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (filter !== 'all') {
-        query = query.eq('status', filter);
+        query = query.eq('moderation_status', filter);
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
+
+      console.log('Loaded uploads:', data);
       setUploads(data || []);
     } catch (error) {
       console.error('Error loading uploads:', error);
@@ -61,7 +66,7 @@ export function MyUploads() {
 
     try {
       const { error } = await supabase
-        .from('user_uploads')
+        .from('user_content_uploads')
         .delete()
         .eq('id', uploadId)
         .eq('user_id', user?.id);
@@ -179,9 +184,9 @@ export function MyUploads() {
             >
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
-                  {upload.poster_url ? (
+                  {upload.thumbnail_url ? (
                     <img
-                      src={upload.poster_url}
+                      src={upload.thumbnail_url}
                       alt={upload.title}
                       className="w-32 h-20 object-cover rounded"
                     />
@@ -200,18 +205,18 @@ export function MyUploads() {
                       </h3>
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
-                          {upload.genre}
+                          {upload.category}
                         </span>
                         <span>•</span>
                         <span>{new Date(upload.created_at).toLocaleDateString()}</span>
                         <span>•</span>
                         <div className="flex items-center gap-1">
                           <Eye className="h-3 w-3" />
-                          <span>{upload.view_count} views</span>
+                          <span>{upload.views || 0} views</span>
                         </div>
                       </div>
                     </div>
-                    {getStatusBadge(upload.status)}
+                    {getStatusBadge(upload.moderation_status)}
                   </div>
 
                   <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
