@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { User, Clock, Bookmark, ArrowLeft } from 'lucide-react';
+import { User, Clock, Bookmark } from 'lucide-react';
 
 export function AccountLayout() {
   const location = useLocation();
@@ -13,20 +13,12 @@ export function AccountLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-20">
-      <div className="container mx-auto px-4 py-8">
-        <Link
-          to="/"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </Link>
-
-        <div className="grid gap-6 lg:grid-cols-4">
-          <aside className="lg:col-span-1">
-            <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
-              <h2 className="mb-4 text-lg font-bold text-white">My Account</h2>
+    <div className="min-h-screen bg-white pt-14 pl-60">
+      <div className="px-6 py-6">
+        <div className="flex gap-6">
+          <aside className="w-60">
+            <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+              <h2 className="mb-4 text-lg font-semibold text-gray-900">My Account</h2>
               <nav className="space-y-1">
                 {navItems.map((item) => (
                   <Link
@@ -34,8 +26,8 @@ export function AccountLayout() {
                     to={item.path}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                       isActive(item.path)
-                        ? 'bg-red-600 text-white'
-                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                        ? 'bg-gray-200 text-gray-900 font-medium'
+                        : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
@@ -46,7 +38,7 @@ export function AccountLayout() {
             </div>
           </aside>
 
-          <main className="lg:col-span-3">
+          <main className="flex-1">
             <Outlet />
           </main>
         </div>

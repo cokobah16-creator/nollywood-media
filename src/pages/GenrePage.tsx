@@ -1,34 +1,56 @@
-import { useParams, Link } from "react-router-dom";
-import { CatalogContentRow } from "../components/CatalogContentRow";
-import { ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ContentCard } from "../components/ContentCard";
+import { useCatalog } from "../context/CatalogProvider";
+import { Film } from "../lib/catalog";
 
 export default function GenrePage() {
   const { genre } = useParams<{ genre: string }>();
+  const [films, setFilms] = useState<Film[]>([]);
+  const navigate = useNavigate();
+  const { filmCatalog } = useCatalog();
+
+  useEffect(() => {
+    if (filmCatalog && genre) {
+      const filtered = filmCatalog.filter(
+        (film) => film.genre.toLowerCase() === genre.toLowerCase()
+      );
+      setFilms(filtered);
+    }
+  }, [filmCatalog, genre]);
+
+  const handlePlayClick = (film: Film) => {
+    navigate(`/watch/${film.id}`);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-20">
-      <div className="container mx-auto pb-16">
-        <div className="mb-8 px-4">
-          <Link
-            to="/"
-            className="mb-4 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </Link>
-          <h1 className="text-4xl font-bold text-white">{genre} Films</h1>
-          <p className="mt-2 text-slate-400">
-            Explore all {genre} titles in our catalog
-          </p>
-        </div>
+    <div className="bg-white min-h-screen pt-14 pl-60">
+      <div className="px-6 py-6">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">{genre} Films</h1>
+        <p className="text-sm text-gray-600 mb-6">
+          {films.length} {films.length === 1 ? 'video' : 'videos'}
+        </p>
 
-        <CatalogContentRow
-          title={genre || "All Films"}
-          where={{ genre: genre }}
-          sort="az"
-          limit={48}
-          emptyText={`No ${genre} films available`}
-        />
+        {films.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
+            {films.map((film) => (
+              <ContentCard
+                key={film.id}
+                content={{
+                  ...film,
+                  genres: [film.genre],
+                  poster_url: film.poster_url || '/placeholder.jpg'
+                }}
+                type="movie"
+                onPlayClick={() => handlePlayClick(film)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-gray-600">No {genre} films available</p>
+          </div>
+        )}
       </div>
     </div>
   );
