@@ -2,6 +2,7 @@ import { CatalogProvider } from "./context/CatalogProvider";
 import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import GenrePage from "./pages/GenrePage";
@@ -10,6 +11,7 @@ import SearchPage from "./pages/SearchPage";
 import WatchPage from "./pages/WatchPage";
 import ContentTypePage from "./pages/ContentTypePage";
 import Catalog from "./components/Catalog";
+import { AdminLogin } from "./pages/AdminLogin";
 import { AdminLayout } from "./pages/admin/AdminLayout";
 import { AdminDashboard } from "./pages/admin/Dashboard";
 import { AdminFilms } from "./pages/admin/Films";
@@ -28,6 +30,8 @@ export default function App() {
       <CatalogProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/admin/login" element={<AdminLogin />} />
+
             <Route path="/admin" element={
               <ProtectedRoute requireAdmin>
                 <AdminLayout />
@@ -52,17 +56,20 @@ export default function App() {
             </Route>
 
             <Route path="*" element={
-              <div className="min-h-screen bg-slate-950">
+              <div className="flex min-h-screen flex-col bg-slate-950">
                 <Header />
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/catalog" element={<Catalog />} />
-                  <Route path="/genre/:genre" element={<GenrePage />} />
-                  <Route path="/region/:name" element={<RegionPage />} />
-                  <Route path="/content/:type" element={<ContentTypePage />} />
-                  <Route path="/search" element={<SearchPage />} />
-                  <Route path="/watch/:id" element={<WatchPage />} />
-                </Routes>
+                <div className="flex-1">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/catalog" element={<Catalog />} />
+                    <Route path="/genre/:genre" element={<GenrePage />} />
+                    <Route path="/region/:name" element={<RegionPage />} />
+                    <Route path="/content/:type" element={<ContentTypePage />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/watch/:id" element={<WatchPage />} />
+                  </Routes>
+                </div>
+                <Footer />
               </div>
             } />
           </Routes>
