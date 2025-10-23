@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
-import { Film, Check, X, Home, Image, Trash2 } from 'lucide-react';
+import { Film, Check, X, Home, Image, Trash2, FileVideo, Upload as UploadIcon } from 'lucide-react';
 
 export function AddFilm() {
   const navigate = useNavigate();
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const posterInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
@@ -23,13 +24,14 @@ export function AddFilm() {
     director: '',
     studio_label: '',
     tags: '',
-    video_url: '',
     status: 'published',
   });
 
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -43,6 +45,22 @@ export function AddFilm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5368709120) {
+        setError('Video file must be less than 5GB');
+        return;
+      }
+      if (!file.type.startsWith('video/')) {
+        setError('Please select a valid video file');
+        return;
+      }
+      setVideoFile(file);
+      setError(null);
+    }
   };
 
   const handlePosterSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,7 +98,7 @@ export function AddFilm() {
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
@@ -89,6 +107,7 @@ export function AddFilm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setUploadProgress(0);
 
     try {
       if (!posterFile) {
@@ -96,6 +115,32 @@ export function AddFilm() {
         setLoading(false);
         return;
       }
+
+      if (!videoFile) {
+        setError('Please select a video file');
+        setLoading(false);
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      setUploadProgress(10);
+
+      const videoExt = videoFile.name.split('.').pop();
+      const videoFileName = `films/${Date.now()}-video.${videoExt}`;
+
+      const { error: videoUploadError } = await supabase.storage
+        .from('videos')
+        .upload(videoFileName, videoFile);
+
+      if (videoUploadError) throw videoUploadError;
+
+      setUploadProgress(40);
+
+      const { data: { publicUrl: videoUrl } } = supabase.storage
+        .from('videos')
+        .getPublicUrl(videoFileName);
 
       const posterExt = posterFile.name.split('.').pop();
       const posterFileName = `films/${Date.now()}-poster.${posterExt}`;
@@ -105,6 +150,8 @@ export function AddFilm() {
         .upload(posterFileName, posterFile);
 
       if (posterUploadError) throw posterUploadError;
+
+      setUploadProgress(70);
 
       const { data: { publicUrl: posterUrl } } = supabase.storage
         .from('thumbnails')
@@ -130,6 +177,8 @@ export function AddFilm() {
         }
       }
 
+      setUploadProgress(90);
+
       const filmData = {
         id: `film-${Date.now()}`,
         title: formData.title,
@@ -146,7 +195,7 @@ export function AddFilm() {
         director: formData.director,
         studio_label: formData.studio_label,
         tags: formData.tags,
-        video_url: formData.video_url,
+        video_url: videoUrl,
         poster_url: posterUrl,
         poster_path: posterFileName,
         thumbnail_url: thumbnailUrl,
@@ -161,6 +210,7 @@ export function AddFilm() {
 
       if (insertError) throw insertError;
 
+      setUploadProgress(100);
       setSuccess(true);
       setTimeout(() => {
         navigate('/admin/films');
@@ -448,19 +498,70 @@ export function AddFilm() {
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Video URL <span className="text-red-500">*</span>
+              <FileVideo className="inline w-4 h-4 mr-1" />
+              Video File <span className="text-red-500">*</span>
             </label>
+
+            {!videoFile ? (
+              <button
+                type="button"
+                onClick={() => videoInputRef.current?.click()}
+                className="w-full px-4 py-12 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors text-gray-600"
+                disabled={loading}
+              >
+                <div className="flex flex-col items-center">
+                  <FileVideo className="w-10 h-10 mb-3 text-gray-400" />
+                  <span className="text-sm font-medium">Click to select video file</span>
+                  <span className="text-xs mt-2">MP4, WebM, MOV (max 5GB)</span>
+                </div>
+              </button>
+            ) : (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <FileVideo className="w-8 h-8 text-green-600" />
+                  <div>
+                    <p className="text-gray-900 font-medium">{videoFile.name}</p>
+                    <p className="text-sm text-gray-600">{formatFileSize(videoFile.size)}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setVideoFile(null)}
+                  className="text-red-600 hover:text-red-700 transition-colors"
+                  disabled={loading}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            )}
             <input
-              type="url"
-              name="video_url"
-              value={formData.video_url}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="https://example.com/video.mp4 or use Upload tab to upload video"
-              disabled={loading}
+              ref={videoInputRef}
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              onChange={handleVideoSelect}
+              className="hidden"
             />
           </div>
+
+          {loading && (
+            <div className="md:col-span-2">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex justify-between text-sm text-blue-900 mb-2">
+                  <span>Uploading files...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-blue-700 mt-2">
+                  Please don't close this page while uploading...
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -584,7 +685,7 @@ export function AddFilm() {
           </button>
           <button
             type="submit"
-            disabled={loading || !posterFile}
+            disabled={loading || !posterFile || !videoFile}
             className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
