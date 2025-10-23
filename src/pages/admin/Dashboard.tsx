@@ -136,11 +136,35 @@ export function AdminDashboard() {
     try {
       const { data: films } = await supabase
         .from('films')
-        .select('id, title, views, rating')
+        .select('id, title, views')
         .order('views', { ascending: false })
         .limit(5);
 
-      setTopContent(films || []);
+      if (!films) {
+        setTopContent([]);
+        return;
+      }
+
+      // Get average ratings for these films
+      const filmsWithRatings = await Promise.all(
+        films.map(async (film) => {
+          const { data: ratings } = await supabase
+            .from('ratings')
+            .select('stars')
+            .eq('film_id', film.id);
+
+          const avgRating = ratings && ratings.length > 0
+            ? ratings.reduce((sum, r) => sum + r.stars, 0) / ratings.length
+            : 0;
+
+          return {
+            ...film,
+            rating: avgRating,
+          };
+        })
+      );
+
+      setTopContent(filmsWithRatings || []);
     } catch (error) {
       console.error('Error loading top content:', error);
     }
@@ -262,7 +286,7 @@ export function AdminDashboard() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Star className="h-3 w-3" />
-                        {content.rating?.toFixed(1) || 'N/A'}
+                        {typeof content.rating === 'number' ? content.rating.toFixed(1) : 'N/A'}
                       </span>
                     </div>
                   </div>
