@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Film, LayoutDashboard, Users, BarChart3, Settings, LogOut, Home } from 'lucide-react';
+import { Film, LayoutDashboard, Users, BarChart3, Settings, LogOut, Home, Upload, Flag, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export function AdminLayout() {
@@ -16,9 +16,12 @@ export function AdminLayout() {
 
   const navItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
-    { path: '/admin/films', icon: Film, label: 'Films' },
-    { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
+    { path: '/admin/films', icon: Film, label: 'Films' },
+    { path: '/admin/upload', icon: Upload, label: 'Upload & Ingest' },
+    { path: '/admin/moderation', icon: Flag, label: 'Moderation' },
+    { path: '/admin/compliance', icon: Shield, label: 'Compliance' },
+    { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
 

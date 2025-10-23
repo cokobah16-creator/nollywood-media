@@ -19,6 +19,9 @@ import { FilmEditor } from "./pages/admin/FilmEditor";
 import { AdminUsers } from "./pages/admin/Users";
 import { AdminAnalytics } from "./pages/admin/Analytics";
 import { AdminSettings } from "./pages/admin/Settings";
+import { AdminUpload } from "./pages/admin/Upload";
+import { AdminModeration } from "./pages/admin/Moderation";
+import { AdminCompliance } from "./pages/admin/Compliance";
 import { AccountLayout } from "./pages/account/AccountLayout";
 import { Profile } from "./pages/account/Profile";
 import { WatchHistory } from "./pages/account/WatchHistory";
@@ -38,10 +41,13 @@ export default function App() {
               </ProtectedRoute>
             }>
               <Route index element={<AdminDashboard />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="films" element={<AdminFilms />} />
               <Route path="films/:id" element={<FilmEditor />} />
+              <Route path="upload" element={<AdminUpload />} />
+              <Route path="moderation" element={<AdminModeration />} />
+              <Route path="compliance" element={<AdminCompliance />} />
               <Route path="users" element={<AdminUsers />} />
-              <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
