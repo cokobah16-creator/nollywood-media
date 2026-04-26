@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NACECA — Operation Night Raid</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="runtime-status" class="runtime-status">Loading Three.js…</div>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="start-overlay" class="overlay show">
+    <div class="panel start-panel">
+      <h1>NACECA — OPERATION NIGHT RAID</h1>
+      <p>LEKKI MANSION RAID · Tactical Vertical Slice</p>
+      <p class="controls">WASD Move · Mouse Look · Shift Sprint · C Crouch · E Interact · F Scan</p>
+      <button id="start-btn">Start Mission</button>
+    </div>
+  </div>
+
+  <div id="hud" class="hud hidden">
+    <section class="hud-tl panel">
+      <div class="badge">NACECA</div>
+      <h2>OPERATION NIGHT RAID</h2>
+      <small>LEKKI MANSION RAID</small>
+      <ul id="objectives"></ul>
+    </section>
+
+    <section class="hud-tc panel">
+      <div class="compass">W · NW · N · NE · E</div>
+      <div id="distance">OBJ DIST: --m</div>
+    </section>
+
+    <section class="hud-tr panel">
+      <div class="minimap-wrap"><canvas id="minimap" width="180" height="180"></canvas></div>
+      <div class="location">LAGOS CITY / LEKKI COMPOUND</div>
+      <div class="alert">ALERT LEVEL: <b>HIGH</b></div>
+    </section>
+
+    <section class="hud-bl panel rep">
+      <div>Integrity <span id="integrity">65</span><div class="bar"><i id="bar-integrity" style="width:65%"></i></div></div>
+      <div>Public Trust <span id="trust">62</span><div class="bar"><i id="bar-trust" style="width:62%"></i></div></div>
+      <div>Agency Favour <span id="favour">58</span><div class="bar"><i id="bar-favour" style="width:58%"></i></div></div>
+    </section>
+
+    <section id="prompt" class="hud-bc panel">Move closer to objective marker.</section>
+
+    <section class="hud-br panel actions">
+      <div>[TAB] Squad</div>
+      <div>[Q] Order</div>
+      <div>[F] Scan</div>
+      <div>[E] Cuff</div>
+    </section>
+
+    <div class="reticle"></div>
+    <div id="markers"></div>
+  </div>
+
+  <div id="mission-complete" class="overlay">
+    <div class="panel complete-panel">
+      <h2>Mission Complete</h2>
+      <p>Evidence Collected</p>
+      <p>Civilians Secured</p>
+      <p>Force Used: 0</p>
+      <p>Integrity Change: +8</p>
+      <p>Public Trust Change: +12</p>
+      <p>Agency Favour Change: +6</p>
+      <p>XP Earned: +500</p>
+      <button id="continue-btn">Continue</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="./game.js"></script>
+</body>
+</html>
