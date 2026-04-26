@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NACECA — Cinematic Mansion Raid</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="runtime-status" class="runtime-status">Loading cinematic raid...</div>
+
+  <div id="start-overlay" class="overlay show">
+    <div class="start-panel panel">
+      <div class="eyebrow">PITCH-QUALITY 2.5D VERSION</div>
+      <h1>NACECA: Operation Night Raid</h1>
+      <p>Fixed-camera cinematic mansion raid. Move Agent Kelechi through the staged scene, scan evidence, secure the child, and arrest the suspect.</p>
+      <p class="controls">WASD move · Shift sprint · C crouch · F scan · E interact</p>
+      <button id="start-btn">Start Mission</button>
+    </div>
+  </div>
+
+  <div id="mission-complete" class="overlay">
+    <div class="complete-panel panel">
+      <h1>Mission Complete</h1>
+      <div id="complete-summary"></div>
+      <button id="continue-btn">Continue</button>
+    </div>
+  </div>
+
+  <div id="hud" class="hud hidden">
+    <section class="hud-tl panel">
+      <div class="mission-head">
+        <div class="badge">NACECA</div>
+        <div>
+          <h2>OPERATION NIGHT RAID</h2>
+          <p>LEKKI MANSION RAID</p>
+        </div>
+      </div>
+      <ul id="objectives"></ul>
+    </section>
+
+    <section class="hud-tc panel">
+      <div class="compass"><span>W</span><span>NW</span><b>N</b><span>NE</span><span>E</span></div>
+      <div id="distance">OBJ DIST: --m</div>
+    </section>
+
+    <section class="hud-tr panel">
+      <div class="location">LAGOS CITY<br><b>LEKKI COMPOUND</b></div>
+      <div class="minimap-wrap"><canvas id="minimap" width="180" height="180"></canvas></div>
+      <div class="alert">ALERT LEVEL <b>HIGH</b></div>
+    </section>
+
+    <section class="hud-bl panel">
+      <div class="stat"><span>Integrity</span><b id="integrity">65</b></div><div class="bar"><i id="bar-integrity"></i></div>
+      <div class="stat"><span>Public Trust</span><b id="trust">62</b></div><div class="bar blue"><i id="bar-trust"></i></div>
+      <div class="stat"><span>Agency Favour</span><b id="favour">58</b></div><div class="bar purple"><i id="bar-favour"></i></div>
+      <div id="feed" class="feed"></div>
+    </section>
+
+    <section class="hud-bc panel">
+      <div id="prompt">Move closer to objective marker.</div>
+    </section>
+
+    <section class="hud-br panel">
+      <div class="actions">
+        <div><kbd>TAB</kbd> Squad</div>
+        <div><kbd>Z</kbd> Order</div>
+        <div><kbd>F</kbd> Scan</div>
+        <div><kbd>E</kbd> Cuff</div>
+      </div>
+    </section>
+
+    <div class="reticle"></div>
+    <div id="markers"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="./game.js"></script>
+</body>
+</html>
