@@ -15,6 +15,8 @@
   const feedEl = document.getElementById('feed');
   const minimap = document.getElementById('minimap');
   const mctx = minimap.getContext('2d');
+  const restartBtn = document.getElementById('restart-btn');
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 
   function setStatus(message, type = 'ok') {
     statusEl.textContent = message;
@@ -29,7 +31,7 @@
     return;
   }
 
-  const state = {
+  const initialState = () => ({
     started: false,
     childSecured: false,
     laptopScanned: false,
@@ -47,8 +49,123 @@
     favour: 60,
     keys: {},
     current: null,
-    feed: []
-  };
+    feed: [],
+    startTime: 0,
+    elapsedSeconds: 0
+  });
+  const state = initialState();
+
+  const audio = (function () {
+    let ctx = null;
+    let masterGain = null;
+    let rainGain = null;
+    let sirenGain = null;
+    let started = false;
+
+    function ensure() {
+      if (ctx) return ctx;
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return null;
+      ctx = new Ctor();
+      masterGain = ctx.createGain();
+      masterGain.gain.value = 0.55;
+      masterGain.connect(ctx.destination);
+      return ctx;
+    }
+
+    function startAmbient() {
+      if (!ensure() || started) return;
+      started = true;
+
+      // Rain bed: filtered white noise loop
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i += 1) data[i] = (Math.random() * 2 - 1) * 0.6;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      noise.loop = true;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1800;
+      filter.Q.value = 0.6;
+      rainGain = ctx.createGain();
+      rainGain.gain.value = 0.0;
+      noise.connect(filter).connect(rainGain).connect(masterGain);
+      noise.start(0);
+      rainGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 1.6);
+
+      // Distant siren: two oscillators alternating slowly
+      const oscA = ctx.createOscillator();
+      const oscB = ctx.createOscillator();
+      oscA.type = 'sine';
+      oscB.type = 'sine';
+      oscA.frequency.value = 720;
+      oscB.frequency.value = 540;
+      const sirenLfo = ctx.createOscillator();
+      const sirenLfoGain = ctx.createGain();
+      sirenLfo.frequency.value = 0.35;
+      sirenLfoGain.gain.value = 80;
+      sirenLfo.connect(sirenLfoGain);
+      sirenLfoGain.connect(oscA.frequency);
+      sirenLfoGain.connect(oscB.frequency);
+      sirenGain = ctx.createGain();
+      sirenGain.gain.value = 0.0;
+      const sirenFilter = ctx.createBiquadFilter();
+      sirenFilter.type = 'lowpass';
+      sirenFilter.frequency.value = 900;
+      oscA.connect(sirenFilter);
+      oscB.connect(sirenFilter);
+      sirenFilter.connect(sirenGain).connect(masterGain);
+      oscA.start(0);
+      oscB.start(0);
+      sirenLfo.start(0);
+      sirenGain.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 2.5);
+    }
+
+    function tone(freq, duration, type = 'sine', gain = 0.18) {
+      if (!ensure()) return;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      g.gain.value = 0;
+      g.gain.linearRampToValueAtTime(gain, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(g).connect(masterGain);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + duration + 0.05);
+    }
+
+    function sweep(fromFreq, toFreq, duration, gain = 0.16) {
+      if (!ensure()) return;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(fromFreq, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(toFreq, ctx.currentTime + duration);
+      g.gain.value = 0;
+      g.gain.linearRampToValueAtTime(gain, ctx.currentTime + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(g).connect(masterGain);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + duration + 0.05);
+    }
+
+    return {
+      startAmbient,
+      scan: () => sweep(880, 1480, 0.16, 0.12),
+      collect: () => tone(660, 0.18, 'triangle', 0.18),
+      arrest: () => {
+        tone(220, 0.45, 'sawtooth', 0.18);
+        setTimeout(() => tone(165, 0.45, 'sawtooth', 0.16), 120);
+        setTimeout(() => tone(110, 0.6, 'sawtooth', 0.14), 240);
+      },
+      complete: () => {
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => setTimeout(() => tone(f, 0.45, 'triangle', 0.16), i * 130));
+      },
+      secure: () => sweep(420, 740, 0.22, 0.13)
+    };
+  })();
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x05070d);
@@ -543,16 +660,19 @@
       state.xp += 40;
       state.integrity = Math.min(100, state.integrity + 3);
       createScanRing(laptop);
+      audio.scan();
       addFeed('Laptop scanned. Evidence wipe prevented. +40 XP');
     } else if (id === 'cash' && !state.cashScanned) {
       state.cashScanned = true;
       state.xp += 20;
       createScanRing(cash);
+      audio.scan();
       addFeed('Cash scanned. Press E to collect. +20 XP');
     } else if (id === 'monitors' && !state.monitorsInspected) {
       state.monitorsInspected = true;
       state.xp += 15;
       createScanRing(monitors);
+      audio.scan();
       addFeed('Desk monitors inspected. Supporting evidence logged. +15 XP');
     } else {
       addFeed('No new scan available.');
@@ -566,6 +686,7 @@
       state.xp += 35;
       state.trust = Math.min(100, state.trust + 8);
       child.visible = false;
+      audio.secure();
       addFeed('Civilian secured. +35 XP');
     } else if (id === 'laptop') {
       if (!state.laptopScanned) return addFeed('Scan laptop first with F.');
@@ -573,6 +694,7 @@
         state.laptopCollected = true;
         state.xp += 50;
         laptop.visible = false;
+        audio.collect();
         addFeed('Evidence laptop collected. +50 XP');
       }
     } else if (id === 'cash') {
@@ -581,6 +703,7 @@
         state.cashCollected = true;
         state.xp += 30;
         cash.visible = false;
+        audio.collect();
         addFeed('Cash evidence collected. +30 XP');
       }
     } else if (id === 'suspect') {
@@ -592,10 +715,17 @@
         state.favour = Math.min(100, state.favour + 6);
         suspect.rotation.z = -0.38;
         suspect.position.y = -0.18;
+        audio.arrest();
         addFeed('Suspect arrested non-lethally. +75 XP');
       }
     }
     renderObjectives();
+  }
+
+  function formatTime(secs) {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = Math.floor(secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   }
 
   function completeCheck() {
@@ -603,6 +733,7 @@
     if (!done || state.missionComplete) return;
     state.missionComplete = true;
     completeSummary.innerHTML = `
+      <p>Mission Time: ${formatTime(state.elapsedSeconds)}</p>
       <p>Evidence Collected: Laptop / Cash</p>
       <p>Civilians Secured: 1</p>
       <p>Force Used: 0</p>
@@ -612,6 +743,7 @@
       <p>XP Earned: +${state.xp}</p>
     `;
     completeOverlay.classList.add('show');
+    audio.complete();
     addFeed('Mission complete. Operation Night Raid successful.');
   }
 
@@ -687,11 +819,35 @@
     player.position.z = Math.max(playableBounds.minY, Math.min(playableBounds.maxY, player.position.z));
   }
 
+  const timerEl = document.createElement('div');
+  timerEl.id = 'timer';
+  timerEl.textContent = '00:00';
+  const hudTc = document.querySelector('.hud-tc');
+  if (hudTc) hudTc.appendChild(timerEl);
+
+  function updateIdleAnim() {
+    const t = Date.now() * 0.002;
+    if (!state.suspectArrested) {
+      suspect.rotation.y = -0.75 + Math.sin(t) * 0.05;
+      suspect.position.y = 0.02 + Math.abs(Math.sin(t * 0.9)) * 0.012;
+    }
+    if (!state.childSecured) {
+      child.rotation.y = 0.4 + Math.sin(t * 1.3 + 1) * 0.04;
+      child.position.y = 0.02 + Math.abs(Math.sin(t * 1.6)) * 0.008;
+    }
+    backup.rotation.y = Math.PI + Math.sin(t * 0.7) * 0.03;
+  }
+
   function animate() {
     requestAnimationFrame(animate);
     const dt = Math.min(clock.getDelta(), 0.05);
     move(dt);
     updateRain(dt);
+    updateIdleAnim();
+    if (state.started && !state.missionComplete) {
+      state.elapsedSeconds = (Date.now() - state.startTime) / 1000;
+      timerEl.textContent = formatTime(state.elapsedSeconds);
+    }
     const phase = Math.sin(Date.now() * 0.008);
     police.color.set(phase > 0 ? 0xff3048 : 0x3a78ff);
     police.intensity = 2.2 + Math.abs(phase) * 2.3;
@@ -731,16 +887,100 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  document.getElementById('start-btn').addEventListener('click', () => {
+  function resetMission() {
+    Object.assign(state, initialState());
+    child.visible = true;
+    laptop.visible = true;
+    cash.visible = true;
+    suspect.visible = true;
+    suspect.rotation.set(0, -0.75, 0);
+    suspect.position.set(3.45, 0.02, 0.7);
+    child.position.set(0.55, 0.02, 1.18);
+    child.rotation.y = 0.4;
+    feedEl.innerHTML = '';
+    timerEl.textContent = '00:00';
+    completeOverlay.classList.remove('show');
+    hud.classList.add('hidden');
+    startOverlay.classList.add('show');
+    renderObjectives();
+    setStatus('Mission reset. Press Start to begin.', 'ok');
+  }
+
+  function startMission() {
     state.started = true;
+    state.startTime = Date.now();
     startOverlay.classList.remove('show');
     hud.classList.remove('hidden');
+    audio.startAmbient();
     setStatus('Cinematic raid running. WASD move, F scan, E interact.', 'ok');
-  });
+  }
+
+  document.getElementById('start-btn').addEventListener('click', startMission);
 
   document.getElementById('continue-btn').addEventListener('click', () => {
     completeOverlay.classList.remove('show');
   });
+
+  if (restartBtn) {
+    restartBtn.addEventListener('click', resetMission);
+  }
+
+  if (isCoarsePointer) {
+    const touchUI = document.createElement('div');
+    touchUI.className = 'touch-controls';
+    touchUI.innerHTML = `
+      <div class="dpad">
+        <button class="dpad-btn up" data-key="KeyW" aria-label="Move forward">▲</button>
+        <button class="dpad-btn left" data-key="KeyA" aria-label="Move left">◀</button>
+        <button class="dpad-btn down" data-key="KeyS" aria-label="Move back">▼</button>
+        <button class="dpad-btn right" data-key="KeyD" aria-label="Move right">▶</button>
+      </div>
+      <div class="touch-actions">
+        <button class="touch-btn touch-sprint" data-key="ShiftLeft" aria-label="Sprint">⚡</button>
+        <button class="touch-btn touch-crouch" data-action="crouch" aria-label="Crouch">⤓</button>
+        <button class="touch-btn touch-scan" data-action="scan" aria-label="Scan">F</button>
+        <button class="touch-btn touch-interact" data-action="interact" aria-label="Interact">E</button>
+      </div>
+    `;
+    document.body.appendChild(touchUI);
+
+    function pressKey(key, down) {
+      state.keys[key] = down;
+      if (key === 'ShiftLeft') state.sprinting = down;
+    }
+
+    touchUI.querySelectorAll('[data-key]').forEach((btn) => {
+      const key = btn.dataset.key;
+      const start = (e) => { e.preventDefault(); pressKey(key, true); btn.classList.add('active'); };
+      const end = (e) => { e.preventDefault(); pressKey(key, false); btn.classList.remove('active'); };
+      btn.addEventListener('touchstart', start, { passive: false });
+      btn.addEventListener('touchend', end);
+      btn.addEventListener('touchcancel', end);
+      btn.addEventListener('mousedown', start);
+      btn.addEventListener('mouseup', end);
+      btn.addEventListener('mouseleave', end);
+    });
+
+    touchUI.querySelector('.touch-crouch').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      state.crouching = !state.crouching;
+    }, { passive: false });
+
+    function triggerAction(fn) {
+      if (!state.started) return;
+      const c = nearest();
+      if (!c || c.dist > c.item.radius) return;
+      fn(c.item.id);
+    }
+
+    const scanBtn = touchUI.querySelector('.touch-scan');
+    const interactBtn = touchUI.querySelector('.touch-interact');
+    const fire = (fn) => (e) => { e.preventDefault(); triggerAction(fn); };
+    scanBtn.addEventListener('touchstart', fire(scan), { passive: false });
+    scanBtn.addEventListener('mousedown', fire(scan));
+    interactBtn.addEventListener('touchstart', fire(interact), { passive: false });
+    interactBtn.addEventListener('mousedown', fire(interact));
+  }
 
   renderObjectives();
   animate();

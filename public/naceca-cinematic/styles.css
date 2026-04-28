@@ -169,7 +169,116 @@ kbd { padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,.12); b
 }
 @keyframes ring { from { opacity: 1; scale: .3; } to { opacity: 0; scale: 1.45; } }
 @media (max-width: 900px) {
-  .hud-tr, .hud-br, .hud-tc { display: none; }
+  .hud-tr, .hud-br { display: none; }
   .hud-tl { width: 310px; }
   .hud-bc { min-width: 280px; }
+  .hud-tc { padding: 6px 10px; }
+  .compass { gap: 12px; font-size: 11px; }
 }
+
+#timer {
+  margin-top: 4px;
+  color: #cfdaea;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.complete-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+button.secondary {
+  background: linear-gradient(135deg, rgba(166,196,255,.18), rgba(216,171,91,.12));
+  border: 1px solid rgba(166,196,255,.4);
+}
+
+@keyframes startPulse {
+  0%, 100% { box-shadow: 0 18px 50px rgba(0,0,0,.45), 0 0 0 rgba(216,171,91,0); }
+  50% { box-shadow: 0 18px 50px rgba(0,0,0,.45), 0 0 36px rgba(216,171,91,.32); }
+}
+#start-overlay.show .start-panel {
+  animation: startPulse 2.6s ease-in-out infinite;
+}
+
+@media (pointer: coarse) {
+  .hud-bl { transform: scale(.85); transform-origin: bottom left; opacity: .9; }
+  .hud-bc { bottom: 215px; }
+}
+
+.touch-controls {
+  position: fixed;
+  inset: auto 0 0 0;
+  height: 200px;
+  z-index: 30;
+  pointer-events: none;
+}
+.dpad {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  width: 144px;
+  height: 144px;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.dpad-btn {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 900;
+  border-radius: 10px;
+  background: rgba(7, 12, 22, 0.82);
+  border: 1px solid rgba(216,171,91,.6);
+  color: #f3d99a;
+  display: grid;
+  place-items: center;
+  touch-action: none;
+}
+.dpad-btn.up { top: 0; left: 48px; }
+.dpad-btn.left { top: 48px; left: 0; }
+.dpad-btn.right { top: 48px; right: 0; }
+.dpad-btn.down { top: 96px; left: 48px; }
+.dpad-btn.active { background: rgba(216,171,91,.32); transform: scale(.94); }
+
+.touch-actions {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, 56px);
+  grid-auto-rows: 56px;
+  gap: 8px;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.touch-btn {
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  padding: 0;
+  border-radius: 14px;
+  background: rgba(7, 12, 22, 0.82);
+  border: 1px solid rgba(216,171,91,.6);
+  color: #f3d99a;
+  font-weight: 900;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+  touch-action: none;
+}
+.touch-btn.active, .touch-btn:active { background: rgba(216,171,91,.32); transform: scale(.96); }
+.touch-scan { color: #70dcff; border-color: rgba(112,220,255,.65); }
+.touch-interact { color: #ffd17a; border-color: rgba(255,209,122,.65); }
+.touch-sprint { color: #b06cff; border-color: rgba(176,108,255,.6); }
+.touch-crouch { color: #cfdaea; }
