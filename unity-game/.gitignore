@@ -1,0 +1,21 @@
+# Unity-generated folders (only Assets/ + ProjectSettings/ are tracked)
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Uu]ser[Ss]ettings/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.csproj
+*.sln
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
