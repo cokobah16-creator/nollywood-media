@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>NACECA — Operation Serpent's Route</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="game-root">
+  <canvas id="three-canvas"></canvas>
+
+  <!-- =================== HUD =================== -->
+  <div class="hud" id="hud" style="display:none">
+    <div class="panel hud-mission" id="hud-mission">
+      <div class="naceca-shield">
+        <svg viewBox="0 0 64 72" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="shieldG" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1a2a4a"/><stop offset="1" stop-color="#0b1426"/></linearGradient></defs>
+          <path d="M32 2 L60 12 L60 38 Q60 58 32 70 Q4 58 4 38 L4 12 Z" fill="url(#shieldG)" stroke="#d8a64a" stroke-width="1.5"/>
+          <path d="M32 12 L52 19 L52 38 Q52 52 32 62 Q12 52 12 38 L12 19 Z" fill="none" stroke="#d8a64a" stroke-width=".7" opacity=".5"/>
+          <text x="32" y="40" text-anchor="middle" font-family="Oswald,sans-serif" font-size="13" font-weight="700" fill="#d8a64a" letter-spacing="1">NACECA</text>
+          <path d="M22 46 L32 52 L42 46" fill="none" stroke="#d8a64a" stroke-width="1.2"/>
+          <circle cx="32" cy="22" r="2.2" fill="#d8a64a"/>
+        </svg>
+      </div>
+      <div style="flex:1">
+        <div class="title" id="hud-mission-title">OPERATION NIGHT RAID</div>
+        <div id="hud-mission-objs"></div>
+      </div>
+    </div>
+
+    <div class="hud-topleft-controls">
+      <span class="pill" id="btn-casefile">TAB · CASE FILE</span>
+      <span class="pill" id="btn-skills">K · SKILLS</span>
+      <span class="pill" id="btn-pause">ESC · MENU</span>
+    </div>
+
+    <div class="hud-topright">
+      <div class="minimap-wrap">
+        <div class="minimap-label" id="hud-region">LAGOS<br><span class="sub" id="hud-subregion">NACECA HQ</span></div>
+        <div class="minimap"><svg id="minimap-svg" viewBox="-50 -50 100 100"><circle cx="0" cy="0" r="48" fill="#0e1626"/><g id="minimap-streets" stroke="#2a3550" stroke-width=".8" fill="none"></g><g id="minimap-pois"></g><circle cx="0" cy="0" r="2.5" fill="#d8a64a"/><path d="M0 -4 L2 0 L0 4 L-2 0 Z" fill="#d8a64a" id="minimap-arrow"/></svg></div>
+      </div>
+      <div class="alert-badge" id="hud-alert" style="display:none">
+        <span class="ico">⚠</span>
+        <div><div class="lbl">ALERT LEVEL</div><div class="lvl" id="hud-alert-lvl">LOW</div></div>
+      </div>
+    </div>
+
+    <div class="hud-rep">
+      <div class="rep-row integrity"><span class="rep-icon">🛡</span><span class="rep-label">INTEGRITY</span><div class="rep-bar"><div class="rep-fill" id="rep-integrity" style="width:50%"></div></div></div>
+      <div class="rep-row trust"><span class="rep-icon">👥</span><span class="rep-label">PUBLIC TRUST</span><div class="rep-bar"><div class="rep-fill" id="rep-trust" style="width:50%"></div></div></div>
+      <div class="rep-row favour"><span class="rep-icon">★</span><span class="rep-label">AGENCY FAVOUR</span><div class="rep-bar"><div class="rep-fill" id="rep-favour" style="width:50%"></div></div></div>
+    </div>
+
+    <div class="hud-prompt" id="hud-prompt"></div>
+
+    <div class="hud-bottomright">
+      <div class="xp-toast" id="xp-toast">+250 XP</div>
+      <div class="evidence-count" id="hud-evidence">📁 EVIDENCE COLLECTED <span class="num"><span id="ev-cur">0</span>/<span id="ev-max">5</span></span></div>
+      <div class="action-row">
+        <div class="action-btn" data-act="squad"><div class="ico">👥</div>SQUAD<div class="key">TAB</div></div>
+        <div class="action-btn" data-act="order"><div class="ico">⚑</div>ORDER<div class="key">Z</div></div>
+        <div class="action-btn" data-act="scan"><div class="ico">⊙</div>SCAN<div class="key">F</div></div>
+        <div class="action-btn" data-act="cuff"><div class="ico">⌬</div>CUFF<div class="key">C</div></div>
+      </div>
+    </div>
+
+    <div class="scan-fx" id="scan-fx"></div>
+  </div>
+
+  <!-- mobile controls -->
+  <div class="mobile-controls">
+    <div class="joystick" id="joystick"><div class="knob" id="joystick-knob"></div></div>
+    <div class="touch-btns">
+      <div class="touch-btn" data-tact="interact">E</div>
+      <div class="touch-btn" data-tact="scan">F</div>
+      <div class="touch-btn" data-tact="sprint">▶▶</div>
+      <div class="touch-btn" data-tact="crouch">▼</div>
+    </div>
+  </div>
+
+  <!-- evidence markers float here -->
+  <div id="markers-layer" style="position:absolute;inset:0;pointer-events:none;z-index:35"></div>
+
+  <!-- cinematic bars -->
+  <div class="cine-bars top" id="cine-top"></div>
+  <div class="cine-bars bot" id="cine-bot"></div>
+
+  <!-- =================== SCREENS =================== -->
+  <div class="overlay" id="screen-title"><div class="overlay-bg"></div>
+    <div class="stamp">CASE 0001 · CLASSIFIED · OFFICIAL USE ONLY</div>
+    <h1>NACECA<span class="accent">Operation Serpent's Route</span></h1>
+    <p class="sub">A cinematic anti-fraud investigation across Lagos, Kano, Edo and Delta. Build evidence, balance integrity against political pressure, and decide what kind of officer Agent Kelechi becomes.</p>
+    <div class="title-actions">
+      <button class="btn primary" id="btn-newgame">NEW INVESTIGATION</button>
+      <button class="btn" id="btn-continue">CONTINUE</button>
+      <button class="btn ghost" id="btn-mission-select">MISSION SELECT</button>
+    </div>
+    <div style="position:absolute;bottom:24px;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.4em;color:#5a6a82">FICTION · ALL CHARACTERS, AGENCIES AND CASES ARE FICTIONAL</div>
+  </div>
+
+  <div class="overlay" id="screen-missions"><div class="overlay-bg"></div>
+    <h2>CASE FILES</h2>
+    <div class="desc">Vertical slice missions are playable. Remaining missions scaffolded for the full campaign.</div>
+    <div class="mission-grid" id="mission-grid"></div>
+    <button class="btn ghost" id="btn-missions-back">◀ BACK</button>
+  </div>
+
+  <div class="overlay" id="screen-controls"><div class="overlay-bg"></div>
+    <div class="controls-stamp" id="controls-mnum">CASE 01</div>
+    <div class="controls-mname" id="controls-mname">LAGOS HQ BRIEFING</div>
+    <div class="controls-region" id="controls-region">LAGOS · NACECA HQ</div>
+    <div class="controls-grid">
+      <div class="ctl-row"><div class="ctl-keys"><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span></div><div class="ctl-label">MOVE</div></div>
+      <div class="ctl-row"><div class="ctl-keys"><span class="kbd">SHIFT</span></div><div class="ctl-label">SPRINT</div></div>
+      <div class="ctl-row"><div class="ctl-keys"><span class="kbd">C</span></div><div class="ctl-label">CROUCH</div></div>
+      <div class="ctl-row"><div class="ctl-keys"><span class="kbd">E</span></div><div class="ctl-label">INTERACT</div></div>
+      <div class="ctl-row"><div class="ctl-keys"><span class="kbd">F</span></div><div class="ctl-label">SCAN</div></div>
+      <div class="ctl-row"><div class="ctl-keys"><span class="kbd">TAB</span></div><div class="ctl-label">CASE FILE</div></div>
+      <div class="ctl-row"><div class="ctl-keys"><span class="kbd">K</span></div><div class="ctl-label">SKILL TREE</div></div>
+      <div class="ctl-row"><div class="ctl-keys"><span class="kbd">ESC</span></div><div class="ctl-label">PAUSE / MENU</div></div>
+    </div>
+    <div class="controls-tip">Click the canvas to capture mouse · Move toward characters and props for interact prompts · On mobile, use the joystick + touch buttons</div>
+    <button class="btn primary" id="btn-start-mission">▶ START MISSION</button>
+    <div class="controls-hint">Press <span class="kbd inline">ENTER</span> or <span class="kbd inline">SPACE</span> to begin</div>
+  </div>
+
+  <div class="overlay dialogue-overlay" id="screen-dialogue">
+    <div class="dialogue-portrait" id="dialogue-portrait"></div>
+    <div class="dialogue-box">
+      <div class="speaker" id="dlg-speaker">COMMANDER</div>
+      <div class="text" id="dlg-text"></div>
+      <div class="choices" id="dlg-choices"></div>
+      <div class="dialogue-continue hide" id="dlg-continue">▼ CONTINUE · SPACE</div>
+    </div>
+  </div>
+
+  <div class="overlay" id="screen-puzzle"><div class="overlay-bg"></div>
+    <div class="puzzle-frame">
+      <div class="head"><h2 id="puzzle-title">PHONE FORENSIC SCAN</h2><div class="scanner">DEVICE LOCKED · NACECA-FX-001</div></div>
+      <div class="phone-screen" id="puzzle-screen"></div>
+      <div class="puzzle-prompt" id="puzzle-prompt"></div>
+      <div class="puzzle-options" id="puzzle-options"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="screen-aftermath"><div class="overlay-bg"></div>
+    <div class="aftermath-stamp">MISSION COMPLETE</div>
+    <div class="aftermath-title" id="aftermath-title">OPERATION NIGHT RAID</div>
+    <div class="aftermath-mission" id="aftermath-region">LAGOS · LEKKI MANSION DISTRICT</div>
+    <div class="aftermath-grid" id="aftermath-grid"></div>
+    <div class="aftermath-actions">
+      <button class="btn primary" id="btn-aftermath-continue">CONTINUE ▶</button>
+      <button class="btn ghost" id="btn-aftermath-skills">VIEW SKILLS (K)</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="screen-skills"><div class="overlay-bg"></div>
+    <h2 style="font-family:'Oswald';font-size:24px;letter-spacing:.22em;color:#fff;margin-bottom:0">SKILL TREE</h2>
+    <div class="skill-points-display">SKILL POINTS AVAILABLE: <span class="num" id="skill-points-num">0</span></div>
+    <div class="skill-cols" id="skill-cols"></div>
+    <button class="btn ghost" id="btn-skills-back" style="margin-top:24px">◀ CLOSE</button>
+  </div>
+
+  <div class="overlay" id="screen-casefile"><div class="overlay-bg"></div>
+    <h2>CASE FILE — OPERATION SERPENT'S ROUTE</h2>
+    <div class="case-list" id="case-list"></div>
+    <button class="btn ghost" id="btn-casefile-back" style="margin-top:24px">◀ CLOSE</button>
+  </div>
+
+  <div class="overlay" id="screen-evidence"><div class="overlay-bg"></div>
+    <div class="evidence-board-frame">
+      <div class="eb-head">
+        <div class="eb-title">EVIDENCE BOARD</div>
+        <div class="eb-sub">Operation Serpent's Route · Case #NACECA-2026/0034</div>
+      </div>
+      <div class="eb-canvas-wrap">
+        <svg class="eb-strings" id="eb-strings"></svg>
+        <div class="eb-cork" id="eb-cork"></div>
+        <div class="eb-instructions" id="eb-instructions">
+          Click two cards to draw a connection between them. Correct links raise <b>INTEL</b>. Wrong links waste time.
+        </div>
+      </div>
+      <div class="eb-stats">
+        <div class="eb-stat"><span class="lbl">INTEL SCORE</span><div class="eb-meter"><div class="eb-fill" id="eb-fill"></div></div><span class="val" id="eb-intel">0</span></div>
+        <div class="eb-stat"><span class="lbl">CONNECTIONS</span><span class="val" id="eb-conn">0/6</span></div>
+        <div class="eb-stat warrant" id="eb-warrant"><span class="lbl">WARRANT</span><span class="val" id="eb-warrant-val">PENDING</span></div>
+      </div>
+      <div class="eb-actions">
+        <button class="btn ghost" id="btn-eb-reset">RESET LINKS</button>
+        <button class="btn ghost" id="btn-eb-back">◀ CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="screen-pause"><div class="overlay-bg"></div>
+    <h1 style="font-family:'Oswald';font-size:48px;letter-spacing:.2em;color:#fff;margin-bottom:32px">PAUSED</h1>
+    <div class="title-actions">
+      <button class="btn primary" id="btn-resume">RESUME</button>
+      <button class="btn" id="btn-save">SAVE GAME</button>
+      <button class="btn" id="btn-load">LOAD GAME</button>
+      <button class="btn ghost" id="btn-quit">QUIT TO MENU</button>
+      <button class="btn danger" id="btn-erase">ERASE SAVE</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- Three.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="src/_bundle.js"></script>
+</body>
+</html>
