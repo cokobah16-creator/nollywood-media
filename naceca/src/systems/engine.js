@@ -398,8 +398,13 @@ function bindInput(){
   document.addEventListener('pointerlockchange', ()=>{
     ENGINE.pointer.locked = (document.pointerLockElement === canvas);
   });
+  // Drag fallback: when pointer lock is unavailable (embedded frames block it),
+  // holding the mouse button and dragging on the canvas still turns the camera.
+  let mouseDrag = false;
+  canvas.addEventListener('mousedown', e=>{ if(e.button===0) mouseDrag = true; });
+  document.addEventListener('mouseup', ()=>{ mouseDrag = false; });
   document.addEventListener('mousemove', e=>{
-    if(ENGINE.pointer.locked){
+    if(ENGINE.pointer.locked || (mouseDrag && ENGINE.movementEnabled && !isOverlayOpen())){
       ENGINE.cameraYaw   -= e.movementX * 0.0025;
       ENGINE.playerPitch  = clamp(ENGINE.playerPitch + e.movementY*0.002, -0.2, 0.6);
     }
@@ -462,6 +467,7 @@ function bindTouchControls(){
   // camera drag on right side of screen
   let camTouchId=null, camLastX=0, camLastY=0;
   document.addEventListener('touchstart', e=>{
+    if(isOverlayOpen() || !ENGINE.movementEnabled) return;
     for(const t of e.changedTouches){
       if(t.clientX > window.innerWidth/2 && camTouchId===null){
         const inJoy = j.contains(e.target) || $('.touch-btns').contains(e.target);
@@ -470,6 +476,8 @@ function bindTouchControls(){
     }
   });
   document.addEventListener('touchmove', e=>{
+    if(camTouchId===null) return;
+    if(isOverlayOpen()){ camTouchId=null; return; }
     for(const t of e.changedTouches){
       if(t.identifier===camTouchId){
         ENGINE.cameraYaw  -= (t.clientX-camLastX)*0.005;

@@ -15,6 +15,7 @@
 
   <!-- =================== HUD =================== -->
   <div class="hud" id="hud" style="display:none">
+    <div class="hud-topleft">
     <div class="panel hud-mission" id="hud-mission">
       <div class="naceca-shield">
         <svg viewBox="0 0 64 72" xmlns="http://www.w3.org/2000/svg">
@@ -31,12 +32,13 @@
         <div id="hud-mission-objs"></div>
       </div>
     </div>
-
     <div class="hud-topleft-controls">
-      <span class="pill" id="btn-casefile">TAB · CASE FILE</span>
-      <span class="pill" id="btn-skills">K · SKILLS</span>
-      <span class="pill" id="btn-pause">ESC · MENU</span>
+      <span class="pill" id="btn-casefile"><span class="k">TAB · </span>CASE FILE</span>
+      <span class="pill" id="btn-skills"><span class="k">K · </span>SKILLS</span>
+      <span class="pill" id="btn-pause"><span class="k">ESC · </span>MENU</span>
     </div>
+    </div>
+
 
     <div class="hud-topright">
       <div class="minimap-wrap">
@@ -59,7 +61,7 @@
 
     <div class="hud-bottomright">
       <div class="xp-toast" id="xp-toast">+250 XP</div>
-      <div class="evidence-count" id="hud-evidence">📁 EVIDENCE COLLECTED <span class="num"><span id="ev-cur">0</span>/<span id="ev-max">5</span></span></div>
+      <div class="evidence-count" id="hud-evidence"><span>📁 EVIDENCE<span class="long"> COLLECTED</span></span> <span class="num"><span id="ev-cur">0</span>/<span id="ev-max">5</span></span></div>
       <div class="action-row">
         <div class="action-btn" data-act="squad"><div class="ico">👥</div>SQUAD<div class="key">TAB</div></div>
         <div class="action-btn" data-act="order"><div class="ico">⚑</div>ORDER<div class="key">Z</div></div>
@@ -134,7 +136,7 @@
       <div class="speaker" id="dlg-speaker">COMMANDER</div>
       <div class="text" id="dlg-text"></div>
       <div class="choices" id="dlg-choices"></div>
-      <div class="dialogue-continue hide" id="dlg-continue">▼ CONTINUE · SPACE</div>
+      <div class="dialogue-continue hide" id="dlg-continue">▼ CONTINUE<span class="k"> · SPACE</span></div>
     </div>
   </div>
 
@@ -177,12 +179,11 @@
         <div class="eb-title">EVIDENCE BOARD</div>
         <div class="eb-sub">Operation Serpent's Route · Case #NACECA-2026/0034</div>
       </div>
-      <div class="eb-canvas-wrap">
-        <svg class="eb-strings" id="eb-strings"></svg>
-        <div class="eb-cork" id="eb-cork"></div>
-        <div class="eb-instructions" id="eb-instructions">
-          Click two cards to draw a connection between them. Correct links raise <b>INTEL</b>. Wrong links waste time.
-        </div>
+      <div class="eb-canvas-wrap" id="eb-canvas-wrap">
+        <div class="eb-cork" id="eb-cork"><svg class="eb-strings" id="eb-strings"></svg></div>
+      </div>
+      <div class="eb-instructions" id="eb-instructions">
+        Tap two cards to draw a connection between them. Correct links raise <b>INTEL</b>. Wrong links waste time.
       </div>
       <div class="eb-stats">
         <div class="eb-stat"><span class="lbl">INTEL SCORE</span><div class="eb-meter"><div class="eb-fill" id="eb-fill"></div></div><span class="val" id="eb-intel">0</span></div>

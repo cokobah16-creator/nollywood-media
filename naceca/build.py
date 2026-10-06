@@ -12,7 +12,7 @@ This avoids requiring a webserver — naceca.html runs from any file:// URL.
 import os
 import re
 
-ROOT = "/home/claude/naceca-modular"
+ROOT = os.path.dirname(os.path.abspath(__file__))  # works wherever the repo is checked out
 SRC = os.path.join(ROOT, "src")
 BUNDLE_OUT = os.path.join(SRC, "_bundle.js")
 HTML_IN = os.path.join(ROOT, "index.html")
@@ -24,6 +24,7 @@ LOAD_ORDER = [
     "_HEADER.js",
     # ----- inlined assets (must load before any system that references ASSETS) -----
     "assets/_inline.js",
+    "assets/_music_inline.js",
     # ----- config (data only, no deps) -----
     "config/missions.js",
     "config/skills.js",

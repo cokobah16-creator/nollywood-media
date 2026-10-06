@@ -33,7 +33,7 @@ function renderDialogueLine(){
     $('#dlg-text').textContent = text.slice(0,i);
     if(i % 3 === 0 && text[i-1] && /\w/.test(text[i-1])) sfxBlip();
     if(i>=text.length){
-      clearInterval(DLG._tw);
+      clearInterval(DLG._tw); DLG._tw = null;
       if(line.choices && line.choices.length){
         renderChoices(line.choices);
       } else {
@@ -73,6 +73,27 @@ function advanceDialogue(){
   DLG.idx++;
   if(DLG.idx >= DLG.script.length) endDialogue();
   else renderDialogueLine();
+}
+
+/* Tap / click handling: a tap mid-line completes the typewriter, a tap on a
+   finished line advances. Choice buttons keep their own handlers. */
+function skipTypewriter(){
+  if(!DLG._tw || !DLG.script) return false;
+  const line = DLG.script[DLG.idx]; if(!line) return false;
+  clearInterval(DLG._tw); DLG._tw = null;
+  $('#dlg-text').textContent = line.text || '';
+  if(line.choices && line.choices.length) renderChoices(line.choices);
+  else $('#dlg-continue').classList.remove('hide');
+  return true;
+}
+function bindDialogueTap(){
+  const ov = $('#screen-dialogue'); if(!ov || ov._tapBound) return; ov._tapBound = true;
+  ov.addEventListener('click', e=>{
+    if(e.target.closest('#dlg-choices')) return;
+    if(!ov.classList.contains('show')) return;
+    if(!$('#dlg-continue').classList.contains('hide')){ advanceDialogue(); return; }
+    skipTypewriter();
+  });
 }
 
 function endDialogue(){

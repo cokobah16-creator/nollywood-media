@@ -249,6 +249,20 @@ AUDIO._music = { current:null, currentName:null, fadeMs:1200, sessionPicks:{} };
 /* Resolve a music key to a concrete URL.
    For variant arrays, picks once per (key, session) and remembers. */
 function _resolveMusicUrl(name){
+  // Single-file build: the score is inlined as base64 AAC. Decode once into a
+  // blob: URL (same-origin, so Web Audio routing stays untainted) and cache it.
+  if(typeof MUSIC_INLINE !== 'undefined' && MUSIC_INLINE[name]){
+    AUDIO._music.blobUrls = AUDIO._music.blobUrls || {};
+    if(!AUDIO._music.blobUrls[name]){
+      try{
+        const bin = atob(MUSIC_INLINE[name]);
+        const bytes = new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+        AUDIO._music.blobUrls[name] = URL.createObjectURL(new Blob([bytes], {type: MUSIC_INLINE_MIME}));
+      }catch(e){ AUDIO._music.blobUrls[name] = null; }
+    }
+    if(AUDIO._music.blobUrls[name]) return AUDIO._music.blobUrls[name];
+  }
   const entry = MUSIC[name];
   if(!entry) return null;
   if(typeof entry === 'string') return entry;

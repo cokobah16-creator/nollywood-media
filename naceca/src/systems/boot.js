@@ -117,6 +117,7 @@ function updateTitleCam(dt){
 }
 
 window.addEventListener('load', ()=>{
+  bindDialogueTap();
   initThree();
   bindInput();
   bindMenuButtons();

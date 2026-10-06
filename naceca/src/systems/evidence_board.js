@@ -19,7 +19,7 @@ function openEvidenceBoard(){
   // swap to investigation music while board is open
   if(typeof musicForScene === 'function') musicForScene('investigation');
   const cork = $('#eb-cork');
-  cork.innerHTML = '';
+  cork.querySelectorAll('.eb-card').forEach(e=>e.remove());
   $('#eb-strings').innerHTML = '';
   EB_STATE.selected = null;
   // restore links from state
@@ -41,17 +41,24 @@ function openEvidenceBoard(){
     });
     cork.appendChild(el);
   });
-  redrawEBLinks();
   updateEBStats();
   showOverlay('screen-evidence');
+  // strings need real geometry, so draw after the overlay is visible
+  redrawEBLinks();
+  requestAnimationFrame(redrawEBLinks);
   // hint message
   const lc = EB_STATE.links.length;
+  const touch = document.body.classList.contains('touch-active');
   if(lc===0){
-    setEBInstruction(`Click two cards to draw a connection between them. Correct links raise <b>INTEL</b>. Wrong links waste time.`);
+    setEBInstruction(`${touch?'Tap':'Click'} two cards to draw a connection between them. Correct links raise <b>INTEL</b>. Wrong links waste time.${touch?' Drag the board to pan.':''}`);
   } else {
     setEBInstruction(`<b>${lc}</b> connections made · keep linking suspects to evidence and locations.`);
   }
 }
+window.addEventListener('resize', ()=>{
+  const sc = document.getElementById('screen-evidence');
+  if(sc && sc.classList.contains('show')) redrawEBLinks();
+});
 function isMissionInProgressOrLater(id){
   // unlocks evidence as soon as you've started the mission
   return S.game.currentMission===id || S.game.completedMissions.includes(id);
@@ -105,17 +112,19 @@ function ebSelectCard(id){
 function redrawEBLinks(){
   const svg = $('#eb-strings');
   const cork = $('#eb-cork');
-  const rect = cork.getBoundingClientRect();
-  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+  const W = cork.offsetWidth, H = cork.offsetHeight;
+  if(!W || !H) return;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  // pin position = top-centre of each card (offset* ignores the cards' tilt transforms)
+  const pin = id => {
+    const el = cork.querySelector(`.eb-card[data-cid="${id}"]`);
+    if(!el) return null;
+    return { x: el.offsetLeft + el.offsetWidth/2, y: el.offsetTop + 4 };
+  };
   svg.innerHTML = EB_STATE.links.map(l=>{
-    const ca = EB_CARDS.find(c=>c.id===l.a);
-    const cb = EB_CARDS.find(c=>c.id===l.b);
-    if(!ca || !cb) return '';
-    const x1 = (ca.x/100)*rect.width + 80;
-    const y1 = (ca.y/100)*rect.height + 30;
-    const x2 = (cb.x/100)*rect.width + 80;
-    const y2 = (cb.y/100)*rect.height + 30;
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${l.correct?'correct':''}" />`;
+    const a = pin(l.a), b = pin(l.b);
+    if(!a || !b) return '';
+    return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="${l.correct?'correct':''}" />`;
   }).join('');
 }
 function updateEBStats(){
