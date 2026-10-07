@@ -322,8 +322,8 @@ function bindInput(){
   document.addEventListener('mouseup', ()=>{ mouseDrag = false; });
   document.addEventListener('mousemove', e=>{
     if(ENGINE.pointer.locked || (mouseDrag && ENGINE.movementEnabled && !isOverlayOpen())){
-      ENGINE.cameraYaw   -= e.movementX * 0.0025;
-      ENGINE.playerPitch  = clamp(ENGINE.playerPitch + e.movementY*0.002, -0.2, 0.6);
+      ENGINE.cameraYaw   -= e.movementX * 0.0025; ENGINE._lastCamDrag = performance.now();
+      ENGINE.playerPitch  = clamp(ENGINE.playerPitch + e.movementY*0.002, -0.05, 0.95);
     }
   });
 
@@ -346,7 +346,7 @@ function bindInput(){
   $('#btn-pause').addEventListener('click', togglePause);
 }
 
-function bindTouchControls(){
+function bindTouchControlsLegacy(){
   const j = $('#joystick'); const k = $('#joystick-knob');
   let touchId=null, cx=0, cy=0;
   j.addEventListener('touchstart', e=>{
@@ -411,7 +411,7 @@ function bindTouchControls(){
 function isOverlayOpen(){ return $$('.overlay.show').length>0; }
 
 /* ---------- update loop ---------- */
-function tick(){
+function tickLegacy(){
   requestAnimationFrame(tick);
   if(!ENGINE.scene) return;
   const dt = ENGINE.clock.getDelta();
@@ -449,6 +449,7 @@ function updateAtmosphere(dt){
   if(typeof updateAsabaTrigger === 'function') updateAsabaTrigger(dt);
   if(typeof updateTowerTrigger === 'function') updateTowerTrigger(dt);
   if(typeof updateMansionWipe === 'function') updateMansionWipe(dt);
+  if(typeof updateEkosodin === 'function') updateEkosodin(dt);
 
   ENGINE.scene.traverse(obj=>{
     if(obj.userData && obj.userData._dust){
@@ -499,7 +500,7 @@ function updateAtmosphere(dt){
   }
 }
 
-function updatePlayer(dt){
+function updatePlayerLegacy(dt){
   if(!ENGINE.player) return;
   const speed = ((ENGINE.keys['ShiftLeft']||ENGINE.keys['ShiftRight']) ? 5.2 : 3.0) * (ENGINE.speedMul || 1);
   let mx=0, mz=0;
@@ -513,8 +514,8 @@ function updatePlayer(dt){
     mx/=Math.max(len,1); mz/=Math.max(len,1);
     // rotate by camera yaw
     const cy = ENGINE.cameraYaw;
-    const wx = mx*Math.cos(cy) - mz*Math.sin(cy);
-    const wz = mx*Math.sin(cy) + mz*Math.cos(cy);
+    const wx = -mz*Math.sin(cy) - mx*Math.cos(cy);
+    const wz = -mz*Math.cos(cy) + mx*Math.sin(cy);
     const nx = ENGINE.player.position.x + wx*speed*dt;
     const nz = ENGINE.player.position.z + wz*speed*dt;
     // bounds + obstacle check
@@ -572,7 +573,7 @@ function gatherCameraSolids(){
   });
   _camRay.solids = solids; _camRay.scene = ENGINE.scene; _camRay.cur = null;
 }
-function updateCamera(){
+function updateCameraLegacy(){
   if(!ENGINE.player||!ENGINE.camera) return;
   const p = ENGINE.player.position;
   const dist = ENGINE.cameraDist;
@@ -602,7 +603,7 @@ function updateCamera(){
   if(typeof applyShake==='function') applyShake();
 }
 
-function updateInteractPrompt(){
+function updateInteractPromptLegacy(){
   const near = nearestInteractable();
   if(near){
     let promptHtml = `<span class="opt"><span class="key">E</span> ${near.label}</span>`;
@@ -612,7 +613,7 @@ function updateInteractPrompt(){
     showPrompt(null);
   }
 }
-function nearestInteractable(){
+function nearestInteractableLegacy(){
   if(!ENGINE.player) return null;
   let best=null, bd=Infinity;
   for(const it of ENGINE.interactables){
@@ -652,7 +653,7 @@ function updateNPCs(dt){
   if(typeof animateRigs==='function') animateRigs(dt);
 }
 
-function updateMarkers(){
+function updateMarkersLegacy(){
   if(!ENGINE.camera) return;
   const layer = $('#markers-layer');
   // ensure each marker has a DOM element

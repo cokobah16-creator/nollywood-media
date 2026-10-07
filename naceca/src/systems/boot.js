@@ -119,8 +119,10 @@ function updateTitleCam(dt){
 window.addEventListener('load', ()=>{
   bindDialogueTap();
   initThree();
+  startArtLoad();
   loadSettings();
   bindInput();
+  ensureHudV8();
   bindMenuButtons();
   bindExtraMenus();
   // build the cinematic title backdrop scene

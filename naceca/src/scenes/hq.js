@@ -50,6 +50,10 @@ function buildSceneHQ(){
   cmd.position.set(0, 0, -8.0); cmd.rotation.y = Math.PI;
   scene.add(cmd);
   ENGINE.npcs.push({mesh:cmd, update:(dt)=>{ cmd.userData.walkPhase += dt*1.2; cmd.position.y = Math.sin(cmd.userData.walkPhase)*0.01; }});
+  if(typeof placeExtra==='function'){
+    placeExtra(scene, 'office', -6.5, -5.5, Math.PI*0.25);    // an analyst by the case wall
+    placeExtra(scene, 'guard', 2.6, 8.8, Math.PI);            // door security
+  }
 
   // NACECA crest on back wall
   const crestBg = new THREE.Mesh(new THREE.PlaneGeometry(3,2), basicMat('#0b1426'));

@@ -34,6 +34,7 @@ function onBeforeInteract(it){
 
 function guideTarget(){
   if(CHASE && CHASE.active) return { mesh: CHASE.active.runner, label: CHASE.active.label };
+  if(typeof TAIL!=='undefined' && TAIL.active) return { mesh: TAIL.active.target, label: 'Follow the ' + TAIL.active.label.toLowerCase() };
   const its = ENGINE.interactables || [];
   const live = it => it.mesh && it.mesh.position && (it.mesh.visible !== false);
   const next = its.find(it => !it._used && live(it) && !TERMINAL_RE.test(it.label));
@@ -58,7 +59,7 @@ function updateGuidance(dt){
   if(!t){ GUIDE.el.style.display = 'none'; GUIDE.arrow.style.display = 'none'; }
   else {
     if(!_gv.v) _gv.v = new THREE.Vector3();
-    const m = t.mesh, h = (m.userData && m.userData._rig) ? 2.25 * (m.scale ? m.scale.y : 1) : 1.6;
+    const m = t.mesh, h = (m.userData && m.userData._skinned) ? 2.25 : (m.userData && m.userData._rig) ? 2.25 * (m.scale ? m.scale.y : 1) : (t.labelY !== undefined ? t.labelY + 0.55 : 1.6);
     _gv.v.set(m.position.x, (m.position.y||0) + h, m.position.z);
     const dist = Math.hypot(m.position.x - ENGINE.player.position.x, m.position.z - ENGINE.player.position.z);
     _gv.v.project(ENGINE.camera);
@@ -96,7 +97,7 @@ function updateGuidance(dt){
 function resetGuidance(){ GUIDE.lastProgress = performance.now(); GUIDE.lastSig = ''; }
 
 /* ---------- feel: characters face each other while talking ---------- */
-function faceEachOther(it){
+function faceEachOtherLegacy(it){
   const m = it && it.mesh; if(!m || !ENGINE.player) return;
   if(!(m.userData && m.userData._rig) || m.userData._down) return;
   if(CHASE && CHASE.active && CHASE.active.runner === m) return;

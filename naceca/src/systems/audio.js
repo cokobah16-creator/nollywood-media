@@ -388,6 +388,8 @@ function musicForScene(kind){
     case 'm6_chase':   playMusic('chase',         { volume: 0.85, loop: false }); break;
     case 'm7':         playMusic('stealth',       { volume: 0.55 }); break;  // Ugbowo tower — dusk, exposed
     case 'm7_ambush':  playMusic('chase',         { volume: 0.85, loop: false }); break;
+    case 'm8':         playMusic('investigation', { volume: 0.5 }); break;   // Ekosodin — the finale
+    case 'm8_reveal':  playMusic('stealth',       { volume: 0.7 }); break;
     case 'investigation': playMusic('investigation', { volume: 0.55 }); break;  // Evidence Board overlay
     case 'victory':    playMusic('victory',       { volume: 0.75, loop: false }); break;
     default:           stopMusic();

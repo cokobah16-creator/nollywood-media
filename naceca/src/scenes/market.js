@@ -59,7 +59,8 @@ function buildSceneMarket(){
          {female:true, hair:'braids'},
          {female:true, hair:'afro', robe:shirts[(i+2)%shirts.length]}][i%3]
       : [{hair:'crop'}, {hair:'cap', capColor:shirts[(i+4)%shirts.length], beard:i%4===1}, {hair:'afro'}, {hair:'bald', build:'heavy'}][i%4];
-    const npc = buildNPCMesh(
+    const DESIGNED = ['fruit_seller','fila_man','gele_purple','cap_guy','gele_handbag','tank_guy','bread_seller','student'];
+    const npc = i < DESIGNED.length && typeof makeExtra==='function' ? makeExtra(DESIGNED[i]) : buildNPCMesh(
       skinTones[i%4], shirts[i%shirts.length], ['#1a2030','#3a2a1a','#2a3a2a'][i%3], '#0a0a14', looks);
     const ang = Math.random()*Math.PI*2;
     npc.position.set(Math.cos(ang)*12 + (Math.random()-.5)*4, 0, Math.sin(ang)*12 + (Math.random()-.5)*4);

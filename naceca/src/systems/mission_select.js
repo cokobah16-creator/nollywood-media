@@ -11,7 +11,7 @@ function renderMissionSelect(){
     const locked = !m.playable && !completed;
     let stamp = 'PLAYABLE';
     if(completed) stamp = 'COMPLETED';
-    else if(locked) stamp = 'SCAFFOLDED';
+    else if(locked) stamp = m.season===2 ? 'SEASON 2' : 'SCAFFOLDED';
     return `<button class="mission-card ${completed?'completed':''} ${locked?'locked':''}" data-mid="${m.id}" ${locked?'disabled':''}>
       <div class="num">CASE ${m.num}</div>
       <div class="name">${m.name}</div>
@@ -50,6 +50,7 @@ function renderMissionSelect(){
         if(S.game.moralChoices) S.game.moralChoices.asaba = null;
       }
       if(id==='m7' && typeof towerResetFlags === 'function'){ towerResetFlags(); }
+      if(id==='m8' && typeof finResetFlags === 'function'){ finResetFlags(); }
       loadMission(id);
     });
   });

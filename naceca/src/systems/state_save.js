@@ -4,10 +4,10 @@
    Edit the modules; run build.py to rebuild naceca.html.
    ========================================================================= */
 /* ===================== 8. SAVE / LOAD ===================== */
-function saveGame(){
+function saveGame(quiet){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify(S));
-    toast('SAVED', 'progress committed to local storage');
+    if(!quiet) toast('SAVED', 'progress committed to local storage');
   }catch(e){ toast('SAVE FAILED', e.message); }
 }
 function loadGame(){

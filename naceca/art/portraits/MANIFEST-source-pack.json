@@ -1,0 +1,511 @@
+{
+  "title": "NACECA character portraits",
+  "version": 1,
+  "count": 49,
+  "dimensions": [
+    512,
+    512
+  ],
+  "format": "webp",
+  "max_file_bytes": 60000,
+  "total_portrait_bytes": 879338,
+  "base64_payload_bytes": 1172516,
+  "background_art_direction": "#0b1426 with soft vignette",
+  "light_direction": "upper image left",
+  "expression_aliases": {
+    "lying": "evasive"
+  },
+  "count_note": "The explicit list contains 49 portraits: 8 main characters x 4 + 8 supporting characters x 2 + 1 tower shooter. The headings mentioning 50 and 53 were inconsistent; no unspecified portraits were added.",
+  "portraits": [
+    {
+      "character": "kelechi",
+      "display_name": "Agent Kelechi",
+      "expression": "neutral",
+      "file": "portraits/kelechi_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 14294,
+      "sha256": "0115d6325a936ea94480166633ff2bb737bc01ae5ced9052321f262d950029ad"
+    },
+    {
+      "character": "kelechi",
+      "display_name": "Agent Kelechi",
+      "expression": "angry",
+      "file": "portraits/kelechi_angry.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 14088,
+      "sha256": "fb60c618640d6fbe1e37a3049435c4303af33ece09e77042a21b0695c721732d"
+    },
+    {
+      "character": "kelechi",
+      "display_name": "Agent Kelechi",
+      "expression": "afraid",
+      "file": "portraits/kelechi_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 14518,
+      "sha256": "5221f217805ddc05858df5828bfbe0ebff96769bd72d26753ee339bf8484f798"
+    },
+    {
+      "character": "kelechi",
+      "display_name": "Agent Kelechi",
+      "expression": "evasive",
+      "file": "portraits/kelechi_evasive.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 13890,
+      "sha256": "4bb7bcc019b10c34aa6ac9fe80f9e12baa80aac81b5a27f7ff420bc9bc7cad28"
+    },
+    {
+      "character": "adaeze",
+      "display_name": "Commander Adaeze",
+      "expression": "neutral",
+      "file": "portraits/adaeze_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 12292,
+      "sha256": "7797ed1255ac20ef7d5524b7fe4d62117c0ab2d3c9b62aca8bd18860a50c6449"
+    },
+    {
+      "character": "adaeze",
+      "display_name": "Commander Adaeze",
+      "expression": "angry",
+      "file": "portraits/adaeze_angry.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 12634,
+      "sha256": "5b273c9d80df937147d2eafe8e72290ca4043a441c4a09ee23716fa0ed634c4f"
+    },
+    {
+      "character": "adaeze",
+      "display_name": "Commander Adaeze",
+      "expression": "afraid",
+      "file": "portraits/adaeze_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 13066,
+      "sha256": "16618dbb2778b40e5db031662b1ce177552dfe68ff798034f6e5cb0993de337e"
+    },
+    {
+      "character": "adaeze",
+      "display_name": "Commander Adaeze",
+      "expression": "evasive",
+      "file": "portraits/adaeze_evasive.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 12796,
+      "sha256": "d294011e7b3b80ec53103016a659ebbda5323d732224f3d32a0e9283e4461b40"
+    },
+    {
+      "character": "uche",
+      "display_name": "Sgt. Uche",
+      "expression": "neutral",
+      "file": "portraits/uche_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 15084,
+      "sha256": "24ad4858e26ccc4e5c7fe4bc53fe02ece392ef66c606b8d63c42d6aba5595755"
+    },
+    {
+      "character": "uche",
+      "display_name": "Sgt. Uche",
+      "expression": "angry",
+      "file": "portraits/uche_angry.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 15698,
+      "sha256": "870accf75931e85f946eb80162a18a63a18ee604e7eb449306afaa5b098a98c4"
+    },
+    {
+      "character": "uche",
+      "display_name": "Sgt. Uche",
+      "expression": "afraid",
+      "file": "portraits/uche_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 15516,
+      "sha256": "a6cbb3b90a80d4e15fbcab91859ce824f6df2737b4e53d790109765d8ed3d3c6"
+    },
+    {
+      "character": "uche",
+      "display_name": "Sgt. Uche",
+      "expression": "evasive",
+      "file": "portraits/uche_evasive.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 15592,
+      "sha256": "9a7fb9978f3ced66a1cfa7b9b4017eb88dd9114ea2afec8f27cb2fc744da3b09"
+    },
+    {
+      "character": "obi",
+      "display_name": "Chief Obi",
+      "expression": "neutral",
+      "file": "portraits/obi_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 31854,
+      "sha256": "9741474210706dd94c07bd1f8b16b406a79f59f8c3dfdff3c1c62e5d44b4f18a"
+    },
+    {
+      "character": "obi",
+      "display_name": "Chief Obi",
+      "expression": "angry",
+      "file": "portraits/obi_angry.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 31402,
+      "sha256": "09d256b4049796196bd8f5216587d81d105d40a4e91836da55e0478d62629136"
+    },
+    {
+      "character": "obi",
+      "display_name": "Chief Obi",
+      "expression": "afraid",
+      "file": "portraits/obi_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 32056,
+      "sha256": "affc4479c4b30f4e34f924764b27635e4833aa1196e7cbd6e47f636a4429b328"
+    },
+    {
+      "character": "obi",
+      "display_name": "Chief Obi",
+      "expression": "evasive",
+      "file": "portraits/obi_evasive.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 30940,
+      "sha256": "a0b42e9b6ab3d7a7f8ac0e51d3f2422cdaab3b1360ef18ef1eef944a6847e0b6"
+    },
+    {
+      "character": "kc",
+      "display_name": "KC",
+      "expression": "neutral",
+      "file": "portraits/kc_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 13290,
+      "sha256": "b74572327b226871e6c9aaa9425bc411c79585c2d0c261cdc12e51bd599febaa"
+    },
+    {
+      "character": "kc",
+      "display_name": "KC",
+      "expression": "angry",
+      "file": "portraits/kc_angry.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 13328,
+      "sha256": "660d2ee2ecdfc2867a8dda83eb8b416ec02c1b88d2bcc237ea368b76e4577345"
+    },
+    {
+      "character": "kc",
+      "display_name": "KC",
+      "expression": "afraid",
+      "file": "portraits/kc_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 13214,
+      "sha256": "01f5bf3c85ee7d32e4873accc8eaf4fcf507c80a4a00c2a86846dd537ed960f9"
+    },
+    {
+      "character": "kc",
+      "display_name": "KC",
+      "expression": "evasive",
+      "file": "portraits/kc_evasive.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 13634,
+      "sha256": "5123edbc71fbbd83265688aaa483fc6e1cd1b08b872c04a1b13fab172de7176a"
+    },
+    {
+      "character": "musa",
+      "display_name": "Musa",
+      "expression": "neutral",
+      "file": "portraits/musa_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 22524,
+      "sha256": "b922310885f5a79951618a5696e3fea6dae6610164d4e4c9a56aa3f448cbff8b"
+    },
+    {
+      "character": "musa",
+      "display_name": "Musa",
+      "expression": "angry",
+      "file": "portraits/musa_angry.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 22458,
+      "sha256": "03ba3fb60a9727bb2c13084fb79a0b754aa07ef582e44c8fa0b5b8b488dff326"
+    },
+    {
+      "character": "musa",
+      "display_name": "Musa",
+      "expression": "afraid",
+      "file": "portraits/musa_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 21932,
+      "sha256": "a17de772fe6e1c717cc27be5c8558b4bb3a215764ed1be99a1449253bb0009d2"
+    },
+    {
+      "character": "musa",
+      "display_name": "Musa",
+      "expression": "evasive",
+      "file": "portraits/musa_evasive.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 21286,
+      "sha256": "ef02c936f5c2f5fb00b0f12f7cb91428b41fcc9d50205cb82c9b948a1c3fb8da"
+    },
+    {
+      "character": "tobi",
+      "display_name": "Tobi",
+      "expression": "neutral",
+      "file": "portraits/tobi_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 15336,
+      "sha256": "67f82a445429e2ed8039b1d4f09975c909ceca352cef2962e3618643a6a0ca48"
+    },
+    {
+      "character": "tobi",
+      "display_name": "Tobi",
+      "expression": "angry",
+      "file": "portraits/tobi_angry.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 14914,
+      "sha256": "1923d46597b995e5225ed060fcd90cac1fe2137f9b4f6442cbd2d5fdc10192b7"
+    },
+    {
+      "character": "tobi",
+      "display_name": "Tobi",
+      "expression": "afraid",
+      "file": "portraits/tobi_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 14776,
+      "sha256": "0996acd4c9d42bb92cdb2a96915b7b66b8a20269ffb639eedd295d64ac5546dd"
+    },
+    {
+      "character": "tobi",
+      "display_name": "Tobi",
+      "expression": "evasive",
+      "file": "portraits/tobi_evasive.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 15708,
+      "sha256": "d0a233e0b03669bc5a11c344b9f76f0f440dac99403498f4fe03fba1c9b37557"
+    },
+    {
+      "character": "mrs_ehigie",
+      "display_name": "Mrs. Ehigie",
+      "expression": "neutral",
+      "file": "portraits/mrs_ehigie_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 28680,
+      "sha256": "422ade3fd6263335a810a46c740866193bcbf13d997638eb64ebd71ef0bb9925"
+    },
+    {
+      "character": "mrs_ehigie",
+      "display_name": "Mrs. Ehigie",
+      "expression": "angry",
+      "file": "portraits/mrs_ehigie_angry.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 28486,
+      "sha256": "ceec1c8fbb7948fc0039c40a92252ba2c553fe948c352afd0c07663e65bc5d45"
+    },
+    {
+      "character": "mrs_ehigie",
+      "display_name": "Mrs. Ehigie",
+      "expression": "afraid",
+      "file": "portraits/mrs_ehigie_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 29436,
+      "sha256": "6a7c6a712fddb77af86ac5113d3288328d5b697925c6e4eb55c282915e5344bb"
+    },
+    {
+      "character": "mrs_ehigie",
+      "display_name": "Mrs. Ehigie",
+      "expression": "evasive",
+      "file": "portraits/mrs_ehigie_evasive.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 28936,
+      "sha256": "46f7d28b75c92675715f8b41feb51f3d28cb7ad64b438b9dc5e9c0c5273cc1a4"
+    },
+    {
+      "character": "tunde",
+      "display_name": "Tunde",
+      "expression": "neutral",
+      "file": "portraits/tunde_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 17036,
+      "sha256": "0581dca46e5f8b187cdfae16c0db668b41541114219cf747f14d060dcc36286d"
+    },
+    {
+      "character": "tunde",
+      "display_name": "Tunde",
+      "expression": "wary",
+      "file": "portraits/tunde_wary.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 16094,
+      "sha256": "7861a57fed2a61f679a1817b1642a83ab4ab540ea1f25fdc536175b0c1da9990"
+    },
+    {
+      "character": "chidi",
+      "display_name": "Inspector Chidi",
+      "expression": "neutral",
+      "file": "portraits/chidi_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 17380,
+      "sha256": "33be6dc7063443271de9c00760ad357a46b2c7ad7609e1e7a80e0be611d26a22"
+    },
+    {
+      "character": "chidi",
+      "display_name": "Inspector Chidi",
+      "expression": "suspicious",
+      "file": "portraits/chidi_suspicious.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 18060,
+      "sha256": "935db9189d1383e60c060eb9572b4e406f12003e2ab0aab246d5e0a7127803d4"
+    },
+    {
+      "character": "pa_eze",
+      "display_name": "Pa Eze",
+      "expression": "neutral",
+      "file": "portraits/pa_eze_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 17038,
+      "sha256": "3a574d49a3aabec70fe0aa1c3c5c4403dba9db1025d79911bac326feafa7678c"
+    },
+    {
+      "character": "pa_eze",
+      "display_name": "Pa Eze",
+      "expression": "stern",
+      "file": "portraits/pa_eze_stern.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 16684,
+      "sha256": "95603145655c60175143974de5347c41e74d401901ca57237922a54d51833118"
+    },
+    {
+      "character": "osaro",
+      "display_name": "Engr. Osaro",
+      "expression": "neutral",
+      "file": "portraits/osaro_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 20166,
+      "sha256": "6f8df7401e31ab4558ab4566a5ed51d67cd13d1372496b1382c131a0fac8456a"
+    },
+    {
+      "character": "osaro",
+      "display_name": "Engr. Osaro",
+      "expression": "afraid",
+      "file": "portraits/osaro_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 18208,
+      "sha256": "6acd9a340dd1a811240f2bbfe124ea7de6ac8b1383ecd4067faf3ba3dccf53a2"
+    },
+    {
+      "character": "ifeanyi",
+      "display_name": "Ifeanyi",
+      "expression": "neutral",
+      "file": "portraits/ifeanyi_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 12936,
+      "sha256": "82c4d538c1363774c936a7db072be322cbd8e5f350730142ebfba0240ebd3a11"
+    },
+    {
+      "character": "ifeanyi",
+      "display_name": "Ifeanyi",
+      "expression": "defiant",
+      "file": "portraits/ifeanyi_defiant.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 13286,
+      "sha256": "9ede9dd3ac05f3c0523cfb910fff9255cbd361dc446d69e976304433ae01dcfe"
+    },
+    {
+      "character": "lekki_girl",
+      "display_name": "Lekki mansion girl",
+      "expression": "afraid",
+      "file": "portraits/lekki_girl_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 16740,
+      "sha256": "b60805ceebc280849a6ee4f612df9f7a9b19b56a5966e916cbd1fdb6ac5ca55b"
+    },
+    {
+      "character": "lekki_girl",
+      "display_name": "Lekki mansion girl",
+      "expression": "relieved",
+      "file": "portraits/lekki_girl_relieved.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 16818,
+      "sha256": "4345947bb615cfd71c6bc9cfa029d1539dc598869d5b27f3f07fadf8158dad86"
+    },
+    {
+      "character": "osas",
+      "display_name": "Osas Ehigie",
+      "expression": "afraid",
+      "file": "portraits/osas_afraid.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 13748,
+      "sha256": "29ffce11b6b2886e246b749ad45c16b433911c52d71bd950b127ce1fa85b5099"
+    },
+    {
+      "character": "osas",
+      "display_name": "Osas Ehigie",
+      "expression": "relieved",
+      "file": "portraits/osas_relieved.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 13908,
+      "sha256": "abe75fab2c23fa81a9247d446fcf7628a2f6bb3d27f03382792c5dad8bf1b39a"
+    },
+    {
+      "character": "the_voice",
+      "display_name": "The Voice",
+      "expression": "neutral",
+      "file": "portraits/the_voice_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 10212,
+      "sha256": "1a74f2193d3228923adf62a6146a6fcf24f43405c347aa6feb1550fe6f713788"
+    },
+    {
+      "character": "the_voice",
+      "display_name": "The Voice",
+      "expression": "menacing",
+      "file": "portraits/the_voice_menacing.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 10322,
+      "sha256": "1295c0b032fe2347375f69eb10bfb5c5d39cd77363ca736c318422427cb8c54a"
+    },
+    {
+      "character": "tower_shooter",
+      "display_name": "Tower shooter",
+      "expression": "neutral",
+      "file": "portraits/tower_shooter_neutral.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 17044,
+      "sha256": "e174febc57788f6672f80becc9e35f41b11311f9bc2f1b2a14b1b42d1c2e011f"
+    }
+  ]
+}

@@ -51,9 +51,10 @@ function buildHumanoid(skin, shirt, pants, hairColor, opts={}){
   const spine = new THREE.Group(); spine.position.set(0, 1.0, 0); g.add(spine);
   const chestTopR = female ? 0.175 : 0.205, waistR = heavy ? 0.22 : (female ? 0.14 : 0.165);
   const chest = part(cyl(chestTopR, waistR, 0.48, 14), shirt, 0, 0.23, 0, spine);
+  const shirtParts = [chest];
   chest.scale.z = heavy ? 0.85 : 0.66;
   if(heavy){ const belly = part(sph(0.2), shirt, 0, 0.1, 0.06, spine); belly.scale.set(1.05,0.9,0.8); }
-  for(const sx of [-1,1]){ part(sph(0.075, 10, 8), shirt, sx*(chestTopR+0.02), 0.44, 0, spine, 1.05); }
+  for(const sx of [-1,1]){ shirtParts.push(part(sph(0.075, 10, 8), opts.tank ? skin : shirt, sx*(chestTopR+0.02), 0.44, 0, spine, 1.05)); }
   part(cyl(0.05, 0.058, 0.1), skin, 0, 0.52, 0, spine, 0);
 
   // ---- head (neck pivot) ----
@@ -75,6 +76,11 @@ function buildHumanoid(skin, shirt, pants, hairColor, opts={}){
   if(opts.glasses){
     for(const sx of [-1,1]){ const r = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.005, 6, 16), rigMat('#141414')); r.position.set(sx*0.05, 0.12, 0.148); neck.add(r); }
     part(new THREE.BoxGeometry(0.035, 0.005, 0.005), '#141414', 0, 0.123, 0.15, neck, 0);
+  }
+  if(opts.goatee){
+    const gc = opts.beardColor || hairColor;
+    const gt = part(sph(0.05, 10, 8), gc, 0, -0.01, 0.1, neck, 1.04); gt.scale.set(0.9, 1.25, 0.8);
+    part(new THREE.BoxGeometry(0.07, 0.014, 0.02), gc, 0, 0.058, 0.138, neck, 0);
   }
   if(opts.beard){
     const bc = opts.beardColor || hairColor;
@@ -106,6 +112,29 @@ function buildHumanoid(skin, shirt, pants, hairColor, opts={}){
     part(sph(0.155, 16, 10), hairColor, 0, 0.115, -0.006, neck, 1.04).scale.set(0.95, 0.9, 1.0);
     const b = part(cyl(0.17, 0.165, 0.06, 16), capC, -0.03, 0.22, 0, neck, 1.05); b.rotation.z = 0.22;
   }
+  if(hs==='bcap'){                      // baseball cap with a brim (a crown that sits above the brow)
+    const crown = new THREE.Mesh(new THREE.SphereGeometry(0.162, 16, 10, 0, Math.PI*2, 0, Math.PI/2), rigMat(capC));
+    crown.position.set(0, 0.15, -0.008); crown.scale.set(0.98, 0.95, 1.04); neck.add(crown); outline(crown, 1.05);
+    const brim = part(new THREE.BoxGeometry(0.22, 0.016, 0.15), capC, 0, 0.155, 0.17, neck, 1.05); brim.rotation.x = 0.1;
+  }
+  if(hs==='twists'){                    // short twists
+    const cap3 = new THREE.Mesh(new THREE.SphereGeometry(0.16, 18, 10, 0, Math.PI*2, 0, Math.PI/2.1), rigMat(hairColor));
+    cap3.position.set(0, 0.12, -0.006); cap3.scale.set(0.97, 1.12, 1.03); neck.add(cap3); outline(cap3, 1.05);
+    for(let k=0;k<11;k++){ const a = k*2.39, r = 0.05 + (k%3)*0.03; part(sph(0.035, 6, 5), hairColor, Math.cos(a)*r, 0.25 - r*0.4, Math.sin(a)*r*0.9 - 0.01, neck, 0); }
+  }
+  if(hs==='updo'){                      // high braided bun
+    const cap2 = new THREE.Mesh(new THREE.SphereGeometry(0.158, 18, 10, 0, Math.PI*2, 0, Math.PI/2.1), rigMat(hairColor));
+    cap2.position.set(0, 0.115, -0.006); cap2.scale.set(0.95, 1.08, 1.02); neck.add(cap2); outline(cap2, 1.05);
+    part(sph(0.1, 12, 10), hairColor, 0, 0.29, -0.04, neck, 1.05).scale.set(1, 0.85, 1);
+  }
+  if(hs==='wrap'){                      // a simple head-tie
+    const w = part(sph(0.168, 16, 10), capC, 0, 0.16, -0.015, neck, 1.04); w.scale.set(1, 0.8, 1.05);
+    part(sph(0.06, 8, 6), darken(capC, 0.85), 0.03, 0.27, 0.08, neck, 0);
+  }
+  if(hs==='gelePuff'){                  // a big, rounded gele
+    part(cyl(0.165, 0.16, 0.08, 16), capC, 0, 0.18, -0.01, neck, 1.04);
+    const puff = part(sph(0.26, 14, 10), capC, 0, 0.33, -0.02, neck, 1.04); puff.scale.set(1.25, 0.6, 1.15);
+  }
   if(hs==='mask'){
     const m = part(sph(0.162, 16, 12), capC || '#141414', 0, 0.1, 0, neck, 1.04); m.scale.set(0.95, 1.1, 1.0);
     const slit = part(new THREE.BoxGeometry(0.14, 0.04, 0.02), skin, 0, 0.12, 0.148, neck, 0);
@@ -116,7 +145,7 @@ function buildHumanoid(skin, shirt, pants, hairColor, opts={}){
   for(const sx of [-1,1]){
     const sh = new THREE.Group(); sh.position.set(sx*(chestTopR+0.045), 1.43, 0); g.add(sh);
     const rest = new THREE.Group(); rest.rotation.z = sx * 0.09; sh.add(rest);       // arms hang slightly out
-    part(cyl(0.06, 0.05, 0.29), opts.longSleeve || opts.robeSleeves ? shirt : shirt, 0, -0.145, 0, rest);
+    shirtParts.push(part(cyl(0.06, 0.05, 0.29), opts.tank ? skin : shirt, 0, -0.145, 0, rest));
     const elbow = new THREE.Group(); elbow.position.set(0, -0.29, 0); rest.add(elbow);
     part(cyl(0.049, 0.041, 0.26), sleeve, 0, -0.13, 0, elbow);
     const hand = part(sph(0.048, 10, 8), skin, 0, -0.285, 0.005, elbow, 1.06); hand.scale.set(0.85, 1.1, 0.7);
@@ -124,9 +153,13 @@ function buildHumanoid(skin, shirt, pants, hairColor, opts={}){
     arms.push({sh, elbow, hand});
   }
 
+  // ---- knee-length skirt ----
+  if(opts.skirt){
+    const sk = part(cyl(0.175, 0.205, 0.5, 16), opts.skirt, 0, 0.74, 0, g, 1.04); sk.scale.z = 0.8;
+  }
   // ---- long garment (wrapper, robe, agbada) over the legs ----
   if(opts.robe){
-    const robe = part(cyl(heavy?0.22:0.18, 0.29, 0.74, 16), opts.robe, 0, 0.6, 0, g, 1.04);
+    var robe = part(cyl(heavy?0.22:0.18, 0.29, 0.74, 16), opts.robe, 0, 0.6, 0, g, 1.04);
     robe.scale.z = 0.8;
     if(opts.robeTrim){ part(cyl(0.292, 0.292, 0.05, 16), opts.robeTrim, 0, 0.255, 0, g, 0).scale.z = 0.8; }
   }
@@ -134,7 +167,8 @@ function buildHumanoid(skin, shirt, pants, hairColor, opts={}){
   g.userData = {
     _rig:true, armL:arms[0].sh, armR:arms[1].sh, legL:legs[0].hip, legR:legs[1].hip,
     elbowL:arms[0].elbow, elbowR:arms[1].elbow, kneeL:legs[0].knee, kneeR:legs[1].knee,
-    handR:arms[1].hand, spine, neck, eyes, walkPhase:0, baseY:0,
+    handR:arms[1].hand, handL:arms[0].hand, spine, neck, eyes, walkPhase:0, baseY:0,
+    shirtParts, robe: (typeof robe!=='undefined' ? robe : null),
     _seed: Math.random()*100, _last:null, _blink:2+Math.random()*3,
   };
   if(opts.scale) g.scale.setScalar(opts.scale);
@@ -142,7 +176,7 @@ function buildHumanoid(skin, shirt, pants, hairColor, opts={}){
 }
 
 /* Kelechi — the player. Navy NACECA uniform, plate carrier, low fade, sidearm in hand. */
-function buildPlayerMesh(){
+function buildPlayerMeshLegacy(){
   const g = buildHumanoid('#5a3826', '#14234a', '#1a1f2e', '#0c0a10', { hair:'crop', longSleeve:true, shoe:'#0a0a0a' });
   const u = g.userData;
   const vest = new THREE.Mesh(cyl(0.2, 0.175, 0.36, 14), rigMat('#0a1428'));
@@ -181,14 +215,21 @@ function animateRigs(dt){
     else u._last = p.clone();
     u._v = THREE.MathUtils.lerp(u._v||0, v, Math.min(1, dt*10));
     const moving = u._v > 0.35;
+    if(u._pose){
+      const P = u._pose;
+      if(P.armL){ u.armL.rotation.set(P.armL[0], P.armL[1], P.armL[2]); }
+      if(P.armR){ u.armR.rotation.set(P.armR[0], P.armR[1], P.armR[2]); }
+    }
     const lL = u.legL.rotation.x, lR = u.legR.rotation.x;
     // knees fold as the leg swings through; a little bend even when standing
     u.kneeL.rotation.x = THREE.MathUtils.clamp(Math.max(0, lL)*1.5 + (moving?0.18:0.04), 0, 1.6);
     u.kneeR.rotation.x = THREE.MathUtils.clamp(Math.max(0, lR)*1.5 + (moving?0.18:0.04), 0, 1.6);
     // elbows: forward swing bends the elbow; raised-hands poses keep it straighter
     const aL = u.armL.rotation.x, aR = u.armR.rotation.x;
-    u.elbowL.rotation.x = aL < -1.2 ? -0.2 : -(0.12 + Math.max(0, -aL)*0.7 + (moving?0.15:0));
-    if(u._baseElbowR != null) u.elbowR.rotation.x = u._baseElbowR - Math.max(0,-aR)*0.3;
+    if(!(u._pose && u._pose.elbowL != null)) u.elbowL.rotation.x = aL < -1.2 ? -0.2 : -(0.12 + Math.max(0, -aL)*0.7 + (moving?0.15:0));
+    if(u._pose && u._pose.elbowL != null) u.elbowL.rotation.x = u._pose.elbowL;
+    if(u._pose && u._pose.elbowR != null) u.elbowR.rotation.x = u._pose.elbowR;
+    else if(u._baseElbowR != null) u.elbowR.rotation.x = u._baseElbowR - Math.max(0,-aR)*0.3;
     else u.elbowR.rotation.x = aR < -1.2 ? -0.2 : -(0.12 + Math.max(0, -aR)*0.7 + (moving?0.15:0));
     // walking bob + torso counter-twist; idle breathing + head drift
     const s = u._seed;

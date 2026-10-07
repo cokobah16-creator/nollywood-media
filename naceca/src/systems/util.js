@@ -50,7 +50,7 @@ function applyEffect(eff, flagPayload){
   refreshHUD();
 }
 
-function refreshHUD(){
+function refreshHUDCore(){
   $('#rep-integrity').style.width = S.player.reputation.integrity+'%';
   $('#rep-trust').style.width     = S.player.reputation.publicTrust+'%';
   $('#rep-favour').style.width    = S.player.reputation.agencyFavour+'%';
@@ -74,7 +74,7 @@ function completeObjective(id){
   const o = S.game.objectives.find(x=>x.id===id);
   if(o && !o.done){ o.done=true; renderObjectives(); }
 }
-function renderObjectives(){
+function renderObjectivesLegacy(){
   $('#hud-mission-objs').innerHTML = S.game.objectives.map(o=>
     `<div class="obj ${o.done?'done':''}">${o.text}</div>`).join('');
 }
@@ -82,7 +82,7 @@ function setMissionTitle(t){ $('#hud-mission-title').textContent = t.toUpperCase
 
 function showHUD(b){ $('#hud').style.display = b?'block':'none'; }
 
-function setEvidenceMax(n){ $('#ev-max').textContent = n; }
+function setEvidenceMaxCore(n){ $('#ev-max').textContent = n; }
 
 function showPrompt(html){
   const p = $('#hud-prompt');

@@ -4,7 +4,7 @@
    Edit the modules; run build.py to rebuild naceca.html.
    ========================================================================= */
 /* ===================== 13. SCENE: LEKKI MANSION RAID (NIGHT) ===================== */
-function buildSceneMansion(){
+function buildSceneMansionLegacy(){
   S.game._wipeTotal = 0; S.game._wipeT = 0; S.game._wipeDone = false; S.game._wipeLost = false;
   const scene = newScene({bg:'#0a0e1a', fog:'#0c1426'});
   scene.fog.near = 12; scene.fog.far = 45;
@@ -285,6 +285,7 @@ function buildSceneMansion(){
 
 function refreshEvidenceCount(){
   $('#ev-cur').textContent = missionEvidenceCount();
+  const c = document.getElementById('cb-ev-cur'); if(c) c.textContent = missionEvidenceCount();
 }
 
 

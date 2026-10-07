@@ -22,31 +22,29 @@ HTML_OUT = os.path.join(ROOT, "naceca.html")
 # Dependency order — config before systems, engine before scenes, scenes before flow.
 LOAD_ORDER = [
     "_HEADER.js",
-    # ----- inlined assets (must load before any system that references ASSETS) -----
     "assets/_inline.js",
     "assets/_music_inline.js",
     "assets/_portraits_art.js",
-    # ----- config (data only, no deps) -----
     "config/missions.js",
     "config/skills.js",
     "config/dialogue.js",
     "config/puzzles.js",
     "config/casefile.js",
     "config/evidence_board.js",
-    # ----- core systems (state + utils + engine) -----
     "systems/state.js",
     "systems/util.js",
     "systems/state_save.js",
     "systems/audio.js",
     "systems/engine.js",
     "systems/characters.js",
+    "systems/npc_cast.js",
+    "systems/people_art_pass.js",
     "systems/pressure.js",
     "systems/settings.js",
     "systems/guidance.js",
     "systems/progression.js",
-    # ----- scene helpers -----
+    "systems/finale.js",
     "scenes/_common.js",
-    # ----- scenes -----
     "scenes/hq.js",
     "scenes/market.js",
     "scenes/mansion.js",
@@ -54,7 +52,7 @@ LOAD_ORDER = [
     "scenes/shrine.js",
     "scenes/asaba.js",
     "scenes/tower.js",
-    # ----- gameplay systems -----
+    "scenes/ekosodin.js",
     "systems/dialogue_system.js",
     "systems/puzzle_system.js",
     "systems/evidence.js",
@@ -64,8 +62,8 @@ LOAD_ORDER = [
     "systems/skill_tree.js",
     "systems/evidence_board.js",
     "systems/pause.js",
-    # ----- entry -----
     "systems/boot.js",
+    "systems/art_pass_v8.js",
     "main.js",
 ]
 
@@ -104,6 +102,12 @@ def build_html(bundle):
         lambda m: f"<style>\n{css}\n</style>",
         html,
     )
+    # Inline other local scripts (vendor loaders, generated art) as their own <script> blocks
+    def _inline_local(m):
+        p = os.path.join(ROOT, m.group(1))
+        with open(p, "r", encoding="utf-8") as fh:
+            return f"<script>\n{fh.read()}\n</script>"
+    html = re.sub(r'<script src="(src/(?:vendor|assets)/[^"]+\.js)"></script>', _inline_local, html)
     # Inline the bundle — replace the <script src="src/_bundle.js"> with a <script>...</script>
     html = re.sub(
         r'<script src="src/_bundle\.js"></script>',

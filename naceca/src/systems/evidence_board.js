@@ -15,7 +15,7 @@ function openCaseFile(){
 // EB_VALID_LINKS imported from config/evidence_board.js
 let EB_STATE = { selected:null, links:[] }; // links: [{a,b,correct}]
 
-function openEvidenceBoard(){
+function openEvidenceBoardCore(){
   // swap to investigation music while board is open
   if(typeof musicForScene === 'function') musicForScene('investigation');
   const cork = $('#eb-cork');

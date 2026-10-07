@@ -16,6 +16,7 @@ function loadMission(id){
     if(S.game.flags){ delete S.game.flags.shrine_access; delete S.game.flags.shrine; }
   }
   if(id==='m7'){ towerResetFlags(); }
+  if(id==='m8'){ finResetFlags(); }
   // Show the start-mission/controls overlay first; player clicks START MISSION to actually begin
   showHUD(false);
   ENGINE.movementEnabled = false;
@@ -31,7 +32,7 @@ function showStartMission(id){
   showOverlay('screen-controls');
 }
 
-function beginMission(id){
+function beginMissionCore(id){
   // per-operation bookkeeping (HUD counter + aftermath stats are per mission)
   S.game._opEv = [];
   S.game._opStart = { arrests:S.game.arrests||0, civ:S.game.civiliansRescued||0, force:S.game.forceUsed||0, intel:S.game.intelScore||0, xp:S.player.xp||0, rep:Object.assign({}, S.player.reputation) };
@@ -147,8 +148,31 @@ function beginMission(id){
     startAmbient('checkpoint');
     musicForScene('m7');
   }
+  if(id==='m8'){
+    setMissionTitle('The Voice');
+    finResetFlags();
+    const R = finaleRoute();
+    const objs = [{id:'o1_brief', text:'Brief with Sgt. Uche'}];
+    if(R==='A') objs.push({id:'o2_find', text:'The house is known — the blue gate on Akintola Close'});
+    if(R==='B') objs.push({id:'o2_find', text:'Find the courier'}, {id:'o2b_tail', text:'Tail her to the house — stay unseen'});
+    if(R==='C') objs.push({id:'o2c_call', text:'Keep the Voice talking until the trace locks'}, {id:'o2_find', text:'Find the house'});
+    objs.push({id:'o3_entry', text:'Choose your way in'}, {id:'o4_osas', text:'Get Osas out'}, {id:'o5_voice', text:'Face the Voice'});
+    setObjectives(objs);
+    setEvidenceMax(R==='A' ? 1 : 2);
+    buildSceneEkosodin();
+    startAmbient('market');
+    musicForScene('m8');
+  }
   // start every mission with the camera behind Kelechi, looking where he faces
   if(ENGINE.player){ ENGINE.cameraYaw = ENGINE.player.rotation.y; ENGINE.playerYaw = ENGINE.player.rotation.y; }
+}
+
+/* M8 per-mission state (_fin*) — cleared on every (re)load. */
+function finResetFlags(){
+  ['_finBriefed','_finKC','_finTailing','_finHouseKnown','_finCourierPhone','_finCallDone','_finTrace','_finHungUp',
+   '_finRecording','_finInside','_finOsas','_finArrived','_finRisk','_finWarned'].forEach(k=>{ delete S.game[k]; });
+  if(S.game.flags){ delete S.game.flags.fin_bodycam; delete S.game.flags.fin_osas; }
+  if(S.game.moralChoices){ delete S.game.moralChoices.finale; }
 }
 
 /* M7 per-mission state lives on S.game as _tower* flags — cleared on every (re)load. */

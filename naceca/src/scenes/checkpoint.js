@@ -146,6 +146,7 @@ function buildSceneCheckpoint(){
       openPuzzle('checkpoint_lie', (ok)=>{
         if(!ok) return;
         S.game._cpMusaFlipped = true;
+        S.game.flags = S.game.flags || {}; S.game.flags.musa_tip = true;
         refreshEvidenceCount();
         setTimeout(()=>startDialogue('checkpoint_musa_flip'), 700);
       });
@@ -216,6 +217,11 @@ function buildSceneCheckpoint(){
   const p = buildPlayerMesh(); p.position.set(-12, 0, 4); scene.add(p);
   ENGINE.player = p;
   ENGINE.cameraYaw = Math.PI/2; // looking east toward truck
+  // roadside life at the checkpoint: a hawker working the queue, a mechanic waiting on a part
+  if(typeof placeExtra==='function'){
+    placeExtra(scene, 'fruit_seller', -16, 6.2, Math.PI*0.9);
+    placeExtra(scene, 'mechanic', 12.5, -6.4, -Math.PI*0.35);
+  }
   ENGINE.bounds = {minX:-25, maxX:18, minZ:-9, maxZ:8.5};
 
   setMinimap(

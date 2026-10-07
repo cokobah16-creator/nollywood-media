@@ -29,6 +29,11 @@ function renderDialogueLine(){
   if(!DLG.script || DLG.idx >= DLG.script.length){ endDialogue(); return; }
   let line = DLG.script[DLG.idx];
   if(line.textEn && typeof SETTINGS!=='undefined' && SETTINGS.lang==='english'){ line = Object.assign({}, line, {text: line.textEn}); }
+  if(line.trace && !(DLG._applied && DLG._applied.has('t:'+DLG.idx+':'+DLG.scriptKey))){
+    (DLG._applied = DLG._applied || new Set()).add('t:'+DLG.idx+':'+DLG.scriptKey);
+    S.game._finTrace = Math.min(100, (S.game._finTrace||0) + line.trace);
+    if(typeof showMeter==='function') showMeter('trace','CALL TRACE', S.game._finTrace/100, 'info', S.game._finTrace + '%');
+  }
   if(line.effect && !line.choices){
     DLG._applied = DLG._applied || new Set();
     if(!DLG._applied.has(line)){ DLG._applied.add(line); applyEffect(line.effect); }
@@ -74,6 +79,11 @@ function renderChoices(choices){
       }
       sfxClick();
       applyEffect(c.effect, c.flag);
+      if(c.trace != null){
+        S.game._finTrace = Math.min(100, (S.game._finTrace||0) + c.trace);
+        if(typeof showMeter==='function') showMeter('trace','CALL TRACE', S.game._finTrace/100, 'info', S.game._finTrace + '%');
+      }
+      if(c.hangup){ S.game._finHungUp = true; }
       if(c.next){
         DLG.script = DIALOGUE[c.next];
         DLG.idx = 0;
@@ -240,9 +250,10 @@ const PORTRAIT_MAP = {
    neutral face, then to the older portrait set below. */
 const SPEAKER_ART = [
   ['KELECHI','kelechi'], ['ADAEZE','adaeze'], ['UCHE','uche'], ['OBI','obi'], ['KC','kc'],
+  ['OSAS','osas'], ['COURIER','courier'],
   ['MUSA','musa'], ['EHIGIE','ehigie'], ['CHIDI','chidi'], ['PA EZE','paeze'], ['CHILD','child'],
   ['TOBI','tobi'], ['IFEANYI','ifeanyi'], ['THE VOICE','voice'], ['SHOOTER','shooter'],
-  ['TUNDE','tunde'], ['OSARO','osaro'], ['OSAS','osas'],
+  ['TUNDE','tunde'], ['OSARO','osaro'],
 ];
 function paintedPortrait(speaker, mood){
   if(typeof PORTRAIT_ART === 'undefined' || !speaker) return null;
@@ -255,6 +266,15 @@ function paintedPortrait(speaker, mood){
 }
 function drawPortrait(kind, speaker, mood){
   const wrap = $('#dialogue-portrait');
+  // the Voice (and anyone heard only on a phone) gets a call card, not a face
+  if(speaker && /THE VOICE|CALLER/.test(speaker.toUpperCase())){
+    wrap.innerHTML = `<div class="portrait-frame phone-card"><svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#0b1426"/>
+      <rect x="38" y="22" width="24" height="44" rx="5" fill="none" stroke="#d8a64a" stroke-width="3"/>
+      <circle cx="50" cy="60" r="2.4" fill="#d8a64a"/>
+      ${[0,1,2,3,4,5,6].map(i=>`<rect class="wv" style="animation-delay:${i*0.09}s" x="${26+i*7.5}" y="74" width="4" height="12" rx="2" fill="#e84a5c"/>`).join('')}
+      </svg><div class="portrait-vignette"></div></div>`;
+    return;
+  }
   const painted = paintedPortrait(speaker, mood);
   if(painted){
     wrap.innerHTML = `<div class="portrait-frame painted"><img src="${painted}" alt="${speaker}" /><div class="portrait-vignette"></div></div>`;

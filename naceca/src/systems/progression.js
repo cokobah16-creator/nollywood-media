@@ -13,6 +13,7 @@ const SAFETY_TIPS = {
   m4: "Fake job and travel offers often ask for 'processing' or 'medical' fees up front, or ask you to carry a package. Never carry goods for someone whose contents you haven't seen.",
   m5: "Fraudsters borrow the trust of faith, family and tradition. Urgency plus secrecy is the warning sign, whoever the request seems to come from.",
   m6: "SIM-swap fraud starts with your personal details. Set a SIM PIN, and if your phone suddenly loses all signal, call your network and your bank from another phone straight away.",
+  m8: "Corruption cases are won on records: dates, amounts, names. If someone in authority asks you for money to 'help' your case, write down exactly what was said, when and by whom, and report it.",
   m7: "If you get a ransom call, contact the police at once and try to reach the person directly. Many ransom calls are 'virtual kidnappings' — a recorded voice, and no one actually taken.",
 };
 
@@ -33,6 +34,9 @@ const ACHIEVEMENTS = [
   { id:'nothing_left',  name:'Nothing Left Behind',        desc:'Collect every piece of evidence in a mission.' },
   { id:'textbook',      name:'Textbook',                   desc:'Earn an S grade on any mission.' },
   { id:'incorruptible', name:'Incorruptible',              desc:'Reach 85 Integrity.' },
+  { id:'quiet_way',     name:'The Back Gate',              desc:"Use Musa's tip to get into the compound unseen." },
+  { id:'airtight',      name:'Airtight',                   desc:'Prove the Voice\'s guilt beyond doubt.' },
+  { id:'season_one',    name:'Season One',                 desc:'Finish Operation Serpent\'s Route.' },
 ];
 let _ach = {};
 try{ _ach = JSON.parse(localStorage.getItem(ACH_KEY) || '{}') || {}; }catch(e){ _ach = {}; }
@@ -57,6 +61,12 @@ function computeGrade(op){
   let pts = evRatio*35 + objRatio*25 + Math.max(0, Math.min(30, 18 + repDelta)) + Math.min(10, op.civ*5);
   pts -= op.force * 8;
   pts -= (S.game._opBumps || 0) * 3;
+  if(S.game.currentMission === 'm8'){
+    pts -= (S.game._finRisk || 0) * 15;
+    const o = S.game.moralChoices && S.game.moralChoices.finale;
+    if(o === 'contested') pts = Math.min(pts, 78);
+    if(o === 'unproven')  pts = Math.min(pts, 58);
+  }
   const g = pts >= 85 ? 'S' : pts >= 70 ? 'A' : pts >= 55 ? 'B' : pts >= 40 ? 'C' : 'D';
   return { g, pts: Math.round(pts), evRatio };
 }

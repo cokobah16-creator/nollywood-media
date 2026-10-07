@@ -20,10 +20,10 @@ const MISSIONS = [
   { id:'m5', num:'05', name:'Forest Shrine Compound', region:'EDO · OZALLA FOREST', summary:'A shrine used as fear-cover. Respect the sacred ground while you search for what the cartel hid there.', playable:true },
   { id:'m6', num:'06', name:'The Disappeared', region:'DELTA · ASABA WAREHOUSE', summary:'Rescue a hostage. Recover SIM packs and hard drives. Do you chase the runner or save the captive first?', playable:true },
   { id:'m7', num:'07', name:'No Signal Zone', region:'EDO · UGBOWO TELECOM TOWER', summary:'A sabotaged tower behind the UNIBEN gate. Restore power, trace the ransom calls, and decide what to protect when the lights draw fire.', playable:true },
-  { id:'m8', num:'08', name:"Oba's Palace Raid", region:'EDO · BENIN COMPOUND', summary:'Encrypted drives inside a politically fortified compound. The accountant knows the names.', playable:false },
-  { id:'m9', num:'09', name:'The Ritual Market', region:'DELTA · SAPELE NIGHT MARKET', summary:'Undercover. Identify a ransom launderer trading through a charm seller.', playable:false },
-  { id:'m10', num:'10', name:'Forest Pursuit', region:'DELTA · WETLANDS', summary:'A bike chase through mangrove trails. The cartel enforcer knows the bends better than you.', playable:false },
-  { id:'m11', num:'11', name:'Debrief Dilemma', region:'LAGOS · NACECA HQ', summary:'Internal politics. Bury the file or expose the patron — your reputation will decide what you can survive.', playable:false },
-  { id:'m12', num:'12', name:'Final Standoff: Oil Tanker Yard', region:'DELTA · RIVERBANK', summary:'Final raid. Witnesses, a barge, the mastermind. Career or truth.', playable:false },
+  { id:'m8', num:'08', name:'The Voice', region:'EDO · EKOSODIN, AKINTOLA CLOSE', summary:'Season 1 finale. Find the house where Osas is held, get him out, and face the Voice — and find out how much you can prove.', playable:true },
+  { id:'m9', num:'09', name:'The Ritual Market', region:'DELTA · SAPELE NIGHT MARKET', summary:'Undercover. Identify a ransom launderer trading through a charm seller.', playable:false, season:2 },
+  { id:'m10', num:'10', name:'Forest Pursuit', region:'DELTA · WETLANDS', summary:'A bike chase through mangrove trails. The cartel enforcer knows the bends better than you.', playable:false, season:2 },
+  { id:'m11', num:'11', name:'Debrief Dilemma', region:'LAGOS · NACECA HQ', summary:'Internal politics. Bury the file or expose the patron — your reputation will decide what you can survive.', playable:false, season:2 },
+  { id:'m12', num:'12', name:'Final Standoff: Oil Tanker Yard', region:'DELTA · RIVERBANK', summary:'Final raid. Witnesses, a barge, the mastermind. Career or truth.', playable:false, season:2 },
 ];
 

@@ -4,13 +4,14 @@
    Edit the modules; run build.py to rebuild naceca.html.
    ========================================================================= */
 /* ===================== 10. SCENE BUILDERS ===================== */
-function newScene(opts={}){
+function newSceneCore(opts={}){
   clearMarkers();
   ENGINE.interactables = [];
   ENGINE.npcs = [];
   ENGINE.obstacles = [];
   ENGINE.speedMul = 1; ENGINE._stagger = 0;
   if(typeof stopChase==='function') stopChase();
+  if(typeof stopTail==='function') stopTail();
   if(typeof clearMeters==='function') clearMeters();
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(opts.bg || '#0d1626');

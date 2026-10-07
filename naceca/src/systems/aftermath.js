@@ -12,6 +12,9 @@ function generateHeadline(){
   const civ = S.game.civiliansRescued;
   const integ = r.integrity, trust = r.publicTrust;
 
+  // Mission 8 — The Voice (Season 1 finale)
+  if(S.game.currentMission==='m8' && typeof finaleHeadline==='function') return finaleHeadline();
+
   // Mission 7 — No Signal Zone (Ugbowo)
   if(S.game.currentMission==='m7'){
     const t = S.game.moralChoices && S.game.moralChoices.tower;
@@ -118,8 +121,12 @@ function nextMissionPreview(){
       <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
   }
   if(cur==='m7'){
-    return `Mission 8 — <b>Oba's Palace Raid</b> · encrypted drives inside a politically fortified Benin compound. The accountant knows the names.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(232,74,92,.5);color:#ffb0b8;font-family:Oswald;font-size:10px;letter-spacing:.18em">SCAFFOLDED</span>`;
+    return `Mission 8 — <b>The Voice</b> · Season 1 finale. Ekosodin, after dark. Find the house, get Osas out, and face whoever has been making those calls.
+      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+  }
+  if(cur==='m8'){
+    return `<b>Season 1 is complete.</b> Continue for the epilogue — and for who protected her.
+      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(216,166,74,.6);color:#ffd76a;font-family:Oswald;font-size:10px;letter-spacing:.18em">SEASON 2 — COMING</span>`;
   }
   return 'Open the mission select to choose your next operation.';
 }
@@ -175,7 +182,7 @@ function showAftermath(){
       <div style="font-size:13px;color:#bcc6d4;line-height:1.7">
         ${nextMissionPreview()}
       </div>
-      <div style="font-size:12px;color:#7a8aa3;margin-top:8px">The full campaign (missions 8-12) is structured in the mission select. Each card holds the briefing and chosen region.</div>
+      <div style="font-size:12px;color:#7a8aa3;margin-top:8px">Season 2 (missions 9–12) is outlined in the mission select. Each card holds the briefing and chosen region.</div>
     </div>`;
 
   if(typeof onAftermath==='function') onAftermath(op, head);

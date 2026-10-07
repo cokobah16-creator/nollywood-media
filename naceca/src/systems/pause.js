@@ -63,6 +63,7 @@ function bindMenuButtons(){
     showOverlay('screen-title');
   });
   $('#btn-aftermath-continue').addEventListener('click', ()=>{
+    if(S.game.currentMission==='m8' && S.game.completedMissions.includes('m8') && typeof startEpilogue==='function'){ startEpilogue(); return; }
     showOverlay(null);
     showHUD(false);
     renderMissionSelect();
