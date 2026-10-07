@@ -5,6 +5,7 @@
    ========================================================================= */
 /* ===================== 13. SCENE: LEKKI MANSION RAID (NIGHT) ===================== */
 function buildSceneMansion(){
+  S.game._wipeTotal = 0; S.game._wipeT = 0; S.game._wipeDone = false; S.game._wipeLost = false;
   const scene = newScene({bg:'#0a0e1a', fog:'#0c1426'});
   scene.fog.near = 12; scene.fog.far = 45;
 
@@ -126,10 +127,10 @@ function buildSceneMansion(){
 
   // === characters ===
   // SUSPECT — Chief Obi (orange shirt, wide build), at desk
-  const obi = buildNPCMesh('#7a4a30', '#e07d4a', '#5a3020', '#0a0a14');
+  const obi = buildNPCMesh('#7a4a30', '#e07d4a', '#5a3020', '#0a0a14', {hair:'cap', capColor:'#e07d4a', build:'heavy', beard:true, robe:'#e07d4a', robeTrim:'#d8a64a', longSleeve:true});
   obi.position.set(6, 0, -4); obi.rotation.y = Math.PI/4;
-  // make him visibly bigger (mansion fat-cat like reference)
-  obi.scale.set(1.15,1.0,1.15);
+  // agbada and fila; the build option already makes him broad
+  obi.scale.set(1.05,1.0,1.05);
   scene.add(obi);
   // hands-up animation (until arrested)
   ENGINE.npcs.push({mesh:obi, update:(dt)=>{
@@ -150,13 +151,13 @@ function buildSceneMansion(){
   }});
 
   // CHILD — on floor
-  const child = buildNPCMesh('#7a5238', '#f3ead2', '#3a4828', '#0a0a14');
+  const child = buildNPCMesh('#7a5238', '#f3ead2', '#3a4828', '#0a0a14', {female:true, hair:'braids'});
   child.scale.set(0.7,0.7,0.7);
   child.position.set(2, 0, -3); child.rotation.y = Math.PI/3;
   scene.add(child);
 
   // SQUADMATE — Sgt. Uche, near the door (NACECA)
-  const uche = buildNPCMesh('#5a3826', '#0b1a3a', '#0a1020', '#0a0a14');
+  const uche = buildNPCMesh('#5a3826', '#0b1a3a', '#0a1020', '#0a0a14', {hair:'crop', beard:true, longSleeve:true});
   uche.position.set(0.5, 0, 6.5); uche.rotation.y = Math.PI;
   scene.add(uche);
   ENGINE.interactables.push({
@@ -172,7 +173,13 @@ function buildSceneMansion(){
     mesh: laptop, label:'Stop laptop wipe', range:1.8,
     onInteract: ()=>{
       if(S.game._evLaptop){ toast('SECURED','Laptop wipe stopped'); return; }
+      if(S.game._wipeLost){ toast('WIPED','The drive is blank. Too slow.'); return; }
       if(!S.game._mansionPreBriefed){ toast('PRE-BREACH','Brief with Sgt. Uche first'); return; }
+      const pct = Math.round(100 * (S.game._wipeT||0) / (S.game._wipeTotal||60));
+      S.game._wipeDone = true; hideMeter('wipe');
+      toast('WIPE HALTED', `Pulled the power at ${pct}%. ${pct<40?'Drive mostly intact.':pct<75?'Partial recovery possible.':'Barely anything left.'}`, 2200);
+      applyEffect({intel: pct<40 ? +12 : pct<75 ? +5 : 0});
+      if(pct < 25 && typeof unlock==='function') unlock('pulled_plug');
       collectEvidence({id:'laptop', name:'Encrypted Laptop', xp:80});
       S.game._evLaptop = true;
       ENGINE.evidenceMarkers.find(m=>m.id==='ev_laptop')?.let_collected();
@@ -223,15 +230,12 @@ function buildSceneMansion(){
     mesh: { position: new THREE.Vector3(9, 0, -10) }, label:'Crack the safe (quick puzzle)', range:2.0,
     onInteract: ()=>{
       if(S.game._evSafe){ toast('SAFE OPEN','Drives bagged'); return; }
-      // simple bonus puzzle inline
-      const code = '4-7-2';
-      toast('SAFE COMBO',`Sequence: ${code} — tap to confirm`, 1400);
-      setTimeout(()=>{
-        collectEvidence({id:'safe_drives', name:'Encrypted Hard Drives', xp:120});
+      openPuzzle('mansion_safe', (ok)=>{
+        if(!ok) return;
         S.game._evSafe = true;
         ENGINE.evidenceMarkers.find(m=>m.id==='ev_safe')?.let_collected();
         refreshEvidenceCount();
-      }, 1100);
+      });
     }
   });
 
@@ -280,6 +284,30 @@ function buildSceneMansion(){
 }
 
 function refreshEvidenceCount(){
-  $('#ev-cur').textContent = S.game.evidence.length;
+  $('#ev-cur').textContent = missionEvidenceCount();
 }
 
+
+/* M3 — the wipe clock. Starts the moment the squad commits to an entry; how you
+   came in decides how long you have: quiet 80 s, knock-and-announce 55 s, loud 40 s
+   (he hears a loud breach and hits the button sooner). */
+function startMansionWipe(){
+  const entry = (S.game.flags && S.game.flags.entry) || S.game.moralChoices.entry || 'knock';
+  S.game._wipeTotal = {quiet:80, knock:55, loud:40}[entry] || 55;
+  S.game._wipeT = 0; S.game._wipeDone = false; S.game._wipeLost = false;
+  toast('LAPTOP WIPE RUNNING', `Obi triggered a remote wipe. You have about ${S.game._wipeTotal} seconds — the laptop is on the desk.`, 2800);
+}
+function updateMansionWipe(dt){
+  if(S.game.currentMission !== 'm3' || !S.game._wipeTotal || S.game._wipeDone || S.game._wipeLost) return;
+  if(isOverlayOpen()) return;
+  S.game._wipeT += dt * (typeof timerRate==='function' ? timerRate() : 1);
+  const f = S.game._wipeT / S.game._wipeTotal;
+  showMeter('wipe', 'LAPTOP WIPE', f, 'danger', Math.round(f*100) + '%');
+  if(f >= 1){
+    S.game._wipeLost = true; hideMeter('wipe');
+    applyEffect({intel:-10, agencyFavour:-4});
+    completeObjective('o4_wipe');
+    toast('WIPE COMPLETE','The drive is blank. The cartel\'s contacts are gone with it.', 3000);
+    sfxFail();
+  }
+}

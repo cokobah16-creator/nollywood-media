@@ -150,21 +150,20 @@ function buildSceneAsaba(){
 
   // ===== player + NPCs =====
   ENGINE.player = buildPlayerMesh();
-  ENGINE.player.position.set(-12, 0, 6);
+  ENGINE.player.position.set(-10, 0, 6);  // room for the camera behind him
   ENGINE.player.rotation.y = Math.PI/2;
   scene.add(ENGINE.player);
 
   // Sgt. Uche — at the breach point with the player
-  const uche = buildNPCMesh('#5a3818', '#1a2a18', '#1a2a18', '#0a0a08');
-  const vest = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.45, 0.36), toonMat('#0b1a3a'));
-  vest.position.y = 1.1; uche.add(vest); outline(vest, 1.04);
+  const uche = buildNPCMesh('#5a3818', '#1a2a18', '#1a2a18', '#0a0a08', {hair:'crop', beard:true, longSleeve:true});
+  addVest(uche, '#0b1a3a');
   uche.position.set(-13, 0, 4.5);
   uche.rotation.y = Math.PI/2;
   uche.userData._patrolBase = new THREE.Vector3(-13, 0, 4.5);
   scene.add(uche); ENGINE.npcs.push(uche);
 
   // Ifeanyi — the runner. Initially behind the central crate stack, positioned to sprint to van.
-  const runner = buildNPCMesh('#5a3818', '#c84a3a', '#1a1a1a', '#0a0a08');  // red shirt — visually pop
+  const runner = buildNPCMesh('#5a3818', '#c84a3a', '#1a1a1a', '#0a0a08', {hair:'crop'});  // red shirt — visually pop
   runner.position.set(2, 0, 1);
   runner.rotation.y = -Math.PI/4;
   runner.userData._fled = false;
@@ -200,7 +199,7 @@ function buildSceneAsaba(){
   scene.add(runner); ENGINE.npcs.push(runner);
 
   // Tobi — the hostage, slumped in the office. Bound (dark rope at wrists/ankles).
-  const tobi = buildNPCMesh('#5a3818', '#5a5a3a', '#3a3a2a', '#0a0a08');
+  const tobi = buildNPCMesh('#5a3818', '#5a5a3a', '#3a3a2a', '#0a0a08', {hair:'crop', glasses:true, longSleeve:true});
   tobi.position.set(-10, 0, -5.5);
   tobi.rotation.y = -Math.PI/4;
   tobi.scale.y = 0.55;  // slumped
@@ -213,6 +212,7 @@ function buildSceneAsaba(){
   tobi.userData._patrolBase = new THREE.Vector3(-10, 0, -5.5);
   tobi.userData._rescued = false;
   scene.add(tobi); ENGINE.npcs.push(tobi);
+  ENGINE._asabaTobi = tobi;
 
   // ===== INTERACTABLES =====
   // Sgt. Uche — pre-breach briefing
@@ -301,15 +301,23 @@ function updateAsabaTrigger(dt){
   if(S.game.currentMission !== 'm6') return;
   if(!S.game._asabaBriefed) return;
   if(S.game._asabaTriggered) {
-    // Hostage death timer: if player picks 'chase', a 35s smoke timer starts
-    if(S.game._asabaChoice === 'chase' && !S.game._asabaHostageLost){
-      S.game._asabaSmokeTimer = (S.game._asabaSmokeTimer||0) + dt;
+    // Tobi's smoke clock runs from the breach, whatever you do (pauses on screens)
+    const tobiSafe = ENGINE._asabaTobi && ENGINE._asabaTobi.userData._rescued;
+    if(!tobiSafe && !S.game._asabaHostageLost && !isOverlayOpen()){
+      S.game._asabaSmokeTimer = (S.game._asabaSmokeTimer||0) + dt * (typeof timerRate==='function' ? timerRate() : 1);
+      const f = S.game._asabaSmokeTimer / 35;
+      showMeter('smoke', 'TOBI — SMOKE', f, 'danger', Math.max(0, 35 - S.game._asabaSmokeTimer).toFixed(0)+' s');
       if(S.game._asabaSmokeTimer > 35){
-        S.game._asabaHostageLost = true;
-        toast('TOBI LOST','The smoke took him. The runner was the trade.', 3000);
+        S.game._asabaHostageLost = true; hideMeter('smoke');
+        toast('TOBI LOST','The smoke took him.', 3000);
         sfxFail();
+        // nobody committed and the runner is gone too — the worst night
+        if(!S.game._asabaChoice && ENGINE._asabaRunner && ENGINE._asabaRunner.userData._escaped && !S.game._asabaResolved){
+          S.game._asabaResolved = true; S.game.moralChoices.asaba = 'failed';
+          setTimeout(()=>startDialogue('asaba_resolve_failed'), 1200);
+        }
       }
-    }
+    } else if(tobiSafe) hideMeter('smoke');
     // Runner escape timer: if player picks 'rescue', runner sprints
     return;
   }
@@ -324,6 +332,23 @@ function updateAsabaTrigger(dt){
     if(ENGINE._asabaSmoke) ENGINE._asabaSmoke.material.opacity = 0.9;
     // Mark first chaos beat
     completeObjective('o1_breach');
+    // Ifeanyi grabs the SIM bag and runs a loop through the bays to the van
+    const rn = ENGINE._asabaRunner;
+    if(rn && !rn.userData._caught){
+      startChase({
+        runner: rn, label:'IFEANYI', speed:4.5, catchDist:1.5, headStart:0.3,
+        path: [[2,1],[6,5],[11,5],[11,-4],[15.5,-1]],
+        onCaught: ()=>{ if(!S.game._asabaChoice) makeAsabaChoice('chase', rn); },
+        onEscaped: ()=>{
+          rn.userData._escaped = true;
+          toast('IFEANYI GONE','He made the van. Tobi is still in the smoke — go.', 2600);
+          if(S.game._asabaHostageLost && !S.game._asabaChoice && !S.game._asabaResolved){
+            S.game._asabaResolved = true; S.game.moralChoices.asaba = 'failed';
+            setTimeout(()=>startDialogue('asaba_resolve_failed'), 1200);
+          }
+        },
+      });
+    }
   }
 }
 
@@ -366,6 +391,8 @@ function makeAsabaChoice(which, target){
     collectEvidence({id:'asaba_hostage', name:'Tobi Onuoha (Accountant) — Recovered', xp:160});
     refreshEvidenceCount();
     // Trigger runner's flee NOW, since the player chose hostage
+    if(CHASE.active && CHASE.active.runner === ENGINE._asabaRunner) stopChase();
+    hideMeter('smoke');
     if(ENGINE._asabaRunner && !ENGINE._asabaRunner.userData._caught){
       ENGINE._asabaRunner.userData._fled = true;
     }

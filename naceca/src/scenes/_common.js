@@ -8,6 +8,10 @@ function newScene(opts={}){
   clearMarkers();
   ENGINE.interactables = [];
   ENGINE.npcs = [];
+  ENGINE.obstacles = [];
+  ENGINE.speedMul = 1; ENGINE._stagger = 0;
+  if(typeof stopChase==='function') stopChase();
+  if(typeof clearMeters==='function') clearMeters();
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(opts.bg || '#0d1626');
   scene.fog = new THREE.Fog(opts.fog || opts.bg || '#0d1626', 18, 65);

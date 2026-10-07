@@ -19,7 +19,7 @@ const MISSIONS = [
     playable:true },
   { id:'m5', num:'05', name:'Forest Shrine Compound', region:'EDO · OZALLA FOREST', summary:'A shrine used as fear-cover. Respect the sacred ground while you search for what the cartel hid there.', playable:true },
   { id:'m6', num:'06', name:'The Disappeared', region:'DELTA · ASABA WAREHOUSE', summary:'Rescue a hostage. Recover SIM packs and hard drives. Do you chase the runner or save the captive first?', playable:true },
-  { id:'m7', num:'07', name:'No Signal Zone', region:'EDO · UGBOWO TELECOM TOWER', summary:'A sabotaged tower. Trace kidnapper calls under ambush fire.', playable:false },
+  { id:'m7', num:'07', name:'No Signal Zone', region:'EDO · UGBOWO TELECOM TOWER', summary:'A sabotaged tower behind the UNIBEN gate. Restore power, trace the ransom calls, and decide what to protect when the lights draw fire.', playable:true },
   { id:'m8', num:'08', name:"Oba's Palace Raid", region:'EDO · BENIN COMPOUND', summary:'Encrypted drives inside a politically fortified compound. The accountant knows the names.', playable:false },
   { id:'m9', num:'09', name:'The Ritual Market', region:'DELTA · SAPELE NIGHT MARKET', summary:'Undercover. Identify a ransom launderer trading through a charm seller.', playable:false },
   { id:'m10', num:'10', name:'Forest Pursuit', region:'DELTA · WETLANDS', summary:'A bike chase through mangrove trails. The cartel enforcer knows the bends better than you.', playable:false },

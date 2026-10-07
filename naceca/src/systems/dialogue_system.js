@@ -6,11 +6,20 @@
 /* ===================== 14. DIALOGUE SYSTEM ===================== */
 let DLG = { script:null, idx:0, onComplete:null };
 
+/* the line's words in the player's chosen dialogue language */
+function lineText(line){ return (line && line.textEn && typeof SETTINGS!=='undefined' && SETTINGS.lang==='english') ? line.textEn : ((line && line.text) || ''); }
+
+/* Two beats can land at once (a timed resolve while another conversation is open).
+   Rather than one silently replacing the other, later ones wait their turn. */
 function startDialogue(scriptKey, onComplete){
+  const busy = ['screen-dialogue','screen-puzzle'].some(id=>{ const e=document.getElementById(id); return e && e.classList.contains('show'); });
+  if(busy){ (DLG.queue = DLG.queue || []).push([scriptKey, onComplete]); return; }
+  if(typeof duckMusic==='function') duckMusic(true);
   DLG.script = DIALOGUE[scriptKey];
   DLG.idx = 0;
   DLG.onComplete = onComplete;
   DLG.scriptKey = scriptKey;
+  DLG._applied = new Set();
   cinematic(true);
   showOverlay('screen-dialogue');
   renderDialogueLine();
@@ -18,12 +27,17 @@ function startDialogue(scriptKey, onComplete){
 
 function renderDialogueLine(){
   if(!DLG.script || DLG.idx >= DLG.script.length){ endDialogue(); return; }
-  const line = DLG.script[DLG.idx];
+  let line = DLG.script[DLG.idx];
+  if(line.textEn && typeof SETTINGS!=='undefined' && SETTINGS.lang==='english'){ line = Object.assign({}, line, {text: line.textEn}); }
+  if(line.effect && !line.choices){
+    DLG._applied = DLG._applied || new Set();
+    if(!DLG._applied.has(line)){ DLG._applied.add(line); applyEffect(line.effect); }
+  }
   $('#dlg-speaker').textContent = line.speaker || '';
   $('#dlg-text').textContent = '';
   $('#dlg-choices').innerHTML = '';
   $('#dlg-continue').classList.add('hide');
-  drawPortrait(line.portrait);
+  drawPortrait(line.portrait, line.speaker, line.mood);
 
   // typewriter with audio blip every ~3 chars
   let i=0; const text = line.text || '';
@@ -53,6 +67,11 @@ function renderChoices(choices){
     btn.className = 'dialogue-choice';
     btn.innerHTML = `<span class="marker">${i+1}.</span><span>${c.text}</span>${c.tag?`<span class="tag ${c.tag}">${c.tag.toUpperCase()}</span>`:''}`;
     btn.addEventListener('click', ()=>{
+      if(c.flag && !btn.dataset.armed){
+        wrap.querySelectorAll('.dialogue-choice.armed').forEach(x=>{ x.classList.remove('armed'); delete x.dataset.armed; });
+        btn.dataset.armed = '1'; btn.classList.add('armed'); sfxClick(); haptic(15);
+        return;
+      }
       sfxClick();
       applyEffect(c.effect, c.flag);
       if(c.next){
@@ -81,7 +100,7 @@ function skipTypewriter(){
   if(!DLG._tw || !DLG.script) return false;
   const line = DLG.script[DLG.idx]; if(!line) return false;
   clearInterval(DLG._tw); DLG._tw = null;
-  $('#dlg-text').textContent = line.text || '';
+  $('#dlg-text').textContent = lineText(line);
   if(line.choices && line.choices.length) renderChoices(line.choices);
   else $('#dlg-continue').classList.remove('hide');
   return true;
@@ -97,11 +116,13 @@ function bindDialogueTap(){
 }
 
 function endDialogue(){
+  if(typeof duckMusic==='function') duckMusic(false);
   cinematic(false);
   showOverlay(null);
   // post-dialogue hooks
   if(DLG.scriptKey==='hq_intro' || DLG.scriptKey==='hq_lawful' || DLG.scriptKey==='hq_harsh' || DLG.scriptKey==='hq_savvy'){
     S.game._hqBriefed = true;
+    if(typeof unlock==='function') unlock('sworn_in');
     completeObjective('o1_brief');
     showPrompt('<span class="opt"><span class="key">E</span> Deploy to Ikeja Market</span>');
   }
@@ -111,6 +132,7 @@ function endDialogue(){
   }
   if(DLG.scriptKey==='mansion_pre_breach'){
     S.game._mansionPreBriefed = true;
+    if(typeof startMansionWipe==='function') startMansionWipe();
     completeObjective('o1_brief_squad');
   }
   if(DLG.scriptKey==='checkpoint_intro'){
@@ -149,7 +171,7 @@ function endDialogue(){
     if(!S.game.completedMissions.includes('m5')){
       S.game.completedMissions.push('m5');
     }
-    awardXP(280);
+    S.game._opXP = 280; awardXP(280);
     sfxComplete();
     stopAmbient();
     showAftermath();
@@ -158,31 +180,91 @@ function endDialogue(){
     if(!S.game.completedMissions.includes('m6')){
       S.game.completedMissions.push('m6');
     }
-    awardXP(300);
+    S.game._opXP = 300; awardXP(300);
+    sfxComplete();
+    stopAmbient();
+    showAftermath();
+  }
+  if(DLG.scriptKey==='asaba_resolve_failed' && !S.game.completedMissions.includes('m6')){
+    S.game.completedMissions.push('m6'); S.game._opXP = 120; awardXP(120); stopAmbient(); showAftermath();
+  }
+  if(DLG.scriptKey==='tower_engineer'){
+    completeObjective('o2_engineer');
+    showPrompt('<span class="opt"><span class="key">E</span> Restart the generator beside the hut</span>');
+  }
+  // a choice's `next` swaps DLG.script without changing scriptKey, so accept either form
+  const towerResolved = ['tower_hold','tower_extract','tower_backup','tower_cut_extract','tower_cut_backup'].includes(DLG.scriptKey)
+    || ((DLG.scriptKey==='tower_ambush' || DLG.scriptKey==='tower_power_cut') && S.game.moralChoices && S.game.moralChoices.tower);
+  if(towerResolved && !S.game._towerDecided){
+    S.game._towerDecided = true;
+    completeObjective('o5_decide');
+    if(S.game.moralChoices.tower==='hold'){
+      collectEvidence({id:'tower_fix', name:'Handset Fix — Ekosodin, ±300 m', xp:140});
+      refreshEvidenceCount();
+    }
+    if(!S.game.completedMissions.includes('m7')){
+      S.game.completedMissions.push('m7');
+    }
+    S.game._opXP = 320; awardXP(320);
     sfxComplete();
     stopAmbient();
     showAftermath();
   }
   if(DLG.onComplete) DLG.onComplete();
+  if(DLG.queue && DLG.queue.length){
+    const [k2, cb2] = DLG.queue.shift();
+    setTimeout(()=>startDialogue(k2, cb2), 350);
+  }
 }
 
 /* Portrait — uses inline rendered images from ASSETS.portraits with SVG fallback.
    The map below pairs every dialogue 'kind' with a real character portrait. */
 const PORTRAIT_MAP = {
   // game key  →  asset key in ASSETS.portraits
-  kelechi:   'officer_female_vest',     // young female officer with vest (the player)
+  kelechi:   'officer_male_vest',       // Agent Kelechi (the player) — young male officer in a vest
   commander: 'commander_female',         // imposing female officer (Cdr Adaeze)
   sergeant:  'officer_tactical_helmet',  // helmeted operator (Sgt. Uche)
   informant: 'fixer_orange',             // orange-shirt fixer (Tunde)
   teen:      'civilian_teen',            // the teen (KC the runner)
   child:     'child_boy',                // the rescued child
   suspect:   'suspect_orange_shirt',     // orange-shirt suspect (Chief Obi / Ifeanyi)
-  driver:    'officer_alt_male',         // a working-man portrait (Musa)
+  driver:    'civilian_witness',         // Musa the truck driver (was showing an officer's portrait)
   merchant:  'elder_white_robe',         // white-robe + cap (Pa Eze the custodian)
+  engineer:  'civilian_witness',         // the telecom site engineer (Engr. Osaro)
+  mother:    'woman_patterned_dress',    // Mrs. Ehigie, the student's mother
+  ambusher:  'tactical_helmet_alt',      // masked shooter on the fence line
 };
 
-function drawPortrait(kind){
+/* Painted portraits: picked from the speaker's name, then the line's mood
+   (neutral · angry · afraid · evasive), falling back to that character's
+   neutral face, then to the older portrait set below. */
+const SPEAKER_ART = [
+  ['KELECHI','kelechi'], ['ADAEZE','adaeze'], ['UCHE','uche'], ['OBI','obi'], ['KC','kc'],
+  ['MUSA','musa'], ['EHIGIE','ehigie'], ['CHIDI','chidi'], ['PA EZE','paeze'], ['CHILD','child'],
+  ['TOBI','tobi'], ['IFEANYI','ifeanyi'], ['THE VOICE','voice'], ['SHOOTER','shooter'],
+  ['TUNDE','tunde'], ['OSARO','osaro'], ['OSAS','osas'],
+];
+function paintedPortrait(speaker, mood){
+  if(typeof PORTRAIT_ART === 'undefined' || !speaker) return null;
+  const S_ = speaker.toUpperCase();
+  const hit = SPEAKER_ART.find(([k]) => S_.includes(k)); if(!hit) return null;
+  const id = hit[1];
+  // exact mood → neutral → any face we have for this character
+  return PORTRAIT_ART[`${id}_${mood||'neutral'}`] || PORTRAIT_ART[`${id}_neutral`]
+      || PORTRAIT_ART[Object.keys(PORTRAIT_ART).find(k => k.startsWith(id + '_'))] || null;
+}
+function drawPortrait(kind, speaker, mood){
   const wrap = $('#dialogue-portrait');
+  const painted = paintedPortrait(speaker, mood);
+  if(painted){
+    wrap.innerHTML = `<div class="portrait-frame painted"><img src="${painted}" alt="${speaker}" /><div class="portrait-vignette"></div></div>`;
+    return;
+  }
+  // system messages carry the agency badge rather than a face
+  if(speaker && /NACECA SYSTEM|^—$/.test(speaker) && typeof ASSETS!=='undefined' && ASSETS.title && ASSETS.title.naceca_badge){
+    wrap.innerHTML = `<div class="portrait-frame"><img src="${ASSETS.title.naceca_badge}" alt="NACECA" class="badge" /><div class="portrait-vignette"></div></div>`;
+    return;
+  }
   // Try to use the rendered character image
   const assetKey = PORTRAIT_MAP[kind];
   if(typeof ASSETS !== 'undefined' && ASSETS.portraits && assetKey && ASSETS.portraits[assetKey]){

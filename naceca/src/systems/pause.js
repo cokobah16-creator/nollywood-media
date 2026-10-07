@@ -33,12 +33,8 @@ function bindMenuButtons(){
     loadMission('m1');
   });
   $('#btn-continue').addEventListener('click', ()=>{
-    if(loadGame()){
-      const last = S.game.currentMission || 'm1';
-      // resume at the last loaded mission, or default
-      if(['m1','m2','m3'].includes(last)) loadMission(last);
-      else loadMission('m1');
-    } else { toast('NO SAVE FOUND','Start a new investigation'); }
+    if(loadGame()){ showRecap(resumeCampaign); }
+    else { toast('NO SAVE FOUND','Start a new investigation'); }
   });
   $('#btn-mission-select').addEventListener('click', ()=>{
     // mission select is open from title; load fresh save view
@@ -51,11 +47,8 @@ function bindMenuButtons(){
   $('#btn-resume').addEventListener('click', togglePause);
   $('#btn-save').addEventListener('click', saveGame);
   $('#btn-load').addEventListener('click', ()=>{
-    if(loadGame()){
-      const last = S.game.currentMission || 'm1';
-      if(['m1','m2','m3'].includes(last)) loadMission(last);
-      toast('LOADED','progress restored');
-    } else toast('NO SAVE');
+    if(loadGame()){ togglePause(); resumeCampaign(); toast('LOADED','progress restored'); }
+    else toast('NO SAVE');
   });
   $('#btn-quit').addEventListener('click', ()=>{
     showHUD(false);

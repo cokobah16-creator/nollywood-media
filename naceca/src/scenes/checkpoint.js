@@ -5,6 +5,7 @@
    ========================================================================= */
 /* ===================== 13b. SCENE: BENIN BYPASS CHECKPOINT (Mission 4, dusk) ===================== */
 function buildSceneCheckpoint(){
+  S.game._cpMusaFlipped = false;
   const scene = newScene({bg:'#2a1a18', fog:'#3a2a20'});
   scene.fog.near = 18; scene.fog.far = 60;
 
@@ -104,7 +105,7 @@ function buildSceneCheckpoint(){
 
   // === NPCs ===
   // AKS Inspector Chidi (green camo, beret) - left of truck
-  const chidi = buildNPCMesh('#5a3826', '#3a4a28', '#1a2010', '#0a0a14');
+  const chidi = buildNPCMesh('#5a3826', '#3a4a28', '#1a2010', '#0a0a14', {hair:'beret', capColor:'#7a1a1a', longSleeve:true});
   chidi.position.set(-6, 0, 2); chidi.rotation.y = Math.PI/3;
   // beret
   const beret = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8, 0, Math.PI*2, 0, Math.PI/2.5), toonMat('#5a0a0a'));
@@ -119,7 +120,7 @@ function buildSceneCheckpoint(){
   });
 
   // Driver Musa - sitting curbside, near the truck
-  const musa = buildNPCMesh('#6a4528', '#a08a6a', '#3a2a18', '#1a0a04');
+  const musa = buildNPCMesh('#6a4528', '#a08a6a', '#3a2a18', '#1a0a04', {hair:'cap', capColor:'#f0e8d8', beard:true, beardColor:'#2a2018', robe:'#a08a6a'});
   musa.position.set(-4, 0, 2.5); musa.rotation.y = Math.PI/2;
   scene.add(musa);
   ENGINE.npcs.push({mesh:musa, update:(dt)=>{
@@ -133,6 +134,21 @@ function buildSceneCheckpoint(){
       if(!S.game._cpBriefed){ toast('PROTOCOL','Speak with AKS first'); return; }
       if(S.game._cpDriverInterviewed){ toast('MUSA','He has nothing more to say without a lawyer'); return; }
       startDialogue('checkpoint_driver', ()=>{ S.game._cpDriverInterviewed = true; completeObjective('o2_driver'); });
+    }
+  });
+
+  // confront Musa: catch the lie against the documents, and he flips
+  ENGINE.interactables.push({
+    mesh: musa, label:'Confront Musa with the papers', range:2.3,
+    onInteract: ()=>{
+      if(!S.game._cpDriverInterviewed || !S.game._cpManifestDone){ toast('NOT YET','Question him and verify the manifest first.'); return; }
+      if(S.game._cpMusaFlipped){ toast('MUSA','He has given you the pickup. Get it on the record.'); return; }
+      openPuzzle('checkpoint_lie', (ok)=>{
+        if(!ok) return;
+        S.game._cpMusaFlipped = true;
+        refreshEvidenceCount();
+        setTimeout(()=>startDialogue('checkpoint_musa_flip'), 700);
+      });
     }
   });
 

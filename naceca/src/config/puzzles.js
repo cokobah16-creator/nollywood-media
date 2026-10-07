@@ -32,7 +32,7 @@ IMG_003.jpg — Family wedding photo
       { text:'The +1-415 "acct will be suspended" SMS', hint:'Foreign sender, bank-spoof URL with hxxp:// disguise, urgency.', correct:true },
       { text:'The Ola Mechanic message', hint:'Legitimate trade message.', correct:false },
     ],
-    onCorrect:{ intel:+25, integrity:+3, agencyFavour:+5, evidenceId:'phishing_template' },
+    onCorrect:{ intel:+25, integrity:+3, agencyFavour:+5, evidenceId:'phishing_template', evidenceName:'Phishing Template' },
     onWrong:  { integrity:-2, agencyFavour:-3 }
   },
 
@@ -62,8 +62,92 @@ CONTAINER SEAL # ON TRUCK: <span class="red">SL-44912</span>      ← MISMATCH
       { text:'Container seal numbers do not match', hint:'A broken/replaced seal is statutory probable cause to inspect cargo.', correct:true },
       { text:'The plate is from Abuja not Kano', hint:'Plates are portable. Not in itself suspicious.', correct:false },
     ],
-    onCorrect:{ intel:+30, integrity:+5, agencyFavour:+5, evidenceId:'broken_seal' },
+    onCorrect:{ intel:+30, integrity:+5, agencyFavour:+5, evidenceId:'broken_seal', evidenceName:'Mismatched Container Seal' },
     onWrong:  { integrity:-3, agencyFavour:-2 }
   },
-};
 
+  tower_call_trace: {
+    title:'CALL TRACE · SECTOR TIMING',
+    screen:
+`<span class="label">[ BTS: UGB-EDO-0417 · UGBOWO ]   [ BACKHAUL: DEGRADED · GEN POWER ]</span>
+<span class="label">[ TARGET: IMEI 35-***-88 · 4 RANSOM CALLS · 19:02–19:41 ]</span>
+
+SECTOR   AZIMUTH   TIMING ADV   RANGE BAND     SIGNAL
+─────────────────────────────────────────────────────
+A        030°      <span class="green">TA 9</span>         <span class="green">~5.0 km</span>        <span class="green">STRONG</span>   (north)
+B        150°      <span class="red">TA 2</span>         <span class="red">~1.1 km</span>        <span class="red">WEAK</span>     (south-east)
+C        270°      TA 14        ~7.7 km        <span class="red">NONE</span>     (west)
+
+HANDOVER LOG
+─────────────────────────────────────────────────────
+19:38  UGB-0417-A  →  <span class="green">EKO-0122</span>  (Ekosodin micro-cell)
+19:41  call dropped on battery sag · handset last seen on EKO-0122
+`,
+    prompt:`Three sectors see the handset differently. Pick the <b>only location consistent with every reading</b> — the strong sector, the range band and the handover.`,
+    options:[
+      { text:'UNIBEN Hall 3 hostel, south-east of the mast', hint:'Sector B points there, but it reads weak and far too close for TA 9.', correct:false },
+      { text:'Isihor junction market, west on the Lagos road', hint:'Sector C faces west and sees nothing at all.', correct:false },
+      { text:'Ekosodin, north of the campus fence', hint:'Sector A is strong at ~5 km north, and the handset handed over to the Ekosodin micro-cell.', correct:true },
+      { text:'The filling station on Ugbowo–Lagos Road', hint:'South-west. No sector reads strong in that direction.', correct:false },
+    ],
+    onCorrect:{ intel:+28, integrity:+3, agencyFavour:+6, evidenceId:'tower_cdr', evidenceName:'Call Records — Ugbowo Cell (IMEI 35-***-88)', xp:90 },
+    onWrong:  { integrity:-2, agencyFavour:-3 },
+    toastWrong:'Re-read the sectors — which one is strong, and where did the handset hand over?'
+  },
+
+  mansion_safe: {
+    title:'WALL SAFE · STUDY',
+    screen:
+`<span class="label">[ SAFE: 6-DIGIT DIAL · CHIEF OBI · STUDY ]</span>
+
+WHAT'S IN THE STUDY
+─────────────────────────────────────
+FRAMED PHOTO   "Conferment of the title <span class="green">Akaeze of Umuoji</span>
+               on Chief E. Obi — <span class="green">14 July 1986</span>"
+DESK DIARY     <span class="red">"safe = the day they gave me my name.
+                 big number first, like the Americans write it — no.
+                 BIG number first."</span>
+GOLD PEN       engraved "To Ada, 22·03·86"
+CALENDAR       wife's birthday circled: <span class="green">22 March</span>
+`,
+    prompt:`Chief Obi wrote himself a reminder. Work out the <b>six digits</b> he set — the date he means, in the order he means.`,
+    options:[
+      { text:'14 07 86', hint:'The right day, but day-first. His note says the big number goes first.', correct:false },
+      { text:'22 03 86', hint:"That's Ada's date. His note is about the day he got his title.", correct:false },
+      { text:'86 07 14', hint:'Title day, 14 July 1986, written year-first — the biggest number leads.', correct:true },
+      { text:'07 14 86', hint:'Month-first is "like the Americans write it" — the very order he crossed out.', correct:false },
+    ],
+    onCorrect:{ intel:+20, integrity:+2, agencyFavour:+4, evidenceId:'safe_drives', evidenceName:'Encrypted Hard Drives', xp:120 },
+    onWrong:  { agencyFavour:-2 },
+    toastWrongTitle:'DIAL RESETS',
+    toastWrong:'Read the diary again — whose day, and which number first?'
+  },
+
+  checkpoint_lie: {
+    title:'STATEMENT vs. DOCUMENTS · DRIVER MUSA',
+    screen:
+`<span class="label">[ WHAT MUSA TOLD YOU ]</span>
+ 1. "I dey carry cattle from Kano to Sapele."
+ 2. "Owner of cattle na one Alhaji for Kano."
+ 3. "Five years I dey do this road. No problem at all."
+ 4. "I no know wetin dem put for back-back."
+
+<span class="label">[ WHAT THE PAPERS SAY ]</span>
+WAYBILL     route <span class="green">KANO → SAPELE</span> · consignor <span class="green">ALH. RABIU MUKHTAR (KANO)</span>
+LICENCE     class E · <span class="red">first issued 11 MAR 2026</span> (FRSC, Kano)
+TRUCK       registered to <span class="red">SAPELE HAULAGE NIG. LTD · since 2026</span>
+LOGBOOK     <span class="red">3 entries</span> — all in the last 6 months
+`,
+    prompt:`One of his statements is <b>contradicted by the documents</b>, not just unproven. Put it to him.`,
+    options:[
+      { text:'1 — Kano to Sapele', hint:'The waybill says exactly that.', correct:false },
+      { text:'2 — the Alhaji in Kano', hint:'The consignor is a Kano Alhaji. It checks out.', correct:false },
+      { text:'3 — "five years on this road"', hint:'A licence from March and a six-month logbook. He has not driven this road for five years.', correct:true },
+      { text:'4 — "I don\'t know what\'s in the back"', hint:'Suspicious, but nothing on paper proves it false. Yet.', correct:false },
+    ],
+    onCorrect:{ intel:+18, integrity:+3, agencyFavour:+4, evidenceId:'musa_statement', evidenceName:'Musa\'s Statement — Names the Bypass Pickup', xp:110 },
+    onWrong:  { publicTrust:-2, agencyFavour:-2 },
+    toastWrongTitle:'HE DOESN\'T BLINK',
+    toastWrong:'That one holds up. Which claim do the papers actually break?'
+  },
+};

@@ -119,8 +119,10 @@ function updateTitleCam(dt){
 window.addEventListener('load', ()=>{
   bindDialogueTap();
   initThree();
+  loadSettings();
   bindInput();
   bindMenuButtons();
+  bindExtraMenus();
   // build the cinematic title backdrop scene
   buildTitleScene();
   showOverlay('screen-title');
@@ -129,3 +131,16 @@ window.addEventListener('load', ()=>{
   document.addEventListener('pointerdown', ()=>{ initAudio(); startAmbient('title'); musicForScene('title'); }, {once:true});
   tick();
 });
+
+/* Settings + Case Records buttons on the title and pause screens */
+function bindExtraMenus(){
+  const add = (sel, id, label, fn)=>{
+    const host = document.querySelector(sel); if(!host || document.getElementById(id)) return;
+    const b = document.createElement('button'); b.className = 'btn ghost'; b.id = id; b.textContent = label;
+    b.addEventListener('click', fn); host.appendChild(b);
+  };
+  add('#screen-title .title-actions', 'btn-title-settings', 'SETTINGS', openSettings);
+  add('#screen-title .title-actions', 'btn-title-records', 'CASE RECORDS', openRecords);
+  add('#screen-pause .title-actions', 'btn-pause-settings', 'SETTINGS', openSettings);
+  add('#screen-pause .title-actions', 'btn-pause-records', 'CASE RECORDS', openRecords);
+}

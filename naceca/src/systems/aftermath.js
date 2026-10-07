@@ -6,14 +6,38 @@
 /* ===================== 18. AFTERMATH ===================== */
 function generateHeadline(){
   const r = S.player.reputation;
-  const force = S.game.forceUsed;
+  const force = (S.game.forceUsed||0) - ((S.game._opStart && S.game._opStart.force) || 0);
   const arrest = S.game.moralChoices.arrest;
   const checkpoint = S.game.moralChoices.checkpoint;
   const civ = S.game.civiliansRescued;
   const integ = r.integrity, trust = r.publicTrust;
 
+  // Mission 7 — No Signal Zone (Ugbowo)
+  if(S.game.currentMission==='m7'){
+    const t = S.game.moralChoices && S.game.moralChoices.tower;
+    if(t==='hold'){
+      return { pub:'PUNCH TODAY', head:"NACECA Pins Kidnappers' Phone to Ekosodin in Ugbowo Tower Firefight", ded:'Two officers held a telecom cabinet under fire to finish a call trace. Rescue teams moved north before dawn.' };
+    }
+    if(t==='extract'){
+      return { pub:'THE GUARDIAN', head:'Anti-Fraud Officers Pull Civilians From Ugbowo Tower Ambush', ded:"Trace completed, cabinet abandoned. The site engineer and the missing student's mother walked out behind the officers." };
+    }
+    if(t==='backup'){
+      return { pub:'THIS DAY', head:'Benin Zonal Command Reinforces NACECA at Sabotaged Ugbowo Mast', ded:'The ambush broke when the armoured unit arrived. Critics ask why two officers were sent alone.' };
+    }
+    if(t==='cut_extract'){
+      return { pub:'CHANNELS NEWS', head:'Kidnappers Cut Power Twice at Ugbowo Tower — Call Trace Lost', ded:'NACECA withdrew with civilians and sabotage evidence. The ransom calls continue.' };
+    }
+    if(t==='cut_backup'){
+      return { pub:'THE GUARDIAN', head:'Standoff at Ugbowo Mast Ends Without Arrests', ded:'Reinforcements secured the site; the handset went dark before it could be fixed.' };
+    }
+    return { pub:'THIS DAY', head:'Operation Underway at Sabotaged Ugbowo Telecom Tower', ded:'The full picture of the Ugbowo operation is still developing.' };
+  }
+
   // Mission 6 — The Disappeared (Asaba)
   if(S.game.currentMission==='m6'){
+    if(S.game.moralChoices.asaba==='failed'){
+      return { pub:'CHANNELS NEWS', head:'Asaba Warehouse Raid Ends With Fixer Escaped, Hostage Dead', ded:'Officers hesitated at the breach, sources say. NACECA has opened an internal review.' };
+    }
     const choice = S.game.moralChoices && S.game.moralChoices.asaba;
     if(choice==='rescue'){
       return { pub:'PUNCH TODAY', head:'NACECA Pulls Accountant From Asaba Warehouse Fire — Fixer Escapes', ded:'A young officer chose the man over the lead. The fixer is in the wind; the witness can talk.' };
@@ -90,7 +114,11 @@ function nextMissionPreview(){
       <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
   }
   if(cur==='m6'){
-    return `Mission 7 — <b>No Signal Zone</b> · sabotaged telecom tower in Edo. Triangulate the kidnapper's calls under ambush fire.
+    return `Mission 7 — <b>No Signal Zone</b> · sabotaged telecom tower behind the UNIBEN gate. Restore power, trace the ransom calls, decide under fire.
+      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+  }
+  if(cur==='m7'){
+    return `Mission 8 — <b>Oba's Palace Raid</b> · encrypted drives inside a politically fortified Benin compound. The accountant knows the names.
       <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(232,74,92,.5);color:#ffb0b8;font-family:Oswald;font-size:10px;letter-spacing:.18em">SCAFFOLDED</span>`;
   }
   return 'Open the mission select to choose your next operation.';
@@ -106,17 +134,26 @@ function showAftermath(){
   S.game.headlines.push(head);
 
   const r = S.player.reputation;
-  const arrestText = ({professional:'Professional restraint', forceful:'Forceful takedown', informant:'Informant deal', bribe:'BRIBED — case compromised'})[S.game.moralChoices.arrest] || '—';
+  const arrestText = S.game.currentMission!=='m3' ? '—' : ({professional:'Professional restraint', forceful:'Forceful takedown', informant:'Informant deal', bribe:'BRIBED — case compromised'})[S.game.moralChoices.arrest] || '—';
 
+  const o = S.game._opStart || {arrests:0, civ:0, force:0, intel:0, xp:S.player.xp};
+  const op = {
+    arrests: (S.game.arrests||0) - o.arrests,
+    civ: (S.game.civiliansRescued||0) - o.civ,
+    force: (S.game.forceUsed||0) - o.force,
+    intel: (S.game.intelScore||0) - o.intel,
+    ev: missionEvidenceCount(),
+    xp: Math.max(0, (S.player.xp||0) - o.xp),
+  };
   const grid = $('#aftermath-grid');
   grid.innerHTML = `
     <div class="aftermath-block">
       <h3>OPERATIONAL STATS</h3>
-      <div class="stat-row"><span class="lbl">Arrests made</span><span class="val">${S.game.arrests}</span></div>
-      <div class="stat-row"><span class="lbl">Evidence collected</span><span class="val">${S.game.evidence.length}</span></div>
-      <div class="stat-row"><span class="lbl">Civilians rescued</span><span class="val">${S.game.civiliansRescued}</span></div>
-      <div class="stat-row"><span class="lbl">Force used</span><span class="val ${S.game.forceUsed>0?'down':''}">${S.game.forceUsed}</span></div>
-      <div class="stat-row"><span class="lbl">Intel score</span><span class="val">${S.game.intelScore}</span></div>
+      <div class="stat-row"><span class="lbl">Arrests made</span><span class="val">${op.arrests}</span></div>
+      <div class="stat-row"><span class="lbl">Evidence collected</span><span class="val">${op.ev}</span></div>
+      <div class="stat-row"><span class="lbl">Civilians rescued</span><span class="val">${op.civ}</span></div>
+      <div class="stat-row"><span class="lbl">Force used</span><span class="val ${op.force>0?'down':''}">${op.force}</span></div>
+      <div class="stat-row"><span class="lbl">Intel gained</span><span class="val">+${op.intel}</span></div>
       <div class="stat-row"><span class="lbl">Arrest method</span><span class="val">${arrestText}</span></div>
     </div>
     <div class="aftermath-block">
@@ -124,7 +161,7 @@ function showAftermath(){
       <div class="stat-row"><span class="lbl">Integrity</span><span class="val ${r.integrity>=60?'up':r.integrity<=40?'down':''}">${r.integrity}</span></div>
       <div class="stat-row"><span class="lbl">Public Trust</span><span class="val ${r.publicTrust>=60?'up':r.publicTrust<=40?'down':''}">${r.publicTrust}</span></div>
       <div class="stat-row"><span class="lbl">Agency Favour</span><span class="val ${r.agencyFavour>=60?'up':r.agencyFavour<=40?'down':''}">${r.agencyFavour}</span></div>
-      <div class="stat-row"><span class="lbl">XP this op</span><span class="val up">+250</span></div>
+      <div class="stat-row"><span class="lbl">XP this op</span><span class="val up">+${op.xp}</span></div>
       <div class="stat-row"><span class="lbl">Total XP</span><span class="val">${S.player.xp}</span></div>
       <div class="stat-row"><span class="lbl">Level</span><span class="val">${S.player.level}</span></div>
     </div>
@@ -138,9 +175,10 @@ function showAftermath(){
       <div style="font-size:13px;color:#bcc6d4;line-height:1.7">
         ${nextMissionPreview()}
       </div>
-      <div style="font-size:12px;color:#7a8aa3;margin-top:8px">The full campaign (missions 5-12) is structured in the mission select. Each card holds the briefing and chosen region.</div>
+      <div style="font-size:12px;color:#7a8aa3;margin-top:8px">The full campaign (missions 8-12) is structured in the mission select. Each card holds the briefing and chosen region.</div>
     </div>`;
 
+  if(typeof onAftermath==='function') onAftermath(op, head);
   saveGame();
   showHUD(false);
   showOverlay('screen-aftermath');

@@ -17,6 +17,7 @@ function initAudio(){
     AUDIO.musicGain = AUDIO.ctx.createGain(); AUDIO.musicGain.gain.value = 0.35; AUDIO.musicGain.connect(AUDIO.master);
     AUDIO.ambientGain = AUDIO.ctx.createGain(); AUDIO.ambientGain.gain.value = 0.5; AUDIO.ambientGain.connect(AUDIO.master);
     AUDIO.started = true;
+    if(typeof applyAudioLevels==='function') applyAudioLevels();
   }catch(e){ AUDIO.enabled = false; }
 }
 function ensureAudio(){
@@ -385,6 +386,8 @@ function musicForScene(kind){
     case 'm5':         playMusic('investigation', { volume: 0.40 }); break;  // Forest shrine — quiet, contemplative
     case 'm6':         playMusic('stealth',       { volume: 0.55 }); break;  // Asaba — switches to chase on chaos trigger
     case 'm6_chase':   playMusic('chase',         { volume: 0.85, loop: false }); break;
+    case 'm7':         playMusic('stealth',       { volume: 0.55 }); break;  // Ugbowo tower — dusk, exposed
+    case 'm7_ambush':  playMusic('chase',         { volume: 0.85, loop: false }); break;
     case 'investigation': playMusic('investigation', { volume: 0.55 }); break;  // Evidence Board overlay
     case 'victory':    playMusic('victory',       { volume: 0.75, loop: false }); break;
     default:           stopMusic();

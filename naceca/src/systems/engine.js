@@ -279,90 +279,7 @@ function clayWallTexture(){
 }
 
 /* ---------- player character (improved with sidearm + outlines) ---------- */
-function buildPlayerMesh(){
-  const g = new THREE.Group();
-  // torso
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.75,0.32), toonMat('#0b1a3a'));
-  torso.position.y = 1.05; torso.castShadow=true; g.add(torso); outline(torso, 1.06);
-  // tactical vest plate
-  const vest = new THREE.Mesh(new THREE.BoxGeometry(0.62,0.58,0.38), toonMat('#0a1428'));
-  vest.position.y = 1.02; g.add(vest); outline(vest, 1.05);
-  // shoulder pads (NACECA)
-  for(const sx of [-1,1]){
-    const sh = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.18,0.34), toonMat('#0b1a3a'));
-    sh.position.set(sx*0.32, 1.32, 0); g.add(sh); outline(sh, 1.06);
-  }
-  // gold NACECA patch (front)
-  const patch = new THREE.Mesh(new THREE.PlaneGeometry(0.22,0.08), basicMat('#d8a64a'));
-  patch.position.set(0.18, 1.18, 0.193); g.add(patch);
-  // belt with mag pouches
-  const belt = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.1,0.36), toonMat('#1a1208'));
-  belt.position.y = 0.72; g.add(belt); outline(belt, 1.04);
-  for(let i=-1;i<=1;i++){
-    const mag = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.18,0.06), toonMat('#0a0a0a'));
-    mag.position.set(i*0.14, 0.66, 0.2); g.add(mag);
-  }
-  // head — better proportions
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16,16,14), toonMat('#5a3826'));
-  head.position.y = 1.62; head.castShadow=true; g.add(head); outline(head, 1.07);
-  // close-cropped hair
-  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.165,16,10,0,Math.PI*2,0,Math.PI/2.4), toonMat('#0a0a14'));
-  hair.position.y = 1.66; g.add(hair); outline(hair, 1.05);
-  // eye dots (face front)
-  for(const sx of [-1,1]){
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.012,6,6), basicMat('#0a0a14'));
-    eye.position.set(sx*0.045, 1.62, 0.155); g.add(eye);
-  }
-  // arms — slightly tapered
-  const armGeo = new THREE.BoxGeometry(0.16,0.5,0.16);
-  const armMat = toonMat('#1a2a52');
-  const armL = new THREE.Mesh(armGeo, armMat); armL.position.set(-0.36,1.08,0); armL.castShadow=true; g.add(armL); outline(armL,1.06);
-  const armR = new THREE.Mesh(armGeo, armMat); armR.position.set( 0.36,1.08,0); armR.castShadow=true; g.add(armR); outline(armR,1.06);
-  // forearm + hand on right (holding sidearm low-ready)
-  const forearm = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.28,0.14), toonMat('#5a3826'));
-  forearm.position.set(0.36,0.78,0.08); g.add(forearm); outline(forearm,1.06);
-  // sidearm
-  const gun = new THREE.Group();
-  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.06,0.16,0.04), toonMat('#0a0a0a'));
-  grip.position.y = -0.05; gun.add(grip); outline(grip,1.08);
-  const slide = new THREE.Mesh(new THREE.BoxGeometry(0.06,0.05,0.18), toonMat('#1a1a1a'));
-  slide.position.set(0,0.05,0.04); gun.add(slide); outline(slide,1.08);
-  gun.position.set(0.36,0.66,0.22);
-  g.add(gun);
-  // legs
-  const legGeo = new THREE.BoxGeometry(0.21,0.65,0.21);
-  const legMat = toonMat('#1c2030');
-  const legL = new THREE.Mesh(legGeo, legMat); legL.position.set(-0.14,0.4,0); legL.castShadow=true; g.add(legL); outline(legL,1.05);
-  const legR = new THREE.Mesh(legGeo, legMat); legR.position.set( 0.14,0.4,0); legR.castShadow=true; g.add(legR); outline(legR,1.05);
-  // boots
-  for(const sx of [-1,1]){
-    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.12,0.28), toonMat('#0a0a0a'));
-    boot.position.set(sx*0.14, 0.06, 0.04); g.add(boot); outline(boot,1.04);
-  }
-  g.userData = { armL, armR, legL, legR, walkPhase:0 };
-  return g;
-}
-function buildNPCMesh(skin, shirt, pants, hair){
-  const g = new THREE.Group();
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.75,0.32), toonMat(shirt));
-  torso.position.y = 1.05; torso.castShadow=true; g.add(torso); outline(torso,1.05);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16,14,12), toonMat(skin));
-  head.position.y = 1.62; head.castShadow=true; g.add(head); outline(head,1.07);
-  const hairMesh = new THREE.Mesh(new THREE.SphereGeometry(0.165,14,10,0,Math.PI*2,0,Math.PI/2.4), toonMat(hair));
-  hairMesh.position.y = 1.66; g.add(hairMesh); outline(hairMesh,1.05);
-  for(const sx of [-1,1]){
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.011,6,6), basicMat('#0a0a14'));
-    eye.position.set(sx*0.045, 1.62, 0.155); g.add(eye);
-  }
-  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.6,0.2), toonMat(pants));
-  legL.position.set(-0.14,0.4,0); legL.castShadow=true; g.add(legL); outline(legL,1.05);
-  const legR = legL.clone(); legR.position.x = 0.14; g.add(legR); outline(legR,1.05);
-  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.16,0.55,0.16), toonMat(shirt));
-  armL.position.set(-0.36,1.05,0); armL.castShadow=true; g.add(armL); outline(armL,1.06);
-  const armR = armL.clone(); armR.position.x = 0.36; g.add(armR); outline(armR,1.06);
-  g.userData = { armL, armR, legL, legR, walkPhase:0, baseY:0 };
-  return g;
-}
+/* character builders live in systems/characters.js */
 
 /* ---------- input ---------- */
 function bindInput(){
@@ -513,7 +430,7 @@ function tick(){
   }
   if(ENGINE.scanActive>0){ ENGINE.scanActive -= dt; if(ENGINE.scanActive<=0) $('#scan-fx').classList.remove('show'); }
   // render scene -> RT, then full-screen quad with post FX
-  if(POST.rt){
+  if(POST.rt && !ENGINE._postOff){
     ENGINE.renderer.setRenderTarget(POST.rt);
     ENGINE.renderer.render(ENGINE.scene, ENGINE.camera);
     ENGINE.renderer.setRenderTarget(null);
@@ -530,6 +447,8 @@ function updateAtmosphere(dt){
   if(!ENGINE.scene) return;
   // Mission-specific atmosphere triggers
   if(typeof updateAsabaTrigger === 'function') updateAsabaTrigger(dt);
+  if(typeof updateTowerTrigger === 'function') updateTowerTrigger(dt);
+  if(typeof updateMansionWipe === 'function') updateMansionWipe(dt);
 
   ENGINE.scene.traverse(obj=>{
     if(obj.userData && obj.userData._dust){
@@ -582,7 +501,7 @@ function updateAtmosphere(dt){
 
 function updatePlayer(dt){
   if(!ENGINE.player) return;
-  const speed = (ENGINE.keys['ShiftLeft']||ENGINE.keys['ShiftRight']) ? 5.2 : 3.0;
+  const speed = ((ENGINE.keys['ShiftLeft']||ENGINE.keys['ShiftRight']) ? 5.2 : 3.0) * (ENGINE.speedMul || 1);
   let mx=0, mz=0;
   if(ENGINE.keys['KeyW']||ENGINE.keys['ArrowUp']) mz -= 1;
   if(ENGINE.keys['KeyS']||ENGINE.keys['ArrowDown']) mz += 1;
@@ -599,8 +518,10 @@ function updatePlayer(dt){
     const nx = ENGINE.player.position.x + wx*speed*dt;
     const nz = ENGINE.player.position.z + wz*speed*dt;
     // bounds + obstacle check
-    if(nx>ENGINE.bounds.minX && nx<ENGINE.bounds.maxX) ENGINE.player.position.x = nx;
-    if(nz>ENGINE.bounds.minZ && nz<ENGINE.bounds.maxZ) ENGINE.player.position.z = nz;
+    const _bx = typeof blockedAt==='function' && blockedAt(nx, ENGINE.player.position.z);
+    if(!_bx && nx>ENGINE.bounds.minX && nx<ENGINE.bounds.maxX) ENGINE.player.position.x = nx;
+    const _bz = typeof blockedAt==='function' && blockedAt(ENGINE.player.position.x, nz);
+    if(!_bz && nz>ENGINE.bounds.minZ && nz<ENGINE.bounds.maxZ) ENGINE.player.position.z = nz;
     // face movement
     ENGINE.playerYaw = Math.atan2(wx, wz);
     ENGINE.player.rotation.y = ENGINE.playerYaw;
@@ -627,16 +548,58 @@ function updatePlayer(dt){
   ENGINE.player.scale.y = THREE.MathUtils.lerp(ENGINE.player.scale.y, wantCrouch?0.7:1.0, dt*8);
 }
 
+/* Camera collision. Solid scenery (opaque boxes/cylinders that aren't characters,
+   outlines, floors or effects) is gathered once per scene; each frame a ray from the
+   player's head toward the ideal camera spot pulls the camera in front of any wall. */
+const _camRay = { ray:null, from:null, dir:null, scene:null, solids:[] , cur:null };
+function gatherCameraSolids(){
+  const solids = [];
+  const skip = new Set();
+  if(ENGINE.player) ENGINE.player.traverse(o=>skip.add(o));
+  (ENGINE.npcs||[]).forEach(n=>{ const o3 = (n && n.isObject3D) ? n : (n && n.mesh); if(o3 && o3.traverse) o3.traverse(o=>skip.add(o)); });
+  ENGINE.scene.traverse(o=>{
+    if(!o.isMesh || skip.has(o) || !o.visible) return;
+    if(o.userData && (o.userData._outline || o.userData._smoke)) return;
+    const m = o.material; if(!m || Array.isArray(m)) return;
+    if(m.transparent || m.blending===THREE.AdditiveBlending || m.side===THREE.BackSide) return;
+    const g = o.geometry; if(!g) return;
+    if(g.type!=='BoxGeometry' && g.type!=='CylinderGeometry' && g.type!=='BoxBufferGeometry' && g.type!=='CylinderBufferGeometry') return;
+    if(!g.boundingBox) g.computeBoundingBox();
+    const b = g.boundingBox, sx=b.max.x-b.min.x, sy=b.max.y-b.min.y, sz=b.max.z-b.min.z;
+    if(sy < 0.9) return;                       // floors, kerbs, rugs, low clutter
+    if(Math.max(sx,sz) < 0.5) return;          // thin posts, legs, braces
+    solids.push(o);
+  });
+  _camRay.solids = solids; _camRay.scene = ENGINE.scene; _camRay.cur = null;
+}
 function updateCamera(){
   if(!ENGINE.player||!ENGINE.camera) return;
   const p = ENGINE.player.position;
   const dist = ENGINE.cameraDist;
   const py = ENGINE.playerPitch;
-  const cx = p.x - Math.sin(ENGINE.cameraYaw)*Math.cos(py)*dist;
-  const cz = p.z - Math.cos(ENGINE.cameraYaw)*Math.cos(py)*dist;
-  const cy = p.y + 1.6 + Math.sin(py)*dist;
-  ENGINE.camera.position.set(cx, cy, cz);
+  const dx = -Math.sin(ENGINE.cameraYaw)*Math.cos(py);
+  const dz = -Math.cos(ENGINE.cameraYaw)*Math.cos(py);
+  const dy =  Math.sin(py);
+  let d = dist;
+  if(ENGINE.scene){
+    if(!_camRay.ray){ _camRay.ray = new THREE.Raycaster(); _camRay.from = new THREE.Vector3(); _camRay.dir = new THREE.Vector3(); }
+    if(_camRay.scene !== ENGINE.scene) gatherCameraSolids();
+    if(_camRay.solids.length){
+      _camRay.from.set(p.x, p.y+1.6, p.z);
+      _camRay.dir.set(dx, dy, dz).normalize();
+      _camRay.ray.set(_camRay.from, _camRay.dir);
+      _camRay.ray.far = dist + 0.4;
+      const hit = _camRay.ray.intersectObjects(_camRay.solids, false)[0];
+      if(hit) d = Math.max(0.9, hit.distance - 0.35);
+    }
+  }
+  // snap in fast (never sit inside a wall), ease back out slowly
+  if(_camRay.cur == null) _camRay.cur = d;
+  _camRay.cur = d < _camRay.cur ? d : _camRay.cur + (d - _camRay.cur) * 0.08;
+  const cd = _camRay.cur;
+  ENGINE.camera.position.set(p.x + dx*cd, p.y + 1.6 + dy*cd, p.z + dz*cd);
   ENGINE.camera.lookAt(p.x, p.y+1.4, p.z);
+  if(typeof applyShake==='function') applyShake();
 }
 
 function updateInteractPrompt(){
@@ -663,7 +626,7 @@ function nearestInteractable(){
 }
 function tryInteract(){
   const it = nearestInteractable();
-  if(it && it.onInteract){ it.onInteract(it); }
+  if(it && it.onInteract){ if(typeof onBeforeInteract==='function') onBeforeInteract(it); it.onInteract(it); }
 }
 function triggerScan(){
   $('#scan-fx').classList.add('show');
@@ -683,6 +646,10 @@ function triggerScan(){
 
 function updateNPCs(dt){
   for(const n of ENGINE.npcs){ if(n.update) n.update(dt); }
+  if(typeof updatePressure==='function') updatePressure(dt);
+  if(typeof updateGuideAndFeel==='function') updateGuideAndFeel(dt);
+  if(typeof settingsTick==='function') settingsTick(dt);
+  if(typeof animateRigs==='function') animateRigs(dt);
 }
 
 function updateMarkers(){

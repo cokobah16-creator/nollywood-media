@@ -24,10 +24,10 @@ const DIALOGUE = {
     { speaker:'COMMANDER ADAEZE', text:"Good. Chain of custody, Kelechi. That's how we put the big ones away. Move out — Ikeja market." }
   ],
   hq_harsh: [
-    { speaker:'COMMANDER ADAEZE', text:"Careful. I don't need cowboys. I need convictions. Don't make me regret signing your posting." }
+    { speaker:'COMMANDER ADAEZE', mood:'angry', text:"Careful. I don't need cowboys. I need convictions. Don't make me regret signing your posting." }
   ],
   hq_savvy: [
-    { speaker:'COMMANDER ADAEZE', text:"Smart. I'll send word to AKS — they've been working the same ledger from the kidnapping side. Ikeja market. Go." }
+    { speaker:'COMMANDER ADAEZE', mood:'evasive', text:"Smart. I'll send word to AKS — they've been working the same ledger from the kidnapping side. Ikeja market. Go." }
   ],
 
   // Mission 2: Market intro & informant
@@ -42,11 +42,20 @@ const DIALOGUE = {
       ]
     }
   ],
+  market_runner_escaped: [
+    { speaker:'INFORMANT — TUNDE', portrait:'informant',
+      text:"He don cut through Computer Village, oga. That boy know every back door for this market.",
+      textEn:"He's cut through Computer Village, sir. That boy knows every back door in this market." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"We have the phone and the template. He'll surface again — and next time we'll know his face." },
+  ],
   market_runner: [
     { speaker:'TEEN SUSPECT — KC', portrait:'teen',
-      text:"Officer abeg! I no know wetin dey for that phone. Na person give me to hold am for am. I just dey hustle small data card sales!" },
+      mood:'afraid', text:"Officer abeg! I no know wetin dey for that phone. Na person give me to hold am for am. I just dey hustle small data card sales!",
+      textEn:"Officer, please! I don't know what's on that phone. Someone gave it to me to hold for them. I just sell data cards!" },
     { speaker:'TEEN SUSPECT — KC',
-      text:"If you carry me go station… my mama dey sick. Abeg. I fit help you. I sabi the guy wey dey send the phishing message dem.",
+      mood:'afraid', text:"If you carry me go station… my mama dey sick. Abeg. I fit help you. I sabi the guy wey dey send the phishing message dem.",
+      textEn:"If you take me to the station… my mum is sick. Please. I can help you. I know the guy who sends the phishing messages.",
       choices:[
         { text:"Cuff him. Procedure first — he can talk at HQ.", effect:{integrity:+4, agencyFavour:+3, publicTrust:-2}, tag:'lawful',
           flag:{ choice:'detain' }, next:null },
@@ -74,11 +83,17 @@ const DIALOGUE = {
       ]
     }
   ],
+  mansion_child_safe: [
+    { speaker:'CHILD', portrait:'child', mood:'relieved',
+      text:"...Okay. Your face get kindness. I go follow you.",
+      textEn:"...Okay. You have a kind face. I'll come with you." },
+  ],
   mansion_arrest: [
     { speaker:'SUSPECT — "CHIEF" OBI', portrait:'suspect',
-      text:"My friend! Officer! Take am easy now. We fit reason this thing. Whatever number dey your head — I fit double am. Cash. Inside that drawer." },
+      mood:'evasive', text:"My friend! Officer! Take am easy now. We fit reason this thing. Whatever number dey your head — I fit double am. Cash. Inside that drawer.",
+      textEn:"My friend! Officer! Take it easy. We can work this out. Whatever number is in your head — I can double it. Cash. In that drawer." },
     { speaker:'SUSPECT — "CHIEF" OBI',
-      text:"You no need to embarrass me for my own house. Make we settle am like sensible people.",
+      mood:'angry', text:"You no need to embarrass me for my own house. Make we settle am like sensible people.",
       choices:[
         { text:"Read him his rights. Cuff with restraint.",        effect:{integrity:+8, publicTrust:+6, agencyFavour:+3}, tag:'lawful',  flag:{arrest:'professional', force:0}, next:null },
         { text:"Down on the ground. Knee on his back.",            effect:{integrity:-4, publicTrust:-3, agencyFavour:+4, force:+1}, tag:'harsh', flag:{arrest:'forceful', force:1}, next:null },
@@ -90,11 +105,11 @@ const DIALOGUE = {
   ],
   mansion_civilian: [
     { speaker:'CHILD', portrait:'child',
-      text:"Aunty… I want my daddy. Why you people get gun? I no do anything…" },
+      mood:'afraid', text:"Aunty… I want my daddy. Why you people get gun? I no do anything…" },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"It's okay. I'm a police officer — NACECA. You're safe. Walk with me — eyes on me — we're going outside to your aunty.",
       choices:[
-        { text:"Take her hand gently and lead her to the safe zone.", effect:{integrity:+5, publicTrust:+8}, tag:'lawful', flag:{rescued:1}, next:null },
+        { text:"Take her hand gently and lead her to the safe zone.", effect:{integrity:+5, publicTrust:+8}, tag:'lawful', flag:{rescued:1}, next:'mansion_child_safe' },
         { text:"Tell her to stay put. Get back to the laptop.",       effect:{integrity:-4, publicTrust:-6}, tag:'harsh', next:null },
       ]
     }
@@ -105,7 +120,7 @@ const DIALOGUE = {
     { speaker:'AKS LIAISON — INSP. CHIDI', portrait:'sergeant',
       text:"Kelechi, you made it. Welcome to the Bypass. AKS picked up signal: a livestock truck moving cattle north — but one of our informants says the cargo's not just cattle." },
     { speaker:'AKS LIAISON — INSP. CHIDI',
-      text:"Driver's been here twenty minutes. Sweating like he's running a fever. I want you to verify his manifest — your eyes are fresher than mine. Then we open up the back together.",
+      mood:'evasive', text:"Driver's been here twenty minutes. Sweating like he's running a fever. I want you to verify his manifest — your eyes are fresher than mine. Then we open up the back together.",
       choices:[
         { text:"Understood. I'll work the documents first — proper sequence.", effect:{integrity:+4, agencyFavour:+3}, tag:'lawful', next:null },
         { text:"Forget the paper — pop the back doors now.",                     effect:{integrity:-3, agencyFavour:+2, force:+1}, tag:'harsh', next:null },
@@ -115,15 +130,27 @@ const DIALOGUE = {
   ],
   checkpoint_driver: [
     { speaker:'TRUCK DRIVER — MUSA', portrait:'driver',
-      text:"Officer abeg na correct papers I get o. I dey carry cattle from Kano to Sapele. Five years I dey do this road. No problem at all." },
+      mood:'evasive', text:"Officer abeg na correct papers I get o. I dey carry cattle from Kano to Sapele. Five years I dey do this road. No problem at all.",
+      textEn:"Officer, please, my papers are correct. I carry cattle from Kano to Sapele. Five years I've driven this road. Never any problem." },
     { speaker:'TRUCK DRIVER — MUSA',
-      text:"Wetin you wan check? Manifest dey for dashboard. Owner of cattle na one Alhaji for Kano. I just dey drive. I no know wetin dem put for back-back.",
+      mood:'angry', text:"Wetin you wan check? Manifest dey for dashboard. Owner of cattle na one Alhaji for Kano. I just dey drive. I no know wetin dem put for back-back.",
+      textEn:"What do you want to check? The manifest is on the dashboard. The cattle belong to an Alhaji in Kano. I just drive. I don't know what they put in the back.",
       choices:[
         { text:"I'll check the manifest. Stay with the vehicle.", effect:{integrity:+3}, tag:'lawful', next:null },
         { text:"You said you don't know what's in the back. That's interesting.", effect:{integrity:+2, publicTrust:+2}, tag:'savvy', next:null },
         { text:"Sit on the curb. Hands where I can see them.",   effect:{agencyFavour:+1, publicTrust:-2}, tag:'harsh', next:null },
       ]
     }
+  ],
+  checkpoint_musa_flip: [
+    { speaker:'TRUCK DRIVER — MUSA', portrait:'driver',
+      mood:'afraid', text:"...Oga. Na true. Na March I start. Dem give me the licence, dem give me the truck. One man for Benin Bypass dey load the back — I no dey look.",
+      textEn:"...Sir. It's true. I started in March. They gave me the licence, they gave me the truck. A man on the Benin Bypass loads the back — I don't look." },
+    { speaker:'TRUCK DRIVER — MUSA',
+      mood:'afraid', text:"Dem call am 'Engineer'. Him dey wait for the filling station before Ugbowo junction. I fit show you the place. Abeg, tell them say I talk.",
+      textEn:"They call him 'Engineer'. He waits at the filling station before Ugbowo junction. I can show you the place. Please, tell them I talked." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"Then you'll say it again on the record. That's how you help yourself." },
   ],
   checkpoint_resolve: [
     { speaker:'AKS LIAISON — INSP. CHIDI', portrait:'sergeant',
@@ -144,13 +171,13 @@ const DIALOGUE = {
   // ===== Mission 5: Forest Shrine =====
   shrine_uche: [
     { speaker:'SGT. UCHE', portrait:'sergeant',
-      text:"Ma. The ledger from the Bypass — Musa's route lands here. The cartel's been using this shrine as a transfer point. They know nobody on patrol will breach it." },
+      text:"Sir. The ledger from the Bypass — Musa's route lands here. The cartel's been using this shrine as a transfer point. They know nobody on patrol will breach it." },
     { speaker:'SGT. UCHE',
       text:"The custodian, Pa Eze — he's been here forty years. We don't know if he's a partner or a hostage to the situation. Talk to him before we move." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"And if he refuses access?" },
     { speaker:'SGT. UCHE',
-      text:"Then ma'am decides. We have probable cause. We can stack and breach. Or we can knock and announce. Or we can leave and come back with a state magistrate signed off. Each one costs different things." },
+      text:"Then it's your call, sir. We have probable cause. We can stack and breach. Or we can knock and announce. Or we can leave and come back with a state magistrate signed off. Each one costs different things." },
   ],
   shrine_intro: [
     { speaker:'PA EZE — CUSTODIAN', portrait:'merchant',
@@ -158,7 +185,7 @@ const DIALOGUE = {
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Pa Eze. We have intelligence that this shrine has been used — without your knowledge — to move stolen goods. We need access to the compound." },
     { speaker:'PA EZE',
-      text:"Without my knowledge. So now you know more about what happens here than the man who has tended this place since before your father was born." },
+      mood:'angry', text:"Without my knowledge. So now you know more about what happens here than the man who has tended this place since before your father was born." },
     { speaker:'PA EZE',
       text:"This ground is not a warehouse. It is a covenant. People come here to bury grief, to carry shame they cannot carry alone, to ask for things only the old gods can give. What do you want to do?",
       choices:[
@@ -194,9 +221,9 @@ const DIALOGUE = {
   ],
   shrine_force: [
     { speaker:'PA EZE', portrait:'merchant',
-      text:"Then enter. But know that what you walk over today will walk back over you, in some other life." },
+      mood:'angry', text:"Then enter. But know that what you walk over today will walk back over you, in some other life." },
     { speaker:'PA EZE',
-      text:"I will not bless this. The village will know. The radio will know. And the gods are not deaf." },
+      mood:'angry', text:"I will not bless this. The village will know. The radio will know. And the gods are not deaf." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Sgt. Uche, stack on the gate. Knock-and-announce. We move." },
     { speaker:'NACECA SYSTEM', portrait:'kelechi',
@@ -207,9 +234,9 @@ const DIALOGUE = {
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"We pull back. Sgt. Uche, secure a perimeter at fifty yards. Quiet. Nobody enters the compound until we have a signed warrant." },
     { speaker:'SGT. UCHE', portrait:'sergeant',
-      text:"Ma — by the time we get back, the cache walks. You know that." },
+      mood:'angry', text:"Sir — by the time we get back, the cache walks. You know that." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
-      text:"Then we move fast. Some procedures are slower because they have to be. Let's go." },
+      mood:'angry', text:"Then we move fast. Some procedures are slower because they have to be. Let's go." },
     { speaker:'NACECA SYSTEM', portrait:'kelechi',
       text:"Operation paused. The case file remains open. Some evidence may be lost — but the precedent is clean.",
       effect:{ flag:{ shrine_access:'left' }, intel:+4 } },
@@ -222,15 +249,23 @@ const DIALOGUE = {
   ],
   shrine_complete_force: [
     { speaker:'AGENT KELECHI', portrait:'kelechi',
-      text:"We have the cache. Pa Eze hasn't said a word since we breached. We got the evidence. We may have lost the village." },
+      mood:'evasive', text:"We have the cache. Pa Eze hasn't said a word since we breached. We got the evidence. We may have lost the village." },
     { speaker:'SGT. UCHE', portrait:'sergeant',
-      text:"That'll matter on the next operation, ma. These forests don't forget." },
+      text:"That'll matter on the next operation, sir. These forests don't forget." },
   ],
 
   // ===== Mission 6: The Disappeared (Asaba) =====
+  asaba_resolve_failed: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      mood:'afraid', text:"Van's gone. Fire service pulled Tobi out of that office, sir. Too late." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      mood:'afraid', text:"I waited. I should have picked one." },
+    { speaker:'SGT. UCHE',
+      mood:'angry', text:"Pick one next time. Any one. Standing still is the only wrong answer." },
+  ],
   asaba_brief: [
     { speaker:'SGT. UCHE', portrait:'sergeant',
-      text:"Asaba commercial warehouse. The shrine ledger you pulled from Pa Eze pointed here. Two things waiting for us inside, ma." },
+      text:"Asaba commercial warehouse. The shrine ledger you pulled from Pa Eze pointed here. Two things waiting for us inside, sir." },
     { speaker:'SGT. UCHE',
       text:"One: a fixer the cartel calls Ifeanyi. Books the routes, moves the cash, never touches a phone we can trace. He's our entry into the upper rung." },
     { speaker:'SGT. UCHE',
@@ -240,17 +275,17 @@ const DIALOGUE = {
     { speaker:'SGT. UCHE',
       text:"That's what makes this hard. Once we breach, Ifeanyi runs for the loading bay. There's a van. He'll be in it inside thirty seconds. Tobi's in a side office that's already been doused — they're starting fires on their way out." },
     { speaker:'SGT. UCHE',
-      text:"You can chase. You can rescue. Cannot do both. I'll take whichever you don't. But ma — I'm slower than you. The one you take, you take." },
+      text:"You can chase. You can rescue. Cannot do both. I'll take whichever you don't. But sir — I'm slower than you. The one you take, you take." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Understood. Breach when ready, sergeant." },
   ],
   asaba_resolve_chase: [
     { speaker:'SGT. UCHE', portrait:'sergeant',
-      text:"Ifeanyi's cuffed. Got him in the dust before he made the door. Tobi — I pulled him out, ma. He's coughing up half a lung but he's breathing." },
+      text:"Ifeanyi's cuffed. Got him in the dust before he made the door. Tobi — I pulled him out, sir. He's coughing up half a lung but he's breathing." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
-      text:"Both? You got both?" },
+      mood:'afraid', text:"Both? You got both?" },
     { speaker:'SGT. UCHE',
-      text:"This time. Don't bet on me being that fast every time we pull this kind of mission." },
+      mood:'evasive', text:"This time. Don't bet on me being that fast every time we pull this kind of mission." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Logged. Bag the SIMs and the ledger crumbs, sergeant. We move them to the field office tonight." },
   ],
@@ -258,25 +293,185 @@ const DIALOGUE = {
     { speaker:'SGT. UCHE', portrait:'sergeant',
       text:"Ifeanyi's in custody. The interview alone is going to give us six new names by morning." },
     { speaker:'SGT. UCHE',
-      text:"Tobi… I couldn't get to him in time. The smoke was too thick by the time Ifeanyi was secured. The accountant didn't make it." },
+      mood:'afraid', text:"Tobi… I couldn't get to him in time. The smoke was too thick by the time Ifeanyi was secured. The accountant didn't make it." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
-      text:"Get me his family contact. They hear it from us. From me. Tonight." },
+      mood:'angry', text:"Get me his family contact. They hear it from us. From me. Tonight." },
     { speaker:'SGT. UCHE',
-      text:"Yes, ma." },
+      text:"Yes, sir." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"And the next time we get intelligence like this, we go in heavier. Two squads. Three. We don't run another solo six-up where the choice is who lives." },
   ],
   asaba_resolve_rescue: [
     { speaker:'SGT. UCHE', portrait:'sergeant',
-      text:"Tobi's stable. The medics are taking him to St. Theresa's. He kept saying thank you, ma. Kept saying it." },
+      text:"Tobi's stable. The medics are taking him to St. Theresa's. He kept saying thank you, sir. Kept saying it." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"And Ifeanyi?" },
     { speaker:'SGT. UCHE',
-      text:"Made the van. Cleared the bay before I could close the gap. He's in the wind." },
+      mood:'angry', text:"Made the van. Cleared the bay before I could close the gap. He's in the wind." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Then we follow him. Not today. But Tobi can talk. The accountant knows what the fixer was protecting. That's a thread Ifeanyi can't cut from the inside of a getaway." },
     { speaker:'SGT. UCHE',
-      text:"Yes, ma. Slower. But it holds." },
+      text:"Yes, sir. Slower. But it holds." },
+  ],
+
+  /* ===================== MISSION 7 — NO SIGNAL ZONE ===================== */
+  tower_brief_chase: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      text:"Ugbowo. The mast behind UNIBEN's back gate. Ifeanyi's phone gave us one number he never saved — a negotiator the boys call 'the Voice'. Every ransom call to the Ehigie family pinged this cell." },
+    { speaker:'SGT. UCHE',
+      text:"A student, Osas Ehigie. Taken at the campus gate on Friday. His mother gets a call every evening — a few seconds of the boy, then the Voice." },
+    { speaker:'SGT. UCHE',
+      text:"Then two nights ago the site went dark. Fibre cut, diesel drained. Not a fault, sir. Somebody wanted this tower blind while the calls kept coming." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"So the calls still route through here?" },
+    { speaker:'SGT. UCHE',
+      text:"On battery, in bursts. If we get the generator back and the engineer opens the cabinet, we can pull the timing data and put the handset on a map." },
+    { speaker:'SGT. UCHE',
+      text:"The site engineer is still inside — refused to leave his equipment. And the student's mother has been at that gate since yesterday." },
+    { speaker:'SGT. UCHE',
+      text:"One more thing. Whoever cut this tower knows it's the only way to find them. The moment those floodlights come on, sir, assume they come with it." },
+  ],
+  tower_brief_rescue: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      text:"Ugbowo. The mast behind UNIBEN's back gate. Tobi was awake in that office longer than they knew — he heard them say the next boy's calls would run through 'the tower at Ugbowo'." },
+    { speaker:'SGT. UCHE',
+      text:"A student, Osas Ehigie. Taken at the campus gate on Friday. His mother gets a call every evening — a few seconds of the boy, then someone they call the Voice." },
+    { speaker:'SGT. UCHE',
+      text:"Then two nights ago the site went dark. Fibre cut, diesel drained. Not a fault, sir. Somebody wanted this tower blind while the calls kept coming." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"So the calls still route through here?" },
+    { speaker:'SGT. UCHE',
+      text:"On battery, in bursts. If we get the generator back and the engineer opens the cabinet, we can pull the timing data and put the handset on a map." },
+    { speaker:'SGT. UCHE',
+      text:"The site engineer is still inside — refused to leave his equipment. And the student's mother has been at that gate since yesterday." },
+    { speaker:'SGT. UCHE',
+      text:"One more thing. Whoever cut this tower knows it's the only way to find them. The moment those floodlights come on, sir, assume they come with it." },
+  ],
+  tower_brief_cold: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      text:"Ugbowo. Benin Zonal Command handed us this one — a UNIBEN student, Osas Ehigie, taken at the campus gate on Friday. Every ransom call to his mother pings this one cell." },
+    { speaker:'SGT. UCHE',
+      text:"The negotiator never gives a name. To the family, it's just the Voice." },
+    { speaker:'SGT. UCHE',
+      text:"Then two nights ago the site went dark. Fibre cut, diesel drained. Not a fault, sir. Somebody wanted this tower blind while the calls kept coming." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"So the calls still route through here?" },
+    { speaker:'SGT. UCHE',
+      text:"On battery, in bursts. If we get the generator back and the engineer opens the cabinet, we can pull the timing data and put the handset on a map." },
+    { speaker:'SGT. UCHE',
+      text:"The site engineer is still inside — refused to leave his equipment. And the student's mother has been at that gate since yesterday." },
+    { speaker:'SGT. UCHE',
+      text:"One more thing. Whoever cut this tower knows it's the only way to find them. The moment those floodlights come on, sir, assume they come with it." },
+  ],
+  tower_mother: [
+    { speaker:'MRS. EHIGIE', portrait:'mother',
+      mood:'afraid', text:"Officer. Officer, please. They call me from seven. They let him say 'Mummy' and then they take the phone. Three days now." },
+    { speaker:'MRS. EHIGIE',
+      mood:'angry', text:"The telecom people say the network is bad. The police say they are 'working on it'. Tell me what you are doing. Tell me something true.",
+      choices:[
+        { text:"We will bring Osas home tonight, ma. I promise you.",
+          effect:{publicTrust:+6, integrity:-3}, tag:'harsh', flag:{ tower_promise:true } },
+        { text:"I can't promise you tonight. I can promise we're here for him and not for a headline. When the lights come on, get behind the security hut and stay there.",
+          effect:{integrity:+5, publicTrust:+3}, tag:'lawful', flag:{ tower_promise:false } },
+      ]
+    },
+    { speaker:'MRS. EHIGIE',
+      mood:'evasive', text:"...Hm. God go follow you, my son.",
+      textEn:"...Hm. God be with you, my son." },
+  ],
+  tower_engineer: [
+    { speaker:'ENGR. OSARO', portrait:'engineer',
+      mood:'afraid', text:"You people came. Good. I've been sitting with a dead site for two nights. They took the fibre with a cutlass — clean, like they do it for a living." },
+    { speaker:'ENGR. OSARO',
+      text:"Battery bank is at eleven percent. That's why the calls still pass — barely. Give me a running gen and the BTS cabinet is logging in ninety seconds." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"Can you pull the timing data on one handset?" },
+    { speaker:'ENGR. OSARO',
+      text:"Timing advance on three sectors, plus handover history. Not GPS — but it puts a phone inside a few hundred metres. In Ugbowo that is a street." },
+    { speaker:'ENGR. OSARO',
+      text:"The gen is beside the hut. Red lever, then the green button. It will be loud, and the floodlights come on with it — I cannot separate them from here.",
+      choices:[
+        { text:"Stay in the hut, Engineer. Whatever you hear, you stay down. I'll run the cabinet.",
+          effect:{integrity:+3, publicTrust:+2}, tag:'lawful', flag:{ tower_engineer:'shelter' } },
+        { text:"I need you on the cabinet with me. You read it faster than I can.",
+          effect:{intel:+6, agencyFavour:+3, publicTrust:-2}, tag:'savvy', flag:{ tower_engineer:'assist' } },
+      ]
+    },
+    { speaker:'ENGR. OSARO',
+      text:"Understood, oga officer.",
+      textEn:"Understood, officer." },
+  ],
+  tower_ambush: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      mood:'afraid', text:"Kelechi! East fence — three shooters, maybe four. They were waiting for the lights. I have the gate; I cannot hold the fence and the gate." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      mood:'afraid', text:"I have a fix on the handset. The trace is still writing." },
+    { speaker:'SGT. UCHE',
+      mood:'angry', text:"Then you choose, sir. Now.",
+      choices:[
+        { text:"Hold the cabinet. Sixty seconds and we have the Voice on a map.",
+          effect:{intel:+18, agencyFavour:+8, integrity:-2, publicTrust:-4, force:+1}, tag:'harsh',
+          flag:{ tower:'hold' }, next:'tower_hold' },
+        { text:"Get Osaro and Mrs. Ehigie behind the hut. We pull out with what the trace already gave us.",
+          effect:{integrity:+6, publicTrust:+8, agencyFavour:-5}, tag:'lawful',
+          flag:{ tower:'extract', rescued:2 }, next:'tower_extract' },
+        { text:"Radio Benin Zonal. Armoured unit, now. We hold the hut and wait.",
+          effect:{agencyFavour:+2, integrity:+2, publicTrust:-2}, tag:'savvy',
+          flag:{ tower:'backup' }, next:'tower_backup' },
+      ]
+    }
+  ],
+  tower_hold: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      text:"Holding. Keep your head under that cabinet lid, sir." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      mood:'afraid', text:"Sector A... handover to the Ekosodin micro-cell... it's writing. It's writing." },
+    { speaker:'SGT. UCHE',
+      mood:'afraid', text:"They're pulling back — sirens on the Ugbowo road. Did we get it?" },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"We got it. The Voice is in Ekosodin. Three hundred metres of it." },
+  ],
+  tower_extract: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      mood:'afraid', text:"Moving! Engineer, madam — behind the hut, stay low!" },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"Trace is partial. Sector A and the handover. North of the campus — Ekosodin, I'd bet my badge on it." },
+    { speaker:'SGT. UCHE',
+      text:"Then we bet the badge, not the civilians. That is the right order, sir." },
+  ],
+  tower_backup: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      text:"Zonal copies. Twelve minutes. We hold the hut." },
+    { speaker:'—',
+      text:"The floodlights draw fire for eleven of those minutes. Then an armoured unit's horn carries up the Ugbowo road, and the east fence goes quiet." },
+    { speaker:'SGT. UCHE',
+      text:"Twelve minutes we won't get back, sir. But everyone in this compound walks out." },
+  ],
+  tower_power_cut: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      mood:'angry', text:"They hit the gen. Lights gone — the cabinet's dead. We cannot sit in the dark with them on the fence.",
+      choices:[
+        { text:"Get Osaro and Mrs. Ehigie out through the gate. We leave with what we have.",
+          effect:{integrity:+4, publicTrust:+4, agencyFavour:-6}, tag:'lawful',
+          flag:{ tower:'cut_extract', rescued:2 }, next:'tower_cut_extract' },
+        { text:"Radio Benin Zonal. We hold the hut until they arrive.",
+          effect:{agencyFavour:+1, publicTrust:-3}, tag:'savvy',
+          flag:{ tower:'cut_backup' }, next:'tower_cut_backup' },
+      ]
+    }
+  ],
+  tower_cut_extract: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      text:"Out the gate — go, go!" },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"The fibre photos and the sabotage report go to Zonal tonight. Osaro restores the site tomorrow, and we trace the next call." },
+  ],
+  tower_cut_backup: [
+    { speaker:'SGT. UCHE', portrait:'sergeant',
+      text:"Zonal copies. We hold." },
+    { speaker:'—',
+      text:"Fourteen minutes in the dark. The shooters are gone when the armoured unit arrives. The handset in Ekosodin stops calling at 21:10." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      mood:'angry', text:"We'll find another way to the Voice." },
   ],
 };
-

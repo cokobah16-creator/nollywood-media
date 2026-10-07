@@ -15,6 +15,7 @@ function loadMission(id){
     delete S.game._shrineComplete;
     if(S.game.flags){ delete S.game.flags.shrine_access; delete S.game.flags.shrine; }
   }
+  if(id==='m7'){ towerResetFlags(); }
   // Show the start-mission/controls overlay first; player clicks START MISSION to actually begin
   showHUD(false);
   ENGINE.movementEnabled = false;
@@ -31,6 +32,14 @@ function showStartMission(id){
 }
 
 function beginMission(id){
+  // per-operation bookkeeping (HUD counter + aftermath stats are per mission)
+  S.game._opEv = [];
+  S.game._opStart = { arrests:S.game.arrests||0, civ:S.game.civiliansRescued||0, force:S.game.forceUsed||0, intel:S.game.intelScore||0, xp:S.player.xp||0, rep:Object.assign({}, S.player.reputation) };
+  S.game._opBumps = 0;
+  if(typeof fadeIn==='function') fadeIn();
+  if(typeof resetGuidance==='function') resetGuidance();
+  S.game.currentMission = id;
+  if(!S.game.flags) S.game.flags = {};
   showOverlay(null);
   showHUD(true);
   ENGINE.movementEnabled = true;
@@ -53,7 +62,7 @@ function beginMission(id){
       {id:'o2_scan',  text:'Scan suspect phone'},
       {id:'o3_runner',text:'Decide on the teen runner'},
     ]);
-    setEvidenceMax(2);
+    setEvidenceMax(1);
     buildSceneMarket();
     startAmbient('market');
     musicForScene('m2');
@@ -66,7 +75,7 @@ function beginMission(id){
       {id:'o4_wipe',        text:'Stop laptop wipe'},
       {id:'o6_arrest',      text:'Arrest the principal'},
     ]);
-    setEvidenceMax(4);
+    setEvidenceMax(3);
     buildSceneMansion();
     startAmbient('mansion');
     musicForScene('m3');
@@ -81,7 +90,7 @@ function beginMission(id){
       {id:'o4_search',    text:'Search rear compartment'},
       {id:'o5_decide',    text:"Decide the driver's fate"},
     ]);
-    setEvidenceMax(3);
+    setEvidenceMax(4);
     if(!S.game.unlockedRegions.includes('Edo')) S.game.unlockedRegions.push('Edo');
     buildSceneCheckpoint();
     startAmbient('checkpoint');
@@ -122,6 +131,32 @@ function beginMission(id){
     startAmbient('asaba');
     musicForScene('m6');
   }
+  if(id==='m7'){
+    setMissionTitle('No Signal Zone');
+    setObjectives([
+      {id:'o1_brief',    text:'Brief with Sgt. Uche'},
+      {id:'o2_engineer', text:'Find the site engineer'},
+      {id:'o3_power',    text:'Restore power to the mast'},
+      {id:'o4_trace',    text:'Trace the ransom calls at the BTS cabinet'},
+      {id:'o5_decide',   text:'Decide under fire'},
+    ]);
+    setEvidenceMax(3);
+    if(!S.game.unlockedRegions.includes('Edo')) S.game.unlockedRegions.push('Edo');
+    towerResetFlags();
+    buildSceneTower();
+    startAmbient('checkpoint');
+    musicForScene('m7');
+  }
+  // start every mission with the camera behind Kelechi, looking where he faces
+  if(ENGINE.player){ ENGINE.cameraYaw = ENGINE.player.rotation.y; ENGINE.playerYaw = ENGINE.player.rotation.y; }
+}
+
+/* M7 per-mission state lives on S.game as _tower* flags — cleared on every (re)load. */
+function towerResetFlags(){
+  ['_towerBriefed','_towerMother','_towerEngineer','_towerPower','_towerAmbush','_towerAmbushDelay','_towerWindow',
+   '_towerWarn30','_towerWarn10','_towerExpired','_towerTraced','_towerDecided','_towerFibre','_towerCutPending'
+  ].forEach(k=>{ delete S.game[k]; });
+  if(S.game.moralChoices){ S.game.moralChoices.tower = null; delete S.game.moralChoices.tower_engineer; delete S.game.moralChoices.tower_promise; }
 }
 
 function completeMission(id, opts={}){
@@ -132,7 +167,7 @@ function completeMission(id, opts={}){
 
   // missions that show an aftermath screen
   if(id==='m3' || id==='m4'){
-    awardXP(250);
+    S.game._opXP = 250; awardXP(250);
     sfxComplete();
     stopAmbient();
     showAftermath();

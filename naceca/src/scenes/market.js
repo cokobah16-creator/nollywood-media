@@ -32,6 +32,7 @@ function buildSceneMarket(){
       addBox(scene, x+1.0, 0, z+0.8, 0.1, 2.3, 0.1, '#1a1208');
       // counter
       addBox(scene, x, 0, z, 2.0, 0.9, 0.8, '#3a2a18');
+      addObstacle(x, z, 2.1, 1.7);
       // wares
       for(let k=0; k<3; k++){
         addBox(scene, x-0.7+k*0.7, 0.9, z-0.1, 0.3, 0.3, 0.3, ['#c84a3a','#5db86a','#d8a64a'][k]);
@@ -52,8 +53,14 @@ function buildSceneMarket(){
   const shirts = ['#c84a3a','#3a8ad0','#5db86a','#a04acd','#e07d4a','#d8a64a','#3a3a3a','#f3ead2'];
   const wanderers = [];
   for(let i=0;i<14;i++){
+    const fem = i%2===0;
+    const looks = fem
+      ? [{female:true, hair:'gele', capColor:shirts[(i+3)%shirts.length], robe:shirts[(i+5)%shirts.length]},
+         {female:true, hair:'braids'},
+         {female:true, hair:'afro', robe:shirts[(i+2)%shirts.length]}][i%3]
+      : [{hair:'crop'}, {hair:'cap', capColor:shirts[(i+4)%shirts.length], beard:i%4===1}, {hair:'afro'}, {hair:'bald', build:'heavy'}][i%4];
     const npc = buildNPCMesh(
-      skinTones[i%4], shirts[i%shirts.length], '#1a2030', '#0a0a14');
+      skinTones[i%4], shirts[i%shirts.length], ['#1a2030','#3a2a1a','#2a3a2a'][i%3], '#0a0a14', looks);
     const ang = Math.random()*Math.PI*2;
     npc.position.set(Math.cos(ang)*12 + (Math.random()-.5)*4, 0, Math.sin(ang)*12 + (Math.random()-.5)*4);
     npc.rotation.y = Math.random()*Math.PI*2;
@@ -62,6 +69,7 @@ function buildSceneMarket(){
     scene.add(npc);
     wanderers.push(npc);
     ENGINE.npcs.push({mesh:npc, update:(dt)=>{
+      if(npc.userData._down) return;
       const t = npc.userData.target;
       const dx = t.x - npc.position.x, dz = t.z - npc.position.z;
       const d = Math.hypot(dx,dz);
@@ -81,8 +89,19 @@ function buildSceneMarket(){
     }});
   }
 
+  // traders with head-loads standing in the lanes — the chase has to weave through them
+  const traders = [];
+  for(const [tx,tz,col] of [[7.2,-1.5,'#d8a64a'],[8.4,-4.6,'#5db86a'],[7.4,-10.2,'#c84a3a'],[11.8,2.6,'#a04acd'],[12.2,-5.2,'#3a8ad0'],[11.6,-10.1,'#e07d4a']]){
+    const t = buildNPCMesh('#6a4a30', col, '#2a1d12', '#0a0a14', {female:true, hair:'gele', capColor:col, robe:col});
+    const tray = new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.3,0.08,14), toonMat('#8a6a3a')); tray.position.y = 1.98; t.add(tray); outline(tray,1.05);
+    for(let k=0;k<3;k++){ const f = new THREE.Mesh(new THREE.SphereGeometry(0.08,8,6), toonMat(['#e8c040','#5db86a','#c84a3a'][k])); f.position.set(-0.12+k*0.12, 2.06, 0); t.add(f); }
+    t.position.set(tx, 0, tz); t.rotation.y = Math.random()*Math.PI*2;
+    scene.add(t); ENGINE.npcs.push(t); traders.push(t);
+  }
+  ENGINE._marketCrowd = traders.concat(wanderers);
+
   // INFORMANT — Tunde, by a specific stall (not wandering)
-  const tunde = buildNPCMesh('#5a3826', '#5db86a', '#1a2030', '#0a0a14');
+  const tunde = buildNPCMesh('#5a3826', '#5db86a', '#1a2030', '#0a0a14', {hair:'cap', capColor:'#d8a64a', beard:true});
   tunde.position.set(-6, 0, -2); tunde.rotation.y = Math.PI/2;
   scene.add(tunde);
   ENGINE.interactables.push({
@@ -94,8 +113,8 @@ function buildSceneMarket(){
   });
 
   // SUSPECT — KC, in orange, at counter, holding phone
-  const kc = buildNPCMesh('#7a4a30', '#e07d4a', '#1a2030', '#0a0a14');
-  kc.position.set(8, 0, 4); kc.rotation.y = -Math.PI/2;
+  const kc = buildNPCMesh('#7a4a30', '#e07d4a', '#1a2030', '#0a0a14', {hair:'crop', scale:0.9});
+  kc.position.set(8, 0, 4); kc.rotation.y = -Math.PI/2; ENGINE._marketKC = kc;
   scene.add(kc);
 
   // The PHONE — evidence on counter
@@ -119,11 +138,33 @@ function buildSceneMarket(){
     onInteract: ()=>{
       if(!S.game._marketScanned){ toast('NO EVIDENCE','Scan the phone first'); return; }
       if(S.game.moralChoices.market_runner){ toast('ALREADY DECIDED','Head back to the van'); return; }
-      startDialogue('market_runner', ()=>{
-        S.game.moralChoices.market_runner = true;
-        completeObjective('o3_runner');
-        // unlock van exit
-        toast('OBJECTIVE COMPLETE','Return to the NACECA van');
+      if(CHASE.active){ return; }
+      // he sees the badge and bolts — shoving a trader's tray into your path
+      ENGINE._stagger = 0.9;
+      toast('HE\'S RUNNING','KC shoves a tray at you and breaks for the back of the stalls. Sprint — and mind the traders.', 2600);
+      musicForScene && musicForScene('m6_chase');
+      startChase({
+        runner: kc, label:'KC', speed:4.9, catchDist:1.45, headStart:0.4,
+        path: [[8,4],[8,7.4],[12.6,7.4],[12.6,-2.4],[12.6,-7.5],[7.6,-7.5],[7.6,-12.5],[12.6,-12.5],[12.6,-20.5]],
+        crowd: ENGINE._marketCrowd || [],
+        onCaught: ()=>{
+          kc.rotation.y += Math.PI;
+          startDialogue('market_runner', ()=>{
+            S.game.moralChoices.market_runner = 'caught';
+            completeObjective('o3_runner');
+            toast('OBJECTIVE COMPLETE','Return to the NACECA van');
+            musicForScene && musicForScene('m2');
+          });
+        },
+        onEscaped: ()=>{
+          applyEffect({agencyFavour:-4, intel:-5});
+          startDialogue('market_runner_escaped', ()=>{
+            S.game.moralChoices.market_runner = 'escaped';
+            completeObjective('o3_runner');
+            toast('OBJECTIVE CLOSED','He got away. Return to the NACECA van');
+            musicForScene && musicForScene('m2');
+          });
+        },
       });
     }
   });

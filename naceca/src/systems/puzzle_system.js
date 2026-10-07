@@ -5,6 +5,8 @@
    ========================================================================= */
 /* ===================== 15. PUZZLE SYSTEM ===================== */
 function openPuzzle(key, onResolve){
+  // never open on top of a conversation
+  const _d=document.getElementById('screen-dialogue'); if(_d && _d.classList.contains('show')) return;
   const P = PUZZLES[key];
   $('#puzzle-title').textContent = P.title;
   $('#puzzle-screen').innerHTML = P.screen;
@@ -21,18 +23,20 @@ function openPuzzle(key, onResolve){
         sfxComplete();
         b.classList.add('correct');
         applyEffect({integrity:P.onCorrect.integrity, agencyFavour:P.onCorrect.agencyFavour, intel:P.onCorrect.intel});
-        toast('CORRECT MATCH','+25 INTEL · +EVIDENCE',1700);
+        toast('CORRECT MATCH',`+${P.onCorrect.intel} INTEL · +EVIDENCE`,1700);
         if(P.onCorrect.evidenceId){
-          collectEvidence({id:P.onCorrect.evidenceId, name:'Phishing Template', xp:50});
+          collectEvidence({id:P.onCorrect.evidenceId, name:P.onCorrect.evidenceName || 'Evidence', xp:P.onCorrect.xp || 50});
         }
-        setTimeout(()=>{ showOverlay(null); onResolve&&onResolve(true); }, 1300);
+        setTimeout(()=>{ showOverlay(null); if(DLG.queue && DLG.queue.length){ const [k2,cb2]=DLG.queue.shift(); setTimeout(()=>startDialogue(k2,cb2), 350); } onResolve&&onResolve(true); }, 1300);
       } else {
         sfxFail();
         b.classList.add('wrong');
         applyEffect(P.onWrong);
-        toast('NOT THE TEMPLATE','Try again — look for the bank-spoof',1500);
+        toast(P.toastWrongTitle || 'NOT A MATCH', P.toastWrong || 'Try again — look for the bank-spoof',1500);
         // re-enable after a moment
-        setTimeout(()=>{ b.classList.remove('wrong'); delete b.dataset._done; }, 1200);
+        // story difficulty: a wrong answer stays crossed out; otherwise it resets
+        if(!(typeof isStoryMode==='function' && isStoryMode())) setTimeout(()=>{ b.classList.remove('wrong'); delete b.dataset._done; }, 1200);
+        else b.classList.add('struck');
       }
     });
     ops.appendChild(b);

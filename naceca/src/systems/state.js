@@ -29,6 +29,7 @@ const defaultState = () => ({
     completedMissions: [],
     unlockedRegions: ['Lagos'],
     moralChoices: {},
+    flags: {},             // mission-scoped story flags (shrine_access, shrine, tower...)
     headlines: [],
   }
 });

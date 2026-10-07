@@ -25,6 +25,7 @@ LOAD_ORDER = [
     # ----- inlined assets (must load before any system that references ASSETS) -----
     "assets/_inline.js",
     "assets/_music_inline.js",
+    "assets/_portraits_art.js",
     # ----- config (data only, no deps) -----
     "config/missions.js",
     "config/skills.js",
@@ -38,6 +39,11 @@ LOAD_ORDER = [
     "systems/state_save.js",
     "systems/audio.js",
     "systems/engine.js",
+    "systems/characters.js",
+    "systems/pressure.js",
+    "systems/settings.js",
+    "systems/guidance.js",
+    "systems/progression.js",
     # ----- scene helpers -----
     "scenes/_common.js",
     # ----- scenes -----
@@ -47,6 +53,7 @@ LOAD_ORDER = [
     "scenes/checkpoint.js",
     "scenes/shrine.js",
     "scenes/asaba.js",
+    "scenes/tower.js",
     # ----- gameplay systems -----
     "systems/dialogue_system.js",
     "systems/puzzle_system.js",

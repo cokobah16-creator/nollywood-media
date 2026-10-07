@@ -27,6 +27,7 @@ function showXP(n){
 function showOverlay(id){
   $$('.overlay').forEach(o=>o.classList.remove('show'));
   if(id) $('#'+id).classList.add('show');
+  if(id==='screen-title' && typeof hasSave==='function'){ const c=$('#btn-continue'); if(c) c.disabled = !hasSave(); }
 }
 
 function applyEffect(eff, flagPayload){
@@ -37,10 +38,14 @@ function applyEffect(eff, flagPayload){
   if(eff.agencyFavour) r.agencyFavour = clamp(r.agencyFavour + eff.agencyFavour, 0, 100);
   if(eff.intel)        S.game.intelScore += eff.intel;
   if(eff.force)        S.game.forceUsed += eff.force;
+  if(!S.game.flags) S.game.flags = {};
+  // line-level story flags: effect:{ flag:{ shrine_access:'granted_negotiate' } }
+  if(eff.flag && typeof eff.flag==='object') Object.assign(S.game.flags, eff.flag);
   if(flagPayload){
     if(flagPayload.force)    S.game.forceUsed += flagPayload.force;
     if(flagPayload.rescued)  S.game.civiliansRescued += flagPayload.rescued;
     Object.assign(S.game.moralChoices, flagPayload);
+    Object.assign(S.game.flags, flagPayload);
   }
   refreshHUD();
 }
@@ -51,7 +56,7 @@ function refreshHUD(){
   $('#rep-favour').style.width    = S.player.reputation.agencyFavour+'%';
   $('#hud-region').firstChild.textContent = (S.game.currentRegion||'').toUpperCase();
   $('#hud-subregion').textContent = (S.game.currentSubregion||'').toUpperCase();
-  $('#ev-cur').textContent = S.game.evidence.length;
+  $('#ev-cur').textContent = missionEvidenceCount();
   // alert level
   const lv = S.game.alertLevel;
   const alertEl = $('#hud-alert');

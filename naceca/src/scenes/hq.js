@@ -46,7 +46,7 @@ function buildSceneHQ(){
   // commander's desk (back wall)
   addBox(scene, 0, 0.4, -7.5, 4, 0.1, 1.6, '#1a1208');
   // commander NPC
-  const cmd = buildNPCMesh('#5a3826', '#1a3050', '#0a1020', '#0a0a14');
+  const cmd = buildNPCMesh('#5a3826', '#1a3050', '#0a1020', '#0a0a14', {female:true, hair:'beret', capColor:'#0b1a3a', longSleeve:true});
   cmd.position.set(0, 0, -8.0); cmd.rotation.y = Math.PI;
   scene.add(cmd);
   ENGINE.npcs.push({mesh:cmd, update:(dt)=>{ cmd.userData.walkPhase += dt*1.2; cmd.position.y = Math.sin(cmd.userData.walkPhase)*0.01; }});

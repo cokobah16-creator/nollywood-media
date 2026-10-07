@@ -5,8 +5,14 @@
    ========================================================================= */
 /* ===================== 16. EVIDENCE / XP ===================== */
 function collectEvidence(ev){
-  S.game.evidence.push({id:ev.id, name:ev.name, t:Date.now()});
-  awardXP(ev.xp || 50);
+  if(!Array.isArray(S.game._opEv)) S.game._opEv = [];
+  if(S.game._opEv.includes(ev.id)) return;            // already logged this operation
+  S.game._opEv.push(ev.id);
+  const firstTime = !S.game.evidence.some(e=>e.id===ev.id);
+  if(firstTime) S.game.evidence.push({id:ev.id, name:ev.name, t:Date.now()});
+  awardXP(firstTime ? (ev.xp || 50) : Math.round((ev.xp || 50) * 0.25));  // replays earn a little
+  refreshHUD();
+  if(typeof evidenceFlash==='function') evidenceFlash();
   toast('EVIDENCE LOGGED', ev.name.toUpperCase(), 1700);
   sfxEvidence();
 }
@@ -38,3 +44,6 @@ function awardXP(n){
   }
 }
 
+
+/* evidence logged during the current operation (the HUD counter is per mission) */
+function missionEvidenceCount(){ return Array.isArray(S.game._opEv) ? S.game._opEv.length : 0; }

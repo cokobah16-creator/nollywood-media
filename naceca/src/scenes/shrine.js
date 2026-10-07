@@ -154,7 +154,7 @@ function buildSceneShrine(){
 
   // Custodian — Pa Eze, the shrine's keeper. Standing in the gateway.
   // (skin, shirt, pants, hair) — off-white robe, dark hair under a black cap
-  const custodian = buildNPCMesh('#5a3818', '#f4ead0', '#f4ead0', '#1a1408');
+  const custodian = buildNPCMesh('#5a3818', '#f4ead0', '#f4ead0', '#f4ead0', {hair:'cap', capColor:'#c84a3a', beard:true, beardColor:'#e8e4dc', robe:'#f4ead0', longSleeve:true});
   // add a red sash overlay
   const sash = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.16, 0.34), toonMat('#c84a3a'));
   sash.position.y = 1.18; custodian.add(sash); outline(sash, 1.05);
@@ -165,10 +165,9 @@ function buildSceneShrine(){
   ENGINE.npcs.push(custodian);
 
   // Sgt. Uche — squad partner waiting near the entrance
-  const uche = buildNPCMesh('#5a3818', '#1a2a18', '#1a2a18', '#0a0a08');
+  const uche = buildNPCMesh('#5a3818', '#1a2a18', '#1a2a18', '#0a0a08', {hair:'crop', beard:true, longSleeve:true});
   // navy shoulder armor / vest
-  const vest = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.45, 0.36), toonMat('#0b1a3a'));
-  vest.position.y = 1.1; uche.add(vest); outline(vest, 1.04);
+  addVest(uche, '#0b1a3a');
   uche.position.set(-3.5, 0, 8);
   uche.rotation.y = Math.PI*0.6;
   uche.userData._patrolBase = new THREE.Vector3(-3.5, 0, 8);

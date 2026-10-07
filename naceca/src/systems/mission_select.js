@@ -29,7 +29,7 @@ function renderMissionSelect(){
       if(id==='m1'){ S.game._hqBriefed=false; }
       if(id==='m2'){ S.game._marketTunde=false; S.game._marketScanned=false; S.game.moralChoices.market_runner=false; }
       if(id==='m3'){
-        S.game._mansionPreBriefed=false; S.game._evLaptop=false; S.game._evCash=false; S.game._evSafe=false; S.game._civChild=false;
+        S.game._mansionPreBriefed=false; S.game._evLaptop=false; S.game._evCash=false; S.game._evSafe=false; S.game._civChild=false; S.game._wipeTotal=0; S.game._wipeT=0; S.game._wipeDone=false; S.game._wipeLost=false;
         S.game.moralChoices.arrest = null;
       }
       if(id==='m4'){
@@ -49,6 +49,7 @@ function renderMissionSelect(){
         S.game._asabaSIMs=false;
         if(S.game.moralChoices) S.game.moralChoices.asaba = null;
       }
+      if(id==='m7' && typeof towerResetFlags === 'function'){ towerResetFlags(); }
       loadMission(id);
     });
   });
