@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "test -f naceca.html",
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/", "destination": "/naceca.html" }
+  ]
+}
