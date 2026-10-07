@@ -5,6 +5,7 @@
    ========================================================================= */
 /* ===================== 15. PUZZLE SYSTEM ===================== */
 function openPuzzle(key, onResolve){
+  if(typeof showHint==='function') showHint('puzzle', 'Find the one detail that settles it. A wrong answer costs a little reputation.', 'Find the one detail that settles it. A wrong answer costs a little reputation.');
   // never open on top of a conversation
   const _d=document.getElementById('screen-dialogue'); if(_d && _d.classList.contains('show')) return;
   const P = PUZZLES[key];
@@ -15,10 +16,12 @@ function openPuzzle(key, onResolve){
   P.options.forEach((opt,i)=>{
     const b = document.createElement('button');
     b.className = 'puzzle-option';
-    b.innerHTML = `${opt.text}<span class="hint">${opt.hint}</span>`;
+    const _hintNow = (typeof isStoryMode==='function' && isStoryMode());
+    b.innerHTML = `${opt.text}<span class="hint"${_hintNow ? '' : ' style="display:none"'}>${opt.hint}</span>`;
     b.addEventListener('click', ()=>{
       if(b.dataset._done) return;
       b.dataset._done = '1';
+      { const _h = b.querySelector('.hint'); if(_h) _h.style.display = ''; }
       if(opt.correct){
         sfxComplete();
         b.classList.add('correct');

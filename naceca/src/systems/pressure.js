@@ -41,7 +41,8 @@ function addObstacle(cx, cz, w, d){
 }
 function blockedAt(x, z, r=0.3){
   const obs = ENGINE.obstacles; if(!obs || !obs.length) return false;
-  for(const o of obs){ if(x > o.minX-r && x < o.maxX+r && z > o.minZ-r && z < o.maxZ+r) return true; }
+  const low = !!ENGINE.keys['KeyC'];
+  for(const o of obs){ if(o.crouchOnly && low) continue; if(x > o.minX-r && x < o.maxX+r && z > o.minZ-r && z < o.maxZ+r) return true; }
   return false;
 }
 

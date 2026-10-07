@@ -25,7 +25,7 @@ function sph(r, ws=14, hs=12){ return new THREE.SphereGeometry(r, ws, hs); }
 /* opts: female, hair ('crop'|'bun'|'afro'|'braids'|'gele'|'cap'|'beret'|'bald'|'mask'),
          hairColor, capColor, beard, beardColor, robe (long garment colour), longSleeve,
          glasses, build ('slim'|'heavy'), scale */
-function buildHumanoid(skin, shirt, pants, hairColor, opts={}){
+function buildHumanoidLegacy(skin, shirt, pants, hairColor, opts={}){
   const g = new THREE.Group();
   const female = !!opts.female;
   const heavy = opts.build === 'heavy';
@@ -254,7 +254,7 @@ function animateRigs(dt){
 }
 
 /* plate carrier strapped to a rigged character's torso (moves and breathes with it) */
-function addVest(g, color='#0b1a3a'){
+function addVestLegacy(g, color='#0b1a3a'){
   const u = g.userData; if(!u || !u.spine) return null;
   const v = new THREE.Mesh(cyl(0.215, 0.19, 0.36, 14), rigMat(color));
   v.position.set(0, 0.24, 0); v.scale.z = 0.8; u.spine.add(v); outline(v, 1.05);

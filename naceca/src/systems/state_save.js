@@ -35,7 +35,9 @@ function loadGame(){
 /* Where Continue should take the player: the first playable mission not yet
    completed, else the mission select (campaign finished so far). */
 function nextPlayableMission(){
-  const m = MISSIONS.find(x => x.playable && !S.game.completedMissions.includes(x.id));
+  // the cold open is only offered to a fresh campaign
+  const fresh = !S.game.completedMissions.some(id => id !== 'm0');
+  const m = MISSIONS.find(x => x.playable && !S.game.completedMissions.includes(x.id) && (x.id !== 'm0' || fresh));
   return m ? m.id : null;
 }
 function resumeCampaign(){

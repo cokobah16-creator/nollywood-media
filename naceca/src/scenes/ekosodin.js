@@ -21,7 +21,7 @@ function finaleRoute(){
 function kcIsFair(){ const m = S.game.moralChoices || {}; return m.market_runner === 'caught' && m.choice !== 'force'; }
 function musaGaveTip(){ const f = S.game.flags || {}, m = S.game.moralChoices || {}; return !!f.musa_tip || m.checkpoint === 'flip_driver'; }
 
-function buildSceneEkosodin(){
+function buildSceneEkosodinLegacy(){
   const scene = newScene({bg:'#0a0f1e', fog:'#121a2e'});
   scene.fog.near = 16; scene.fog.far = 60;
   scene.add(new THREE.AmbientLight('#3a4a6a', 0.55));

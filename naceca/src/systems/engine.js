@@ -450,6 +450,9 @@ function updateAtmosphere(dt){
   if(typeof updateTowerTrigger === 'function') updateTowerTrigger(dt);
   if(typeof updateMansionWipe === 'function') updateMansionWipe(dt);
   if(typeof updateEkosodin === 'function') updateEkosodin(dt);
+  if(typeof updatePrologue === 'function') updatePrologue(dt);
+  if(typeof updateTraffic === 'function') updateTraffic(dt);
+  if(typeof updateAmbientBehaviours === 'function') updateAmbientBehaviours(dt);
 
   ENGINE.scene.traverse(obj=>{
     if(obj.userData && obj.userData._dust){
@@ -643,6 +646,7 @@ function triggerScan(){
   document.body.style.transition = 'box-shadow 0.2s ease-out';
   document.body.style.boxShadow = 'inset 0 0 200px 0 rgba(216,166,74,0.4)';
   setTimeout(()=>{ document.body.style.boxShadow = ''; }, 1600);
+  if(typeof sideScan==='function') sideScan();
 }
 
 function updateNPCs(dt){

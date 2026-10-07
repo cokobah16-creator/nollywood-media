@@ -4,7 +4,7 @@
    Edit the modules; run build.py to rebuild naceca.html.
    ========================================================================= */
 /* ===================== 12. SCENE: IKEJA MARKET ===================== */
-function buildSceneMarket(){
+function buildSceneMarketLegacy(){
   const scene = newScene({bg:'#1a2845', fog:'#2a3a5a'});
   scene.fog.near = 14; scene.fog.far = 50;
 

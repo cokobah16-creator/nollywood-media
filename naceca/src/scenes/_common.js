@@ -12,6 +12,10 @@ function newSceneCore(opts={}){
   ENGINE.speedMul = 1; ENGINE._stagger = 0;
   if(typeof stopChase==='function') stopChase();
   if(typeof stopTail==='function') stopTail();
+  if(typeof stopTraffic==='function') stopTraffic();
+  if(typeof clearBehaviours==='function') clearBehaviours();
+  if(typeof setEye==='function') setEye(null);
+  document.querySelectorAll('.obs-mark').forEach(e=>e.remove());
   if(typeof clearMeters==='function') clearMeters();
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(opts.bg || '#0d1626');

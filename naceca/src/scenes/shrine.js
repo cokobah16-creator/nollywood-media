@@ -4,7 +4,7 @@
    Edit the modules; run build.py to rebuild naceca.html.
    ========================================================================= */
 /* ===================== 13c. SCENE: OZALLA FOREST SHRINE COMPOUND (Mission 5, dawn) ===================== */
-function buildSceneShrine(){
+function buildSceneShrineLegacy(){
   const scene = newScene({bg:'#1a3028', fog:'#243f33'});
   scene.fog.near = 18; scene.fog.far = 70;
   // dawn ambient — soft green-gold

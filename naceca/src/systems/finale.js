@@ -57,9 +57,9 @@ function finaleRevealScript(){
 
 function finaleHeadline(){
   const o = S.game.moralChoices.finale, hurt = S.game.flags.fin_osas === 'hurt';
-  if(o === 'proven')    return { pub:'PUNCH TODAY', head:'NACECA Commander Arrested in Ekosodin Kidnap Plot — Student Freed', ded:`The ransom calls came from inside the agency, investigators say. A flash drive and an accountant's testimony sealed the case.${hurt?' The student was treated for a broken wrist.':''}` };
-  if(o === 'contested') return { pub:'THE GUARDIAN', head:'Senior NACECA Officer Detained After UNIBEN Student Rescue', ded:'Prosecutors face a fight: one piece of hard evidence, a powerful defence, and an agency in shock.' };
-  return { pub:'THIS DAY', head:'Kidnapped UNIBEN Student Freed; NACECA Commander Suspended Pending Inquiry', ded:'Questions mount over why Cdr. Adaeze reached the compound before backup did.' };
+  if(o === 'proven')    return { pub:'THE DAILY GONG', head:'NACECA Commander Arrested in Ekosodin Kidnap Plot — Student Freed', ded:`The ransom calls came from inside the agency, investigators say. A flash drive and an accountant's testimony sealed the case.${hurt?' The student was treated for a broken wrist.':''}` };
+  if(o === 'contested') return { pub:'THE LAGOS LEDGER', head:'Senior NACECA Officer Detained After UNIBEN Student Rescue', ded:'Prosecutors face a fight: one piece of hard evidence, a powerful defence, and an agency in shock.' };
+  return { pub:'NATIONAL DISPATCH', head:'Kidnapped UNIBEN Student Freed; NACECA Commander Suspended Pending Inquiry', ded:'Questions mount over why Cdr. Adaeze reached the compound before backup did.' };
 }
 
 /* ---------------- epilogue, credits, stinger ---------------- */

@@ -30,7 +30,7 @@ function bindMenuButtons(){
   $('#btn-newgame').addEventListener('click', ()=>{
     S = defaultState();
     showHUD(false);
-    loadMission('m1');
+    loadMission('m0');
   });
   $('#btn-continue').addEventListener('click', ()=>{
     if(loadGame()){ showRecap(resumeCampaign); }

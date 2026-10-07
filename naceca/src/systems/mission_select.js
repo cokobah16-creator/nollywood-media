@@ -17,6 +17,7 @@ function renderMissionSelect(){
       <div class="name">${m.name}</div>
       <div class="region">${m.region}</div>
       <div class="summary">${m.summary}</div>
+      ${typeof sideCardLine==='function' ? sideCardLine(m.id) : ''}
       <div class="stamp">${stamp}</div>
     </button>`;
   }).join('');

@@ -5,6 +5,7 @@
    ========================================================================= */
 /* ===================== 2. DATA: MISSIONS ===================== */
 const MISSIONS = [
+  { id:'m0', num:'00', name:'Cold Open', region:'LAGOS · MUSHIN, 23:20', summary:'The night before. A man in a red shirt, a locked compound, a van in the rain.', playable:true },
   { id:'m1', num:'01', name:'Lagos HQ Briefing', region:'LAGOS · NACECA HQ',
     summary:'Meet Commander Adaeze. Review the case file. Suit up for your first field operation.',
     playable:true },

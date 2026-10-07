@@ -667,4 +667,38 @@ const DIALOGUE = {
     { speaker:'NACECA SYSTEM',
       text:"02:14 — Benin Zonal Command relieves Cdr. Adaeze of command pending inquiry." },
   ],
+
+  /* ===================== COLD OPEN — "THE TRANSFER" ===================== */
+  co_plate_partial: [
+    { speaker:'AGENT KELECHI', portrait:'kelechi', mood:'angry', text:"Partial. K-J-A, one, then the rain took it." },
+    { speaker:'COMMANDER ADAEZE (RADIO)', text:"Partial is something. Good. Come in." },
+  ],
+  co_plate_none: [
+    { speaker:'AGENT KELECHI', portrait:'kelechi', mood:'afraid', text:"No. He was gone before I reached the road." },
+    { speaker:'COMMANDER ADAEZE (RADIO)', mood:'evasive', text:"Then we work with what you saw. Good. Come in." },
+  ],
+  co_plate_driver: [
+    { speaker:'AGENT KELECHI', portrait:'kelechi', text:"The rider. Red cap, a scar down his left cheek." },
+    { speaker:'COMMANDER ADAEZE (RADIO)', text:"Faces are better than plates. Good. Come in." },
+  ],
+  /* ===================== MISSION 1 — THE FIELD OFFICE (tutorial beats) ===================== */
+  hq_board: [
+    { speaker:'NACECA SYSTEM',
+      text:"The case board. Last night's photo is already pinned: a man in a blue shirt with a brown folder, rain across the lens." },
+    { speaker:'NACECA SYSTEM',
+      text:"Strings run from the photo to three POS agents in Ikeja and two SIMs registered to a dead grandmother." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"Everything on this board runs through that market." },
+  ],
+  hq_phone: [
+    { speaker:'NACECA SYSTEM',
+      text:"Your phone. Two new messages." },
+    { speaker:'TEXT · MUM',
+      text:"Did you get home safe? You didn't call. Eat something before work o." },
+    { speaker:'TEXT · TUNDE',
+      text:"Oga Kelechi! Tunde here. That SIM boy don show for Ikeja market this morning. Come before 10.",
+      textEn:"Officer Kelechi! It's Tunde. That SIM boy turned up at Ikeja market this morning. Come before 10." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi',
+      text:"Ikeja, then. After the Commander." },
+  ],
 };

@@ -12,7 +12,7 @@ const defaultState = () => ({
     xp: 0, level: 1,
     skillPoints: 0,
     skills: [], // ids of unlocked skills
-    reputation: { integrity: 50, publicTrust: 50, agencyFavour: 50 },
+    reputation: { integrity: 50, publicTrust: 50, agencyFavour: 50, underworldHeat: 20 },
   },
   game: {
     scene: 'title',

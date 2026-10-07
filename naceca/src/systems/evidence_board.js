@@ -5,6 +5,7 @@
    ========================================================================= */
 /* ===================== 21. CASE FILE ===================== */
 function openCaseFile(){
+  if(S.game.currentMission==='m1' && typeof completeObjective==='function'){ completeObjective('o_casefile'); S.game._hqCaseFile = true; }
   // Default to evidence board (the signature investigation system)
   openEvidenceBoard();
 }

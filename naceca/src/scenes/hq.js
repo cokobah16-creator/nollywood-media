@@ -4,7 +4,7 @@
    Edit the modules; run build.py to rebuild naceca.html.
    ========================================================================= */
 /* ===================== 11. SCENE: HQ BRIEFING ROOM ===================== */
-function buildSceneHQ(){
+function buildSceneHQLegacy(){
   const scene = newScene({bg:'#0e1626', fog:'#1a2540'});
   // warm interior lighting
   const amb = new THREE.AmbientLight('#3a3550', 0.55); scene.add(amb);
@@ -91,14 +91,40 @@ function buildSceneHQ(){
 
   // briefing trigger — walk up to table
   ENGINE.interactables.push({
-    mesh: folder, label:'Approach Commander', range:3.5,
-    onInteract: ()=>{ if(!S.game._hqBriefed){ startDialogue('hq_intro'); } else { toast('BRIEFING COMPLETE','Move to the exit'); } }
+    mesh: folder, label:'Approach Commander', verb:'talk', range:3.5,
+    onInteract: ()=>{ if(!S.game._hqBriefed){ startDialogue(hqIntroScript()); } else { toast('BRIEFING COMPLETE','Move to the exit'); } }
+  });
+
+  // the case board on the west wall — last night's photo is already up
+  const board = addBox(scene, -11.7, 1.0, -2.5, 0.12, 1.8, 3.2, '#c8a878');
+  for(const [bz, by, col] of [[-3.4,2.2,'#f0ece0'],[-2.4,2.4,'#f0ece0'],[-1.6,1.9,'#e84a5c'],[-3.0,1.4,'#f0ece0']]){
+    const card = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.36), basicMat(col)); card.position.set(-11.63, by, bz); card.rotation.y = Math.PI/2; scene.add(card);
+  }
+  ENGINE.interactables.push({
+    mesh: board, label:'Check the case board', verb:'inspect', range:2.8,
+    onInteract: ()=>{
+      if(S.game._hqBoard){ toast('CASE BOARD','Blue shirt. Brown folder. Ikeja.'); return; }
+      startDialogue('hq_board', ()=>{ S.game._hqBoard = true; completeObjective('o_board'); });
+    }
+  });
+  // Kelechi's phone, on the desk by the door
+  addBox(scene, 4.2, 0, 6.4, 2.2, 0.8, 1.0, '#3a2a1a');
+  const phoneM = addBox(scene, 4.0, 0.8, 6.4, 0.18, 0.03, 0.32, '#141414');
+  ENGINE.interactables.push({
+    mesh: phoneM, label:'Read your phone', verb:'inspect', range:2.4,
+    onInteract: ()=>{
+      if(S.game._hqPhone){ toast('YOUR PHONE','Tunde: Ikeja market, before 10.'); return; }
+      startDialogue('hq_phone', ()=>{
+        S.game._hqPhone = true; completeObjective('o_phone');
+        if(!S.game._hqCaseFile) showHint('casefile', 'Open your Case File — <b>TAB</b>', 'Open your <b>CASE FILE</b> at the bottom of the screen');
+      });
+    }
   });
 
   // exit door — leaves to next mission
   const door = addBox(scene, 0, 0, 9.9, 1.6, 3, 0.2, '#d8a64a');
   ENGINE.interactables.push({
-    mesh: door, label:'Deploy to Ikeja Market', range:3,
+    mesh: door, label:'Deploy to Ikeja Market', verb:'exit', range:3,
     onInteract: ()=>{
       if(!S.game._hqBriefed){ toast('BRIEFING REQUIRED','Approach the commander first'); return; }
       completeMission('m1', { silent:true });
@@ -119,5 +145,17 @@ function buildSceneHQ(){
   S.game.currentRegion = 'Lagos';
   S.game.currentSubregion = 'NACECA HQ';
   refreshHUD();
+  setTimeout(()=>{ if(typeof showHint==='function') showHint('marker', 'The <b>gold marker</b> shows where to go next', 'The <b>gold marker</b> shows where to go next'); }, 1200);
 }
 
+
+/* The Commander's first words depend on what Kelechi did in the rain last night. */
+function hqIntroScript(){
+  const f = S.game.flags || {};
+  const base = DIALOGUE.hq_intro.slice();
+  if(f.co_heard === 'girl')     base.unshift({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:"'The girl moves tonight.' You got close enough to hear that. Close enough to be seen, too." });
+  if(f.co_heard === 'engineer') base.unshift({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:"'Engineer.' You heard that from twenty metres back. That's patience. Keep it." });
+  if(f.co_spotted)              base.unshift({ speaker:'COMMANDER ADAEZE', mood:'angry',   text:"He made you last night. Once is a mistake. Don't let it become a habit." });
+  DIALOGUE.hq_intro_run = base;
+  return 'hq_intro_run';
+}

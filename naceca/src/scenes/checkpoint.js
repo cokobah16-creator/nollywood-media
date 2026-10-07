@@ -4,7 +4,7 @@
    Edit the modules; run build.py to rebuild naceca.html.
    ========================================================================= */
 /* ===================== 13b. SCENE: BENIN BYPASS CHECKPOINT (Mission 4, dusk) ===================== */
-function buildSceneCheckpoint(){
+function buildSceneCheckpointLegacy(){
   S.game._cpMusaFlipped = false;
   const scene = newScene({bg:'#2a1a18', fog:'#3a2a20'});
   scene.fog.near = 18; scene.fog.far = 60;

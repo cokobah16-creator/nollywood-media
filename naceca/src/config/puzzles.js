@@ -14,14 +14,14 @@ const PUZZLES = {
 INBOX (last 24h)
 ─────────────────────────────────────
 From: <span class="green">Family Group</span>     "Mama don land! Pick her at MM2"
-From: <span class="red">+1-415-***-09</span>     "Dear customer, your acct will be suspended. Click: hxxp://gtb-secure-verify.co/login"
+From: <span class="red">+1-415-***-09</span>     "Dear customer, your acct will be suspended. Click: hxxp://crestline-secure-verify.co/login"
 From: <span class="green">Funke ❤</span>           "Send me 5k abeg, weekend money finished"
 From: <span class="red">UNKNOWN-BANK</span>        "ATTN: Re-validate BVN. Reply with full DOB+PIN. Urgent."
 From: <span class="green">Ola Mechanic</span>      "Boss your car ready. Come carry am."
 
 GALLERY · 3 IMAGES
 ─────────────────────────────────────
-IMG_001.jpg — Generic GTB login page (FAKE BRANDING)
+IMG_001.jpg — Copy of the Crestline Bank login page (FAKE)
 IMG_002.jpg — List of Nigerian phone numbers, 200+ rows
 IMG_003.jpg — Family wedding photo
 `,

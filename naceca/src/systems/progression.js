@@ -61,6 +61,7 @@ function computeGrade(op){
   let pts = evRatio*35 + objRatio*25 + Math.max(0, Math.min(30, 18 + repDelta)) + Math.min(10, op.civ*5);
   pts -= op.force * 8;
   pts -= (S.game._opBumps || 0) * 3;
+  if(typeof sideGradeAdjust==='function') pts += sideGradeAdjust();
   if(S.game.currentMission === 'm8'){
     pts -= (S.game._finRisk || 0) * 15;
     const o = S.game.moralChoices && S.game.moralChoices.finale;
@@ -109,6 +110,7 @@ function onAftermath(op, head){
   if(mid==='m6' && mc.asaba==='chase') unlock('dust');
   if(mid==='m7' && mc.tower==='hold') unlock('sixty');
   if(mid==='m7' && (mc.tower==='extract' || mc.tower==='cut_extract')) unlock('everyone');
+  if(typeof sideAftermath==='function') sideAftermath(grid);
 }
 
 /* ---------- Case Records: press archive + awards ---------- */

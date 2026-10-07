@@ -133,6 +133,28 @@ function startAmbient(kind){
     const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=300;
     const g=ctx.createGain(); g.gain.value=0.04;
     src.connect(f); f.connect(g); g.connect(AUDIO.ambientGain); src.start(t); nodes.push(src);
+  } else if(kind==='rain'){
+    // rain hiss, a generator thudding two compounds over, a danfo horn far off
+    const buffer = ctx.createBuffer(2, ctx.sampleRate*4, ctx.sampleRate);
+    for(let ch=0;ch<2;ch++){ const d=buffer.getChannelData(ch); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*0.6; }
+    const src=ctx.createBufferSource(); src.buffer=buffer; src.loop=true;
+    const f=ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=1400;
+    const g=ctx.createGain(); g.gain.value=0.11;
+    src.connect(f); f.connect(g); g.connect(AUDIO.ambientGain); src.start(t); nodes.push(src);
+    const gen=ctx.createOscillator(); gen.type='sawtooth'; gen.frequency.value=48;
+    const gf=ctx.createBiquadFilter(); gf.type='lowpass'; gf.frequency.value=160;
+    const gg=ctx.createGain(); gg.gain.value=0.035;
+    const lfo=ctx.createOscillator(); lfo.frequency.value=7.5; const lg=ctx.createGain(); lg.gain.value=0.018; lfo.connect(lg); lg.connect(gg.gain);
+    gen.connect(gf); gf.connect(gg); gg.connect(AUDIO.ambientGain); gen.start(t); lfo.start(t); nodes.push(gen, lfo);
+    const horn=ctx.createOscillator(); horn.type='square'; horn.frequency.value=330;
+    const hf=ctx.createBiquadFilter(); hf.type='lowpass'; hf.frequency.value=700;
+    const hg=ctx.createGain(); hg.gain.value=0.0; horn.connect(hf); hf.connect(hg); hg.connect(AUDIO.ambientGain); horn.start(t); nodes.push(horn);
+    AUDIO._hornInterval = setInterval(()=>{
+      const tt = ctx.currentTime;
+      hg.gain.cancelScheduledValues(tt);
+      hg.gain.setValueAtTime(0,tt); hg.gain.linearRampToValueAtTime(0.018,tt+0.05); hg.gain.linearRampToValueAtTime(0,tt+0.35);
+      hg.gain.setValueAtTime(0,tt+0.5); hg.gain.linearRampToValueAtTime(0.018,tt+0.55); hg.gain.linearRampToValueAtTime(0,tt+0.9);
+    }, 9000 + Math.random()*4000);
   } else if(kind==='market'){
     // bustling crowd: filtered noise + occasional high blips
     const buffer = ctx.createBuffer(2, ctx.sampleRate*4, ctx.sampleRate);
@@ -389,6 +411,7 @@ function musicForScene(kind){
     case 'm7':         playMusic('stealth',       { volume: 0.55 }); break;  // Ugbowo tower — dusk, exposed
     case 'm7_ambush':  playMusic('chase',         { volume: 0.85, loop: false }); break;
     case 'm8':         playMusic('investigation', { volume: 0.5 }); break;   // Ekosodin — the finale
+    case 'm0':         playMusic('stealth',       { volume: 0.38 }); break;  // cold open — rain, Mushin
     case 'm8_reveal':  playMusic('stealth',       { volume: 0.7 }); break;
     case 'investigation': playMusic('investigation', { volume: 0.55 }); break;  // Evidence Board overlay
     case 'victory':    playMusic('victory',       { volume: 0.75, loop: false }); break;

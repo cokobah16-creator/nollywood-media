@@ -37,14 +37,17 @@ LOAD_ORDER = [
     "systems/audio.js",
     "systems/engine.js",
     "systems/characters.js",
-    "systems/npc_cast.js",
     "systems/people_art_pass.js",
+    "systems/npc_cast.js",
+    "systems/traffic.js",
     "systems/pressure.js",
     "systems/settings.js",
     "systems/guidance.js",
+    "systems/onboarding.js",
     "systems/progression.js",
     "systems/finale.js",
     "scenes/_common.js",
+    "scenes/prologue.js",
     "scenes/hq.js",
     "scenes/market.js",
     "scenes/mansion.js",
@@ -66,6 +69,12 @@ LOAD_ORDER = [
     "systems/art_pass_v8.js",
     "main.js",
 ]
+
+# v12 layer — appended as separate blocks just before </body>, after the bundle
+V12_DIR = os.path.join(SRC, "v12")
+V12_CSS = ["v12.css"]
+V12_JS = ["v12_core.js", "v12_docs.js", "v12_ops.js", "v12_plan.js", "v12_finale.js",
+          "v12_night.js", "v12_daily.js", "v12_share.js", "v12_vo.js", "v12_pt.js", "v12_boot.js"]
 
 def build_bundle():
     parts = []
@@ -114,6 +123,19 @@ def build_html(bundle):
         lambda m: f"<script>\n{bundle}\n</script>",
         html,
     )
+    # Append the v12 layer before </body>
+    parts = []
+    for name in V12_CSS:
+        with open(os.path.join(V12_DIR, name), "r", encoding="utf-8") as fh:
+            parts.append(f'<style id="{name[:-4]}">\n{fh.read()}\n</style>')
+    for name in V12_JS:
+        with open(os.path.join(V12_DIR, name), "r", encoding="utf-8") as fh:
+            code = fh.read()
+        if "</script" in code.lower():
+            raise SystemExit(f"v12/{name} contains a closing script tag")
+        parts.append(f"<script>/* ---------- {name} (v12) ---------- */\n{code}\n</script>")
+    idx = html.rindex("</body>")
+    html = html[:idx] + "\n".join(parts) + "\n" + html[idx:]
     with open(HTML_OUT, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"  built:  {HTML_OUT}  ({len(html):,} chars)")

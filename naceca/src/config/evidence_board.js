@@ -16,6 +16,7 @@ const EB_CARDS = [
   { id:'e_laptop',  type:'evidence', tag:'DEVICE',        name:'Encrypted Laptop',  meta:'Lekki · wipe stopped', x:52, y:36, requires:'m3' },
   { id:'e_cdr',     type:'evidence', tag:'TELECOM',       name:'Ugbowo Call Records', meta:'IMEI 35-***-88 · handover to Ekosodin', x:30, y:54, requires:'m7' },
   { id:'e_wallet',  type:'evidence', tag:'CRYPTO',        name:'Wallet 0xE7…91A',    meta:'0.62 BTC drained pre-cashout',     x:48, y:66 },
+  { id:'e_madam',   type:'evidence', tag:'PHONE',         name:"'Tell Madam it's clean'", meta:'Mushin · dropped the night before day one', x:52, y:84, requires:'m0' },
   { id:'e_cash',    type:'evidence', tag:'CASH',          name:'₦12.4M Bundles',    meta:'Lekki coffee table',   x:29, y:84, requires:'m3' },
   // locations
   { id:'l_lekki',   type:'location', tag:'NODE',          name:'Lekki Mansion',  meta:'Lagos · Old GRA',              x:78, y:6 },
@@ -31,6 +32,7 @@ const EB_VALID_LINKS = [
   { a:'s_kc',   b:'l_market', intel:8,  hint:'courier seen at market' },
   { a:'s_kc',   b:'e_phish',  intel:14, hint:'courier was running the template' },
   { a:'s_musa', b:'l_bypass', intel:10, hint:'driver intercepted on bypass' },
+  { a:'e_madam', b:'s_voice', intel:14, hint:"the 'Madam' in Mushin is the Voice on the Ugbowo calls" },
   { a:'s_musa', b:'e_ledger', intel:18, hint:'ledger pulled from his cargo' },
   { a:'s_mama', b:'e_phish',  intel:10, hint:'SIMs registered to dead pensioner used in phishing' },
   { a:'l_lekki',b:'e_cash',   intel:8,  hint:'cash bagged at the mansion' },

@@ -6,6 +6,8 @@
 /* ===================== 17. MISSION FLOW ===================== */
 function loadMission(id){
   S.game.currentMission = id;
+  // the cold open starts in motion — no controls screen
+  if(id==='m0'){ S.game.alertLevel = 0; beginMission('m0'); return; }
   S.game.alertLevel = 0;
   // reset per-mission flags so replay works
   if(id==='m5'){
@@ -29,6 +31,7 @@ function showStartMission(id){
   $('#controls-mnum').textContent = `CASE ${m.num}`;
   $('#controls-mname').textContent = m.name.toUpperCase();
   $('#controls-region').textContent = m.region;
+  if(typeof sideStartCard==='function') sideStartCard(id);
   showOverlay('screen-controls');
 }
 
@@ -45,11 +48,28 @@ function beginMissionCore(id){
   showHUD(true);
   ENGINE.movementEnabled = true;
 
+  if(id==='m0'){
+    setMissionTitle('Cold Open');
+    setObjectives([
+      {id:'co_cross',  text:'Cross to his side of the road'},
+      {id:'co_follow', text:'Stay on the man in the blue shirt'},
+      {id:'co_gate',   text:'Find a way past the gate'},
+      {id:'co_reveal', text:'See what\'s in the compound'},
+      {id:'co_chase',  text:'Don\'t lose him'},
+    ]);
+    setEvidenceMax(5);
+    buildScenePrologue();
+    startAmbient('rain');
+    musicForScene('m0');
+  }
   if(id==='m1'){
     setMissionTitle('Lagos HQ Briefing');
     setObjectives([
-      {id:'o1_brief', text:'Receive briefing from Commander Adaeze'},
-      {id:'o2_exit',  text:'Deploy to Ikeja Market'},
+      {id:'o1_brief',    text:'Report to Commander Adaeze'},
+      {id:'o_board',     text:'Check the case board'},
+      {id:'o_phone',     text:'Read your phone'},
+      {id:'o_casefile',  text:'Open your Case File'},
+      {id:'o2_exit',     text:'Deploy to Ikeja Market'},
     ]);
     setEvidenceMax(0);
     buildSceneHQ();
@@ -103,7 +123,7 @@ function beginMissionCore(id){
       {id:'o1_brief_uche', text:'Brief with Sgt. Uche'},
       {id:'o2_custodian',  text:'Speak with Pa Eze'},
       {id:'o3_decide',     text:'Decide how to enter the compound'},
-      {id:'o4_evidence',   text:'Recover the cartel cache (if granted access)'},
+      {id:'o4_evidence',   text:'Search the pots, then the cache behind the shrine'},
     ]);
     setEvidenceMax(3);
     if(!S.game.unlockedRegions.includes('Edo')) S.game.unlockedRegions.push('Edo');

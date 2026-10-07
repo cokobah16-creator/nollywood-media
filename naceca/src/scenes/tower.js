@@ -12,7 +12,7 @@
    hold the cabinet, extract the civilians, or wait for Benin Zonal.
    ========================================================================= */
 
-function buildSceneTower(){
+function buildSceneTowerLegacy(){
   const scene = newScene({bg:'#2a1f3d', fog:'#3a2a44'});
   scene.fog.near = 22; scene.fog.far = 70;
   // dusk: low orange sun, violet ambient

@@ -11,7 +11,7 @@
    carries forward into Mission 7.
    ========================================================================= */
 
-function buildSceneAsaba(){
+function buildSceneAsabaLegacy(){
   const scene = newScene({bg:'#1a1814', fog:'#2a2418'});
   scene.fog.near = 14; scene.fog.far = 50;
   // late-afternoon warm interior — light leaking from skylights and cracked roof panels

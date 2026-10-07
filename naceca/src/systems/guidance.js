@@ -37,7 +37,7 @@ function guideTarget(){
   if(typeof TAIL!=='undefined' && TAIL.active) return { mesh: TAIL.active.target, label: 'Follow the ' + TAIL.active.label.toLowerCase() };
   const its = ENGINE.interactables || [];
   const live = it => it.mesh && it.mesh.position && (it.mesh.visible !== false);
-  const next = its.find(it => !it._used && live(it) && !TERMINAL_RE.test(it.label));
+  const next = its.find(it => !it._used && !it.optional && live(it) && !TERMINAL_RE.test(it.label));
   if(next) return next;
   return its.find(it => live(it) && TERMINAL_RE.test(it.label)) || null;
 }

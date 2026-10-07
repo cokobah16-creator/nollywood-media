@@ -19,87 +19,87 @@ function generateHeadline(){
   if(S.game.currentMission==='m7'){
     const t = S.game.moralChoices && S.game.moralChoices.tower;
     if(t==='hold'){
-      return { pub:'PUNCH TODAY', head:"NACECA Pins Kidnappers' Phone to Ekosodin in Ugbowo Tower Firefight", ded:'Two officers held a telecom cabinet under fire to finish a call trace. Rescue teams moved north before dawn.' };
+      return { pub:'THE DAILY GONG', head:"NACECA Pins Kidnappers' Phone to Ekosodin in Ugbowo Tower Firefight", ded:'Two officers held a telecom cabinet under fire to finish a call trace. Rescue teams moved north before dawn.' };
     }
     if(t==='extract'){
-      return { pub:'THE GUARDIAN', head:'Anti-Fraud Officers Pull Civilians From Ugbowo Tower Ambush', ded:"Trace completed, cabinet abandoned. The site engineer and the missing student's mother walked out behind the officers." };
+      return { pub:'THE LAGOS LEDGER', head:'Anti-Fraud Officers Pull Civilians From Ugbowo Tower Ambush', ded:"Trace completed, cabinet abandoned. The site engineer and the missing student's mother walked out behind the officers." };
     }
     if(t==='backup'){
-      return { pub:'THIS DAY', head:'Benin Zonal Command Reinforces NACECA at Sabotaged Ugbowo Mast', ded:'The ambush broke when the armoured unit arrived. Critics ask why two officers were sent alone.' };
+      return { pub:'NATIONAL DISPATCH', head:'Benin Zonal Command Reinforces NACECA at Sabotaged Ugbowo Mast', ded:'The ambush broke when the armoured unit arrived. Critics ask why two officers were sent alone.' };
     }
     if(t==='cut_extract'){
-      return { pub:'CHANNELS NEWS', head:'Kidnappers Cut Power Twice at Ugbowo Tower — Call Trace Lost', ded:'NACECA withdrew with civilians and sabotage evidence. The ransom calls continue.' };
+      return { pub:'WAVE24 NEWS', head:'Kidnappers Cut Power Twice at Ugbowo Tower — Call Trace Lost', ded:'NACECA withdrew with civilians and sabotage evidence. The ransom calls continue.' };
     }
     if(t==='cut_backup'){
-      return { pub:'THE GUARDIAN', head:'Standoff at Ugbowo Mast Ends Without Arrests', ded:'Reinforcements secured the site; the handset went dark before it could be fixed.' };
+      return { pub:'THE LAGOS LEDGER', head:'Standoff at Ugbowo Mast Ends Without Arrests', ded:'Reinforcements secured the site; the handset went dark before it could be fixed.' };
     }
-    return { pub:'THIS DAY', head:'Operation Underway at Sabotaged Ugbowo Telecom Tower', ded:'The full picture of the Ugbowo operation is still developing.' };
+    return { pub:'NATIONAL DISPATCH', head:'Operation Underway at Sabotaged Ugbowo Telecom Tower', ded:'The full picture of the Ugbowo operation is still developing.' };
   }
 
   // Mission 6 — The Disappeared (Asaba)
   if(S.game.currentMission==='m6'){
     if(S.game.moralChoices.asaba==='failed'){
-      return { pub:'CHANNELS NEWS', head:'Asaba Warehouse Raid Ends With Fixer Escaped, Hostage Dead', ded:'Officers hesitated at the breach, sources say. NACECA has opened an internal review.' };
+      return { pub:'WAVE24 NEWS', head:'Asaba Warehouse Raid Ends With Fixer Escaped, Hostage Dead', ded:'Officers hesitated at the breach, sources say. NACECA has opened an internal review.' };
     }
     const choice = S.game.moralChoices && S.game.moralChoices.asaba;
     if(choice==='rescue'){
-      return { pub:'PUNCH TODAY', head:'NACECA Pulls Accountant From Asaba Warehouse Fire — Fixer Escapes', ded:'A young officer chose the man over the lead. The fixer is in the wind; the witness can talk.' };
+      return { pub:'THE DAILY GONG', head:'NACECA Pulls Accountant From Asaba Warehouse Fire — Fixer Escapes', ded:'A young officer chose the man over the lead. The fixer is in the wind; the witness can talk.' };
     }
     if(choice==='chase' && S.game._asabaHostageLost){
-      return { pub:'CHANNELS NEWS', head:"Asaba Hostage Dies in Warehouse Fire as NACECA Cuffs Cartel Fixer", ded:"Civil-rights groups call for review of solo-squad authorisations on dual-objective operations." };
+      return { pub:'WAVE24 NEWS', head:"Asaba Hostage Dies in Warehouse Fire as NACECA Cuffs Cartel Fixer", ded:"Civil-rights groups call for review of solo-squad authorisations on dual-objective operations." };
     }
     if(choice==='chase'){
-      return { pub:'THE GUARDIAN', head:'Asaba Bust: NACECA Cuffs Cartel Fixer, Hostage Recovered Alive', ded:'A close-run operation. The sergeant pulled the accountant out before the smoke turned.' };
+      return { pub:'THE LAGOS LEDGER', head:'Asaba Bust: NACECA Cuffs Cartel Fixer, Hostage Recovered Alive', ded:'A close-run operation. The sergeant pulled the accountant out before the smoke turned.' };
     }
-    return { pub:'THIS DAY', head:'Operation Underway at Asaba Commercial Warehouse', ded:'The full picture of the Asaba operation is still developing.' };
+    return { pub:'NATIONAL DISPATCH', head:'Operation Underway at Asaba Commercial Warehouse', ded:'The full picture of the Asaba operation is still developing.' };
   }
 
   // Mission 5 — Forest Shrine
   if(S.game.currentMission==='m5'){
     const shrine = S.game.flags && S.game.flags.shrine;
     if(shrine==='leave'){
-      return { pub:'THIS DAY', head:'Anti-Fraud Officer Halts Op at Forest Shrine — Awaits State Order', ded:'Some procedures are slower because they have to be. Custodian thanks NACECA.' };
+      return { pub:'NATIONAL DISPATCH', head:'Anti-Fraud Officer Halts Op at Forest Shrine — Awaits State Order', ded:'Some procedures are slower because they have to be. Custodian thanks NACECA.' };
     }
     if(shrine==='force'){
-      return { pub:'CHANNELS NEWS', head:"'They Stepped on the Sacred' — Edo Village Protests NACECA Raid", ded:'Cache recovered. Custodian withdraws cooperation. Ozalla elders demand redress.' };
+      return { pub:'WAVE24 NEWS', head:"'They Stepped on the Sacred' — Edo Village Protests NACECA Raid", ded:'Cache recovered. Custodian withdraws cooperation. Ozalla elders demand redress.' };
     }
     if(shrine==='negotiate'){
-      return { pub:'PUNCH TODAY', head:"Custodian Cooperates: NACECA Recovers Ransom Cache From Forest Shrine", ded:'Pa Eze, who has tended the Ozalla shrine for forty years, opened the gate himself.' };
+      return { pub:'THE DAILY GONG', head:"Custodian Cooperates: NACECA Recovers Ransom Cache From Forest Shrine", ded:'Pa Eze, who has tended the Ozalla shrine for forty years, opened the gate himself.' };
     }
-    return { pub:'THE GUARDIAN', head:'Operation Underway in Ozalla Forest', ded:'A young officer, a quiet morning, and a delicate decision.' };
+    return { pub:'THE LAGOS LEDGER', head:'Operation Underway in Ozalla Forest', ded:'A young officer, a quiet morning, and a delicate decision.' };
   }
 
   // Mission 4 — checkpoint specific
   if(S.game.currentMission==='m4'){
     if(checkpoint==='arrest_driver'){
-      return { pub:'CHANNELS NEWS', head:"Joint NACECA-AKS Bust: Ransom Ledger Seized On Benin Bypass", ded:'Driver in custody. Arms and a route ledger recovered from a livestock truck.' };
+      return { pub:'WAVE24 NEWS', head:"Joint NACECA-AKS Bust: Ransom Ledger Seized On Benin Bypass", ded:'Driver in custody. Arms and a route ledger recovered from a livestock truck.' };
     }
     if(checkpoint==='flip_driver'){
-      return { pub:'PUNCH TODAY', head:"NACECA Quietly Turns Bypass Driver — Wider Net Said To Be Closing", ded:'Sources confirm a cooperator is wired up. Names of upstream handlers expected.' };
+      return { pub:'THE DAILY GONG', head:"NACECA Quietly Turns Bypass Driver — Wider Net Said To Be Closing", ded:'Sources confirm a cooperator is wired up. Names of upstream handlers expected.' };
     }
     if(checkpoint==='tail_driver'){
-      return { pub:'THE GUARDIAN', head:'Anti-Fraud Unit Plays the Long Game on Edo Bypass', ded:'Surveillance op underway. Officers refused to confirm the size of the net being drawn.' };
+      return { pub:'THE LAGOS LEDGER', head:'Anti-Fraud Unit Plays the Long Game on Edo Bypass', ded:'Surveillance op underway. Officers refused to confirm the size of the net being drawn.' };
     }
-    return { pub:'THIS DAY', head:'Cattle Truck Hides Cartel Cargo on Benin Bypass', ded:'A joint operation, an alert young officer, and a fresh case file.' };
+    return { pub:'NATIONAL DISPATCH', head:'Cattle Truck Hides Cartel Cargo on Benin Bypass', ded:'A joint operation, an alert young officer, and a fresh case file.' };
   }
 
   // Mission 3 — mansion (existing branches)
   if(arrest==='bribe'){
-    return { pub:'THE LAGOS STANDARD', head:'NACECA Officer Spotted Leaving Mansion Empty-Handed — Witnesses Talk', ded:'Anti-fraud raid ends without an arrest. Sources say cash changed hands.' };
+    return { pub:'THE ISLAND HERALD', head:'NACECA Officer Spotted Leaving Mansion Empty-Handed — Witnesses Talk', ded:'Anti-fraud raid ends without an arrest. Sources say cash changed hands.' };
   }
   if(force >= 2 || integ < 35){
-    return { pub:'CHANNELS BREAKING', head:'"Heavy-Handed" — NACECA Mansion Raid Sparks Outcry', ded:'Aides decry "political witch hunt" as evidence is bagged.' };
+    return { pub:'WAVE24 BREAKING', head:'"Heavy-Handed" — NACECA Mansion Raid Sparks Outcry', ded:'Aides decry "political witch hunt" as evidence is bagged.' };
   }
   if(arrest==='informant'){
-    return { pub:'PUNCH TODAY', head:"NACECA Flips Cybercrime Boss — 'Bigger Names' Said To Be Next", ded:'Suspect cooperating. Prosecutors signal a wider net.' };
+    return { pub:'THE DAILY GONG', head:"NACECA Flips Cybercrime Boss — 'Bigger Names' Said To Be Next", ded:'Suspect cooperating. Prosecutors signal a wider net.' };
   }
   if(arrest==='professional' && civ>=1 && trust>=60 && integ>=60){
-    return { pub:'PUNCH TODAY', head:'Anti-Fraud Officer Praised for Clean Lekki Arrest', ded:'Witnesses describe a calm operation. Child handed safely to family liaison.' };
+    return { pub:'THE DAILY GONG', head:'Anti-Fraud Officer Praised for Clean Lekki Arrest', ded:'Witnesses describe a calm operation. Child handed safely to family liaison.' };
   }
   if(arrest==='forceful'){
-    return { pub:'THIS DAY', head:'NACECA Raid Saves Witness — Questions Over Force', ded:'Arrests made; civil liberties groups want a review.' };
+    return { pub:'NATIONAL DISPATCH', head:'NACECA Raid Saves Witness — Questions Over Force', ded:'Arrests made; civil liberties groups want a review.' };
   }
-  return { pub:'THE GUARDIAN', head:'NACECA Mansion Raid: Suspect In Custody, Evidence Bagged', ded:'A measured operation. The case file moves to prosecution.' };
+  return { pub:'THE LAGOS LEDGER', head:'NACECA Mansion Raid: Suspect In Custody, Evidence Bagged', ded:'A measured operation. The case file moves to prosecution.' };
 }
 
 function nextMissionPreview(){
@@ -132,6 +132,7 @@ function nextMissionPreview(){
 }
 
 function showAftermath(){
+  if(typeof sideFinalize==='function') sideFinalize();
   // swap to victory music for the headline screen
   if(typeof musicForScene === 'function') musicForScene('victory');
 

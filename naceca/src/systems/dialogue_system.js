@@ -12,7 +12,7 @@ function lineText(line){ return (line && line.textEn && typeof SETTINGS!=='undef
 /* Two beats can land at once (a timed resolve while another conversation is open).
    Rather than one silently replacing the other, later ones wait their turn. */
 function startDialogue(scriptKey, onComplete){
-  const busy = ['screen-dialogue','screen-puzzle'].some(id=>{ const e=document.getElementById(id); return e && e.classList.contains('show'); });
+  const busy = ['screen-dialogue','screen-puzzle','screen-minigame'].some(id=>{ const e=document.getElementById(id); return e && e.classList.contains('show'); });
   if(busy){ (DLG.queue = DLG.queue || []).push([scriptKey, onComplete]); return; }
   if(typeof duckMusic==='function') duckMusic(true);
   DLG.script = DIALOGUE[scriptKey];
@@ -130,7 +130,7 @@ function endDialogue(){
   cinematic(false);
   showOverlay(null);
   // post-dialogue hooks
-  if(DLG.scriptKey==='hq_intro' || DLG.scriptKey==='hq_lawful' || DLG.scriptKey==='hq_harsh' || DLG.scriptKey==='hq_savvy'){
+  if(DLG.scriptKey==='hq_intro' || DLG.scriptKey==='hq_intro_run' || DLG.scriptKey==='hq_lawful' || DLG.scriptKey==='hq_harsh' || DLG.scriptKey==='hq_savvy'){
     S.game._hqBriefed = true;
     if(typeof unlock==='function') unlock('sworn_in');
     completeObjective('o1_brief');
@@ -164,7 +164,8 @@ function endDialogue(){
       ENGINE.evidenceMarkers.find(m=>m.id==='ev_shrine_pots').let_collected = function(){ this.collected=true; };
       addEvidenceMarker(new THREE.Vector3(0, 1.6, -8.3), 'EVIDENCE', 'CACHE', 'ev_shrine_cache');
       ENGINE.evidenceMarkers.find(m=>m.id==='ev_shrine_cache').let_collected = function(){ this.collected=true; };
-      toast('ACCESS GRANTED', 'Search the libation pots and the cache behind the shrine', 2400);
+      toast('ACCESS GRANTED', 'Search the libation pots by the shrine door, then the cache behind the shrine', 2600);
+      if(typeof radioLine==='function') setTimeout(()=>radioLine('SGT. UCHE', "Pots are on the altar left of the door. The cache is round the back — go wide of that fire."), 2800);
     } else if(acc==='left'){
       // walked away — auto-complete to aftermath
       setTimeout(()=>{
@@ -267,7 +268,7 @@ function paintedPortrait(speaker, mood){
 function drawPortrait(kind, speaker, mood){
   const wrap = $('#dialogue-portrait');
   // the Voice (and anyone heard only on a phone) gets a call card, not a face
-  if(speaker && /THE VOICE|CALLER/.test(speaker.toUpperCase())){
+  if(speaker && /THE VOICE|CALLER|^TEXT/.test(speaker.toUpperCase())){
     wrap.innerHTML = `<div class="portrait-frame phone-card"><svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#0b1426"/>
       <rect x="38" y="22" width="24" height="44" rx="5" fill="none" stroke="#d8a64a" stroke-width="3"/>
       <circle cx="50" cy="60" r="2.4" fill="#d8a64a"/>
