@@ -2,9 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "",
-  "buildCommand": "test -f naceca.html",
-  "outputDirectory": ".",
-  "rewrites": [
-    { "source": "/", "destination": "/naceca.html" }
-  ]
+  "buildCommand": "rm -rf dist && mkdir dist && cp naceca.html dist/index.html && cp -R assets dist/ && if [ -d vo ]; then cp -R vo dist/; fi",
+  "outputDirectory": "dist"
 }
