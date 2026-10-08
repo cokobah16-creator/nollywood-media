@@ -27,7 +27,7 @@ const DIALOGUE = {
     { speaker:'COMMANDER ADAEZE', mood:'angry', text:"Careful. I don't need cowboys. I need convictions. Don't make me regret signing your posting." }
   ],
   hq_savvy: [
-    { speaker:'COMMANDER ADAEZE', mood:'evasive', text:"Smart. I'll send word to AKS — they've been working the same ledger from the kidnapping side. Ikeja market. Go." }
+    { speaker:'COMMANDER ADAEZE', mood:'evasive', text:"Smart. I'll send word to the Anti-Kidnapping Squad — they've been working the same ledger from the kidnapping side. Ikeja market. Go." }
   ],
 
   // Mission 2: Market intro & informant
@@ -117,9 +117,9 @@ const DIALOGUE = {
 
   // Mission 4: Checkpoint Shakedown
   checkpoint_intro: [
-    { speaker:'AKS LIAISON — INSP. CHIDI', portrait:'sergeant',
-      text:"Kelechi, you made it. Welcome to the Bypass. AKS picked up signal: a livestock truck moving cattle north — but one of our informants says the cargo's not just cattle." },
-    { speaker:'AKS LIAISON — INSP. CHIDI',
+    { speaker:'ANTI-KIDNAPPING SQUAD LIAISON — INSP. CHIDI', portrait:'sergeant',
+      text:"Kelechi, you made it. Welcome to the Bypass. The Anti-Kidnapping Squad picked up signal: a livestock truck moving cattle north — but one of our informants says the cargo's not just cattle." },
+    { speaker:'ANTI-KIDNAPPING SQUAD LIAISON — INSP. CHIDI',
       mood:'evasive', text:"Driver's been here twenty minutes. Sweating like he's running a fever. I want you to verify his manifest — your eyes are fresher than mine. Then we open up the back together.",
       choices:[
         { text:"Understood. I'll work the documents first — proper sequence.", effect:{integrity:+4, agencyFavour:+3}, tag:'lawful', next:null },
@@ -153,9 +153,9 @@ const DIALOGUE = {
       text:"Then you'll say it again on the record. That's how you help yourself." },
   ],
   checkpoint_resolve: [
-    { speaker:'AKS LIAISON — INSP. CHIDI', portrait:'sergeant',
+    { speaker:'ANTI-KIDNAPPING SQUAD LIAISON — INSP. CHIDI', portrait:'sergeant',
       text:"Compartment behind the cattle. Two AKs, a sealed envelope of cash, and a hand-written ledger — names, drop locations, dates. This is the route." },
-    { speaker:'AKS LIAISON — INSP. CHIDI',
+    { speaker:'ANTI-KIDNAPPING SQUAD LIAISON — INSP. CHIDI',
       text:"What do we do with Musa? He's small fish. But small fish swim in formation.",
       choices:[
         { text:"Arrest him. He carried the cargo — he answers for it.",     effect:{integrity:+4, agencyFavour:+5, publicTrust:-2}, tag:'lawful',

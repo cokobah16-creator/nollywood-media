@@ -104,7 +104,7 @@ function buildSceneCheckpointLegacy(){
   scene.add(compartment);
 
   // === NPCs ===
-  // AKS Inspector Chidi (green camo, beret) - left of truck
+  // Anti-Kidnapping Squad Inspector Chidi (green camo, beret) - left of truck
   const chidi = buildNPCMesh('#5a3826', '#3a4a28', '#1a2010', '#0a0a14', {hair:'beret', capColor:'#7a1a1a', longSleeve:true});
   chidi.position.set(-6, 0, 2); chidi.rotation.y = Math.PI/3;
   // beret
@@ -112,9 +112,9 @@ function buildSceneCheckpointLegacy(){
   beret.position.set(0, 1.7, 0.02); chidi.add(beret); outline(beret,1.05);
   scene.add(chidi);
   ENGINE.interactables.push({
-    mesh: chidi, label:'Brief with AKS Inspector Chidi', range:2.5,
+    mesh: chidi, label:'Brief with Anti-Kidnapping Squad Inspector Chidi', range:2.5,
     onInteract: ()=>{
-      if(S.game._cpBriefed){ toast('AKS','Verify the manifest, then we open the truck'); return; }
+      if(S.game._cpBriefed){ toast('ANTI-KIDNAPPING SQUAD','Verify the manifest, then we open the truck'); return; }
       startDialogue('checkpoint_intro');
     }
   });
@@ -131,7 +131,7 @@ function buildSceneCheckpointLegacy(){
   ENGINE.interactables.push({
     mesh: musa, label:'Question driver Musa', range:2.3,
     onInteract: ()=>{
-      if(!S.game._cpBriefed){ toast('PROTOCOL','Speak with AKS first'); return; }
+      if(!S.game._cpBriefed){ toast('PROTOCOL','Speak with the Anti-Kidnapping Squad first'); return; }
       if(S.game._cpDriverInterviewed){ toast('MUSA','He has nothing more to say without a lawyer'); return; }
       startDialogue('checkpoint_driver', ()=>{ S.game._cpDriverInterviewed = true; completeObjective('o2_driver'); });
     }
@@ -157,7 +157,7 @@ function buildSceneCheckpointLegacy(){
   ENGINE.interactables.push({
     mesh: docs, label:'Verify cargo manifest', range:2.4,
     onInteract: ()=>{
-      if(!S.game._cpBriefed){ toast('PROTOCOL','Brief with AKS first'); return; }
+      if(!S.game._cpBriefed){ toast('PROTOCOL','Brief with the Anti-Kidnapping Squad first'); return; }
       if(S.game._cpManifestDone){ toast('MANIFEST','Documents already verified'); return; }
       openPuzzle('checkpoint_manifest', ()=>{
         S.game._cpManifestDone = true;

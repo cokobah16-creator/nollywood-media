@@ -105,7 +105,7 @@ function beginMissionCore(id){
   if(id==='m4'){
     setMissionTitle('Checkpoint Shakedown');
     setObjectives([
-      {id:'o1_brief_aks', text:'Brief with AKS Inspector Chidi'},
+      {id:'o1_brief_aks', text:'Brief with Anti-Kidnapping Squad Inspector Chidi'},
       {id:'o2_driver',    text:'Question the driver'},
       {id:'o3_manifest',  text:'Verify cargo manifest'},
       {id:'o4_search',    text:'Search rear compartment'},

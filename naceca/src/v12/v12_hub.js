@@ -88,7 +88,7 @@ function ucheLines(h){
   return L;
 }
 function chidiLines(h){
-  const L = [], say = (text, mood)=>L.push({ speaker:'AKS LIAISON — INSP. CHIDI', portrait:'sergeant', mood, text });
+  const L = [], say = (text, mood)=>L.push({ speaker:'ANTI-KIDNAPPING SQUAD LIAISON — INSP. CHIDI', portrait:'sergeant', mood, text });
   if(h === 'h4'){
     const lv = V12.street('levy');
     if(lv === 'reported') say('Your "levy" boy — yellow shirt, Bajaj. We picked up two of them at the junction with three hundred fake revenue cards. My men are tired of being called thieves for what those boys do.');
@@ -98,7 +98,7 @@ function chidiLines(h){
   }
   if(h === 'h5') say('Asaba is Delta State. Different command, different politics. My men will come with you, but at the bridge we become guests.');
   if(h === 'h6'){
-    say('AKS has a new file. A UNIBEN student, taken at the campus gate on Friday. The mother has called every office in this city.', 'evasive');
+    say('The Anti-Kidnapping Squad has a new file. A UNIBEN student, taken at the campus gate on Friday. The mother has called every office in this city.', 'evasive');
     say(W.heardOsas() ? 'She asked for you by name, Kelechi. She says her son left a message at your Lagos office.' : 'She says her son once called NACECA about his work. Nobody wrote it down.');
   }
   if(h === 'h7') say('Tonight I have two men in an unmarked saloon a kilometre behind you. If you lose him, call. If he makes you, call faster.');
@@ -288,7 +288,7 @@ function ticker(){
       : 'BUSINESS · Ikeja traders lose ₦40 million as "Grace Divine" cooperative collapses');
   }
   if(V12.street('levy') === 'ignored') out.push('EDO · Fake "levy" collectors fleece truck drivers on the Benin Bypass');
-  if(V12.street('levy') === 'reported') out.push('EDO · AKS arrests two over fake transport-levy cards on the Benin Bypass');
+  if(V12.street('levy') === 'reported') out.push('EDO · Anti-Kidnapping Squad arrests two over fake transport-levy cards on the Benin Bypass');
   return out;
 }
 /* small items from the street, for days with no front page */

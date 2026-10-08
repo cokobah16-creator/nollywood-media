@@ -61,8 +61,8 @@ const N = [
     dossier:'The next leg after the shrine: a commercial warehouse in Asaba.' },
   { id:'e_asims',   kind:'evidence', g:['route'], tag:'SIM BATCH', name:'24 Pre-activated SIMs', meta:'the Asaba crate', req:ev('asaba_sims'),
     dossier:'Pre-activated, one batch, registered to the same dead pensioner.' },
-  { id:'l_bypass',  kind:'place',    g:['route'], tag:'NODE', name:'Benin Bypass', meta:'AKS checkpoint', req:mis('m4'),
-    dossier:'Where AKS stopped the cattle lorry.' },
+  { id:'l_bypass',  kind:'place',    g:['route'], tag:'NODE', name:'Benin Bypass', meta:'Anti-Kidnapping Squad checkpoint', req:mis('m4'),
+    dossier:'Where the Anti-Kidnapping Squad stopped the cattle lorry.' },
   { id:'l_shrine',  kind:'place',    g:['route'], tag:'NODE', name:'Ozalla Shrine', meta:'forest transfer point', req:mis('m5'),
     dossier:'A shrine used as fear-cover. Jerry-cans of cash behind it.' },
   { id:'l_asaba',   kind:'place',    g:['route'], tag:'NODE', name:'Asaba Warehouse', meta:'the disappeared', req:mis('m6'),
@@ -166,7 +166,7 @@ V12.CANDIDATES = [
   { id:'osaro',   name:'Engr. Osaro',  role:'Ugbowo site engineer',      art:'osaro_neutral' },
   { id:'obi',     name:'"Chief" Obi',  role:'In custody since Lekki',    art:'obi_neutral' },
   { id:'ifeanyi', name:'Ifeanyi',      role:'The cartel\'s fixer',       art:'ifeanyi_neutral' },
-  { id:'chidi',   name:'Insp. Chidi',  role:'AKS liaison, Benin Bypass', art:'chidi_neutral' },
+  { id:'chidi',   name:'Insp. Chidi',  role:'Anti-Kidnapping Squad liaison, Benin Bypass', art:'chidi_neutral' },
 ];
 V12.art = id => (typeof PORTRAIT_ART !== 'undefined' && PORTRAIT_ART[id]) || '';
 

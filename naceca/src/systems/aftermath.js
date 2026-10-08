@@ -72,7 +72,7 @@ function generateHeadline(){
   // Mission 4 — checkpoint specific
   if(S.game.currentMission==='m4'){
     if(checkpoint==='arrest_driver'){
-      return { pub:'WAVE24 NEWS', head:"Joint NACECA-AKS Bust: Ransom Ledger Seized On Benin Bypass", ded:'Driver in custody. Arms and a route ledger recovered from a livestock truck.' };
+      return { pub:'WAVE24 NEWS', head:"Joint NACECA–Anti-Kidnapping Squad Bust: Ransom Ledger Seized On Benin Bypass", ded:'Driver in custody. Arms and a route ledger recovered from a livestock truck.' };
     }
     if(checkpoint==='flip_driver'){
       return { pub:'THE DAILY GONG', head:"NACECA Quietly Turns Bypass Driver — Wider Net Said To Be Closing", ded:'Sources confirm a cooperator is wired up. Names of upstream handlers expected.' };

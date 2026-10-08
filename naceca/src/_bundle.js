@@ -214,7 +214,7 @@ const DIALOGUE = {
     { speaker:'COMMANDER ADAEZE', mood:'angry', text:"Careful. I don't need cowboys. I need convictions. Don't make me regret signing your posting." }
   ],
   hq_savvy: [
-    { speaker:'COMMANDER ADAEZE', mood:'evasive', text:"Smart. I'll send word to AKS — they've been working the same ledger from the kidnapping side. Ikeja market. Go." }
+    { speaker:'COMMANDER ADAEZE', mood:'evasive', text:"Smart. I'll send word to the Anti-Kidnapping Squad — they've been working the same ledger from the kidnapping side. Ikeja market. Go." }
   ],
 
   // Mission 2: Market intro & informant
@@ -304,9 +304,9 @@ const DIALOGUE = {
 
   // Mission 4: Checkpoint Shakedown
   checkpoint_intro: [
-    { speaker:'AKS LIAISON — INSP. CHIDI', portrait:'sergeant',
-      text:"Kelechi, you made it. Welcome to the Bypass. AKS picked up signal: a livestock truck moving cattle north — but one of our informants says the cargo's not just cattle." },
-    { speaker:'AKS LIAISON — INSP. CHIDI',
+    { speaker:'ANTI-KIDNAPPING SQUAD LIAISON — INSP. CHIDI', portrait:'sergeant',
+      text:"Kelechi, you made it. Welcome to the Bypass. The Anti-Kidnapping Squad picked up signal: a livestock truck moving cattle north — but one of our informants says the cargo's not just cattle." },
+    { speaker:'ANTI-KIDNAPPING SQUAD LIAISON — INSP. CHIDI',
       mood:'evasive', text:"Driver's been here twenty minutes. Sweating like he's running a fever. I want you to verify his manifest — your eyes are fresher than mine. Then we open up the back together.",
       choices:[
         { text:"Understood. I'll work the documents first — proper sequence.", effect:{integrity:+4, agencyFavour:+3}, tag:'lawful', next:null },
@@ -340,9 +340,9 @@ const DIALOGUE = {
       text:"Then you'll say it again on the record. That's how you help yourself." },
   ],
   checkpoint_resolve: [
-    { speaker:'AKS LIAISON — INSP. CHIDI', portrait:'sergeant',
+    { speaker:'ANTI-KIDNAPPING SQUAD LIAISON — INSP. CHIDI', portrait:'sergeant',
       text:"Compartment behind the cattle. Two AKs, a sealed envelope of cash, and a hand-written ledger — names, drop locations, dates. This is the route." },
-    { speaker:'AKS LIAISON — INSP. CHIDI',
+    { speaker:'ANTI-KIDNAPPING SQUAD LIAISON — INSP. CHIDI',
       text:"What do we do with Musa? He's small fish. But small fish swim in formation.",
       choices:[
         { text:"Arrest him. He carried the cargo — he answers for it.",     effect:{integrity:+4, agencyFavour:+5, publicTrust:-2}, tag:'lawful',
@@ -6109,7 +6109,7 @@ function buildSceneCheckpointLegacy(){
   scene.add(compartment);
 
   // === NPCs ===
-  // AKS Inspector Chidi (green camo, beret) - left of truck
+  // Anti-Kidnapping Squad Inspector Chidi (green camo, beret) - left of truck
   const chidi = buildNPCMesh('#5a3826', '#3a4a28', '#1a2010', '#0a0a14', {hair:'beret', capColor:'#7a1a1a', longSleeve:true});
   chidi.position.set(-6, 0, 2); chidi.rotation.y = Math.PI/3;
   // beret
@@ -6117,9 +6117,9 @@ function buildSceneCheckpointLegacy(){
   beret.position.set(0, 1.7, 0.02); chidi.add(beret); outline(beret,1.05);
   scene.add(chidi);
   ENGINE.interactables.push({
-    mesh: chidi, label:'Brief with AKS Inspector Chidi', range:2.5,
+    mesh: chidi, label:'Brief with Anti-Kidnapping Squad Inspector Chidi', range:2.5,
     onInteract: ()=>{
-      if(S.game._cpBriefed){ toast('AKS','Verify the manifest, then we open the truck'); return; }
+      if(S.game._cpBriefed){ toast('ANTI-KIDNAPPING SQUAD','Verify the manifest, then we open the truck'); return; }
       startDialogue('checkpoint_intro');
     }
   });
@@ -6136,7 +6136,7 @@ function buildSceneCheckpointLegacy(){
   ENGINE.interactables.push({
     mesh: musa, label:'Question driver Musa', range:2.3,
     onInteract: ()=>{
-      if(!S.game._cpBriefed){ toast('PROTOCOL','Speak with AKS first'); return; }
+      if(!S.game._cpBriefed){ toast('PROTOCOL','Speak with the Anti-Kidnapping Squad first'); return; }
       if(S.game._cpDriverInterviewed){ toast('MUSA','He has nothing more to say without a lawyer'); return; }
       startDialogue('checkpoint_driver', ()=>{ S.game._cpDriverInterviewed = true; completeObjective('o2_driver'); });
     }
@@ -6162,7 +6162,7 @@ function buildSceneCheckpointLegacy(){
   ENGINE.interactables.push({
     mesh: docs, label:'Verify cargo manifest', range:2.4,
     onInteract: ()=>{
-      if(!S.game._cpBriefed){ toast('PROTOCOL','Brief with AKS first'); return; }
+      if(!S.game._cpBriefed){ toast('PROTOCOL','Brief with the Anti-Kidnapping Squad first'); return; }
       if(S.game._cpManifestDone){ toast('MANIFEST','Documents already verified'); return; }
       openPuzzle('checkpoint_manifest', ()=>{
         S.game._cpManifestDone = true;
@@ -8214,7 +8214,7 @@ function beginMissionCore(id){
   if(id==='m4'){
     setMissionTitle('Checkpoint Shakedown');
     setObjectives([
-      {id:'o1_brief_aks', text:'Brief with AKS Inspector Chidi'},
+      {id:'o1_brief_aks', text:'Brief with Anti-Kidnapping Squad Inspector Chidi'},
       {id:'o2_driver',    text:'Question the driver'},
       {id:'o3_manifest',  text:'Verify cargo manifest'},
       {id:'o4_search',    text:'Search rear compartment'},
@@ -8405,7 +8405,7 @@ function generateHeadline(){
   // Mission 4 — checkpoint specific
   if(S.game.currentMission==='m4'){
     if(checkpoint==='arrest_driver'){
-      return { pub:'WAVE24 NEWS', head:"Joint NACECA-AKS Bust: Ransom Ledger Seized On Benin Bypass", ded:'Driver in custody. Arms and a route ledger recovered from a livestock truck.' };
+      return { pub:'WAVE24 NEWS', head:"Joint NACECA–Anti-Kidnapping Squad Bust: Ransom Ledger Seized On Benin Bypass", ded:'Driver in custody. Arms and a route ledger recovered from a livestock truck.' };
     }
     if(checkpoint==='flip_driver'){
       return { pub:'THE DAILY GONG', head:"NACECA Quietly Turns Bypass Driver — Wider Net Said To Be Closing", ded:'Sources confirm a cooperator is wired up. Names of upstream handlers expected.' };
@@ -10321,7 +10321,7 @@ ENVART.follow = function(){
       const paint = ()=>{ x.fillStyle='#14203a'; x.fillRect(0,0,W,H);
         if(ready()){ const h=236, w=h*img.naturalWidth/img.naturalHeight; x.drawImage(img, cx-w/2, 8, w, h); }
         else crestDrawn();
-        txt(x,'NATIONAL ANTI-CYBERCRIME & ECONOMIC CRIMES AGENCY',cx,H-26,'bold 15px Arial','#c9b48a','center'); };
+        txt(x,'NATIONAL ANTI-CORRUPTION & ECONOMIC CRIMES AGENCY',cx,H-26,'bold 15px Arial','#c9b48a','center'); };
       // fallback while the emblem decodes: the original painted shield
       const crestDrawn = ()=>{ x.fillStyle='#d8a64a'; x.beginPath(); x.moveTo(cx,cy-96); x.lineTo(cx+78,cy-66); x.lineTo(cx+78,cy+10); x.quadraticCurveTo(cx+78,cy+70,cx,cy+104); x.quadraticCurveTo(cx-78,cy+70,cx-78,cy+10); x.lineTo(cx-78,cy-66); x.closePath(); x.fill();
       x.fillStyle='#14203a'; x.beginPath(); x.moveTo(cx,cy-80); x.lineTo(cx+64,cy-56); x.lineTo(cx+64,cy+8); x.quadraticCurveTo(cx+64,cy+58,cx,cy+88); x.quadraticCurveTo(cx-64,cy+58,cx-64,cy+8); x.lineTo(cx-64,cy-56); x.closePath(); x.fill();
@@ -10479,9 +10479,10 @@ const MGLOWTEX = {
       return T(c,true); },
     signsCP(){ const W=1024,H=1024,[c,x]=_cv(W,H), r=_rng(621); x.fillStyle='#2a2a2c'; x.fillRect(0,0,W,H);
       const weather=(x0,y0,w,h,seed)=>{ const rr=_rng(seed); for(let i=0;i<Math.floor(w/14);i++){ const X=x0+rr()*w; const g=x.createLinearGradient(0,y0,0,y0+h); g.addColorStop(0,'rgba(90,50,20,0)'); g.addColorStop(1,`rgba(90,50,20,${0.12+rr()*0.18})`); x.fillStyle=g; x.fillRect(X,y0+rr()*h*0.4,1+rr()*4,h); } };
-      // A: AKS checkpoint board (2.4:1)
+      // A: Anti-Kidnapping Squad checkpoint board (2.4:1)
       x.fillStyle='#9a1c16'; x.fillRect(0,0,614,256); x.strokeStyle='#f4efe6'; x.lineWidth=9; x.strokeRect(14,14,586,228);
-      txt(x,'AKS',307,118,font(118),'#ffffff'); txt(x,'CHECKPOINT',307,190,font(62),'#ffffff'); txt(x,'EDO STATE COMMAND · BENIN BYPASS',307,228,font(24,'600'),'#ffd8c8');
+      const fitTo = (s, max, px)=>{ for(; px > 24; px -= 2){ x.font = font(px); if(x.measureText(s).width <= max) break; } return font(px); };
+      txt(x,'ANTI-KIDNAPPING SQUAD',307,104,fitTo('ANTI-KIDNAPPING SQUAD',548,84),'#ffffff'); txt(x,'CHECKPOINT',307,180,font(62),'#ffffff'); txt(x,'EDO STATE COMMAND · BENIN BYPASS',307,228,font(24,'600'),'#ffd8c8');
       weather(0,0,614,256,622); N(x,614,256,3000,0.06,623,2);
       // B: STOP · CHECK · GO (6.8:1)
       x.fillStyle='#f0c020'; x.fillRect(614,0,410,60); x.strokeStyle='#141414'; x.lineWidth=5; x.strokeRect(617,3,404,54); txt(x,'STOP · CHECK · GO',819,44,font(36),'#141414');
@@ -10502,7 +10503,7 @@ const MGLOWTEX = {
       const cx=58, cy=56; x.fillStyle='#d8a64a'; x.beginPath(); x.moveTo(cx,cy-40); x.lineTo(cx+32,cy-28); x.lineTo(cx+32,cy+4); x.quadraticCurveTo(cx+32,cy+30,cx,cy+44); x.quadraticCurveTo(cx-32,cy+30,cx-32,cy+4); x.lineTo(cx-32,cy-28); x.closePath(); x.fill();
       x.fillStyle='#13203c'; x.beginPath(); x.moveTo(cx,cy-32); x.lineTo(cx+25,cy-22); x.lineTo(cx+25,cy+3); x.quadraticCurveTo(cx+25,cy+24,cx,cy+36); x.quadraticCurveTo(cx-25,cy+24,cx-25,cy+3); x.lineTo(cx-25,cy-22); x.closePath(); x.fill();
       txt(x,'N',cx,cy+14,font(36),'#d8a64a');
-      txt(x,'NACECA',112+150,78,font(70),'#d8a64a','center'); txt(x,'NATIONAL ANTI-CYBERCRIME & ECONOMIC CRIMES AGENCY',112+150,98,font(13,'600'),'#c9b48a','center');
+      txt(x,'NACECA',112+150,78,font(70),'#d8a64a','center'); txt(x,'NATIONAL ANTI-CORRUPTION & ECONOMIC CRIMES AGENCY',112+150,98,font(13,'600'),'#c9b48a','center');
       return T(c,false); },
     panoSavanna(){ const W=2048,H=512,[c,x]=_cv(W,H), r=_rng(631), HZ=443, SX=W/2;
       const g=x.createLinearGradient(0,0,0,HZ); g.addColorStop(0,'#1b2150'); g.addColorStop(0.4,'#2e2f62'); g.addColorStop(0.7,'#5e4672'); g.addColorStop(0.9,'#a8625e'); g.addColorStop(1,'#d88452');
@@ -11133,7 +11134,7 @@ function buildSceneMarket(){
 
 
 /* =========================================================================
-   NACECA · scenes/checkpoint.js (v9) — AKS checkpoint on the Benin Bypass
+   NACECA · scenes/checkpoint.js (v9) — Anti-Kidnapping Squad checkpoint on the Benin Bypass
    at dusk. The original builder keeps the briefing, the manifest puzzle,
    Musa's interview and the compartment search; the dressing swaps in the
    light-baked highway, the cattle lorry and the checkpoint crew.
@@ -11154,7 +11155,7 @@ function buildSceneCheckpoint(){
   // the cast's legacy hats and bolt-ons are part of their outfits now
   PROXY.list.forEach(g=>PROXY.scrub(g));
   const byLabel = l=>{ const it = ENGINE.interactables.find(i=>i.label === l); return it && it.mesh; };
-  const chidi = byLabel('Brief with AKS Inspector Chidi'), musa = byLabel('Question driver Musa');
+  const chidi = byLabel('Brief with Anti-Kidnapping Squad Inspector Chidi'), musa = byLabel('Question driver Musa');
   if(chidi && chidi.userData && chidi.userData._proxy){ chidi.position.set(-6, 0, 2); chidi.rotation.y = -1.25; chidi.userData._idle = 'folded'; }
   if(musa && musa.userData && musa.userData._proxy){
     // Musa waits on two crates by his cab, fidgeting

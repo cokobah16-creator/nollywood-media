@@ -23,11 +23,11 @@ DIALOGUE.night_uche = [
 ];
 DIALOGUE.night_uche_a = [
   { speaker:'SGT. UCHE', portrait:'sergeant', text:'Eleven years. She signed my transfer to Lagos. She signs everybody\'s transfer.' },
-  { speaker:'SGT. UCHE', text:'Thursday we go to the Benin Bypass. AKS is lending us Inspector Chidi. Sleep first.' },
+  { speaker:'SGT. UCHE', text:'Thursday we go to the Benin Bypass. The Anti-Kidnapping Squad is lending us Inspector Chidi. Sleep first.' },
 ];
 DIALOGUE.night_uche_b = [
   { speaker:'SGT. UCHE', portrait:'sergeant', text:'She knows where to find me. Here.' },
-  { speaker:'SGT. UCHE', text:'Thursday we go to the Benin Bypass. AKS is lending us Inspector Chidi. Sleep first.' },
+  { speaker:'SGT. UCHE', text:'Thursday we go to the Benin Bypass. The Anti-Kidnapping Squad is lending us Inspector Chidi. Sleep first.' },
 ];
 DIALOGUE.night_voicemail = [
   { speaker:'NACECA SYSTEM', text:'One voicemail. Unknown number. Today, 14:02.' },

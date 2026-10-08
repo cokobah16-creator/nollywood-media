@@ -113,7 +113,7 @@ DIALOGUE.st_levy = [
   { speaker:'AGENT KELECHI', portrait:'kelechi',
     text:"The hologram is a sticker — it lifts at the corner. No revenue code, and the number is a mobile line. A real levy comes with an official receipt.",
     choices:[
-      { text:"Describe him. AKS can pick him up before the next truck.", effect:{ agencyFavour:+2 }, next:'st_levy_report' },
+      { text:"Describe him. The Anti-Kidnapping Squad can pick him up before the next truck.", effect:{ agencyFavour:+2 }, next:'st_levy_report' },
       { text:"Pay nobody without an official receipt — and tell the other drivers.", effect:{ publicTrust:+3 }, next:'st_levy_warn' },
       { text:"I can't take this on today, Alhaji.", next:'st_levy_pass' },
     ] },

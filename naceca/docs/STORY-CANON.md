@@ -13,7 +13,7 @@ These decisions are fixed. New missions, dialogue and art are written to fit the
 - **Why Osas.** Osas found evidence that could expose her. The kidnapping is about silencing that evidence, not ransom.
 - **Complexity.** Some of her earlier help to Kelechi was sincere. She values him, but expects loyalty
   to outrank the truth. The finale must let her make that case, not just be unmasked.
-- **Plants already in the game.** Her sideways look at "I'll send word to AKS" (M1, savvy path).
+- **Plants already in the game.** Her sideways look at "I'll send word to the Anti-Kidnapping Squad" (M1, savvy path).
   More quiet plants are allowed in M1–M7 as long as a first-time player won't see the twist coming.
 
 ## Finale structure: one reveal, three approaches
@@ -42,3 +42,9 @@ It sets up the next season without undoing this victory.
 - At the reveal, the Voice's lines switch to Adaeze's portraits.
 - The separate "the_voice" portraits (a different woman) are not Adaeze. Recommended reuse: the courier
   who relays the calls, whom KC can help identify.
+
+## Names (always)
+- NACECA is the **National Anti-Corruption & Economic Crimes Agency**. Never "Anti-Cybercrime".
+- The kidnapping unit is always written out as the **Anti-Kidnapping Squad** — in dialogue, speaker
+  names, toasts, objectives, signs and news. Never "AKS" in anything a player sees. Code names
+  (`aks()`, `o1_brief_aks`) can stay. "AKs" for rifles is a different word.
