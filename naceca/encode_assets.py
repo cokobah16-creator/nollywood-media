@@ -14,7 +14,7 @@ import os
 import base64
 import json
 
-ROOT = "/home/claude/naceca-modular/src/assets"
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "src", "assets")  # works wherever the repo is checked out
 OUT = os.path.join(ROOT, "_inline.js")
 
 groups = {}

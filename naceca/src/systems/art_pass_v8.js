@@ -1160,6 +1160,9 @@ ENVART.follow = function(){
   const N = (x,w,h,a,al,seed,sz)=>_noise(x,w,h,a,al,seed,sz);
   const T = (c,rep)=>_tex(c,rep);
   const txt = (x, s, X, Y, font, col, align)=>{ x.font = font; x.fillStyle = col; x.textAlign = align || 'left'; x.textBaseline = 'alphabetic'; x.fillText(s, X, Y); };
+  // the NACECA emblem (same image as the title badge), decoded once for the HQ crest
+  let crestEl = null;
+  const crestImg = ()=>{ if(!crestEl && typeof ASSETS !== 'undefined' && ASSETS.title && ASSETS.title.naceca_badge){ crestEl = new Image(); crestEl.src = ASSETS.title.naceca_badge; } return crestEl; };
   Object.assign(MTEX, {
     /* ---------- HQ ---------- */
     carpet(){ const S=512,[c,x]=_cv(S,S), r=_rng(201);
@@ -1211,13 +1214,20 @@ ENVART.follow = function(){
       for(const p of items){ x.fillStyle=r()<0.6?'#d42020':'#e8c020'; x.beginPath(); x.arc(p[0],p[1],5,0,7); x.fill(); x.fillStyle='rgba(255,255,255,0.6)'; x.beginPath(); x.arc(p[0]-1.5,p[1]-1.5,1.6,0,7); x.fill(); }
       return T(c,false); },
     corkboard2(){ return MTEX.corkboard(281); },
-    crest(){ const W=512,H=300,[c,x]=_cv(W,H); x.fillStyle='#14203a'; x.fillRect(0,0,W,H);
-      const cx=W/2, cy=128; x.fillStyle='#d8a64a'; x.beginPath(); x.moveTo(cx,cy-96); x.lineTo(cx+78,cy-66); x.lineTo(cx+78,cy+10); x.quadraticCurveTo(cx+78,cy+70,cx,cy+104); x.quadraticCurveTo(cx-78,cy+70,cx-78,cy+10); x.lineTo(cx-78,cy-66); x.closePath(); x.fill();
+    crest(){ const W=512,H=300,[c,x]=_cv(W,H), cx=W/2, cy=128, img=crestImg();
+      const ready = ()=> img && img.complete && img.naturalWidth > 0;
+      const paint = ()=>{ x.fillStyle='#14203a'; x.fillRect(0,0,W,H);
+        if(ready()){ const h=236, w=h*img.naturalWidth/img.naturalHeight; x.drawImage(img, cx-w/2, 8, w, h); }
+        else crestDrawn();
+        txt(x,'NATIONAL ANTI-CYBERCRIME & ECONOMIC CRIMES AGENCY',cx,H-26,'bold 15px Arial','#c9b48a','center'); };
+      // fallback while the emblem decodes: the original painted shield
+      const crestDrawn = ()=>{ x.fillStyle='#d8a64a'; x.beginPath(); x.moveTo(cx,cy-96); x.lineTo(cx+78,cy-66); x.lineTo(cx+78,cy+10); x.quadraticCurveTo(cx+78,cy+70,cx,cy+104); x.quadraticCurveTo(cx-78,cy+70,cx-78,cy+10); x.lineTo(cx-78,cy-66); x.closePath(); x.fill();
       x.fillStyle='#14203a'; x.beginPath(); x.moveTo(cx,cy-80); x.lineTo(cx+64,cy-56); x.lineTo(cx+64,cy+8); x.quadraticCurveTo(cx+64,cy+58,cx,cy+88); x.quadraticCurveTo(cx-64,cy+58,cx-64,cy+8); x.lineTo(cx-64,cy-56); x.closePath(); x.fill();
       txt(x,'NACECA',cx,cy+14,'bold 34px Oswald, Impact, Arial Narrow, sans-serif','#d8a64a','center');
-      x.strokeStyle='#d8a64a'; x.lineWidth=4; x.beginPath(); x.moveTo(cx-34,cy+38); x.lineTo(cx,cy+56); x.lineTo(cx+34,cy+38); x.stroke(); x.beginPath(); x.arc(cx,cy-40,7,0,7); x.fillStyle='#d8a64a'; x.fill();
-      txt(x,'NATIONAL ANTI-CYBERCRIME & ECONOMIC CRIMES AGENCY',cx,H-26,'bold 15px Arial','#c9b48a','center');
-      return T(c,false); },
+      x.strokeStyle='#d8a64a'; x.lineWidth=4; x.beginPath(); x.moveTo(cx-34,cy+38); x.lineTo(cx,cy+56); x.lineTo(cx+34,cy+38); x.stroke(); x.beginPath(); x.arc(cx,cy-40,7,0,7); x.fillStyle='#d8a64a'; x.fill(); };
+      paint(); const t = T(c,false);
+      if(img && !ready()) img.addEventListener('load', ()=>{ paint(); t.needsUpdate = true; }, { once:true });
+      return t; },
 
     /* ---------- outdoor / market ---------- */
     laterite(){ const S=512,[c,x]=_cv(S,S), r=_rng(401); x.fillStyle='#b07a52'; x.fillRect(0,0,S,S);
