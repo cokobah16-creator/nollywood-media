@@ -178,8 +178,12 @@ function overhear(){
   V12.log('overheard', {});
 }
 
-/* the click: Obi's notebook against the courier's phone */
+/* the click: Obi's notebook against the courier's phone
+   Senior Agent reads the page plain; Recruit gets the red/green highlights. */
 function theClick(){
+  const hl = typeof V12.opsRecruit === 'function' ? V12.opsRecruit() : false;
+  const paint = (cls, t) => hl ? `<span class="${cls}">${t}</span>` : t;
+  const tick = typeof icon === 'function' ? icon('check') : '';
   const spec = {
     key:'night_click', title:'OBI\'S NOTEBOOK · THE COURIER\'S PHONE',
     screen:[
@@ -190,12 +194,12 @@ function theClick(){
       'TUE 29 SEP    POS ×3  ...........  15,400,000',
       'FRI 02 OCT    C.A.  .............   2,500,000',
       'SAT 03 OCT    ENGR  .............     400,000',
-      'MON 05 OCT    C.A.  .............   2,500,000   ✓',
+      'MON 05 OCT    C.A.  .............   2,500,000   ' + tick,
       '',
       '<span class="label">[ COURIER\'S PHONE · UNSENT DRAFT ]</span>',
-      '<span class="red">"Tell Madam it\'s clean."</span>',
+      paint('red', '"Tell Madam it\'s clean."'),
       'draft saved MON 05 OCT · 23:14 · battery 4%',
-      'last call: <span class="green">ENGR</span> · 22:51',
+      'last call: ' + paint('green', 'ENGR') + ' · 22:51',
     ].join('\n'),
     ask:'The courier was told to report to "Madam" the night of the Mushin drop. Who is Madam in Obi\'s books? Pick it, then tap the line that proves it.',
     options:[
@@ -205,21 +209,27 @@ function theClick(){
       { text:'Madam is Ada, Obi\'s wife' },
     ],
     proof:['MON 05 OCT    C.A.'], look:['MON 05 OCT', 'SAT 03 OCT', 'last call'],
-    fail:{ mode:'continue', note:'You\'re too tired to see it tonight. But "Madam" goes up on the table anyway.' },
+    fail:{ mode:'continue', note:'You\'re too tired to see it tonight. The notebook and the phone go on the table as they are: link them yourself.' },
     onCorrect:{ intel:10 },
     onSolved:()=>{ S.game.flags.v12_madam = true; S.game._nightClickGood = true; },
-    onFailed:()=>{ S.game.flags.v12_madam = true; },
+    onFailed:()=>{ S.game._nightClickGood = false; },   // Madam is earned at the table, not handed over
   };
   V12.openDoc(spec, ()=>{
     S.game._nightClick = true;
     completeObjective('n3_table');
     if(S.game._nightClickGood){
-      V12.inkLinks([['e_notebook','e_madam'], ['s_madam','e_notebook'], ['s_madam','e_madam']], true);
+      // only what the page proved goes in ink: the notebook's ticked Monday and the courier's draft are one night
+      V12.inkLinks([['e_notebook','e_madam']], true);
       if(typeof unlock === 'function') unlock('night_shift');
       if(typeof playMusic === 'function') playMusic('stealth', { volume:0.4 });
       if(typeof evidenceFlash === 'function') evidenceFlash();
     }
-    setTimeout(()=>{ toast('A NEW SUSPECT', '"MADAM" — on the operations table', 2600); V12.openOps('lagos', 's_madam'); }, 700);
+    const good = !!S.game._nightClickGood;
+    setTimeout(()=>{
+      if(good) toast('A NEW SUSPECT', '"MADAM" — on the operations table', 2600);
+      else toast('THE TABLE', 'The notebook and the courier\'s phone are on it. Make the link yourself.', 2800);
+      V12.openOps('lagos');
+    }, 700);
   });
 }
 V12.nightClick = theClick;
