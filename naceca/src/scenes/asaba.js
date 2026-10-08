@@ -11,6 +11,11 @@
    carries forward into Mission 7.
    ========================================================================= */
 
+// Ifeanyi's loop once he's doubled back from the van: round the crate stacks and back to the bay
+const ASABA_LANES = {
+  nodes: [[15.5,-1], [11,-4], [11,5], [6,5], [2.5,4.5], [-2,4.5], [-1,-1], [1,-5.5], [7,-5.5]],
+  edges: [[0,1], [1,2], [2,3], [3,4], [4,5], [5,6], [6,7], [7,8], [8,1]],
+};
 function buildSceneAsabaLegacy(){
   const scene = newScene({bg:'#1a1814', fog:'#2a2418'});
   scene.fog.near = 14; scene.fog.far = 50;
@@ -277,7 +282,7 @@ function buildSceneAsabaLegacy(){
      <rect x="14" y="-2"  width="6" height="3" fill="#a8b8c8" opacity="0.5"/>`,
     [
       {x:-13, z:4.5, color:'#5dd07a', r:1.4},  // uche
-      {x:2,   z:1,   color:'#c84a3a', r:1.6},  // runner — pulses if triggered
+      {x:2,   z:1,   color:'#c84a3a', r:1.6, suspect:true},  // runner (hidden once the chase starts: the red blip takes over)
       {x:-10, z:-5.5,color:'#ffd890', r:1.4},  // hostage
       {x:17,  z:-1,  color:'#a8a8a8', r:1.6},  // van
     ]
@@ -336,8 +341,11 @@ function updateAsabaTrigger(dt){
     const rn = ENGINE._asabaRunner;
     if(rn && !rn.userData._caught){
       startChase({
-        runner: rn, label:'IFEANYI', speed:4.5, catchDist:1.5, headStart:0.3,
+        runner: rn, label:'IFEANYI', speed:4.1, catchDist:1.9, headStart:0.3,
         path: [[2,1],[6,5],[11,5],[11,-4],[15.5,-1]],
+        // no way out at the van while you're on him: he doubles back round the bays until caught or 20 s out of range
+        endPause: 1.4, endLine: 'No way out at the van. Ifeanyi breaks back through the bays.',
+        lanes: ASABA_LANES,
         onCaught: ()=>{ if(!S.game._asabaChoice) makeAsabaChoice('chase', rn); },
         onEscaped: ()=>{
           rn.userData._escaped = true;
