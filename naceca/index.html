@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<!-- brand lockup fonts, separate so a problem here can never take the game fonts down with it -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Marcellus&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -90,14 +92,21 @@
   <!-- =================== SCREENS =================== -->
   <div class="overlay" id="screen-title"><div class="overlay-bg"></div>
     <div class="stamp">CASE 0001 · CLASSIFIED · OFFICIAL USE ONLY</div>
-    <h1>NACECA<span class="accent">Operation Serpent's Route</span></h1>
+    <div class="brand-lockup">
+      <h1 class="wordmark">NACECA</h1>
+      <div class="bl-rule"></div>
+      <div class="bl-agency">National Anti-Corruption &amp;<br>Economic Crimes Agency</div>
+      <div class="bl-rule thin"></div>
+      <div class="bl-motto">Evidence<i aria-hidden="true">•</i>Integrity<i aria-hidden="true">•</i>Justice</div>
+    </div>
+    <div class="game-title">Operation Serpent's Route</div>
     <p class="sub">A cinematic anti-fraud investigation across Lagos, Kano, Edo and Delta. Build evidence, balance integrity against political pressure, and decide what kind of officer Agent Kelechi becomes.</p>
     <div class="title-actions">
       <button class="btn primary" id="btn-newgame">NEW INVESTIGATION</button>
       <button class="btn" id="btn-continue">CONTINUE</button>
       <button class="btn ghost" id="btn-mission-select">MISSION SELECT</button>
     </div>
-    <div style="position:absolute;bottom:24px;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.4em;color:#5a6a82">FICTION · ALL CHARACTERS, AGENCIES AND CASES ARE FICTIONAL</div>
+    <div class="title-fiction" style="position:absolute;bottom:24px;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.4em;color:#5a6a82">FICTION · ALL CHARACTERS, AGENCIES AND CASES ARE FICTIONAL</div>
   </div>
 
   <div class="overlay" id="screen-missions"><div class="overlay-bg"></div>
