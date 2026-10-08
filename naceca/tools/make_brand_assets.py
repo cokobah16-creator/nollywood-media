@@ -5,10 +5,11 @@ Reads   art/brand/naceca_brand_sheet.png  (the brand sheet; the main shield is t
 Writes  art/brand/naceca_shield.png        the shield cut out, transparent, native size
         src/assets/title/naceca_badge.png  title-screen badge (4:5 canvas, matches the 4.4 x 5.5 plane in boot.js)
         art/brand/hud_shield.png           HUD badge (inlined into styles.css as .naceca-shield)
-        art/brand/favicon.png              64 x 64 browser tab icon
-        art/brand/apple_touch_icon.png     180 x 180 home-screen icon
-Then run python3 encode_assets.py and python3 build.py, and paste the HUD/icon data URIs
-with --print-data-uris if those images changed.
+        art/brand/splash_shield.png        loading-splash emblem (inlined into index.html #boot-splash)
+        favicon.png                        64 x 64 browser tab icon      } real files, not data URIs: Safari before 26
+        apple-touch-icon.png               180 x 180 home-screen icon    } ignores data: icons. vercel.json copies them.
+Then run python3 encode_assets.py and python3 build.py. If the HUD or splash image changed,
+re-inline it (--print-data-uris prints both).
 """
 import base64, io, os, sys
 from collections import deque
@@ -86,8 +87,9 @@ if __name__ == "__main__":
     H = shield.height + 2
     save(on_canvas(shield, (round(H * 0.8), H)), "src/assets/title/naceca_badge.png")
     hud = save(fit(shield, 144), "art/brand/hud_shield.png")
-    fav = save(on_canvas(shield, (64, 64)), "art/brand/favicon.png")
-    ati = save(on_canvas(shield, (180, 180), bg=((24, 40, 74), (8, 16, 34)), pad=16), "art/brand/apple_touch_icon.png")
+    splash = save(fit(shield, 300), "art/brand/splash_shield.png")
+    save(on_canvas(shield, (64, 64)), "favicon.png")
+    save(on_canvas(shield, (180, 180), bg=((24, 40, 74), (8, 16, 34)), pad=16), "apple-touch-icon.png")
     if "--print-data-uris" in sys.argv:
-        for name, p in (("hud", hud), ("favicon", fav), ("apple_touch_icon", ati)):
+        for name, p in (("hud", hud), ("splash", splash)):
             print(f"{name}={data_uri(p)}")

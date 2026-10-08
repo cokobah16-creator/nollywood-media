@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "",
-  "buildCommand": "rm -rf dist && mkdir dist && cp naceca.html dist/index.html && cp -R assets dist/ && if [ -d vo ]; then cp -R vo dist/; fi",
+  "buildCommand": "rm -rf dist && mkdir dist && cp naceca.html dist/index.html && cp favicon.png apple-touch-icon.png dist/ && cp -R assets dist/ && if [ -d vo ]; then cp -R vo dist/; fi",
   "outputDirectory": "dist"
 }
