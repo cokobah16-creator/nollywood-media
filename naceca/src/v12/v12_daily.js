@@ -86,7 +86,7 @@ V12.openDaily = function(practice){
     const c = cards[R.i];
     ov.innerHTML = `<div class="overlay-bg"></div><div class="sol-frame">
       <div class="sol-head"><div><div class="plan-k">${practice ? 'PRACTICE ROUND' : 'DAILY · #' + day}</div><div class="plan-t">SCAM OR LEGIT?</div></div>
-        <div class="sol-meta"><span class="sol-secs">${Math.ceil(R.left)}s</span><span>${R.i + 1}/${cards.length}</span><button class="v12-x" id="sol-x" aria-label="Close">✕</button></div></div>
+        <div class="sol-meta"><span class="sol-secs">${Math.ceil(R.left)}s</span><span>${R.i + 1}/${cards.length}</span><button class="v12-x" id="sol-x" aria-label="Close">${icon('close')}</button></div></div>
       <div class="sol-time"><i style="width:${R.left / SECONDS * 100}%"></i></div>
       <div class="sol-card"><div class="sol-ch">${c.ch}</div><div class="sol-from">${V12.esc(c.from)}</div><div class="sol-body">${V12.esc(c.body).replace(/\n/g, '<br>')}</div></div>
       <div class="sol-tell" id="sol-tell"></div>
@@ -102,7 +102,7 @@ V12.openDaily = function(practice){
     R.marks.push(ok ? 1 : 0); R.paused = true;
     if(ok){ if(typeof sfxComplete === 'function') sfxComplete(); } else { if(typeof sfxFail === 'function') sfxFail(); if(typeof haptic === 'function') haptic(60); }
     const t = ov.querySelector('#sol-tell'); t.className = 'sol-tell show ' + (ok ? 'good' : 'bad');
-    t.innerHTML = `<b>${ok ? 'RIGHT' : 'WRONG'} — ${c.scam ? 'SCAM' : 'LEGIT'}.</b> ${c.tell}<button class="btn primary" id="sol-next">${R.i + 1 < cards.length ? 'NEXT ▶' : 'RESULT ▶'}</button>`;
+    t.innerHTML = `<b>${ok ? 'RIGHT' : 'WRONG'} — ${c.scam ? 'SCAM' : 'LEGIT'}.</b> ${c.tell}<button class="btn primary" id="sol-next">${R.i + 1 < cards.length ? 'NEXT' : 'RESULT'}${icon('next')}</button>`;
     ov.querySelectorAll('.sol-b').forEach(b => b.disabled = true);
     ov.querySelector('#sol-next').onclick = ()=>{ R.i++; R.paused = false; R.last = performance.now(); if(R.i >= cards.length) finish(); else card(); };
   };
@@ -138,7 +138,7 @@ function result(ov, res, day, st, practice){
     <div class="sol-sq">${res.marks.map(m => `<i class="${m ? 'g' : 'r'}"></i>`).join('')}</div>
     <div class="sol-stats"><span>STREAK <b>${st.streak || 0}</b></span><span>BEST <b>${st.best || 0}/${n}</b></span><span>PLAYED <b>${st.played || 0}</b></span></div>
     <p class="ops-p">${res.score === n ? 'Not one got past you.' : res.score >= n - 2 ? 'Sharp. The ones you missed are the ones that catch real people.' : 'The scammers are counting on exactly these.'}${practice ? '' : ' A new round arrives tomorrow.'}</p>
-    <div class="sol-actions"><button class="btn primary" id="sol-share">SHARE</button><button class="btn" id="sol-again">PRACTICE ROUND</button><button class="btn ghost" id="sol-back">◀ BACK</button></div></div>`;
+    <div class="sol-actions"><button class="btn primary" id="sol-share">SHARE</button><button class="btn" id="sol-again">PRACTICE ROUND</button><button class="btn ghost" id="sol-back">${icon('back')}BACK</button></div></div>`;
   ov.querySelector('#sol-share').onclick = ()=>V12.shareTextOut(shareText(res, day, st));
   ov.querySelector('#sol-again').onclick = ()=>V12.openDaily(true);
   ov.querySelector('#sol-back').onclick = ()=>showOverlay('screen-title');

@@ -639,12 +639,12 @@ function triggerScan(){
   // amplify all evidence markers + briefly highlight any NPC interactables
   $$('.evidence-marker .pip').forEach(p=>{
     p.style.transform='scale(1.6)';
-    p.style.filter = 'drop-shadow(0 0 14px rgba(216,166,74,0.9))';
-    setTimeout(()=>{ p.style.transform=''; p.style.filter=''; }, 1600);
+    p.style.borderColor = 'var(--manila,#E9DCC0)';
+    setTimeout(()=>{ p.style.transform=''; p.style.borderColor=''; }, 1600);
   });
-  // pulse the screen edges (extra vignette flash)
+  // frame the screen edges (flat 3px case-file border, no glow)
   document.body.style.transition = 'box-shadow 0.2s ease-out';
-  document.body.style.boxShadow = 'inset 0 0 200px 0 rgba(216,166,74,0.4)';
+  document.body.style.boxShadow = 'inset 0 0 0 3px rgba(233,220,192,0.55)';
   setTimeout(()=>{ document.body.style.boxShadow = ''; }, 1600);
   if(typeof sideScan==='function') sideScan();
 }
@@ -665,7 +665,7 @@ function updateMarkersLegacy(){
     if(!m.el){
       const el = document.createElement('div');
       el.className = 'evidence-marker';
-      el.innerHTML = `<div class="pip">⊙</div><div class="lbl">${m.label}<span class="sub">${m.sub||''}</span></div>`;
+      el.innerHTML = `<div class="pip"></div><div class="lbl">${m.label}<span class="sub">${m.sub||''}</span></div>`;
       layer.appendChild(el);
       m.el = el;
     }

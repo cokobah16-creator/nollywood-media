@@ -1167,7 +1167,7 @@ function mountHUD(){
     <div class="car-ctl" id="car-ctl">
       <button data-c="back">${key('S')}<span class="cl">BACK OFF</span></button><button data-c="closer">${key('W')}<span class="cl">CLOSER</span></button>
       <i class="car-sep"></i>
-      <button data-c="laneL">${key('A')}<span class="cl">◀ LANE</span></button><button data-c="laneR">${key('D')}<span class="cl">LANE ▶</span></button>
+      <button data-c="laneL">${key('A')}<span class="cl">${icon('back')}LANE</span></button><button data-c="laneR">${key('D')}<span class="cl">LANE${icon('next')}</span></button>
       <i class="car-sep"></i>
       <button data-c="photo" class="cam">${key('SPACE')}<span class="cl">PHOTO</span></button>
     </div>
@@ -1236,7 +1236,7 @@ function showResult(){
     </div>
     ${calls ? `<ul class="carr-calls">${calls}</ul>` : ''}
     <div class="carr-uche">${face ? `<img src="${face}" alt="">` : ''}<p>“${V12.esc(closing)}”</p></div>
-    <div class="carr-actions"><button class="btn ghost" id="carr-retry">TRY THE TAIL AGAIN</button><button class="btn primary" id="carr-go">ON TO EKOSODIN ▶</button></div>
+    <div class="carr-actions"><button class="btn ghost" id="carr-retry">TRY THE TAIL AGAIN</button><button class="btn primary" id="carr-go">ON TO EKOSODIN${icon('next')}</button></div>
   </div>`;
   ov.querySelector('#carr-go').onclick = ()=>{ commit(); teardown(); showOverlay(null); showHUD(false); titleCard(['EKOSODIN', 'AKINTOLA CLOSE · 21:05'], 2400, ()=>loadMission('m8')); };
   ov.querySelector('#carr-retry').onclick = ()=>{ V12.log('car_retry', { outcome:o }); teardown(); showOverlay(null); V12._fromHub = MID; loadMission(MID); };
