@@ -516,7 +516,9 @@ function updatePlayer(dt){
     else if(sprint){ speed = MOVE.sprint; clip = 'sprint'; }
     else if(ENGINE._touch && analog < 0.62){ speed = MOVE.walk; clip = 'walk'; }
     else { speed = MOVE.jog; clip = 'jog'; }
-    speed *= (ENGINE.speedMul || 1) * (ENGINE._touch ? Math.max(0.55, analog) : 1);
+    // touch: walk/jog follow the stick; a sprint is a full sprint once the stick is past half-way
+    const touchK = !ENGINE._touch ? 1 : clip === 'sprint' ? Math.min(1, Math.max(0.55, analog / 0.5)) : Math.max(0.55, analog);
+    speed *= (ENGINE.speedMul || 1) * touchK;
     const nx = P.position.x + wx*speed*dt, nz = P.position.z + wz*speed*dt;
     const b = ENGINE.bounds;
     if(!blockedAt(nx, P.position.z) && nx>b.minX && nx<b.maxX) P.position.x = nx;
