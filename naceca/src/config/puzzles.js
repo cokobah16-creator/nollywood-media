@@ -2,6 +2,9 @@
    NACECA · config/puzzles.js
    Auto-extracted from game.js by split_modules.py
    Edit the modules; run build.py to rebuild naceca.html.
+   Answer-giveaway markup (red/green spans, the arrows, "(FAKE)") is a
+   Recruit-only hint: <span class="cw-hint"> marks the annotations, and
+   V12.seniorScreen (v12_docs.js) strips colour + annotations for Senior Agent.
    ========================================================================= */
 /* ===================== 5. DATA: PUZZLES ===================== */
 const PUZZLES = {
@@ -21,7 +24,7 @@ From: <span class="green">Ola Mechanic</span>      "Boss your car ready. Come ca
 
 GALLERY · 3 IMAGES
 ─────────────────────────────────────
-IMG_001.jpg — Copy of the Crestline Bank login page (FAKE)
+IMG_001.jpg — Copy of the Crestline Bank login page <span class="cw-hint">(FAKE)</span>
 IMG_002.jpg — List of Nigerian phone numbers, 200+ rows
 IMG_003.jpg — Family wedding photo
 `,
@@ -46,14 +49,14 @@ CONSIGNEE         : <span class="green">DELTA RIVERSIDE ABATTOIR LTD</span>
 CONSIGNOR         : <span class="green">ALH. RABIU MUKHTAR (KANO)</span>
 LIVESTOCK COUNT   : <span class="green">42 HEAD · WHITE FULANI</span>
 WEIGHT (DECLARED) : <span class="red">9,400 kg</span>
-WEIGHT (BRIDGE)   : <span class="red">11,820 kg</span>      ← discrepancy +2,420 kg
+WEIGHT (BRIDGE)   : <span class="red">11,820 kg</span><span class="cw-hint">      ← discrepancy +2,420 kg</span>
 
 PLATE             : <span class="green">XB-227-ABJ</span>
 ENGINE NO.        : <span class="green">5KGE-002441</span>
 INSURANCE STAMP   : <span class="red">EXPIRED 2025-08-12</span>
 
 CONTAINER SEAL # ON DOC : <span class="red">SL-44882</span>
-CONTAINER SEAL # ON TRUCK: <span class="red">SL-44912</span>      ← MISMATCH
+CONTAINER SEAL # ON TRUCK: <span class="red">SL-44912</span><span class="cw-hint">      ← MISMATCH</span>
 `,
     prompt:`The cargo manifest doesn't match the truck. Pick the <b>strongest single anomaly</b> that gives you legal grounds to open the back compartment.`,
     options:[

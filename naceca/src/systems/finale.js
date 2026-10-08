@@ -4,7 +4,17 @@
    built across seven missions decides whether her guilt can be PROVEN.
    Also: the epilogue (where everyone ended up), credits, and the Season 2
    stinger, which reveals who protected her without undoing her defeat.
+   Beta casework: a wrong name on a charge sheet (Lagos, the route, the
+   finale) follows that person into the headline and the epilogue.
    ========================================================================= */
+
+/* who a filed charge sheet wrongly named, per case (settled sheets only for raids) */
+function _cwWrong(c){
+  const a = S.game && S.game.accusations, r = a && a[c];
+  if(!r || !r.ok || r.ok.suspect) return null;
+  if(c !== 'voice' && !r.settled) return null;
+  return r.suspect;
+}
 
 /* What Kelechi can actually put to her. Each entry is earned earlier. */
 function finaleProofs(){
@@ -57,9 +67,17 @@ function finaleRevealScript(){
 
 function finaleHeadline(){
   const o = S.game.moralChoices.finale, hurt = S.game.flags.fin_osas === 'hurt';
-  if(o === 'proven')    return { pub:'THE DAILY GONG', head:'NACECA Commander Arrested in Ekosodin Kidnap Plot — Student Freed', ded:`The ransom calls came from inside the agency, investigators say. A flash drive and an accountant's testimony sealed the case.${hurt?' The student was treated for a broken wrist.':''}` };
-  if(o === 'contested') return { pub:'THE LAGOS LEDGER', head:'Senior NACECA Officer Detained After UNIBEN Student Rescue', ded:'Prosecutors face a fight: one piece of hard evidence, a powerful defence, and an agency in shock.' };
-  return { pub:'NATIONAL DISPATCH', head:'Kidnapped UNIBEN Student Freed; NACECA Commander Suspended Pending Inquiry', ded:'Questions mount over why Cdr. Adaeze reached the compound before backup did.' };
+  let h;
+  if(o === 'proven')    h = { pub:'THE DAILY GONG', head:'NACECA Commander Arrested in Ekosodin Kidnap Plot — Student Freed', ded:`The ransom calls came from inside the agency, investigators say. A flash drive and an accountant's testimony sealed the case.${hurt?' The student was treated for a broken wrist.':''}` };
+  else if(o === 'contested') h = { pub:'THE LAGOS LEDGER', head:'Senior NACECA Officer Detained After UNIBEN Student Rescue', ded:'Prosecutors face a fight: one piece of hard evidence, a powerful defence, and an agency in shock.' };
+  else h = { pub:'NATIONAL DISPATCH', head:'Kidnapped UNIBEN Student Freed; NACECA Commander Suspended Pending Inquiry', ded:'Questions mount over why Cdr. Adaeze reached the compound before backup did.' };
+  // the wrong name went first, in public
+  const w = _cwWrong('voice');
+  if(w){
+    const nm = ({ uche:'Sgt. Uche', osaro:'Engr. Osaro', obi:'Chief Obi', ifeanyi:'Ifeanyi', chidi:'Insp. Chidi' })[w] || 'another officer';
+    h = Object.assign({}, h, { head:h.head.replace(/ — Student Freed$/, '') + ` — Hours After ${nm} Was Arrested in Error`, ded:h.ded + ` Earlier that night, on the investigating agent's word, ${nm} was arrested in public.` });
+  }
+  return h;
 }
 
 /* ---------------- epilogue, credits, stinger ---------------- */
@@ -88,6 +106,22 @@ function epilogueSlides(){
   S_.push({ art: f.child_gentle ? 'child_relieved' : 'child_afraid', name:'THE GIRL FROM LEKKI',
     text: f.child_gentle ? 'She lives with her aunt in Surulere now. She drew a policeman with a kind face and stuck it on the fridge.' : 'She lives with her aunt in Surulere now. She doesn\'t like the sound of boots.' });
   S_.push({ art:'uche_evasive', name:'SGT. UCHE', text:'Uche turned down a promotion. "Slower," he says. "But it holds."' });
+  // the people a charge sheet wrongly named
+  try{
+    const CC = (typeof CW !== 'undefined' && CW.CASES) || {};
+    const wl = _cwWrong('lagos'), wr = _cwWrong('route'), wv = _cwWrong('voice');
+    const swap = (name, text)=>{ const s0 = S_.find(x => x.name === name); if(s0) s0.text = text; };
+    if(wl === 'kc') swap('KC', 'KC was held as "the kingpin" on a NACECA charge sheet before Lekki. The charge collapsed in a week. In Ikeja they still call him "the boss", and he hates it.');
+    if(wl === 'tunde') S_.push({ art:'', name:'TUNDE', text:'Your informant spent a night in a NACECA cell on your own charge sheet. He is back at the Ikeja market. He does not answer unknown numbers, or NACECA\'s.' });
+    if(wl === 'pos') S_.push({ art:'', name:'THE IKEJA POS AGENT', text:'Held overnight as "the ringleader" on your charge sheet. The agent\'s licence was suspended for a year. Nobody apologised.' });
+    if(wr === 'tobi') swap('TOBI ONUOHA', m.asaba === 'rescue' ? 'Tobi read the drive line by line for the prosecution — after a morning cuffed to a hospital bed on your charge sheet. He asked for nothing, not even an apology.' : 'Tobi did not live to read the drive. For a week the papers called him the cartel\'s accountant, because of your charge sheet.');
+    if(wr === 'agent') S_.push({ art:'', name:'THE ASABA SIM AGENT', text:'Taken from a stall at Asaba Main Market on your charge sheet and released without charge. The stall is still shut.' });
+    if(wr === 'musa'){ const mu = S_.find(x => x.name === 'MUSA'); if(mu) mu.text += ' He was re-arrested as "the route\'s principal" on your charge sheet; it took a month to get the charge dropped.'; }
+    if(wv && CC.voice && CC.voice.epilogue && CC.voice.epilogue[wv]){
+      const e = CC.voice.epilogue[wv], ex = S_.find(x => x.name === e.name);
+      if(ex) ex.text = e.text; else S_.push({ art:e.art, name:e.name, text:e.text });
+    }
+  }catch(e){}
   S_.push({ art: rep.integrity >= 70 ? 'kelechi_neutral' : rep.integrity <= 40 ? 'kelechi_evasive' : 'kelechi_neutral', name:'AGENT KELECHI',
     text: rep.integrity >= 70 ? 'The new commander offered him a Superintendent\'s badge. He asked for the case files instead.'
         : rep.integrity <= 40 ? 'He kept his badge. Some nights he wonders what it cost, and who else knows.'

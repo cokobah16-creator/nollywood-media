@@ -1,1 +1,155 @@
-/* beta/casework.css — friends-beta pass (see docs/SYNC-2026-10-08-beta.md) */
+/* beta/casework.css — friends-beta pass (see docs/SYNC-2026-10-08-beta.md)
+   Paper documents for the casework layer: the new-game sheet, the charge
+   sheet, the search warrant, the finale accusation and the prosecutor's
+   review in the aftermath. Flat fills, 1px rules, rubber stamps — no
+   gradients, glows or blur. Every tappable thing is at least 44×44px. */
+
+/* ---------- overlays ---------- */
+.overlay.cw-ov{padding:max(12px, env(safe-area-inset-top, 0px)) 16px max(12px, env(safe-area-inset-bottom, 0px))}
+.overlay.cw-ov > .cw-bg{background:var(--ink, #1C1C1A);opacity:.94}
+.overlay.cw-ov > .cw-bg::after{display:none}
+.cw-ov .ico{flex:0 0 auto;display:inline-block;vertical-align:-.15em}
+
+/* ---------- the paper sheet ---------- */
+.cw-paper{background:var(--manila, #E9DCC0);color:var(--ink, #1C1C1A);border:1px solid var(--ink, #1C1C1A);border-radius:3px;box-shadow:none;text-align:left}
+.cw-sheet{position:relative;width:min(780px, 100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;font-family:'Inter', system-ui, sans-serif}
+.cw-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:20px 24px 12px}
+.cw-head{border-bottom:2px solid var(--ink, #1C1C1A);padding-bottom:10px;margin-bottom:12px}
+.cw-agency{font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;line-height:1.35}
+.cw-title{font-family:'Oswald', 'Arial Narrow', sans-serif;font-weight:700;font-size:30px;letter-spacing:.06em;line-height:1.1;margin:4px 0 4px;color:var(--ink, #1C1C1A)}
+.cw-meta{font-family:'JetBrains Mono', ui-monospace, monospace;font-size:11px;letter-spacing:.02em;line-height:1.5}
+.cw-lead{font-size:14px;line-height:1.5;margin:0 0 12px}
+.cw-lead i{font-style:italic}
+
+/* sections */
+.cw-sec{border-top:1px solid rgba(28,28,26,.35);padding:12px 0 8px}
+.cw-head + .cw-sec{border-top:0;padding-top:0}
+.cw-sec-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:8px}
+.cw-n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:1px solid var(--ink, #1C1C1A);border-radius:2px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:12px;align-self:center}
+.cw-l{font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:15px;font-weight:600;letter-spacing:.12em}
+.cw-q{font-size:13px;flex:1 1 220px;line-height:1.4}
+.cw-count{font-family:'JetBrains Mono', ui-monospace, monospace;font-size:12px;margin-left:auto}
+.cw-margin{display:flex;gap:8px;align-items:flex-start;border-left:3px solid var(--green, #0B6E4F);padding:4px 0 4px 10px;margin:0 0 10px;font-size:13.5px;line-height:1.45;color:var(--green, #0B6E4F)}
+.cw-margin b{font-family:'Oswald', 'Arial Narrow', sans-serif;font-weight:600;letter-spacing:.12em;font-size:11px;margin-right:4px}
+.cw-margin .ico{margin-top:2px}
+.cw-empty{font-size:13px;margin:4px 0}
+
+/* single and multi choice lines */
+.cw-opts{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px}
+.cw-opt{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:10px 12px;margin:0;background:transparent;border:1px solid rgba(28,28,26,.45);border-radius:2px;color:var(--ink, #1C1C1A);font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cw-opt:hover{border-color:var(--ink, #1C1C1A)}
+.cw-opt.sel{border:2px solid var(--ink, #1C1C1A);padding:9px 11px;background:rgba(28,28,26,.07)}
+.cw-box{flex:0 0 auto;width:22px;height:22px;border:1.5px solid var(--ink, #1C1C1A);border-radius:2px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-top:1px;background:transparent;color:var(--ink, #1C1C1A)}
+.cw-box .ico{visibility:hidden}
+.sel > .cw-box{background:var(--ink, #1C1C1A);color:var(--manila, #E9DCC0)}
+.sel > .cw-box .ico{visibility:visible}
+.cw-ot{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cw-ot b{font-family:'Oswald', 'Arial Narrow', sans-serif;font-weight:600;font-size:15px;letter-spacing:.03em;line-height:1.25}
+.cw-ol{font-family:'JetBrains Mono', ui-monospace, monospace;font-size:11.5px;line-height:1.45}
+.cw-tag{font-style:normal;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:10px;letter-spacing:.14em;color:var(--red, #B3261E);border:1px solid var(--red, #B3261E);border-radius:2px;padding:0 5px;align-self:flex-start;margin-top:2px}
+
+/* portrait cards (the finale) */
+.cw-cards{display:grid;grid-template-columns:repeat(6, minmax(0, 1fr));gap:8px}
+.cw-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:44px;padding:10px 6px;margin:0;background:transparent;border:1px solid rgba(28,28,26,.45);border-radius:2px;color:var(--ink, #1C1C1A);font:inherit;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cw-card img, .cw-card .cw-noimg{width:56px;height:56px;object-fit:cover;object-position:50% 20%;border:1px solid var(--ink, #1C1C1A);border-radius:2px;background:var(--ink, #1C1C1A)}
+.cw-card b{font-family:'Oswald', 'Arial Narrow', sans-serif;font-weight:600;font-size:13px;letter-spacing:.03em;line-height:1.2}
+.cw-card .cw-ol{font-size:10px;line-height:1.35}
+.cw-card .cw-box{position:absolute;top:5px;right:5px;width:18px;height:18px;font-size:13px;margin:0}
+.cw-card.sel{border:2px solid var(--ink, #1C1C1A);padding:9px 5px;background:rgba(28,28,26,.07)}
+
+/* footer + buttons */
+.cw-foot{flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:10px 24px 14px;border-top:2px solid var(--ink, #1C1C1A);background:var(--manila, #E9DCC0)}
+.cw-warn{display:flex;align-items:center;gap:6px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--red, #B3261E)}
+.cw-acts{display:flex;flex-wrap:wrap;gap:10px;margin-left:auto}
+.cw-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;min-width:44px;padding:10px 18px;margin:0;border:1px solid var(--ink, #1C1C1A);border-radius:2px;background:transparent;color:var(--ink, #1C1C1A);font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:14px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;box-shadow:none;-webkit-tap-highlight-color:transparent}
+.cw-btn:hover{background:rgba(28,28,26,.08)}
+.cw-btn.primary{background:var(--green, #0B6E4F);border-color:var(--green, #0B6E4F);color:var(--manila, #E9DCC0)}
+.cw-btn.primary:hover{background:var(--ink, #1C1C1A);border-color:var(--ink, #1C1C1A)}
+.cw-btn.danger{border-color:var(--red, #B3261E);color:var(--red, #B3261E)}
+.cw-btn.armed, .cw-btn.armed:hover{background:var(--red, #B3261E);border-color:var(--red, #B3261E);color:var(--manila, #E9DCC0)}
+.cw-btn:disabled{opacity:.45;cursor:not-allowed}
+.cw-sheet.arming .cw-warn{font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.cw-sheet.filed .cw-btn.primary:disabled{opacity:1}
+.cw-sheet.filed .cw-btn.primary{background:transparent;border-color:var(--red, #B3261E);color:var(--red, #B3261E)}
+.cw-btn:focus-visible, .cw-opt:focus-visible, .cw-card:focus-visible{outline:2px solid var(--ink, #1C1C1A);outline-offset:2px}
+
+/* rubber stamps */
+.cw-stamp{position:absolute;top:42%;left:50%;transform:translate(-50%, -50%) rotate(-8deg);font-family:'Oswald', 'Arial Narrow', sans-serif;font-weight:700;font-size:44px;letter-spacing:.16em;line-height:1;color:var(--red, #B3261E);border:3px solid var(--red, #B3261E);border-radius:4px;padding:6px 18px;background:transparent;opacity:0;pointer-events:none;white-space:nowrap}
+.cw-sheet.filed .cw-stamp{opacity:.92;animation:cw-stamp .26s ease-out both}
+@keyframes cw-stamp{from{opacity:0;transform:translate(-50%, -50%) rotate(-8deg) scale(1.5)}to{opacity:.92;transform:translate(-50%, -50%) rotate(-8deg) scale(1)}}
+body.reduce-motion .cw-sheet.filed .cw-stamp{animation:none}
+.cw-sheet.filed .cw-scroll{opacity:.85}
+/* stamps that sit on the page rather than land on it */
+.cw-warrant .cw-stamp, .cw-rv .cw-stamp{top:16px;left:auto;right:18px;transform:rotate(-6deg);font-size:18px;border-width:2px;padding:4px 10px;opacity:1;animation:none}
+.cw-warrant .cw-head, .cw-rv > .cw-agency{padding-right:150px}
+.cw-stamp.good{color:var(--green, #0B6E4F);border-color:var(--green, #0B6E4F)}
+
+/* the search warrant */
+.cw-warrant{width:min(620px, 100%)}
+.cw-facts{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px 16px;margin:0 0 12px}
+.cw-facts > div{border-top:1px solid rgba(28,28,26,.35);padding-top:6px}
+.cw-facts dt{font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:11px;letter-spacing:.14em}
+.cw-facts dd{margin:2px 0 0;font-family:'JetBrains Mono', ui-monospace, monospace;font-size:13px;line-height:1.4}
+.cw-costs{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:6px}
+.cw-costs li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.4}
+.cw-costs .ico{color:var(--red, #B3261E);margin-top:2px}
+
+/* the new-game sheet */
+.cw-newgame{width:min(620px, 100%)}
+.cw-newgame .cw-opts{grid-template-columns:1fr}
+.cw-mode{padding:14px 14px}
+.cw-mode.sel{padding:13px 13px}
+.cw-mode .cw-ot b{font-size:19px;letter-spacing:.1em}
+.cw-mode .cw-ol{font-size:12px}
+.cw-note{font-size:12.5px;line-height:1.5;margin:12px 0 0}
+.cw-alert{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--red, #B3261E);border-radius:2px;padding:8px 10px}
+.cw-alert .ico{color:var(--red, #B3261E);margin-top:2px}
+
+/* the prosecutor's review, in the aftermath grid */
+.cw-review{grid-column:1/-1}
+.cw-rv{position:relative;padding:14px 16px 12px}
+.cw-rv > .cw-agency{margin-bottom:6px;min-height:46px}
+.cw-rv-row{display:grid;grid-template-columns:120px minmax(0, 1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(28,28,26,.3)}
+.cw-rv-k{font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:12px;letter-spacing:.14em}
+.cw-rv-v{font-family:'JetBrains Mono', ui-monospace, monospace;font-size:12.5px;line-height:1.4}
+.cw-rv-s{display:inline-flex;gap:4px;align-items:center;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:12px;letter-spacing:.14em;padding:2px 8px;border:1px solid;border-radius:2px}
+.cw-rv-row.ok .cw-rv-s{color:var(--green, #0B6E4F);border-color:var(--green, #0B6E4F)}
+.cw-rv-row.no .cw-rv-s{color:var(--red, #B3261E);border-color:var(--red, #B3261E)}
+.cw-rv-note{font-size:13px;line-height:1.45;margin:8px 0 0}
+
+/* small flat labels the aftermath used to inline */
+.cw-wide{grid-column:1/-1}
+.cw-next{font-size:13px;line-height:1.7}
+.cw-next-sub{font-size:12px;margin-top:8px;opacity:.8}
+.cw-badge{display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid currentColor;border-radius:2px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:10px;letter-spacing:.18em;vertical-align:middle;line-height:1.4}
+.cw-callout{display:flex;gap:6px;align-items:flex-start;margin-top:8px;padding-left:8px;border-left:2px solid currentColor}
+
+/* ---------- document checks: Senior Agent reads the raw extraction ---------- */
+body.cw-senior .phone-screen .green, body.cw-senior .phone-screen .red{color:inherit}
+body.cw-senior .cw-hint{display:none}
+.v12-doc-msg .ico{vertical-align:-.15em;margin-right:2px}
+
+/* ---------- small screens ---------- */
+@media (max-width:760px){
+  .cw-cards{grid-template-columns:repeat(3, minmax(0, 1fr))}
+}
+@media (max-width:620px){
+  .cw-scroll{padding:16px 16px 10px}
+  .cw-foot{padding:10px 16px 12px}
+  .cw-title{font-size:24px}
+  .cw-opts{grid-template-columns:1fr}
+  .cw-acts{width:100%}
+  .cw-acts .cw-btn{flex:1 1 0;padding:10px 12px;font-size:13px;letter-spacing:.08em}
+  .cw-stamp{font-size:34px}
+  .cw-warrant .cw-head, .cw-rv > .cw-agency{padding-right:0;min-height:0}
+  .cw-warrant .cw-stamp, .cw-rv .cw-stamp{position:static;display:inline-block;margin:0 0 10px;font-size:16px}
+  .cw-facts{grid-template-columns:1fr}
+  .cw-rv-row{grid-template-columns:minmax(0, 1fr) auto}
+  .cw-rv-k{grid-column:1/-1}
+}
+@media (max-height:520px){
+  .cw-scroll{padding:12px 16px 8px}
+  .cw-title{font-size:22px}
+  .cw-cards{grid-template-columns:repeat(6, minmax(0, 1fr))}
+  .cw-card img, .cw-card .cw-noimg{width:40px;height:40px}
+}

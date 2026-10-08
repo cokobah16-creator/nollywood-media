@@ -5,6 +5,11 @@
    first miss costs reputation, the second makes the evidence contested and
    the case moves on without it (fail forward). Read the Room underlines
    lines worth a second look; Pressure Point forgives the first miss.
+   Casework difficulty (beta): Recruit keeps the deduction hints — an extra
+   miss, the late underline, red/green colouring and the arrows in the
+   forensic screens, and the "Right idea" partial feedback. Senior Agent
+   strips them at render time. Read the Room is a capability the player
+   bought, so its underline works in both modes.
    ========================================================================= */
 (function(){
 'use strict';
@@ -41,6 +46,14 @@ const DOCS = {
 V12.DOCS = DOCS;
 
 const strip = h => h.replace(/<[^>]+>/g, '').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+const recruit = ()=>typeof isRecruit === 'function' && isRecruit();
+const ico = (n, c)=>typeof icon === 'function' ? icon(n, c) : '';
+/* Senior Agent: the screen reads like raw extraction — no answer colouring,
+   no "← discrepancy" arrows, no "(FAKE)" style annotations. */
+V12.seniorScreen = html => String(html || '')
+  .replace(/<span class="cw-hint">[\s\S]*?<\/span>/g, '')
+  .replace(/<span class="(?:green|red)">([\s\S]*?)<\/span>/g, '$1')
+  .replace(/[ \t]*←[^\n<]*/g, '');
 
 /* build a spec from the old puzzle data */
 V12.docFromPuzzle = key => {
@@ -67,10 +80,10 @@ V12.openDoc = function(spec, done){
   const ov = document.getElementById('screen-puzzle'); if(!ov) return;
   const frame = ov.querySelector('.puzzle-frame');
   S.game._docMiss = S.game._docMiss || {};
-  const diff = (typeof SETTINGS !== 'undefined' && SETTINGS.difficulty) || 'standard';
-  const allowed = diff === 'story' ? 3 : 2;
+  const rec = recruit();
+  const allowed = rec ? 3 : 2;
   const st = { opt:null, line:null, misses:S.game._docMiss[spec.key] || 0, free:V12.has('pressure') && !(S.game._docFree || {})[spec.key], over:false };
-  const raw = spec.screen.split('\n');
+  const raw = (rec ? spec.screen : V12.seniorScreen(spec.screen)).split('\n');
   const isRule = t => /^[\s─━═\-=]+$/.test(t) && /[─━═\-=]/.test(t);
   const lines = raw.map((html, i) => {
     const plain = strip(html);
@@ -80,8 +93,9 @@ V12.openDoc = function(spec, done){
   });
   const needOpt = spec.options.length > 0;
   frame.classList.add('v12-doc');
+  frame.classList.toggle('cw-plain', !rec);
   frame.innerHTML = `
-    <div class="head"><h2>${spec.title}</h2><div class="v12-doc-head-r"><span class="v12-misses" id="v12-misses"></span><button class="v12-x" id="v12-doc-x" aria-label="Back off">✕</button></div></div>
+    <div class="head"><h2>${spec.title}</h2><div class="v12-doc-head-r"><span class="v12-misses" id="v12-misses"></span><button class="v12-x" id="v12-doc-x" aria-label="Back off">${ico('close')}</button></div></div>
     <div class="v12-doc-body">
       <div class="phone-screen v12-lines" id="v12-lines">${lines.map(l => `<div class="v12-line ${l.live ? 'live' : ''}" data-i="${l.i}">${l.html || '&nbsp;'}</div>`).join('')}</div>
       <div class="v12-doc-side">
@@ -112,8 +126,8 @@ V12.openDoc = function(spec, done){
     st.opt = +b.dataset.i; if(typeof sfxClick === 'function') sfxClick(); ready(); reveal(st.line == null ? '#v12-proof' : '#v12-doc-go');
   }));
   const msg = (t, cls)=>{ const m = $q('#v12-doc-msg'); m.className = 'v12-doc-msg ' + (cls || ''); m.innerHTML = t; };
-  // Read the Room: underline lines worth a second look
-  const lookAfter = V12.has('readroom') ? 4500 : diff === 'story' ? 9000 : 0;
+  // Read the Room (a bought capability, both modes) or Recruit casework: underline lines worth a second look
+  const lookAfter = V12.has('readroom') ? 4500 : rec ? 9000 : 0;
   let lookT = null;
   if(lookAfter) lookT = setTimeout(()=>{ frame.querySelectorAll('.v12-line').forEach(el => { if(lines[+el.dataset.i].look) el.classList.add('v12-look'); }); if(V12.has('readroom')) msg('<span class="v12-cap">READ THE ROOM</span> A few lines deserve a second look.', 'info'); }, lookAfter);
   const close = (result)=>{
@@ -135,7 +149,7 @@ V12.openDoc = function(spec, done){
       if(typeof sfxComplete === 'function') sfxComplete();
       frame.querySelectorAll('.v12-line').forEach(el => { if(+el.dataset.i === st.line) el.classList.add('ok'); });
       applyEffect({ integrity:C.integrity, agencyFavour:C.agencyFavour, intel:C.intel });
-      msg(`<b>ON THE RECORD.</b> ${C.intel ? `+${C.intel} INTEL` : ''}${C.evidenceId ? ' · EVIDENCE LOGGED' : ''}`, 'good');
+      msg(`${ico('check')} <b>ON THE RECORD.</b> ${C.intel ? `+${C.intel} INTEL` : ''}${C.evidenceId ? ' · EVIDENCE LOGGED' : ''}`, 'good');
       if(C.evidenceId) collectEvidence({ id:C.evidenceId, name:C.evidenceName || 'Evidence', xp:C.xp || 50 });
       if(spec.onSolved) try{ spec.onSolved(); }catch(e){}
       setTimeout(()=>close(true), 1400);
@@ -151,7 +165,10 @@ V12.openDoc = function(spec, done){
     st.misses++; S.game._docMiss[spec.key] = st.misses; pips();
     if(spec.onWrong) applyEffect(spec.onWrong);
     if(st.misses < allowed){
-      msg(optOk ? '<b>Right idea</b> — but that line won\'t convince a magistrate.' : '<b>That conclusion doesn\'t hold.</b> One more miss and the defence gets this one.', 'bad');
+      const left = allowed - st.misses, more = left === 1 ? 'One more miss' : `${left} more misses`;
+      // Recruit hears whether the conclusion was right; Senior gets one neutral line
+      if(rec) msg(optOk ? `${ico('warning')} <b>Right idea</b> — but that line won't convince a magistrate.` : `${ico('cross')} <b>That conclusion doesn't hold.</b> ${more} and the defence gets this one.`, 'bad');
+      else msg(`${ico('cross')} <b>Not on the record.</b> ${more} and the defence gets this one.`, 'bad');
       return;
     }
     // fail forward: the case moves on without clean evidence
@@ -164,12 +181,13 @@ V12.openDoc = function(spec, done){
       collectEvidence({ id:C.evidenceId, name:(C.evidenceName || 'Evidence') + ' (contested)', xp:Math.round((C.xp || 50) / 3) });
     }
     if(spec.onFailed) try{ spec.onFailed(); }catch(e){}
-    msg(`<b>THE DEFENCE GETS THIS ONE.</b> ${F.note || ''}`, 'bad');
-    const go = $q('#v12-doc-go'); go.disabled = false; go.textContent = 'CONTINUE ▶';
+    msg(`${ico('cross')} <b>THE DEFENCE GETS THIS ONE.</b> ${F.note || ''}`, 'bad');
+    const go = $q('#v12-doc-go'); go.disabled = false; go.innerHTML = `CONTINUE ${ico('next')}`;
     go.onclick = (e)=>{ e.stopImmediatePropagation(); close(F.mode === 'continue'); };
     V12.log('doc_failed', { key:spec.key });
   });
-  if(typeof showHint === 'function') showHint('doc_v12', 'Pick your conclusion, then tap the line in the document that proves it. Two misses and the evidence is contested.', 'Pick your conclusion, then tap the line that proves it. Two misses and the evidence is contested.', 6400);
+  const nMiss = allowed === 3 ? 'Three' : 'Two';
+  if(typeof showHint === 'function') showHint('doc_v12', `Pick your conclusion, then tap the line in the document that proves it. ${nMiss} misses and the evidence is contested.`, `Pick your conclusion, then tap the line that proves it. ${nMiss} misses and the evidence is contested.`, 6400);
   showOverlay('screen-puzzle');
   const sc = frame.querySelector('#v12-lines'); if(sc) sc.scrollTop = 0;
 };

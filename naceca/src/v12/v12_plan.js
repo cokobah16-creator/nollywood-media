@@ -6,10 +6,24 @@
    he was treated fairly (side gate, civilians), a Street Sources text, the
    warrant. The plan — entry, power, Uche's post — sets the wipe clock,
    civilian safety and who gets away.
+   Beta casework: the warrant row reads the Lagos case's warrant from the
+   board (V12.warrantFor('lagos')), and the plan only opens once a charge
+   sheet is on the file (V12.raidGate, beta/casework.js). Going in without
+   a warrant is charged once, when the player chooses it.
    ========================================================================= */
 (function(){
 'use strict';
 const V12 = window.V12;
+const ico = n => typeof icon === 'function' ? icon(n) : '';
+/* the Lagos warrant as the board sees it, plus what the charge sheet decided */
+function lagosWarrant(){
+  let w = null;
+  try{ if(typeof V12.warrantFor === 'function') w = V12.warrantFor('lagos'); }catch(e){ w = null; }
+  const signed = w && typeof w === 'object' ? !!w.signed : !!V12.warrant();
+  const rec = typeof V12.accused === 'function' ? V12.accused('lagos') : null;
+  return { signed, exigent:!signed && !!(rec && rec.warrant === 'exigent'), rec };
+}
+V12.lagosWarrant = lagosWarrant;
 
 function intel(){
   const sims = V12.theory('t_sims');
@@ -26,7 +40,14 @@ function intel(){
     civ: kc ? { known:true, text:'A child in the living room. Staff in the kitchen.', src:'KC' }
         : tip ? { known:true, text:'A child upstairs earlier. Staff in the kitchen.', src:'Street Sources' }
         : { known:false, text:'Unknown. Assume there are.' },
-    warrant: V12.warrant() ? { known:true, text:'Signed.', src: V12.theory('t_money') ? 'the money trail' : 'your intel' } : { known:false, text:'Not yet. You go in under exigent circumstances.' },
+    warrant: (()=>{ const W = lagosWarrant();
+      return W.signed ? { known:true, text:'Signed.', src:'the case on your table' }
+        : W.exigent ? { known:false, text:'Not signed. Exigent circumstances — already on the record.' }
+        : { known:false, text:'Not signed. You go in under exigent circumstances.' }; })(),
+    charge: (()=>{ const W = lagosWarrant(), r = W.rec;
+      if(!r) return { known:false, text:'No charge sheet on the file.' };
+      const nm = window.CW && CW.optName ? CW.optName('lagos', 'suspect', r.suspect) : r.suspect;
+      return { known:true, text:`Charge sheet names ${nm}.`, src:'your signature' }; })(),
   };
 }
 V12.m3Intel = intel;
@@ -71,7 +92,7 @@ V12.planM3 = function(onGo){
           <div class="plan-legend"><span><i class="sus"></i>suspect</span><span><i class="civ"></i>civilian</span><span><i class="lap"></i>laptop</span><span class="unk">?</span>unknown</div></div>
         <div class="plan-b">
           <div class="plan-h">WHAT YOU KNOW</div>
-          ${[['SUSPECTS', I.suspects], ['LAPTOP', I.laptop], ['WAY IN', I.gate], ['CIVILIANS', I.civ], ['WARRANT', I.warrant]].map(([l, x]) => `
+          ${[['SUSPECTS', I.suspects], ['LAPTOP', I.laptop], ['WAY IN', I.gate], ['CIVILIANS', I.civ], ['CHARGED', I.charge], ['WARRANT', I.warrant]].map(([l, x]) => `
             <div class="plan-row ${x.known ? 'k' : 'u'}"><span class="pl">${l}</span><span class="pv">${x.text}${x.src ? `<em>from ${x.src}</em>` : ''}</span></div>`).join('')}
         </div>
         <div class="plan-c">
@@ -86,9 +107,9 @@ V12.planM3 = function(onGo){
             ${plan.entry === 'loud' ? '<div class="bad">Loud entry: force on the record, Underworld Heat rises.</div>' : ''}
             ${plan.power === 'cut' ? '<div>Dark house: his remote wipe trigger arrives late. The child wakes frightened.</div>' : ''}
             ${plan.uche === 'rear' ? '<div>Anyone going over the back wall runs into Uche.</div>' : ''}
-            ${!I.warrant.known ? '<div class="bad">No warrant: Agency Standing −5, and the defence will ask why.</div>' : ''}
+            ${!I.warrant.known ? `<div class="bad">${ico('warning')} No warrant: ${lagosWarrant().exigent ? 'the cost is already on the record' : 'Agency Standing −5'}, and the defence will ask why.</div>` : ''}
           </div>
-          <button class="btn primary plan-go" id="plan-go">GO ▶</button>
+          <button class="btn primary plan-go" id="plan-go">GO ${ico('next')}</button>
         </div>
       </div></div>`;
     ov.querySelectorAll('.plan-seg button').forEach(b => b.addEventListener('click', ()=>{ if(b.disabled) return; plan[b.dataset.k] = b.dataset.v; if(typeof sfxClick === 'function') sfxClick(); draw(); }));
@@ -99,7 +120,13 @@ V12.planM3 = function(onGo){
     S.game._plan = Object.assign({}, plan, { known });
     S.game.flags = S.game.flags || {}; S.game.flags.entry = plan.entry; S.game.moralChoices.entry = plan.entry;
     applyEffect(({ knock:{ integrity:+6, publicTrust:+5, agencyFavour:-2 }, quiet:{ integrity:+2, publicTrust:+2, agencyFavour:+3 }, loud:{ integrity:-4, publicTrust:-4, agencyFavour:+5, force:+1 } })[plan.entry]);
-    if(!known.warrant) applyEffect({ agencyFavour:-5 }); else applyEffect({ agencyFavour:+2 });
+    // no warrant costs once: if the player already chose exigent circumstances at filing, it's paid
+    const W = lagosWarrant();
+    if(known.warrant) applyEffect({ agencyFavour:+2 });
+    else if(!W.exigent){
+      if(window.CW && typeof CW.goExigent === 'function' && W.rec) CW.goExigent('lagos');
+      else applyEffect({ agencyFavour:-5 });
+    }
     if(plan.power === 'cut') applyEffect({ publicTrust:-2 });
     if(known.suspects && known.laptop && known.gate && typeof unlock === 'function') unlock('did_the_work');
     V12.log('plan_m3', { plan, known });
@@ -145,7 +172,9 @@ V12.wrap('buildSceneMansion', orig => function(){
       it.onInteract = ()=>{
         if(S.game._mansionPreBriefed){ toast('READY', 'Move when ready'); return; }
         const u = it.mesh; if(u && u.userData && u.userData.anim) u.userData.anim.play('talk', { fade:0.3 });
-        V12.planM3(()=>startDialogue('mansion_pre_breach', ()=>{ if(u && u.userData && u.userData.anim && u.userData.anim.oneShot) u.userData.anim.oneShot('yes', 'idle'); }));
+        const open = ()=>V12.planM3(()=>startDialogue('mansion_pre_breach', ()=>{ if(u && u.userData && u.userData.anim && u.userData.anim.oneShot) u.userData.anim.oneShot('yes', 'idle'); }));
+        // a raid reached without the hub (mission select, continue) still needs a charge sheet first
+        if(typeof V12.raidGate === 'function') V12.raidGate('lagos', { where:'mission' }, open); else open();
       };
     }
     const ex = ENGINE.interactables.find(i => /^Extract/.test(i.label || ''));
@@ -174,7 +203,8 @@ V12.wrap('computeGrade', orig => function(op){
   try{
     if(S.game.currentMission === 'm3' && S.game._plan){
       const K = S.game._plan.known || {};
-      let pts = r.pts + (K.suspects && K.laptop ? 5 : 0) - (K.warrant ? 0 : 5);
+      // exigent entry is capped by the casework layer instead of docked twice
+      let pts = r.pts + (K.suspects && K.laptop ? 5 : 0) - (K.warrant || lagosWarrant().exigent ? 0 : 5);
       r.pts = Math.round(pts);
       r.g = pts >= 85 ? 'S' : pts >= 70 ? 'A' : pts >= 55 ? 'B' : pts >= 40 ? 'C' : 'D';
     }
