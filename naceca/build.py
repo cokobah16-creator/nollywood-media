@@ -18,6 +18,13 @@ BUNDLE_OUT = os.path.join(SRC, "_bundle.js")
 HTML_IN = os.path.join(ROOT, "index.html")
 CSS_IN = os.path.join(ROOT, "styles.css")
 HTML_OUT = os.path.join(ROOT, "naceca.html")
+# NACECA_OUT_DIR=<dir> writes _bundle.js and naceca.html there instead (for parallel test builds);
+# it also skips mirroring the music folder.
+OUT_DIR = os.environ.get("NACECA_OUT_DIR")
+if OUT_DIR:
+    os.makedirs(OUT_DIR, exist_ok=True)
+    BUNDLE_OUT = os.path.join(OUT_DIR, "_bundle.js")
+    HTML_OUT = os.path.join(OUT_DIR, "naceca.html")
 
 # Dependency order — config before systems, engine before scenes, scenes before flow.
 LOAD_ORDER = [
@@ -33,6 +40,7 @@ LOAD_ORDER = [
     "config/evidence_board.js",
     "systems/state.js",
     "systems/util.js",
+    "beta/icons.js",
     "systems/state_save.js",
     "systems/audio.js",
     "systems/engine.js",
@@ -76,6 +84,11 @@ V12_CSS = ["v12.css"]
 V12_JS = ["v12_core.js", "v12_docs.js", "v12_ops.js", "v12_plan.js", "v12_finale.js",
           "v12_night.js", "v12_mem.js", "v12_street.js", "v12_hub.js", "v12_sound.js", "v12_car.js",
           "v12_daily.js", "v12_share.js", "v12_vo.js", "v12_pt.js", "v12_boot.js"]
+
+# beta layer (friends-beta pass: wayfinding, chases, casework, paper UI) — after v12, so it wins
+BETA_DIR = os.path.join(SRC, "beta")
+BETA_CSS = ["paper.css", "wayfind.css", "board.css", "casework.css"]
+BETA_JS = ["casework.js", "wayfind.js", "chase.js"]
 
 def build_bundle():
     parts = []
@@ -135,6 +148,16 @@ def build_html(bundle):
         if "</script" in code.lower():
             raise SystemExit(f"v12/{name} contains a closing script tag")
         parts.append(f"<script>/* ---------- {name} (v12) ---------- */\n{code}\n</script>")
+    # Append the beta layer after v12
+    for name in BETA_CSS:
+        with open(os.path.join(BETA_DIR, name), "r", encoding="utf-8") as fh:
+            parts.append(f'<style id="beta-{name[:-4]}">\n{fh.read()}\n</style>')
+    for name in BETA_JS:
+        with open(os.path.join(BETA_DIR, name), "r", encoding="utf-8") as fh:
+            code = fh.read()
+        if "</script" in code.lower():
+            raise SystemExit(f"beta/{name} contains a closing script tag")
+        parts.append(f"<script>/* ---------- beta/{name} ---------- */\n{code}\n</script>")
     idx = html.rindex("</body>")
     html = html[:idx] + "\n".join(parts) + "\n" + html[idx:]
     with open(HTML_OUT, "w", encoding="utf-8") as f:
@@ -148,7 +171,7 @@ def main():
     # delivery works: drop naceca.html + assets/ on a static host and music plays.
     import shutil
     src_music = os.path.join(SRC, "assets", "music")
-    if os.path.exists(src_music):
+    if os.path.exists(src_music) and not OUT_DIR:
         dst_music = os.path.join(ROOT, "assets", "music")
         os.makedirs(os.path.dirname(dst_music), exist_ok=True)
         if os.path.exists(dst_music):

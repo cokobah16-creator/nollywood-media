@@ -1,0 +1,1 @@
+/* beta/casework.js — friends-beta pass (see docs/SYNC-2026-10-08-beta.md) */
