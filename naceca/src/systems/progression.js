@@ -45,7 +45,7 @@ function unlock(id){
   const a = ACHIEVEMENTS.find(x=>x.id===id); if(!a) return;
   _ach[id] = Date.now();
   try{ localStorage.setItem(ACH_KEY, JSON.stringify(_ach)); }catch(e){}
-  setTimeout(()=>toast('🏅 ' + a.name.toUpperCase(), a.desc, 2600), 900);
+  setTimeout(()=>toast(icon('medal') + a.name.toUpperCase(), a.desc, 2600), 900);
   haptic([20,40,20]);
 }
 
@@ -119,7 +119,7 @@ function ensureRecordsScreen(){
   const ov = document.createElement('div'); ov.className = 'overlay'; ov.id = 'screen-records';
   ov.innerHTML = `<div class="overlay-bg"></div>
     <div class="settings-frame">
-      <div class="settings-head"><h2>CASE RECORDS</h2><button class="btn ghost" id="btn-records-close">◀ BACK</button></div>
+      <div class="settings-head"><h2>CASE RECORDS</h2><button class="btn ghost" id="btn-records-close">${icon('back')}BACK</button></div>
       <div class="seg rec-tabs"><button class="on" data-tab="archive">PRESS ARCHIVE</button><button data-tab="awards">AWARDS</button></div>
       <div class="settings-body" id="records-body"></div>
     </div>`;
@@ -134,7 +134,7 @@ function renderRecords(tab){
   if(tab === 'awards'){
     const got = ACHIEVEMENTS.filter(a=>_ach[a.id]).length;
     body.innerHTML = `<div class="set-note" style="margin:4px 0 10px">${got} of ${ACHIEVEMENTS.length} unlocked</div>` +
-      ACHIEVEMENTS.map(a=>`<div class="ach ${_ach[a.id]?'got':''}"><span class="ach-ico">${_ach[a.id]?'🏅':'🔒'}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div></div>`).join('');
+      ACHIEVEMENTS.map(a=>`<div class="ach ${_ach[a.id]?'got':''}"><span class="ach-ico">${_ach[a.id]?icon('medal'):icon('lock')}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div></div>`).join('');
     return;
   }
   const arc = (S.game.archive || []).slice().sort((a,b)=>b.at-a.at);
@@ -167,7 +167,7 @@ function showRecap(then){
     <div class="aftermath-stamp">PREVIOUSLY ON NACECA</div>
     ${arc.map(a=>`<div class="headline-block arc"><div class="pub">${a.pub}</div><div class="head">${a.head}</div><div class="ded">${a.ded}</div></div>`).join('')}
     <div class="recap-rep">Integrity <b>${r.integrity}</b> · Public Trust <b>${r.publicTrust}</b> · Agency Favour <b>${r.agencyFavour}</b> · Level <b>${S.player.level}</b></div>
-    <button class="btn primary" id="btn-recap-go">CONTINUE THE INVESTIGATION ▶</button></div>`;
+    <button class="btn primary" id="btn-recap-go">CONTINUE THE INVESTIGATION${icon('next')}</button></div>`;
   showOverlay('screen-recap');
   ov.querySelector('#btn-recap-go').addEventListener('click', ()=>{ then(); });
 }

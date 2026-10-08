@@ -90,14 +90,14 @@ function ebSelectCard(id){
       S.game._ebLinks = EB_STATE.links;
       S.game.intelScore += valid.intel;
       sfxComplete();
-      setEBInstruction(`✔ <b>+${valid.intel} INTEL</b> · ${valid.hint}`);
+      setEBInstruction(`${icon('check')} <b>+${valid.intel} INTEL</b> · ${valid.hint}`);
       checkWarrantUnlock();
     } else {
       EB_STATE.links.push({a, b, correct:false});
       S.game._ebLinks = EB_STATE.links;
       S.game.intelScore = Math.max(0, S.game.intelScore - 3);
       sfxFail();
-      setEBInstruction(`✘ No connection there · −3 INTEL · keep digging.`);
+      setEBInstruction(`${icon('cross')} No connection there · −3 INTEL · keep digging.`);
     }
     EB_STATE.selected = null;
     $$('.eb-card').forEach(c=>c.classList.remove('selected'));
@@ -183,7 +183,7 @@ function openCaseFileLegacy(){
   const entries = [...CASE_ENTRIES_BASE];
   // collected evidence
   S.game.evidence.forEach(e=>{
-    entries.push({ico:'🔬', nm:`EVIDENCE — ${e.name}`, ds:'Logged in chain of custody. Tagged for forensic processing at NACECA HQ.'});
+    entries.push({ico:icon('search'), nm:`EVIDENCE — ${e.name}`, ds:'Logged in chain of custody. Tagged for forensic processing at NACECA HQ.'});
   });
   // moral choices summary
   if(Object.keys(S.game.moralChoices).length){
@@ -200,7 +200,7 @@ function openCaseFileLegacy(){
       mc.arrest==='informant'?'Principal flipped to informant.':'',
       mc.arrest==='bribe'?'BRIBE accepted — case compromised.':'',
     ].filter(Boolean).join(' ');
-    if(ds) entries.push({ico:'⚖', nm:'OPERATIONAL DECISIONS', ds});
+    if(ds) entries.push({ico:icon('scales'), nm:'OPERATIONAL DECISIONS', ds});
   }
   list.innerHTML = entries.map(e=>`
     <div class="case-row">

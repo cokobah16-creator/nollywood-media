@@ -48,6 +48,21 @@ const ICONS = {
   alert:    '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16v.5"/>',
   share:    '<circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 11l8-4M8 13l8 4"/>',
   dot:      '<circle cx="12" cy="12" r="3.5"/>',
+  // visual stream: side-quest diamond, and the evidence-sort mini-game items (were emoji)
+  diamond:  '<path d="M12 3.5l8.5 8.5-8.5 8.5L3.5 12z"/>',
+  cash:     '<rect x="2.5" y="6.5" width="19" height="11" rx="1.5"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/>',
+  card:     '<rect x="2.5" y="5.5" width="19" height="13" rx="1.5"/><path d="M2.5 9.5h19M6 15h4"/>',
+  sim:      '<path d="M7 3h7.5L19 7.5V21H7z"/><rect x="9.5" y="11" width="7" height="7" rx="1"/><path d="M13 11v7M9.5 14.5h7"/>',
+  box:      '<path d="M3.5 7.5L12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5L12 11.5l8.5-4M12 11.5v9"/>',
+  glove:    '<path d="M7.5 21v-5l-2.6-3.4a1.5 1.5 0 012.3-1.9L9 12.5V5.5a1.5 1.5 0 013 0V11V4.5a1.5 1.5 0 013 0V11V6a1.5 1.5 0 013 0v9c0 2.5-1.2 4.5-2.5 6"/>',
+  chip:     '<rect x="7" y="9" width="10" height="12" rx="1.5"/><path d="M9 9V4h6v5M10.5 6.5h0M13.5 6.5h0"/>',
+  photo:    '<rect x="3" y="5" width="18" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.8"/><path d="M3.5 17l5-4.5 3.5 3 3-2.5 5.5 4.5"/>',
+  beads:    '<circle cx="12" cy="9" r="5.5"/><path d="M12 14.5v7M10 18h4"/>',
+  can:      '<path d="M7 5.5h10v13a2 2 0 01-2 2H9a2 2 0 01-2-2z"/><path d="M8 3.5h8M7 8.5h10"/>',
+  roll:     '<ellipse cx="9" cy="12" rx="4" ry="6.5"/><path d="M9 5.5h8c2.2 0 4 2.9 4 6.5s-1.8 6.5-4 6.5H9"/><ellipse cx="9" cy="12" rx="1.2" ry="2"/>',
+  biscuit:  '<circle cx="12" cy="12" r="8"/><path d="M9 9h.01M14.5 8.5h.01M15 13.5h.01M10 14.5h.01M12 11.5h.01"/>',
+  notebook: '<path d="M6 3h12v18H6z"/><path d="M9 3v18M4.5 7h3M4.5 12h3M4.5 17h3"/>',
+  receipt:  '<path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8h6M9 11.5h6M9 15h4"/>',
 };
 function icon(name, cls){
   const d = ICONS[name];

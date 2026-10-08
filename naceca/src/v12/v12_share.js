@@ -86,7 +86,7 @@ V12.shareHeadline = async function(h){
     V12.log('share', { kind:'headline-download' });
   }catch(e){ console.warn('[v12] share', e); toast('SHARE FAILED', 'Try again in a moment', 1800); }
 };
-V12.shareBtn = h => { const b = V12.el('button', 'v12-share', 'SHARE ▶'); b.addEventListener('click', e => { e.stopPropagation(); V12.shareHeadline(h); }); return b; };
+V12.shareBtn = h => { const b = V12.el('button', 'v12-share', icon('share') + 'SHARE'); b.addEventListener('click', e => { e.stopPropagation(); V12.shareHeadline(h); }); return b; };
 
 /* aftermath: a share button on the front page */
 V12.wrap('showAftermath', orig => function(){
