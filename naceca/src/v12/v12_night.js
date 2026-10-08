@@ -231,7 +231,8 @@ V12.wrap('_radioNext', orig => function(){
   const r = orig.apply(this, arguments);
   try{
     const w = document.querySelector('#radio-sub .rs-who');
-    if(w && / · ON THE PHONE/.test(w.textContent)){ const name = w.textContent.split(' · ')[0]; w.innerHTML = `${name} <span class="rs-tag">· OVERHEARD · ON THE PHONE</span>`; }
+    const m = w && / · (ON THE [A-Z ]+?)\s*·\s*RADIO\s*$/.exec(w.textContent);
+    if(m){ const name = w.textContent.split(' · ')[0]; w.innerHTML = `${name} <span class="rs-tag">· OVERHEARD · ${m[1]}</span>`; }
   }catch(e){}
   return r;
 });

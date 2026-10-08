@@ -25,7 +25,7 @@ V12.wrap('bindExtraMenus', orig => function(){
     host.insertBefore(b, document.getElementById('btn-mission-select'));
   }
   const t = document.getElementById('screen-title');
-  if(t && !document.getElementById('v12-build')){ const tag = V12.el('div', 'v12-build', 'BUILD v12 · DEEPER'); tag.id = 'v12-build'; t.appendChild(tag); }
+  if(t && !document.getElementById('v12-build')){ const tag = V12.el('div', 'v12-build', 'BUILD v12.2 · PHASE 2'); tag.id = 'v12-build'; t.appendChild(tag); }
   return r;
 });
 

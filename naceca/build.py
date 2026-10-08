@@ -74,7 +74,8 @@ LOAD_ORDER = [
 V12_DIR = os.path.join(SRC, "v12")
 V12_CSS = ["v12.css"]
 V12_JS = ["v12_core.js", "v12_docs.js", "v12_ops.js", "v12_plan.js", "v12_finale.js",
-          "v12_night.js", "v12_daily.js", "v12_share.js", "v12_vo.js", "v12_pt.js", "v12_boot.js"]
+          "v12_night.js", "v12_mem.js", "v12_street.js", "v12_hub.js", "v12_sound.js", "v12_car.js",
+          "v12_daily.js", "v12_share.js", "v12_vo.js", "v12_pt.js", "v12_boot.js"]
 
 def build_bundle():
     parts = []

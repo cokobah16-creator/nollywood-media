@@ -8,7 +8,7 @@
 (function(){
 'use strict';
 const V12 = window.V12 = window.V12 || {};
-V12.version = 'v12';
+V12.version = 'v12.2';
 
 /* ---------- helpers ---------- */
 V12.el = (tag, cls, html)=>{ const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };

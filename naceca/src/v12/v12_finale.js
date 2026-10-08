@@ -26,7 +26,7 @@ V12.strongAgainstAdaeze = ()=>{
   if(ok('obi_notebook') && V12.theory('t_madam')) out.obi_notebook = 'Obi pays "C.A." every Friday.';
   return out;
 };
-const WHY_NOT = {
+const WHY_NOT = V12.WHY_NOT = {
   fin_drive:'Encrypted. Without Tobi, nobody can read it tonight.',
   tower_cdr:'Partial data. It puts the handset in Ekosodin, not in her hand.',
   co_madam:'It proves a "Madam" exists. Not who she is.',
