@@ -249,8 +249,8 @@ module.exports.tour = async (h, opt) => {
   h.assert(/JetBrains Mono/.test(await h.ev(() => __VA.css('.plan-row .pv', 'fontFamily'))), 'plan rows in monospace');
   await h.ev(() => { S.game.evidence = [{ id:'ev_a', name:'Burner phone' }, { id:'ev_b', name:'POS receipts' }]; V12.accuse(() => {}); });
   await check('13_accuse', 500);
-  h.assert(await h.ev(() => __VA.css('.acc-frame', 'backgroundColor')) === MANILA, 'accusation is a charge sheet');
-  h.assert(/JetBrains Mono/.test(await h.ev(() => __VA.css('.acc-item', 'fontFamily'))), 'accusation items in monospace');
+  h.assert(await h.ev(() => __VA.css(document.querySelector('.cw-sheet') ? '.cw-sheet' : '.acc-frame', 'backgroundColor')) === MANILA, 'accusation is a charge sheet');
+  h.assert(/JetBrains Mono/.test(await h.ev(() => __VA.css(document.querySelector('.cw-ol') ? '.cw-ol' : '.acc-item', 'fontFamily'))), 'accusation items in monospace');
   await h.ev(() => openSkillTree());
   await check('14_skills', 400);
   await h.ev(() => showStartMission('m3'));

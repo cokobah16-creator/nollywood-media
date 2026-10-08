@@ -329,7 +329,8 @@ CW.warrant = function(c){
   let w = null;
   try{ if(typeof V12.warrantFor === 'function') w = V12.warrantFor(c); }catch(e){ w = null; }
   if(!w || typeof w !== 'object'){
-    const signed = typeof V12.warrant === 'function' ? !!V12.warrant() : true;
+    let signed = true;
+    try{ if(typeof V12.warrant === 'function') signed = !!V12.warrant(); }catch(e){ signed = (S.game.intelScore || 0) >= 50; }
     w = { strength:signed ? 100 : 40, signed, refused:false, strikes:0, need:signed ? '' : 'Ink more links' };
   }
   const signed = !!w.signed, refused = !signed && !!w.refused;

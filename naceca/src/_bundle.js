@@ -5683,7 +5683,7 @@ function buildSceneHQLegacy(){
   S.game.currentRegion = 'Lagos';
   S.game.currentSubregion = 'NACECA HQ';
   refreshHUD();
-  setTimeout(()=>{ if(typeof showHint==='function') showHint('marker', 'The <b>gold marker</b> shows where to go next', 'The <b>gold marker</b> shows where to go next'); }, 1200);
+  setTimeout(()=>{ if(typeof showHint==='function') showHint('marker', 'Your <b>objective</b> and its distance are top left; the <b>arrow</b> at the screen edge points the way', 'Your <b>objective</b> and its distance are top left; the <b>arrow</b> at the screen edge points the way'); }, 1200);
 }
 
 

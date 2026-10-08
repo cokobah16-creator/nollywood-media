@@ -92,9 +92,9 @@
 .mission-card .region .ico{color:var(--manila-2,#A89F8A)}
 
 /* ---------- 4. minimap: ink disc, manila streets and player, palette pins ---------- */
-#minimap-svg > circle:first-child{fill:var(--ink,#1C1C1A)}
+#minimap-svg > circle:first-of-type{fill:var(--ink,#1C1C1A)}
 #minimap-streets *{fill:var(--manila-2,#A89F8A);stroke:var(--manila-3,#8C8473)}
-#minimap-arrow,#minimap-svg > circle:not(:first-child){fill:var(--manila,#E9DCC0);stroke:var(--ink,#1C1C1A);stroke-width:.6}
+#minimap-arrow,#minimap-svg > circle:not(:first-of-type){fill:var(--manila,#E9DCC0);stroke:var(--ink,#1C1C1A);stroke-width:.6}
 #minimap-pois circle{stroke:var(--ink,#1C1C1A);stroke-width:.6;fill:var(--manila-2,#A89F8A)}
 #minimap-pois circle[fill="#d8a64a"]{fill:var(--manila,#E9DCC0)}
 #minimap-pois circle[fill="#5dd07a"],#minimap-pois circle[fill="#5db86a"],#minimap-pois circle[fill="#3a9a3a"]{fill:var(--green,#0B6E4F);stroke:var(--manila,#E9DCC0)}

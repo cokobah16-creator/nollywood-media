@@ -813,7 +813,7 @@ function foot(){
 
 // case-file rows may carry emoji (older config) or icon names: draw them as line icons either way
 const NOTE_ICON = { '🪪':'id', '✉️':'envelope', '✉':'envelope', '⚖️':'scales', '⚖':'scales', '📁':'folder', '🏦':'bank', '📱':'phone', '💰':'coins', '🔬':'scan' };
-const noteIco = s => { const k = (typeof ICONS !== 'undefined' && ICONS[s]) ? s : NOTE_ICON[s]; return k ? ic(k) : esc(s || ''); };
+const noteIco = s => { if(typeof s === 'string' && s.trim().startsWith('<svg')) return s; const k = (typeof ICONS !== 'undefined' && ICONS[s]) ? s : NOTE_ICON[s]; return k ? ic(k) : esc(s || ''); };
 function notesHTML(){
   const rows = [...CASE_ENTRIES_BASE];
   for(const e of (S.game.evidence || [])) rows.push({ ico:'scan', nm:'EVIDENCE — ' + e.name, ds: V12.evQ(e.id) === 'weak' ? 'Logged, but contested: the defence will attack how it was obtained.' : 'Logged in chain of custody.' });
@@ -829,7 +829,7 @@ function notesHTML(){
     S.game.sealed ? `Sealed accusation filed: ${(V12.CANDIDATES.find(c => c.id === S.game.sealed.who) || {}).name}.` : '',
   ].filter(Boolean).join(' ');
   if(ds) rows.push({ ico:'scales', nm:'YOUR DECISIONS', ds });
-  return `<div class="ops-notes">${rows.map(e => `<div class="case-row"><div class="ico">${noteIco(e.ico)}</div><div class="body"><div class="nm">${e.nm}</div><div class="ds">${e.ds}</div></div></div>`).join('')}</div>`;
+  return `<div class="ops-notes">${rows.map(e => `<div class="case-row"><div class="ico">${noteIco(e.icon || e.ico)}</div><div class="body"><div class="nm">${e.nm}</div><div class="ds">${e.ds}</div></div></div>`).join('')}</div>`;
 }
 
 /* ---------- the sealed accusation ---------- */
