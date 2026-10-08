@@ -13,7 +13,7 @@ is now the game's emblem everywhere it was drawn.
 
 ## Regenerating
 `python3 tools/make_brand_assets.py` cuts the shield out of the brand sheet and writes every
-image above (`--print-data-uris` prints the HUD/icon data URIs). Then `python3 encode_assets.py`
+image above (`--print-data-uris` prints the HUD and splash data URIs). Then `python3 encode_assets.py`
 and `python3 build.py`. `encode_assets.py` now finds `src/assets/` relative to itself instead of
 the old `/home/claude/naceca-modular` path.
 
