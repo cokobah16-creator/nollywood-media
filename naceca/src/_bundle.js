@@ -896,6 +896,9 @@ const DIALOGUE = {
    NACECA · config/puzzles.js
    Auto-extracted from game.js by split_modules.py
    Edit the modules; run build.py to rebuild naceca.html.
+   Answer-giveaway markup (red/green spans, the arrows, "(FAKE)") is a
+   Recruit-only hint: <span class="cw-hint"> marks the annotations, and
+   V12.seniorScreen (v12_docs.js) strips colour + annotations for Senior Agent.
    ========================================================================= */
 /* ===================== 5. DATA: PUZZLES ===================== */
 const PUZZLES = {
@@ -915,7 +918,7 @@ From: <span class="green">Ola Mechanic</span>      "Boss your car ready. Come ca
 
 GALLERY · 3 IMAGES
 ─────────────────────────────────────
-IMG_001.jpg — Copy of the Crestline Bank login page (FAKE)
+IMG_001.jpg — Copy of the Crestline Bank login page <span class="cw-hint">(FAKE)</span>
 IMG_002.jpg — List of Nigerian phone numbers, 200+ rows
 IMG_003.jpg — Family wedding photo
 `,
@@ -940,14 +943,14 @@ CONSIGNEE         : <span class="green">DELTA RIVERSIDE ABATTOIR LTD</span>
 CONSIGNOR         : <span class="green">ALH. RABIU MUKHTAR (KANO)</span>
 LIVESTOCK COUNT   : <span class="green">42 HEAD · WHITE FULANI</span>
 WEIGHT (DECLARED) : <span class="red">9,400 kg</span>
-WEIGHT (BRIDGE)   : <span class="red">11,820 kg</span>      ← discrepancy +2,420 kg
+WEIGHT (BRIDGE)   : <span class="red">11,820 kg</span><span class="cw-hint">      ← discrepancy +2,420 kg</span>
 
 PLATE             : <span class="green">XB-227-ABJ</span>
 ENGINE NO.        : <span class="green">5KGE-002441</span>
 INSURANCE STAMP   : <span class="red">EXPIRED 2025-08-12</span>
 
 CONTAINER SEAL # ON DOC : <span class="red">SL-44882</span>
-CONTAINER SEAL # ON TRUCK: <span class="red">SL-44912</span>      ← MISMATCH
+CONTAINER SEAL # ON TRUCK: <span class="red">SL-44912</span><span class="cw-hint">      ← MISMATCH</span>
 `,
     prompt:`The cargo manifest doesn't match the truck. Pick the <b>strongest single anomaly</b> that gives you legal grounds to open the back compartment.`,
     options:[
@@ -1055,22 +1058,28 @@ LOGBOOK     <span class="red">3 entries</span> — all in the last 6 months
    ========================================================================= */
 /* ===================== 6. DATA: CASE FILE ENTRIES ===================== */
 const CASE_ENTRIES_BASE = [
-  { ico:'🪪', nm:'PERSONNEL FILE — AGENT KELECHI',
+  { icon:'id', nm:'PERSONNEL FILE — AGENT KELECHI',
     ds:'Age 26. B.Sc. Computer Science, University of Lagos. Two years in a bank fraud-analytics team before NACECA recruited him into the Cyber & Financial Crimes Unit. Posted to Lagos HQ under Cdr. Adaeze.' },
-  { ico:'✉️', nm:'WHY HE JOINED',
+  { icon:'envelope', nm:'WHY HE JOINED',
     ds:'His uncle, a retired headmaster in Enugu, lost his pension to a single "BVN verification" call. Nobody was ever charged. Kelechi kept the call log. He still has it.' },
-  { ico:'⚖️', nm:'THE OATH',
+  { icon:'scales', nm:'THE OATH',
     ds:'"I will follow the evidence, protect the people it touches, and refuse what is offered to look away." Every NACECA officer signs it. Few read it twice.' },
-  { ico:'📁', nm:'CASE FILE NACECA-2026/0034 — "Serpent\u2019s Route"',
+  { icon:'folder', nm:'CASE FILE NACECA-2026/0034 — "Serpent\u2019s Route"',
     ds:'Cybercrime/ransom laundering ring. Suspected linkage between Lagos cyber-syndicate, Edo cash couriers, and Delta riverbank handlers. Political shielding suspected.' },
-  { ico:'🏦', nm:'POS Agent Cluster — Ikeja',
+  { icon:'bank', nm:'POS Agent Cluster — Ikeja',
     ds:'Three agents flagged for cash-outs above ₦5M/day in three-day windows aligned with two known kidnap ransom payouts.' },
-  { ico:'📱', nm:'SIM Triplet — "Mama Florence"',
+  { icon:'phone', nm:'SIM Triplet — "Mama Florence"',
     ds:'Three SIMs registered under a deceased pensioner. All three pinged towers within 800m of the Lekki target mansion.' },
-  { ico:'💰', nm:'Wallet 0xE7…91A',
+  { icon:'coins', nm:'Wallet 0xE7…91A',
     ds:'Crypto wallet emptied 0.62 BTC into three OTC desks the night before the Ikeja cash-out spike.' },
 ];
-
+/* Entries store an icon NAME (beta/icons.js); `ico` resolves it to the line-icon
+   SVG when a renderer reads it (icons.js loads after config, so nothing calls
+   icon() at load time). Renderers can use `${e.ico}` or icon(e.icon). */
+CASE_ENTRIES_BASE.forEach(e => Object.defineProperty(e, 'ico', {
+  enumerable:true, configurable:true,
+  get(){ return typeof icon === 'function' ? icon(e.icon) : ''; },
+}));
 
 
 /* ---------- config/evidence_board.js ---------- */
@@ -1154,6 +1163,8 @@ const defaultState = () => ({
     moralChoices: {},
     flags: {},             // mission-scoped story flags (shrine_access, shrine, tower...)
     headlines: [],
+    difficulty: 'senior',  // casework: 'recruit' (deduction hints on) | 'senior' (hints off)
+    accusations: {},       // filed charge sheets per case (lagos | route | voice) — permanent for the save
   }
 });
 
@@ -1313,6 +1324,21 @@ const ICONS = {
   alert:    '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16v.5"/>',
   share:    '<circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 11l8-4M8 13l8 4"/>',
   dot:      '<circle cx="12" cy="12" r="3.5"/>',
+  // visual stream: side-quest diamond, and the evidence-sort mini-game items (were emoji)
+  diamond:  '<path d="M12 3.5l8.5 8.5-8.5 8.5L3.5 12z"/>',
+  cash:     '<rect x="2.5" y="6.5" width="19" height="11" rx="1.5"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/>',
+  card:     '<rect x="2.5" y="5.5" width="19" height="13" rx="1.5"/><path d="M2.5 9.5h19M6 15h4"/>',
+  sim:      '<path d="M7 3h7.5L19 7.5V21H7z"/><rect x="9.5" y="11" width="7" height="7" rx="1"/><path d="M13 11v7M9.5 14.5h7"/>',
+  box:      '<path d="M3.5 7.5L12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5L12 11.5l8.5-4M12 11.5v9"/>',
+  glove:    '<path d="M7.5 21v-5l-2.6-3.4a1.5 1.5 0 012.3-1.9L9 12.5V5.5a1.5 1.5 0 013 0V11V4.5a1.5 1.5 0 013 0V11V6a1.5 1.5 0 013 0v9c0 2.5-1.2 4.5-2.5 6"/>',
+  chip:     '<rect x="7" y="9" width="10" height="12" rx="1.5"/><path d="M9 9V4h6v5M10.5 6.5h0M13.5 6.5h0"/>',
+  photo:    '<rect x="3" y="5" width="18" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.8"/><path d="M3.5 17l5-4.5 3.5 3 3-2.5 5.5 4.5"/>',
+  beads:    '<circle cx="12" cy="9" r="5.5"/><path d="M12 14.5v7M10 18h4"/>',
+  can:      '<path d="M7 5.5h10v13a2 2 0 01-2 2H9a2 2 0 01-2-2z"/><path d="M8 3.5h8M7 8.5h10"/>',
+  roll:     '<ellipse cx="9" cy="12" rx="4" ry="6.5"/><path d="M9 5.5h8c2.2 0 4 2.9 4 6.5s-1.8 6.5-4 6.5H9"/><ellipse cx="9" cy="12" rx="1.2" ry="2"/>',
+  biscuit:  '<circle cx="12" cy="12" r="8"/><path d="M9 9h.01M14.5 8.5h.01M15 13.5h.01M10 14.5h.01M12 11.5h.01"/>',
+  notebook: '<path d="M6 3h12v18H6z"/><path d="M9 3v18M4.5 7h3M4.5 12h3M4.5 17h3"/>',
+  receipt:  '<path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8h6M9 11.5h6M9 15h4"/>',
 };
 function icon(name, cls){
   const d = ICONS[name];
@@ -2440,12 +2466,12 @@ function triggerScan(){
   // amplify all evidence markers + briefly highlight any NPC interactables
   $$('.evidence-marker .pip').forEach(p=>{
     p.style.transform='scale(1.6)';
-    p.style.filter = 'drop-shadow(0 0 14px rgba(216,166,74,0.9))';
-    setTimeout(()=>{ p.style.transform=''; p.style.filter=''; }, 1600);
+    p.style.borderColor = 'var(--manila,#E9DCC0)';
+    setTimeout(()=>{ p.style.transform=''; p.style.borderColor=''; }, 1600);
   });
-  // pulse the screen edges (extra vignette flash)
+  // frame the screen edges (flat 3px case-file border, no glow)
   document.body.style.transition = 'box-shadow 0.2s ease-out';
-  document.body.style.boxShadow = 'inset 0 0 200px 0 rgba(216,166,74,0.4)';
+  document.body.style.boxShadow = 'inset 0 0 0 3px rgba(233,220,192,0.55)';
   setTimeout(()=>{ document.body.style.boxShadow = ''; }, 1600);
   if(typeof sideScan==='function') sideScan();
 }
@@ -2466,7 +2492,7 @@ function updateMarkersLegacy(){
     if(!m.el){
       const el = document.createElement('div');
       el.className = 'evidence-marker';
-      el.innerHTML = `<div class="pip">⊙</div><div class="lbl">${m.label}<span class="sub">${m.sub||''}</span></div>`;
+      el.innerHTML = `<div class="pip"></div><div class="lbl">${m.label}<span class="sub">${m.sub||''}</span></div>`;
       layer.appendChild(el);
       m.el = el;
     }
@@ -3303,7 +3329,9 @@ function updatePlayer(dt){
     else if(sprint){ speed = MOVE.sprint; clip = 'sprint'; }
     else if(ENGINE._touch && analog < 0.62){ speed = MOVE.walk; clip = 'walk'; }
     else { speed = MOVE.jog; clip = 'jog'; }
-    speed *= (ENGINE.speedMul || 1) * (ENGINE._touch ? Math.max(0.55, analog) : 1);
+    // touch: walk/jog follow the stick; a sprint is a full sprint once the stick is past half-way
+    const touchK = !ENGINE._touch ? 1 : clip === 'sprint' ? Math.min(1, Math.max(0.55, analog / 0.5)) : Math.max(0.55, analog);
+    speed *= (ENGINE.speedMul || 1) * touchK;
     const nx = P.position.x + wx*speed*dt, nz = P.position.z + wz*speed*dt;
     const b = ENGINE.bounds;
     if(!blockedAt(nx, P.position.z) && nx>b.minX && nx<b.maxX) P.position.x = nx;
@@ -3938,40 +3966,106 @@ function blockedAt(x, z, r=0.3){
 
 /* ---------- foot chase ----------
    cfg: { runner, path:[[x,z],...], speed, catchDist, headStart, crowd:[mesh], label,
-          onCaught(), onEscaped() } */
-const CHASE = { active:null };
+          lanes:{nodes:[[x,z],...], edges:[[i,j],...]}, endPause, endLine, burst:[seconds, ×speed],
+          onCaught(), onEscaped() }
+   Catch chases (catchDist > 0): a harder difficulty never makes the runner
+   faster than authored; at the end of his path he stalls for endPause seconds,
+   then keeps running through the lanes graph, away from the player. He only
+   gets away after CHASE.escapeT seconds spent more than CHASE.range metres
+   off (that clock drains at 2× while back in range).
+   Scripted chases (catchDist <= 0, the cold open) still end at the path's end. */
+const CHASE = { active:null, range:14, escapeT:20 };
 function startChase(cfg){
   const c = Object.assign({ speed:4.8, catchDist:1.45, headStart:0, crowd:[], label:'SUSPECT' }, cfg);
+  c.path = (c.path || []).map(q => [q[0], q[1]]);          // ours to extend
   c.seg = 0; c.t = 0; c.stumble = 0; c.headStart = c.headStart || 0;
-  c.speed *= (typeof chaseRate==='function' ? chaseRate() : 1);
+  c.baseSpeed = c.speed;
+  const rate = (typeof chaseRate==='function' ? chaseRate() : 1);
+  c.speed *= c.catchDist > 0 ? Math.min(1, rate) : rate;
   c.total = 0;
   for(let i=1;i<c.path.length;i++) c.total += Math.hypot(c.path[i][0]-c.path[i-1][0], c.path[i][1]-c.path[i-1][1]);
-  c.done = 0;
+  c.done = 0; c.oorT = 0; c.pause = 0; c.ended = false; c.gNode = null; c.gPrev = null;
   CHASE.active = c;
   ENGINE.speedMul = 1;
   sfxAlert();
   return c;
 }
 function stopChase(){ CHASE.active = null; hideMeter('chase'); ENGINE.speedMul = 1; }
+/* the runner reached the end of c.path: append where he runs next (false = nowhere, he stops) */
+function chaseExtend(c){
+  const r = c.runner.position;
+  if(!c.ended){
+    c.ended = true;
+    if(c.endPause > 0){ c.pause = c.endPause; if(c.endLine) toast('DOUBLING BACK', c.endLine, 2000); }
+  }
+  const L = c.lanes;
+  if(L && L.nodes && L.nodes.length){
+    const N = L.nodes;
+    if(c.gNode == null){
+      let bi = 0, bd = Infinity;
+      N.forEach((n, i)=>{ const d = Math.hypot(n[0]-r.x, n[1]-r.z); if(d < bd){ bd = d; bi = i; } });
+      c.gNode = bi;
+      if(bd > 0.05){ c.path.push([N[bi][0], N[bi][1]]); return true; }
+    }
+    // next lane node: keep the biggest lead on the player; don't turn straight back unless cornered
+    const p = ENGINE.player ? ENGINE.player.position : r;
+    const nb = [];
+    for(const e of (L.edges || [])){ if(e[0] === c.gNode) nb.push(e[1]); else if(e[1] === c.gNode) nb.push(e[0]); }
+    if(!nb.length) return false;
+    let best = nb[0], bs = -Infinity;
+    for(const j of nb){
+      const n = N[j];
+      let sc = Math.hypot(n[0]-p.x, n[1]-p.z) - Math.hypot(n[0]-r.x, n[1]-r.z);
+      if(j === c.gPrev) sc -= 4;
+      sc += Math.random() * 0.6;
+      if(sc > bs){ bs = sc; best = j; }
+    }
+    c.gPrev = c.gNode; c.gNode = best;
+    c.path.push([N[best][0], N[best][1]]);
+    return true;
+  }
+  // no lanes: run the authored path back the other way
+  const back = c.path.slice(Math.max(0, c.path.length - 12), -1).reverse();
+  if(!back.length) return false;
+  for(const q of back) c.path.push([q[0], q[1]]);
+  return true;
+}
+function chaseEscape(c){
+  const r = c.runner, cb = c.onEscaped;
+  stopChase(); r.visible = false; toast('LOST HIM', c.label + ' is gone.', 2200); sfxFail(); if(typeof haptic==='function') haptic(120); if(cb) cb(c);
+}
 function updateChase(dt){
   // player stagger (shoved, or ran into someone)
   if(ENGINE._stagger > 0){ ENGINE._stagger -= dt; ENGINE.speedMul = ENGINE._stagger > 0 ? 0.35 : 1; }
   const c = CHASE.active; if(!c || !ENGINE.player) return;
   if(isOverlayOpen()) return;
   const r = c.runner, u = r.userData;
+  if(u && (u._caught || u._arrested)){ stopChase(); return; }     // taken in another way (M6: the action button)
+  const catchChase = c.catchDist > 0;
   if(c.headStart > 0){ c.headStart -= dt; }
-  // move the runner along the path
-  let step = (c.stumble > 0 ? c.speed*0.35 : c.speed) * dt;
-  if(c.stumble > 0) c.stumble -= dt;
-  while(step > 0 && c.seg < c.path.length-1){
-    const a = c.path[c.seg], b = c.path[c.seg+1];
-    const dx = b[0]-r.position.x, dz = b[1]-r.position.z, d = Math.hypot(dx, dz);
-    if(d <= step){ r.position.x = b[0]; r.position.z = b[1]; step -= d; c.done += d; c.seg++; }
-    else { r.position.x += dx/d*step; r.position.z += dz/d*step; c.done += step; r.rotation.y = Math.atan2(dx, dz); step = 0; }
+  // move the runner along the path (catch chases: then on through the lanes)
+  if(c.pause > 0){ c.pause -= dt; }
+  else {
+    // cfg.burst [seconds, ×speed]: the first dash when he bolts from arm's length
+    let k = 1;
+    if(c.burst && (c.burstT = (c.burstT == null ? c.burst[0] : c.burstT)) > 0){ k = c.burst[1]; c.burstT -= dt; }
+    let step = (c.stumble > 0 ? c.speed*0.35 : c.speed*k) * dt;
+    if(c.stumble > 0) c.stumble -= dt;
+    for(let guard = 0; step > 0 && guard < 32; guard++){
+      if(c.seg >= c.path.length-1){
+        if(!catchChase || !chaseExtend(c) || c.pause > 0 || c.seg >= c.path.length-1) break;
+      }
+      const b = c.path[c.seg+1];
+      const dx = b[0]-r.position.x, dz = b[1]-r.position.z, d = Math.hypot(dx, dz);
+      if(d <= step){ r.position.x = b[0]; r.position.z = b[1]; step -= d; c.done += d; c.seg++; }
+      else { r.position.x += dx/d*step; r.position.z += dz/d*step; c.done += step; r.rotation.y = Math.atan2(dx, dz); step = 0; }
+    }
   }
-  u.walkPhase = (u.walkPhase||0) + dt*15;
-  const sw = Math.sin(u.walkPhase)*0.75;
-  u.armL.rotation.x = sw; u.armR.rotation.x = -sw; u.legL.rotation.x = -sw*0.9; u.legR.rotation.x = sw*0.9;
+  if(u){
+    u.walkPhase = (u.walkPhase||0) + dt*(c.pause > 0 ? 4 : 15);
+    const sw = Math.sin(u.walkPhase)*(c.pause > 0 ? 0.2 : 0.75);
+    if(u.armL) u.armL.rotation.x = sw; if(u.armR) u.armR.rotation.x = -sw; if(u.legL) u.legL.rotation.x = -sw*0.9; if(u.legR) u.legR.rotation.x = sw*0.9;
+  }
   // the runner barges through bystanders too — it slows him
   for(const m of c.crowd){
     if(!m.visible || m.userData._down) continue;
@@ -3993,15 +4087,19 @@ function updateChase(dt){
     }
   }
   const gap = Math.hypot(r.position.x-p.x, r.position.z-p.z);
-  showMeter('chase', c.label + ' — GAP', Math.min(1, gap/14), gap < 4 ? 'good' : 'danger', gap.toFixed(1)+' m');
+  if(catchChase){ if(gap > CHASE.range) c.oorT += dt; else c.oorT = Math.max(0, c.oorT - 2*dt); }
+  // out of sight, the meter reads the last-seen point (c.track, kept by beta/chase.js)
+  const tp = c.track || r.position, shown = Math.hypot(tp.x-p.x, tp.z-p.z);
+  const losing = catchChase && c.oorT > 0.05;
+  showMeter('chase', c.label + (losing ? ' — LOSING HIM' : c.track ? ' — LAST SEEN' : ' — GAP'),
+    losing ? c.oorT/CHASE.escapeT : Math.min(1, shown/CHASE.range), (shown < 4 && !losing) ? 'good' : 'danger',
+    shown.toFixed(1)+' m' + (losing ? ' · ' + Math.ceil(Math.max(0, CHASE.escapeT - c.oorT)) + ' s' : ''));
   if(gap < c.catchDist && c.headStart <= 0){
     const cb = c.onCaught; stopChase(); if(typeof tackle==='function') tackle(r); toast('GOT HIM','Hands where I can see them!', 1600); sfxComplete();
     if(typeof unlock==='function' && r===ENGINE._marketKC){ unlock('faster'); if(!c.bumps) unlock('not_one'); }
     if(cb) cb(c); return;
   }
-  if(c.seg >= c.path.length-1){
-    const cb = c.onEscaped; stopChase(); r.visible = false; toast('LOST HIM', c.label + ' is gone.', 2200); sfxFail(); if(typeof haptic==='function') haptic(120); if(cb) cb(c);
-  }
+  if(catchChase ? c.oorT >= CHASE.escapeT : c.seg >= c.path.length-1) chaseEscape(c);
 }
 function knockDown(m){
   m.userData._down = true;
@@ -4092,6 +4190,9 @@ function updateTail(dt){
    subtitles, graphics presets (+ automatic downgrade on slow phones), touch
    layout, objective marker, hints, reduce motion, colour-blind mode, haptics,
    and music ducking under dialogue.
+   Casework difficulty (Recruit / Senior Agent) is NOT a device setting: it
+   belongs to the investigation (S.game.difficulty) and travels with the save.
+   SETTINGS.difficulty is "Action pace" — timers, chases, minigames only.
    ========================================================================= */
 
 const SETTINGS_KEY = 'naceca_settings_v1';
@@ -4125,6 +4226,27 @@ function timerRate(){
 // how fast fleeing suspects run (relative)
 function chaseRate(){ return {story:0.9, standard:1, hard:1.06}[SETTINGS.difficulty] || 1; }
 function isStoryMode(){ return SETTINGS.difficulty === 'story'; }
+
+/* ---------- casework difficulty (per investigation, saved with S) ----------
+   'recruit' = deduction hints on · 'senior' = hints off (default; old saves → senior).
+   Callers outside this file: (typeof isRecruit === 'function' && isRecruit()). */
+function gameDifficulty(){
+  const d = (typeof S !== 'undefined' && S && S.game) ? S.game.difficulty : null;
+  return d === 'recruit' ? 'recruit' : 'senior';
+}
+function isRecruit(){ return gameDifficulty() === 'recruit'; }
+function syncDifficultyClass(){
+  const b = document.body; if(!b) return;
+  const r = isRecruit();
+  b.classList.toggle('cw-recruit', r);
+  b.classList.toggle('cw-senior', !r);
+}
+function setGameDifficulty(v){
+  if(typeof S === 'undefined' || !S || !S.game) return;
+  S.game.difficulty = v === 'recruit' ? 'recruit' : 'senior';
+  syncDifficultyClass();
+  if(typeof V12 !== 'undefined' && V12 && typeof V12.log === 'function') V12.log('casework', { d:S.game.difficulty });
+}
 
 /* ---------- haptics ---------- */
 function haptic(pattern){
@@ -4191,6 +4313,7 @@ function applySettings(){
   b.classList.toggle('cb', SETTINGS.colourBlind === 'on');
   applyAudioLevels();
   applyGraphics(SETTINGS.gfx === 'auto' ? (_gfxActive || autoGfxGuess()) : SETTINGS.gfx);
+  syncDifficultyClass();
 }
 
 /* ---------- settings screen ---------- */
@@ -4200,8 +4323,12 @@ const SETTINGS_UI = [
   { key:'sfx',     label:'Effects',  type:'range' },
   { key:'ambient', label:'Ambience', type:'range' },
   { group:'GAMEPLAY' },
-  { key:'difficulty', label:'Difficulty', opts:[['story','Story'],['standard','Standard'],['hard','Hard']],
-    note:'Story slows timers and suspects, and wrong puzzle answers stay crossed out.' },
+  { key:'casework', label:'Casework', opts:[['recruit','Recruit'],['senior','Senior Agent']],
+    get:()=>gameDifficulty(), set:v=>setGameDifficulty(v), when:()=>!!(S && S.game && S.game.currentMission),
+    note:'Recruit: deduction hints on. Senior Agent: no hints. Saved with this investigation.',
+    offNote:'Chosen when you start an investigation. Continue one to change it.' },
+  { key:'difficulty', label:'Action pace', opts:[['story','Relaxed'],['standard','Standard'],['hard','Hard']],
+    note:'Timers, chase speed and minigames. Deduction hints are set by Casework.' },
   { key:'timed', label:'Timed sequences', opts:[['normal','Normal'],['extended','Extended'],['off','No timers']],
     note:'Wipe, smoke and trace clocks. Chases still run.' },
   { key:'marker', label:'Objective marker', opts:[['on','On'],['off','Off']] },
@@ -4224,7 +4351,7 @@ function ensureSettingsScreen(){
   ov.className = 'overlay'; ov.id = 'screen-settings';
   ov.innerHTML = `<div class="overlay-bg"></div>
     <div class="settings-frame">
-      <div class="settings-head"><h2>SETTINGS</h2><button class="btn ghost" id="btn-settings-close">◀ BACK</button></div>
+      <div class="settings-head"><h2>SETTINGS</h2><button class="btn ghost" id="btn-settings-close">${typeof icon === 'function' ? icon('back') : ''} BACK</button></div>
       <div class="settings-body" id="settings-body"></div>
       <div class="settings-foot"><button class="btn ghost" id="btn-settings-reset">RESET TO DEFAULTS</button></div>
     </div>`;
@@ -4234,27 +4361,35 @@ function ensureSettingsScreen(){
 }
 function renderSettings(){
   const body = document.getElementById('settings-body'); body.innerHTML = '';
-  for(const row of SETTINGS_UI){
-    if(row.group){ const h = document.createElement('div'); h.className = 'set-group'; h.textContent = row.group; body.appendChild(h); continue; }
-    const el = document.createElement('div'); el.className = 'set-row';
+  SETTINGS_UI.forEach((row, ri)=>{
+    if(row.group){ const h = document.createElement('div'); h.className = 'set-group'; h.textContent = row.group; body.appendChild(h); return; }
+    const el = document.createElement('div'); el.className = 'set-row'; el.dataset.key = row.key;
+    const cur = row.get ? row.get() : SETTINGS[row.key];
+    const live = !row.when || row.when();
     let ctl = '';
     if(row.type === 'range'){
-      ctl = `<input type="range" min="0" max="100" step="5" value="${SETTINGS[row.key]}" data-k="${row.key}"><span class="set-val">${SETTINGS[row.key]}</span>`;
+      ctl = `<input type="range" min="0" max="100" step="5" value="${cur}" data-k="${row.key}"><span class="set-val">${cur}</span>`;
     } else {
-      ctl = `<div class="seg">${row.opts.map(([v,l])=>`<button class="${SETTINGS[row.key]===v?'on':''}" data-k="${row.key}" data-v="${v}">${l}</button>`).join('')}</div>`;
+      ctl = `<div class="seg">${row.opts.map(([v,l])=>`<button class="${cur===v?'on':''}" data-r="${ri}" data-k="${row.key}" data-v="${v}" aria-pressed="${cur===v}" ${live?'':'disabled'}>${l}</button>`).join('')}</div>`;
     }
-    el.innerHTML = `<div class="set-label">${row.label}${row.note?`<div class="set-note">${row.note}</div>`:''}</div><div class="set-ctl">${ctl}</div>`;
+    const note = live ? row.note : (row.offNote || row.note);
+    el.innerHTML = `<div class="set-label">${row.label}${note?`<div class="set-note">${note}</div>`:''}</div><div class="set-ctl">${ctl}</div>`;
     body.appendChild(el);
-  }
+  });
   body.querySelectorAll('input[type=range]').forEach(inp=>{
     inp.addEventListener('input', ()=>{ SETTINGS[inp.dataset.k] = +inp.value; inp.nextElementSibling.textContent = inp.value; applyAudioLevels(); saveSettings(); });
   });
   body.querySelectorAll('.seg button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      SETTINGS[btn.dataset.k] = btn.dataset.v;
-      if(btn.dataset.k === 'gfx') _gfxActive = null;
-      saveSettings(); applySettings();
-      btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b===btn));
+      if(btn.disabled) return;
+      const row = SETTINGS_UI[+btn.dataset.r] || {};
+      if(row.set) row.set(btn.dataset.v);
+      else {
+        SETTINGS[btn.dataset.k] = btn.dataset.v;
+        if(btn.dataset.k === 'gfx') _gfxActive = null;
+        saveSettings(); applySettings();
+      }
+      btn.parentElement.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on', b===btn); b.setAttribute('aria-pressed', b===btn); });
       if(typeof sfxClick === 'function') sfxClick();
     });
   });
@@ -4276,9 +4411,10 @@ function closeSettings(){ showOverlay(_settingsReturn); }
    Feel: camera shake, characters turning to face you, a tackle when you
    catch a runner, an evidence flash, and fades between missions.
 
-   "Next thing to do" = the first interactable (in scene order, which follows
-   each mission's flow) the player hasn't successfully used yet. An
-   interaction counts as used when it changed something: an objective,
+   "Next thing to do" comes from WAY.resolve() (beta/wayfind.js): the objective
+   the HUD shows, mapped to a place. guideTarget() below is its last resort:
+   the first interactable (in scene order) the player hasn't successfully used
+   yet. An interaction counts as used when it changed something: an objective,
    evidence, a story flag, or it opened a conversation or puzzle.
    ========================================================================= */
 
@@ -4316,54 +4452,64 @@ function guideTarget(){
 function ensureGuideEls(){
   if(GUIDE.el) return;
   const host = document.getElementById('hud') || document.body;
+  const ico = n => (typeof icon === 'function' ? icon(n) : '');
   GUIDE.el = document.createElement('div'); GUIDE.el.id = 'guide-marker';
-  GUIDE.el.innerHTML = '<div class="gm-chev">▼</div><div class="gm-dist"></div>';
-  GUIDE.arrow = document.createElement('div'); GUIDE.arrow.id = 'guide-arrow'; GUIDE.arrow.textContent = '➤';
+  GUIDE.el.innerHTML = `<div class="gm-chev">${ico('down')}</div><div class="gm-dist"></div>`;
+  GUIDE.arrow = document.createElement('div'); GUIDE.arrow.id = 'guide-arrow';
+  GUIDE.arrow.innerHTML = `<span class="ga-ico">${ico('pointer')}</span><span class="ga-dist"></span>`;
   host.appendChild(GUIDE.el); host.appendChild(GUIDE.arrow);
 }
 
+/* The marker over the target follows SETTINGS.marker; the edge arrow is always on.
+   Both (and the HUD tracker) come from WAY.resolve() in beta/wayfind.js; the
+   fallback below only runs if that layer is missing. */
 const _gv = { v:null };
 function updateGuidance(dt){
   ensureGuideEls();
-  const show = SETTINGS.marker === 'on' && ENGINE.movementEnabled && !isOverlayOpen() && ENGINE.player && ENGINE.camera;
-  const t = show ? guideTarget() : null;
-  if(!t){ GUIDE.el.style.display = 'none'; GUIDE.arrow.style.display = 'none'; }
-  else {
-    if(!_gv.v) _gv.v = new THREE.Vector3();
-    const m = t.mesh, h = (m.userData && m.userData._skinned) ? 2.25 : (m.userData && m.userData._rig) ? 2.25 * (m.scale ? m.scale.y : 1) : (t.labelY !== undefined ? t.labelY + 0.55 : 1.6);
-    _gv.v.set(m.position.x, (m.position.y||0) + h, m.position.z);
-    const dist = Math.hypot(m.position.x - ENGINE.player.position.x, m.position.z - ENGINE.player.position.z);
-    _gv.v.project(ENGINE.camera);
-    const W = window.innerWidth, H = window.innerHeight;
-    const behind = _gv.v.z > 1;
-    let x = (_gv.v.x*0.5+0.5)*W, y = (-_gv.v.y*0.5+0.5)*H;
-    const onScreen = !behind && x > 40 && x < W-40 && y > 70 && y < H-70;
-    if(onScreen){
-      GUIDE.arrow.style.display = 'none';
-      GUIDE.el.style.display = dist < 2.2 ? 'none' : 'block';
-      GUIDE.el.style.transform = `translate(${x}px, ${y}px) translate(-50%,-100%)`;
-      GUIDE.el.querySelector('.gm-dist').textContent = dist.toFixed(0) + ' m';
-    } else {
-      GUIDE.el.style.display = 'none';
-      if(behind){ x = W - x; y = H - y; }
-      const cx = W/2, cy = H/2, dx = x - cx, dy = y - cy;
-      const ang = Math.atan2(dy, dx);
-      const r = Math.min(W, H) * 0.42;
-      GUIDE.arrow.style.display = 'block';
-      GUIDE.arrow.style.transform = `translate(${cx + Math.cos(ang)*r}px, ${cy + Math.sin(ang)*r}px) translate(-50%,-50%) rotate(${ang}rad)`;
+  if(typeof WAY !== 'undefined' && typeof WAY.guide === 'function'){
+    try{ WAY.guide(dt); }catch(e){ console.warn('[NACECA] guidance', e); }
+  } else {
+    const t = (ENGINE.player && ENGINE.camera) ? guideTarget() : null;
+    if(!t){ GUIDE.el.style.display = 'none'; GUIDE.arrow.style.display = 'none'; }
+    else {
+      if(!_gv.v) _gv.v = new THREE.Vector3();
+      const m = t.mesh;
+      _gv.v.set(m.position.x, (m.position.y||0) + 1.6, m.position.z);
+      const dist = Math.hypot(m.position.x - ENGINE.player.position.x, m.position.z - ENGINE.player.position.z);
+      _gv.v.project(ENGINE.camera);
+      const W = window.innerWidth, H = window.innerHeight, behind = _gv.v.z > 1;
+      let x = (_gv.v.x*0.5+0.5)*W, y = (-_gv.v.y*0.5+0.5)*H;
+      if(!behind && x > 40 && x < W-40 && y > 70 && y < H-70){
+        GUIDE.arrow.style.display = 'none';
+        GUIDE.el.style.display = (SETTINGS.marker === 'on' && dist >= 2.2) ? 'block' : 'none';
+        GUIDE.el.style.transform = `translate(${x}px, ${y}px) translate(-50%,-100%)`;
+        GUIDE.el.querySelector('.gm-dist').textContent = dist.toFixed(0) + ' m';
+      } else {
+        GUIDE.el.style.display = 'none';
+        if(behind){ x = W - x; y = H - y; }
+        const cx = W/2, cy = H/2, ang = Math.atan2(y - cy, x - cx), r = Math.min(W, H) * 0.42;
+        GUIDE.arrow.style.display = 'flex';
+        GUIDE.arrow.style.transform = `translate(${cx + Math.cos(ang)*r}px, ${cy + Math.sin(ang)*r}px)`;
+        (GUIDE.arrow.querySelector('.ga-ico svg') || GUIDE.arrow.firstChild).style.transform = `rotate(${ang}rad)`;
+        GUIDE.arrow.lastChild.textContent = dist.toFixed(0) + ' m';
+      }
     }
   }
-  // hints after 60 s with no progress (only while actually playing)
+  // hints after 60 s with no progress (updateGuidance only runs while playing: time in menus doesn't count)
+  const tnow = performance.now();
+  if(GUIDE._lastRun && tnow - GUIDE._lastRun > 500 && GUIDE.lastProgress) GUIDE.lastProgress += tnow - GUIDE._lastRun;
+  GUIDE._lastRun = tnow;
   const sig = progressSig();
   if(sig !== GUIDE.lastSig){ GUIDE.lastSig = sig; GUIDE.lastProgress = performance.now(); }
-  if(SETTINGS.hints === 'on' && ENGINE.movementEnabled && !isOverlayOpen()){
+  if(SETTINGS.hints === 'on'){
     if(!GUIDE.lastProgress) GUIDE.lastProgress = performance.now();
     if(performance.now() - GUIDE.lastProgress > 60000){
       GUIDE.lastProgress = performance.now();
-      const tt = guideTarget();
-      if(tt) toast('HINT', `Try this next: ${tt.label}.${SETTINGS.marker==='on'?' Follow the gold marker.':''}`, 3200);
+      const r = (typeof WAY !== 'undefined' && WAY.resolve) ? WAY.resolve() : guideTarget();
+      const what = (typeof WAY !== 'undefined' && WAY.trackerText && WAY.trackerText()) || (r && r.label);   // the words on the HUD
+      if(r && what) toast('HINT', `Try this next: ${what}.${r.uiOnly ? '' : ' Follow the arrow.'}`, 3200);
     }
-  } else if(isOverlayOpen()) GUIDE.lastProgress = performance.now();
+  }
 }
 function resetGuidance(){ GUIDE.lastProgress = performance.now(); GUIDE.lastSig = ''; }
 
@@ -4562,7 +4708,7 @@ function unlock(id){
   const a = ACHIEVEMENTS.find(x=>x.id===id); if(!a) return;
   _ach[id] = Date.now();
   try{ localStorage.setItem(ACH_KEY, JSON.stringify(_ach)); }catch(e){}
-  setTimeout(()=>toast('🏅 ' + a.name.toUpperCase(), a.desc, 2600), 900);
+  setTimeout(()=>toast(icon('medal') + a.name.toUpperCase(), a.desc, 2600), 900);
   haptic([20,40,20]);
 }
 
@@ -4636,7 +4782,7 @@ function ensureRecordsScreen(){
   const ov = document.createElement('div'); ov.className = 'overlay'; ov.id = 'screen-records';
   ov.innerHTML = `<div class="overlay-bg"></div>
     <div class="settings-frame">
-      <div class="settings-head"><h2>CASE RECORDS</h2><button class="btn ghost" id="btn-records-close">◀ BACK</button></div>
+      <div class="settings-head"><h2>CASE RECORDS</h2><button class="btn ghost" id="btn-records-close">${icon('back')}BACK</button></div>
       <div class="seg rec-tabs"><button class="on" data-tab="archive">PRESS ARCHIVE</button><button data-tab="awards">AWARDS</button></div>
       <div class="settings-body" id="records-body"></div>
     </div>`;
@@ -4651,7 +4797,7 @@ function renderRecords(tab){
   if(tab === 'awards'){
     const got = ACHIEVEMENTS.filter(a=>_ach[a.id]).length;
     body.innerHTML = `<div class="set-note" style="margin:4px 0 10px">${got} of ${ACHIEVEMENTS.length} unlocked</div>` +
-      ACHIEVEMENTS.map(a=>`<div class="ach ${_ach[a.id]?'got':''}"><span class="ach-ico">${_ach[a.id]?'🏅':'🔒'}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div></div>`).join('');
+      ACHIEVEMENTS.map(a=>`<div class="ach ${_ach[a.id]?'got':''}"><span class="ach-ico">${_ach[a.id]?icon('medal'):icon('lock')}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div></div>`).join('');
     return;
   }
   const arc = (S.game.archive || []).slice().sort((a,b)=>b.at-a.at);
@@ -4684,7 +4830,7 @@ function showRecap(then){
     <div class="aftermath-stamp">PREVIOUSLY ON NACECA</div>
     ${arc.map(a=>`<div class="headline-block arc"><div class="pub">${a.pub}</div><div class="head">${a.head}</div><div class="ded">${a.ded}</div></div>`).join('')}
     <div class="recap-rep">Integrity <b>${r.integrity}</b> · Public Trust <b>${r.publicTrust}</b> · Agency Favour <b>${r.agencyFavour}</b> · Level <b>${S.player.level}</b></div>
-    <button class="btn primary" id="btn-recap-go">CONTINUE THE INVESTIGATION ▶</button></div>`;
+    <button class="btn primary" id="btn-recap-go">CONTINUE THE INVESTIGATION${icon('next')}</button></div>`;
   showOverlay('screen-recap');
   ov.querySelector('#btn-recap-go').addEventListener('click', ()=>{ then(); });
 }
@@ -4697,7 +4843,17 @@ function showRecap(then){
    built across seven missions decides whether her guilt can be PROVEN.
    Also: the epilogue (where everyone ended up), credits, and the Season 2
    stinger, which reveals who protected her without undoing her defeat.
+   Beta casework: a wrong name on a charge sheet (Lagos, the route, the
+   finale) follows that person into the headline and the epilogue.
    ========================================================================= */
+
+/* who a filed charge sheet wrongly named, per case (settled sheets only for raids) */
+function _cwWrong(c){
+  const a = S.game && S.game.accusations, r = a && a[c];
+  if(!r || !r.ok || r.ok.suspect) return null;
+  if(c !== 'voice' && !r.settled) return null;
+  return r.suspect;
+}
 
 /* What Kelechi can actually put to her. Each entry is earned earlier. */
 function finaleProofs(){
@@ -4750,9 +4906,17 @@ function finaleRevealScript(){
 
 function finaleHeadline(){
   const o = S.game.moralChoices.finale, hurt = S.game.flags.fin_osas === 'hurt';
-  if(o === 'proven')    return { pub:'THE DAILY GONG', head:'NACECA Commander Arrested in Ekosodin Kidnap Plot — Student Freed', ded:`The ransom calls came from inside the agency, investigators say. A flash drive and an accountant's testimony sealed the case.${hurt?' The student was treated for a broken wrist.':''}` };
-  if(o === 'contested') return { pub:'THE LAGOS LEDGER', head:'Senior NACECA Officer Detained After UNIBEN Student Rescue', ded:'Prosecutors face a fight: one piece of hard evidence, a powerful defence, and an agency in shock.' };
-  return { pub:'NATIONAL DISPATCH', head:'Kidnapped UNIBEN Student Freed; NACECA Commander Suspended Pending Inquiry', ded:'Questions mount over why Cdr. Adaeze reached the compound before backup did.' };
+  let h;
+  if(o === 'proven')    h = { pub:'THE DAILY GONG', head:'NACECA Commander Arrested in Ekosodin Kidnap Plot — Student Freed', ded:`The ransom calls came from inside the agency, investigators say. A flash drive and an accountant's testimony sealed the case.${hurt?' The student was treated for a broken wrist.':''}` };
+  else if(o === 'contested') h = { pub:'THE LAGOS LEDGER', head:'Senior NACECA Officer Detained After UNIBEN Student Rescue', ded:'Prosecutors face a fight: one piece of hard evidence, a powerful defence, and an agency in shock.' };
+  else h = { pub:'NATIONAL DISPATCH', head:'Kidnapped UNIBEN Student Freed; NACECA Commander Suspended Pending Inquiry', ded:'Questions mount over why Cdr. Adaeze reached the compound before backup did.' };
+  // the wrong name went first, in public
+  const w = _cwWrong('voice');
+  if(w){
+    const nm = ({ uche:'Sgt. Uche', osaro:'Engr. Osaro', obi:'Chief Obi', ifeanyi:'Ifeanyi', chidi:'Insp. Chidi' })[w] || 'another officer';
+    h = Object.assign({}, h, { head:h.head.replace(/ — Student Freed$/, '') + ` — Hours After ${nm} Was Arrested in Error`, ded:h.ded + ` Earlier that night, on the investigating agent's word, ${nm} was arrested in public.` });
+  }
+  return h;
 }
 
 /* ---------------- epilogue, credits, stinger ---------------- */
@@ -4781,6 +4945,22 @@ function epilogueSlides(){
   S_.push({ art: f.child_gentle ? 'child_relieved' : 'child_afraid', name:'THE GIRL FROM LEKKI',
     text: f.child_gentle ? 'She lives with her aunt in Surulere now. She drew a policeman with a kind face and stuck it on the fridge.' : 'She lives with her aunt in Surulere now. She doesn\'t like the sound of boots.' });
   S_.push({ art:'uche_evasive', name:'SGT. UCHE', text:'Uche turned down a promotion. "Slower," he says. "But it holds."' });
+  // the people a charge sheet wrongly named
+  try{
+    const CC = (typeof CW !== 'undefined' && CW.CASES) || {};
+    const wl = _cwWrong('lagos'), wr = _cwWrong('route'), wv = _cwWrong('voice');
+    const swap = (name, text)=>{ const s0 = S_.find(x => x.name === name); if(s0) s0.text = text; };
+    if(wl === 'kc') swap('KC', m.market_runner === 'escaped' ? 'KC was never found. Your charge sheet called him "the kingpin", and his face is still on a NACECA wanted notice in Computer Village.' : 'KC was held as "the kingpin" on a NACECA charge sheet before Lekki. The charge collapsed in a week. In Ikeja they still call him "the boss", and he hates it.');
+    if(wl === 'tunde') S_.push({ art:'', name:'TUNDE', text:'Your informant spent a night in a NACECA cell on your own charge sheet. He is back at the Ikeja market. He does not answer unknown numbers, or NACECA\'s.' });
+    if(wl === 'pos') S_.push({ art:'', name:'THE IKEJA POS AGENT', text:'Held overnight as "the ringleader" on your charge sheet. The agent\'s licence was suspended for a year. Nobody apologised.' });
+    if(wr === 'tobi') swap('TOBI ONUOHA', m.asaba === 'rescue' ? 'Tobi read the drive line by line for the prosecution — after a morning cuffed to a hospital bed on your charge sheet. He asked for nothing, not even an apology.' : 'Tobi did not live to read the drive. For a week the papers called him the cartel\'s accountant, because of your charge sheet.');
+    if(wr === 'agent') S_.push({ art:'', name:'THE ASABA SIM AGENT', text:'Taken from a stall at Asaba Main Market on your charge sheet and released without charge. The stall is still shut.' });
+    if(wr === 'musa'){ const mu = S_.find(x => x.name === 'MUSA'); if(mu) mu.text += ' Your charge sheet also named him "the route\'s principal"; it took a month to get that charge dropped.'; }
+    if(wv && CC.voice && CC.voice.epilogue && CC.voice.epilogue[wv]){
+      const e = CC.voice.epilogue[wv], ex = S_.find(x => x.name === e.name);
+      if(ex) ex.text = e.text; else S_.push({ art:e.art, name:e.name, text:e.text });
+    }
+  }catch(e){}
   S_.push({ art: rep.integrity >= 70 ? 'kelechi_neutral' : rep.integrity <= 40 ? 'kelechi_evasive' : 'kelechi_neutral', name:'AGENT KELECHI',
     text: rep.integrity >= 70 ? 'The new commander offered him a Superintendent\'s badge. He asked for the case files instead.'
         : rep.integrity <= 40 ? 'He kept his badge. Some nights he wonders what it cost, and who else knows.'
@@ -5503,7 +5683,7 @@ function buildSceneHQLegacy(){
   S.game.currentRegion = 'Lagos';
   S.game.currentSubregion = 'NACECA HQ';
   refreshHUD();
-  setTimeout(()=>{ if(typeof showHint==='function') showHint('marker', 'The <b>gold marker</b> shows where to go next', 'The <b>gold marker</b> shows where to go next'); }, 1200);
+  setTimeout(()=>{ if(typeof showHint==='function') showHint('marker', 'Your <b>objective</b> and its distance are top left; the <b>arrow</b> at the screen edge points the way', 'Your <b>objective</b> and its distance are top left; the <b>arrow</b> at the screen edge points the way'); }, 1200);
 }
 
 
@@ -5526,6 +5706,13 @@ function hqIntroScript(){
    Edit the modules; run build.py to rebuild naceca.html.
    ========================================================================= */
 /* ===================== 12. SCENE: IKEJA MARKET ===================== */
+// KC's lanes once his path runs out: the two east stall lanes (x 7.6 / 12.6) and the gaps between the stalls
+const MARKET_LANES = (()=>{
+  const xs = [7.6, 12.6], zs = [17.5, 12.5, 7.4, 0, -7.5, -12.5, -17.5, -20.5];
+  const nodes = [], edges = [];
+  zs.forEach((z, r)=>{ xs.forEach(x=>nodes.push([x, z])); edges.push([r*2, r*2+1]); if(r) edges.push([(r-1)*2, r*2], [(r-1)*2+1, r*2+1]); });
+  return { nodes, edges };
+})();
 function buildSceneMarketLegacy(){
   const scene = newScene({bg:'#1a2845', fog:'#2a3a5a'});
   scene.fog.near = 14; scene.fog.far = 50;
@@ -5663,12 +5850,16 @@ function buildSceneMarketLegacy(){
       if(S.game.moralChoices.market_runner){ toast('ALREADY DECIDED','Head back to the van'); return; }
       if(CHASE.active){ return; }
       // he sees the badge and bolts — shoving a trader's tray into your path
-      ENGINE._stagger = 0.9;
+      ENGINE._stagger = 0.5;
       toast('HE\'S RUNNING','KC shoves a tray at you and breaks for the back of the stalls. Sprint — and mind the traders.', 2600);
       musicForScene && musicForScene('m6_chase');
       startChase({
-        runner: kc, label:'KC', speed:4.9, catchDist:1.45, headStart:0.4,
+        // he bolts from arm's length: a 1.2 s dash (×1.5) so the catch radius doesn't end it on the spot
+        runner: kc, label:'KC', speed:4.3, catchDist:1.9, headStart:0.4, burst:[1.2, 1.5],
         path: [[8,4],[8,7.4],[12.6,7.4],[12.6,-2.4],[12.6,-7.5],[7.6,-7.5],[7.6,-12.5],[12.6,-12.5],[12.6,-20.5]],
+        // the back exit is blocked: he doubles back through the east stall lanes until he's caught or 20 s out of range
+        endPause: 1.2, endLine: 'The back exit is blocked. KC turns back into the stalls.',
+        lanes: MARKET_LANES,
         crowd: ENGINE._marketCrowd || [],
         onCaught: ()=>{
           kc.rotation.y += Math.PI;
@@ -5731,7 +5922,7 @@ function buildSceneMarketLegacy(){
      <rect x="-30" y="9"  width="60" height="3" fill="#2a3550" opacity=".3"/>`,
     [
       {x:-6, z:-2, color:'#5db86a', r:1.6}, // tunde
-      {x: 8, z: 4, color:'#e07d4a', r:1.6}, // suspect
+      {x: 8, z: 4, color:'#e07d4a', r:1.6, suspect:true}, // suspect (hidden once the chase starts: the red blip takes over)
       {x: 0, z:14, color:'#5dd07a', r:2.0}, // exit van
       {x: 7.5,z:4, color:'#d8a64a', r:1.2}, // phone evidence
     ]
@@ -6660,6 +6851,11 @@ function makeSmokeTexture(){
    carries forward into Mission 7.
    ========================================================================= */
 
+// Ifeanyi's loop once he's doubled back from the van: round the crate stacks and back to the bay
+const ASABA_LANES = {
+  nodes: [[15.5,-1], [11,-4], [11,5], [6,5], [2.5,4.5], [-2,4.5], [-1,-1], [1,-5.5], [7,-5.5]],
+  edges: [[0,1], [1,2], [2,3], [3,4], [4,5], [5,6], [6,7], [7,8], [8,1]],
+};
 function buildSceneAsabaLegacy(){
   const scene = newScene({bg:'#1a1814', fog:'#2a2418'});
   scene.fog.near = 14; scene.fog.far = 50;
@@ -6926,7 +7122,7 @@ function buildSceneAsabaLegacy(){
      <rect x="14" y="-2"  width="6" height="3" fill="#a8b8c8" opacity="0.5"/>`,
     [
       {x:-13, z:4.5, color:'#5dd07a', r:1.4},  // uche
-      {x:2,   z:1,   color:'#c84a3a', r:1.6},  // runner — pulses if triggered
+      {x:2,   z:1,   color:'#c84a3a', r:1.6, suspect:true},  // runner (hidden once the chase starts: the red blip takes over)
       {x:-10, z:-5.5,color:'#ffd890', r:1.4},  // hostage
       {x:17,  z:-1,  color:'#a8a8a8', r:1.6},  // van
     ]
@@ -6985,8 +7181,11 @@ function updateAsabaTrigger(dt){
     const rn = ENGINE._asabaRunner;
     if(rn && !rn.userData._caught){
       startChase({
-        runner: rn, label:'IFEANYI', speed:4.5, catchDist:1.5, headStart:0.3,
+        runner: rn, label:'IFEANYI', speed:4.1, catchDist:1.9, headStart:0.3,
         path: [[2,1],[6,5],[11,5],[11,-4],[15.5,-1]],
+        // he can't start the van while you're on him: he doubles back round the bays until caught or 20 s out of range
+        endPause: 1.4, endLine: 'Too close to start the van. Ifeanyi breaks back through the bays.',
+        lanes: ASABA_LANES,
         onCaught: ()=>{ if(!S.game._asabaChoice) makeAsabaChoice('chase', rn); },
         onEscaped: ()=>{
           rn.userData._escaped = true;
@@ -8394,6 +8593,9 @@ function completeMission(id, opts={}){
    NACECA · systems/aftermath.js
    Auto-extracted from game.js by split_modules.py
    Edit the modules; run build.py to rebuild naceca.html.
+   Beta casework wraps generateHeadline and showAftermath (beta/casework.js):
+   a wrong name on a charge sheet changes the raid's headline, and the
+   aftermath shows the charge sheet as the prosecutor reviewed it.
    ========================================================================= */
 /* ===================== 18. AFTERMATH ===================== */
 function generateHeadline(){
@@ -8494,31 +8696,28 @@ function generateHeadline(){
   return { pub:'THE LAGOS LEDGER', head:'NACECA Mansion Raid: Suspect In Custody, Evidence Bagged', ded:'A measured operation. The case file moves to prosecution.' };
 }
 
+/* small flat label for the preview (styled in beta/casework.css) */
+function _afBadge(text, kind){ return `<span class="cw-badge${kind ? ' ' + kind : ''}">${text}</span>`; }
+
 function nextMissionPreview(){
   const cur = S.game.currentMission;
   if(cur==='m3'){
-    return `Mission 4 — <b>Checkpoint Shakedown</b> · joint op with Anti-Kidnapping Squad on the Benin Bypass.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 4 — <b>Checkpoint Shakedown</b> · joint op with Anti-Kidnapping Squad on the Benin Bypass. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m4'){
-    return `Mission 5 — <b>Forest Shrine Compound</b> · investigate a shrine used as fear-cover by the cartel. Respect the sacred ground while you search.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 5 — <b>Forest Shrine Compound</b> · investigate a shrine used as fear-cover by the cartel. Respect the sacred ground while you search. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m5'){
-    return `Mission 6 — <b>The Disappeared</b> · hostage rescue in an Asaba warehouse. Chase the runner, or save the captive — pick one, lose the other.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 6 — <b>The Disappeared</b> · hostage rescue in an Asaba warehouse. Chase the runner, or save the captive — pick one, lose the other. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m6'){
-    return `Mission 7 — <b>No Signal Zone</b> · sabotaged telecom tower behind the UNIBEN gate. Restore power, trace the ransom calls, decide under fire.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 7 — <b>No Signal Zone</b> · sabotaged telecom tower behind the UNIBEN gate. Restore power, trace the ransom calls, decide under fire. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m7'){
-    return `Mission 8 — <b>The Voice</b> · Season 1 finale. Ekosodin, after dark. Find the house, get Osas out, and face whoever has been making those calls.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 8 — <b>The Voice</b> · Season 1 finale. Ekosodin, after dark. Find the house, get Osas out, and face whoever has been making those calls. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m8'){
-    return `<b>Season 1 is complete.</b> Continue for the epilogue — and for who protected her.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(216,166,74,.6);color:#ffd76a;font-family:Oswald;font-size:10px;letter-spacing:.18em">SEASON 2 — COMING</span>`;
+    return `<b>Season 1 is complete.</b> Continue for the epilogue — and for who protected her. ${_afBadge('SEASON 2 — COMING', 'soon')}`;
   }
   return 'Open the mission select to choose your next operation.';
 }
@@ -8570,12 +8769,12 @@ function showAftermath(){
       <div class="head">${head.head}</div>
       <div class="ded">${head.ded}</div>
     </div>
-    <div class="aftermath-block" style="grid-column:1/-1">
+    <div class="aftermath-block cw-wide">
       <h3>NEXT IN THE INVESTIGATION</h3>
-      <div style="font-size:13px;color:#bcc6d4;line-height:1.7">
+      <div class="cw-next">
         ${nextMissionPreview()}
       </div>
-      <div style="font-size:12px;color:#7a8aa3;margin-top:8px">Season 2 (missions 9–12) is outlined in the mission select. Each card holds the briefing and chosen region.</div>
+      <div class="cw-next-sub">Season 2 (missions 9–12) is outlined in the mission select. Each card holds the briefing and chosen region.</div>
     </div>`;
 
   if(typeof onAftermath==='function') onAftermath(op, head);
@@ -8671,7 +8870,7 @@ function openSkillTree(){
         const unlocked = S.player.skills.includes(s.id);
         const locked = s.requires && !S.player.skills.includes(s.requires);
         return `<div class="skill-node ${unlocked?'unlocked':''} ${locked?'locked':''}" data-sid="${s.id}">
-          <div class="name">${s.name}${unlocked?'<span class="check">✔</span>':''}</div>
+          <div class="name">${s.name}${unlocked?'<span class="check" aria-label="unlocked">'+icon('check')+'</span>':''}</div>
           <div class="desc">${s.desc}</div>
         </div>`;
       }).join('')}
@@ -8786,14 +8985,14 @@ function ebSelectCard(id){
       S.game._ebLinks = EB_STATE.links;
       S.game.intelScore += valid.intel;
       sfxComplete();
-      setEBInstruction(`✔ <b>+${valid.intel} INTEL</b> · ${valid.hint}`);
+      setEBInstruction(`${icon('check')} <b>+${valid.intel} INTEL</b> · ${valid.hint}`);
       checkWarrantUnlock();
     } else {
       EB_STATE.links.push({a, b, correct:false});
       S.game._ebLinks = EB_STATE.links;
       S.game.intelScore = Math.max(0, S.game.intelScore - 3);
       sfxFail();
-      setEBInstruction(`✘ No connection there · −3 INTEL · keep digging.`);
+      setEBInstruction(`${icon('cross')} No connection there · −3 INTEL · keep digging.`);
     }
     EB_STATE.selected = null;
     $$('.eb-card').forEach(c=>c.classList.remove('selected'));
@@ -8879,7 +9078,7 @@ function openCaseFileLegacy(){
   const entries = [...CASE_ENTRIES_BASE];
   // collected evidence
   S.game.evidence.forEach(e=>{
-    entries.push({ico:'🔬', nm:`EVIDENCE — ${e.name}`, ds:'Logged in chain of custody. Tagged for forensic processing at NACECA HQ.'});
+    entries.push({ico:icon('search'), nm:`EVIDENCE — ${e.name}`, ds:'Logged in chain of custody. Tagged for forensic processing at NACECA HQ.'});
   });
   // moral choices summary
   if(Object.keys(S.game.moralChoices).length){
@@ -8896,7 +9095,7 @@ function openCaseFileLegacy(){
       mc.arrest==='informant'?'Principal flipped to informant.':'',
       mc.arrest==='bribe'?'BRIBE accepted — case compromised.':'',
     ].filter(Boolean).join(' ');
-    if(ds) entries.push({ico:'⚖', nm:'OPERATIONAL DECISIONS', ds});
+    if(ds) entries.push({ico:icon('scales'), nm:'OPERATIONAL DECISIONS', ds});
   }
   list.innerHTML = entries.map(e=>`
     <div class="case-row">
@@ -8925,6 +9124,16 @@ function togglePause(){
   }
 }
 
+/* NEW INVESTIGATION: fresh state with the chosen casework difficulty, then the cold open.
+   The title button opens the new-game sheet first (beta/casework.js) when it exists. */
+function startNewInvestigation(diff){
+  S = defaultState();
+  S.game.difficulty = diff === 'recruit' ? 'recruit' : 'senior';
+  if(typeof syncDifficultyClass === 'function') syncDifficultyClass();
+  showHUD(false);
+  loadMission('m0');
+}
+
 function bindMenuButtons(){
   // first interaction unlocks audio context (autoplay policy)
   document.addEventListener('pointerdown', ()=>{ initAudio(); }, {once:true});
@@ -8939,12 +9148,11 @@ function bindMenuButtons(){
   });
 
   $('#btn-newgame').addEventListener('click', ()=>{
-    S = defaultState();
-    showHUD(false);
-    loadMission('m0');
+    if(typeof openNewGameSheet === 'function') openNewGameSheet();
+    else startNewInvestigation('senior');
   });
   $('#btn-continue').addEventListener('click', ()=>{
-    if(loadGame()){ showRecap(resumeCampaign); }
+    if(loadGame()){ if(typeof syncDifficultyClass === 'function') syncDifficultyClass(); showRecap(resumeCampaign); }
     else { toast('NO SAVE FOUND','Start a new investigation'); }
   });
   $('#btn-mission-select').addEventListener('click', ()=>{
@@ -8958,7 +9166,7 @@ function bindMenuButtons(){
   $('#btn-resume').addEventListener('click', togglePause);
   $('#btn-save').addEventListener('click', saveGame);
   $('#btn-load').addEventListener('click', ()=>{
-    if(loadGame()){ togglePause(); resumeCampaign(); toast('LOADED','progress restored'); }
+    if(loadGame()){ if(typeof syncDifficultyClass === 'function') syncDifficultyClass(); togglePause(); resumeCampaign(); toast('LOADED','progress restored'); }
     else toast('NO SAVE');
   });
   $('#btn-quit').addEventListener('click', ()=>{
@@ -8971,6 +9179,7 @@ function bindMenuButtons(){
   $('#btn-erase').addEventListener('click', ()=>{
     eraseSave();
     S = defaultState();
+    if(typeof syncDifficultyClass === 'function') syncDifficultyClass();
     showOverlay('screen-title');
   });
   $('#btn-aftermath-continue').addEventListener('click', ()=>{
@@ -11543,7 +11752,7 @@ function ensureHudV8(){
     grid.parentNode.insertBefore(tips, grid);
   }
   const tip = document.querySelector('#screen-controls .controls-tip');
-  if(tip && document.body.classList.contains('touch-active')) tip.textContent = 'Follow the gold marker to your next objective. The action button changes to Talk, Inspect, Collect or Open when something is in reach.';
+  if(tip && document.body.classList.contains('touch-active')) tip.textContent = 'Follow the marker to your next objective. The action button changes to Talk, Inspect, Collect or Open when something is in reach.';
 }
 function setSprint(on){
   ENGINE.keys['ShiftLeft'] = !!on;
@@ -11602,15 +11811,11 @@ function updateInteractPrompt(){
   x = Math.max(8, Math.min(W - wl._w - 8, x)); y = Math.max(touch ? 140 : 80, Math.min(H - (touch ? 300 : 220), y));
   wl.style.transform = `translate(${x}px, ${y}px) translate(0,-50%)`;
 }
-/* phones: pressure meters (wipe countdown, chase gap) sit right under the mission panel */
+/* phones: pressure meters (wipe countdown, chase gap) are placed by the stylesheet (beta/wayfind.css),
+   clear of the radio strip, the hint and the stick; this only clears positions set by older builds */
 function placeMetersTouch(){
   const m = document.getElementById('hud-meters'); if(!m) return;
-  if(!document.body.classList.contains('touch-active')){ if(m.style.top){ m.style.top = ''; m.style.width = ''; } return; }
-  if(!m.childElementCount) return;
-  const panel = document.querySelector('.hud-topleft .hud-mission'); if(!panel) return;
-  const r = panel.getBoundingClientRect(); if(!r.height) return;
-  m.style.top = Math.round(r.bottom + 8) + 'px';
-  m.style.width = Math.round(Math.max(200, r.width)) + 'px';
+  if(m.style.top || m.style.width){ m.style.top = ''; m.style.width = ''; }
 }
 /* evidence markers: diamond pips; label only when close (and not under the action label) */
 function updateMarkers(){
@@ -11682,7 +11887,7 @@ function openEvidenceBoard(){
   const objs = S.game.objectives || [], r = S.player.reputation;
   const bar = (lbl, v, col)=>`<div class="rr"><span>${lbl}</span><div class="rb"><i style="width:${v}%;background:${col}"></i></div><span class="rv">${v}</span></div>`;
   st.innerHTML = `<div><h4>${(MISSIONS.find(m=>m.id===S.game.currentMission)||{name:'OPERATION'}).name.toUpperCase()}</h4>${objs.map(o=>`<div class="so ${o.done?'done':''}">${o.text}</div>`).join('') || '<div class="so">No active operation</div>'}</div>
-    <div><h4>REPUTATION</h4>${bar('INTEGRITY', r.integrity, '#5dd07a')}${bar('PUBLIC TRUST', r.publicTrust, '#4aa3e8')}${bar('AGENCY FAVOUR', r.agencyFavour, '#b07be8')}
+    <div><h4>REPUTATION</h4>${bar('INTEGRITY', r.integrity, 'var(--green,#0B6E4F)')}${bar('PUBLIC TRUST', r.publicTrust, 'var(--manila,#E9DCC0)')}${bar('AGENCY FAVOUR', r.agencyFavour, 'var(--manila-3,#8C8473)')}
     <button class="skills-link" id="eb-skills">SKILL TREE · ${S.player.skillPoints||0} PTS</button></div>`;
   const sk = document.getElementById('eb-skills'); if(sk) sk.onclick = ()=>openSkillTree();
   if(typeof sideCaseFile==='function') sideCaseFile(st);
@@ -11862,7 +12067,7 @@ function faceEachOther(it){
    something (reputation, time, evidence quality), but it never blocks the
    story: after a failure the player can try again, force it at a price,
    or back off and come back.
-     dial     padlock tumblers — tap as the needle crosses the gold arc
+     dial     padlock tumblers — tap as the needle crosses the marked arc
      steady   lift / trace along a path without touching the edges
      wires    reconnect coloured leads to the right terminals
      spot     tap the red flags in a message or document
@@ -11899,7 +12104,7 @@ function miniScreen(){
       <div class="mg-head">
         <div><div class="mg-kicker" id="mg-kicker"></div><div class="mg-title" id="mg-title"></div></div>
         <div style="display:flex;gap:12px;align-items:flex-start"><div class="mg-strikes" id="mg-strikes"></div>
-          <button class="mg-x" id="mg-x" aria-label="Back off" style="background:none;border:0;color:#9ba8bd;font-size:20px;line-height:1;cursor:pointer;padding:0 2px">✕</button></div>
+          <button class="mg-x" id="mg-x" aria-label="Back off" style="background:none;border:0;color:var(--manila-2,#A89F8A);font-size:20px;line-height:1;cursor:pointer;padding:0 2px">${icon('close')}</button></div>
       </div>
       <div class="mg-timer" id="mg-timer"><i id="mg-timer-fill"></i></div>
       <div class="mg-sub" id="mg-sub"></div>
@@ -12040,7 +12245,7 @@ function miniIntro(run){
   run.phase = 'intro';
   run.api.msg(run.attempts > 1 ? `ATTEMPT ${run.attempts}` : (run.cfg.introMsg || ''), '');
   miniActions([
-    { label:(run.cfg.startLabel || 'START') + ' ▶', cls:'primary', big:true, primary:true, onClick:()=>miniStart(run) },
+    { label:(run.cfg.startLabel || 'START') + icon('next'), cls:'primary', big:true, primary:true, onClick:()=>miniStart(run) },
     { label:'BACK OFF', cls:'ghost', onClick:()=>miniBackOff() },
   ]);
 }
@@ -12087,9 +12292,9 @@ function miniSuccess(run, extra){
   run.api.flash(true);
   const verdict = run.cfg.winText || ({3:'FLAWLESS', 2:'CLEAN WORK', 1:'GOT IT'}[stars]);
   $('#mg-msg').className = 'mg-msg';
-  $('#mg-msg').innerHTML = `<div class="mg-result"><div class="mg-stars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3-stars)}</span></div>
-    <div class="mg-verdict">${verdict}</div>${run.cfg.winNote ? `<div class="mg-note">${run.cfg.winNote}</div>` : ''}${xp ? `<div class="mg-note" style="color:var(--naceca-gold-bright)">+${xp} XP</div>` : ''}</div>`;
-  miniActions([{ label:'CONTINUE ▶', cls:'primary', big:true, primary:true, onClick:()=>miniClose({ ok:true, stars, strikes:run.strikes, time:run.t }) }]);
+  $('#mg-msg').innerHTML = `<div class="mg-result"><div class="mg-stars" aria-label="${stars} of 3 stars">${icon('star').repeat(stars)}<span class="off">${icon('star').repeat(3-stars)}</span></div>
+    <div class="mg-verdict">${verdict}</div>${run.cfg.winNote ? `<div class="mg-note">${run.cfg.winNote}</div>` : ''}${xp ? `<div class="mg-note mg-xp">+${xp} XP</div>` : ''}</div>`;
+  miniActions([{ label:'CONTINUE' + icon('next'), cls:'primary', big:true, primary:true, onClick:()=>miniClose({ ok:true, stars, strikes:run.strikes, time:run.t }) }]);
   if(typeof sideOnMini === 'function') sideOnMini(id, stars);
 }
 function miniFail(run, text){
@@ -12174,7 +12379,7 @@ window.addEventListener('keyup', e=>{
 
 /* =========================================================================
    DIAL — a padlock (or a pry bar, or a cuff key): the needle sweeps, tap
-   while it crosses the gold arc. Each pin narrows the arc and speeds the
+   while it crosses the marked arc. Each pin narrows the arc and speeds the
    needle; misses cost a strike and move the arc.
    params: pins, arc (rad), speed (rad/s), reverse, actLabel, skin
    ========================================================================= */
@@ -12190,7 +12395,7 @@ MG_TYPES.dial = function(api, P){
   let speed = (P.speed || 2.3) * D.speed, width = (P.arc || 0.62) * D.tol;
   let arcAt = ang + Math.PI, fl = 0, flGood = true;
   const place = ()=>{ let a, n = 0; do { a = Math.random()*MG_TAU; n++; } while(mgAngDist(a, ang) < 1.7 && n < 40); arcAt = a; };
-  const pinsTxt = ()=>{ pinRow.textContent = (P.pinWord || 'PIN') + 'S  ' + Array.from({length:pins}, (_, i)=> i < set ? '■' : '□').join(' '); };
+  const pinsTxt = ()=>{ pinRow.innerHTML = (P.pinWord || 'PIN') + 'S ' + Array.from({length:pins}, (_, i)=> `<i class="mg-pin${i < set ? ' set' : ''}"></i>`).join(''); };
   pinsTxt();
   const hit = ()=>{
     if(!running || !api.playing()) return;
@@ -12206,10 +12411,8 @@ MG_TYPES.dial = function(api, P){
     const x = cv.x, s = size, c = s/2, R = s*0.42;
     x.clearRect(0, 0, s, s);
     // body
-    const g = x.createRadialGradient(c, c*0.85, R*0.1, c, c, R*1.15);
-    g.addColorStop(0, P.face || '#1d2a44'); g.addColorStop(1, '#070b14');
-    x.fillStyle = g; x.beginPath(); x.arc(c, c, R*1.12, 0, MG_TAU); x.fill();
-    x.strokeStyle = 'rgba(216,166,74,.55)'; x.lineWidth = 2; x.stroke();
+    x.fillStyle = P.face || '#262623'; x.beginPath(); x.arc(c, c, R*1.12, 0, MG_TAU); x.fill();
+    x.strokeStyle = 'rgba(233,220,192,.55)'; x.lineWidth = 2; x.stroke();
     // ticks
     for(let i=0;i<60;i++){
       const a = i/60*MG_TAU, r0 = R*(i%5 ? 0.93 : 0.86);
@@ -12218,22 +12421,22 @@ MG_TYPES.dial = function(api, P){
     }
     // sweet spot
     if(set < pins){
-      x.strokeStyle = '#f0c878'; x.lineWidth = 15; x.lineCap = 'butt';
-      x.shadowColor = 'rgba(240,200,120,.8)'; x.shadowBlur = 12;
+      x.strokeStyle = '#E9DCC0'; x.lineWidth = 15; x.lineCap = 'butt';
+      x.shadowBlur = 0; // flat sweet-spot arc (no glow)
       x.beginPath(); x.arc(c, c, R*0.78, arcAt - width/2, arcAt + width/2); x.stroke();
       x.shadowBlur = 0;
     }
     // needle
     x.strokeStyle = '#ffffff'; x.lineWidth = 4; x.lineCap = 'round';
     x.beginPath(); x.moveTo(c, c); x.lineTo(c + Math.cos(ang)*R*0.9, c + Math.sin(ang)*R*0.9); x.stroke();
-    x.fillStyle = '#e84a5c'; x.beginPath(); x.arc(c + Math.cos(ang)*R*0.9, c + Math.sin(ang)*R*0.9, 5, 0, MG_TAU); x.fill();
+    x.fillStyle = '#B3261E'; x.beginPath(); x.arc(c + Math.cos(ang)*R*0.9, c + Math.sin(ang)*R*0.9, 5, 0, MG_TAU); x.fill();
     // hub with shackle glyph
-    x.fillStyle = '#0b1426'; x.beginPath(); x.arc(c, c, R*0.3, 0, MG_TAU); x.fill();
-    x.strokeStyle = 'rgba(216,166,74,.8)'; x.lineWidth = 2; x.stroke();
-    x.fillStyle = '#f3ead2'; x.font = `700 ${Math.round(s*0.09)}px Oswald, Arial Narrow, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillStyle = '#1C1C1A'; x.beginPath(); x.arc(c, c, R*0.3, 0, MG_TAU); x.fill();
+    x.strokeStyle = 'rgba(233,220,192,.8)'; x.lineWidth = 2; x.stroke();
+    x.fillStyle = '#E9DCC0'; x.font = `700 ${Math.round(s*0.09)}px Oswald, Arial Narrow, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillText(`${set}/${pins}`, c, c);
     if(fl > 0){
-      x.strokeStyle = flGood ? `rgba(93,208,122,${fl})` : `rgba(232,74,92,${fl})`; x.lineWidth = 6;
+      x.strokeStyle = flGood ? `rgba(11,110,79,${fl})` : `rgba(179,38,30,${fl})`; x.lineWidth = 6;
       x.beginPath(); x.arc(c, c, R*1.1, 0, MG_TAU); x.stroke();
     }
   };
@@ -12309,13 +12512,11 @@ MG_TYPES.steady = function(api, P){
   const onUp = e=>{ if(e.pointerId === pid){ drag = false; pid = null; } };
   cv.c.addEventListener('pointerdown', onDown); cv.c.addEventListener('pointermove', onMove);
   cv.c.addEventListener('pointerup', onUp); cv.c.addEventListener('pointercancel', onUp);
-  const pal = P.palette || { bg:'#1c120c', rim:'#5a3a22', chan:'rgba(120,180,200,.20)', edge:'rgba(160,210,230,.35)' };
+  const pal = P.palette || { bg:'#1c120c', rim:'#5a3a22', chan:'rgba(233,220,192,.14)', edge:'rgba(233,220,192,.32)' };
   const draw = ()=>{
     const x = cv.x; x.clearRect(0, 0, W, H);
     if(P.skin === 'pot'){
-      const g = x.createRadialGradient(W/2, H/2, 10, W/2, H/2, Math.max(W, H)*0.62);
-      g.addColorStop(0, '#2a1a10'); g.addColorStop(0.75, pal.bg); g.addColorStop(1, '#0b0705');
-      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = pal.bg; x.fillRect(0, 0, W, H);
       x.strokeStyle = pal.rim; x.lineWidth = 10; x.beginPath(); x.ellipse(W/2, H/2, W/2-6, H/2-6, 0, 0, MG_TAU); x.stroke();
       // ritual clutter: cowries + kola, the things you must not disturb
       x.fillStyle = 'rgba(240,230,210,.22)';
@@ -12325,8 +12526,7 @@ MG_TYPES.steady = function(api, P){
       x.fillStyle = '#6a4630'; x.fillRect(0, H*0.32, W, H*0.36);
       x.fillStyle = 'rgba(255,255,255,.05)'; for(let i=0;i<8;i++) x.fillRect(0, H*0.32 + i*H*0.045, W, 1);
     } else {
-      const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#2a2e36'); g.addColorStop(1, '#14171c');
-      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = '#262623'; x.fillRect(0, 0, W, H);
       x.strokeStyle = 'rgba(255,255,255,.05)'; for(let i=0;i<W;i+=14){ x.beginPath(); x.moveTo(i, 0); x.lineTo(i-30, H); x.stroke(); }
       for(const [rx, ry] of [[12,12],[W-12,12],[12,H-12],[W-12,H-12]]){ x.fillStyle = '#4a4f58'; x.beginPath(); x.arc(rx, ry, 4, 0, MG_TAU); x.fill(); }
     }
@@ -12339,21 +12539,20 @@ MG_TYPES.steady = function(api, P){
     for(const it of items){
       if(it.got) continue;
       x.save(); x.translate(it.p[0], it.p[1]); x.rotate(-0.25);
-      x.fillStyle = P.itemColor || '#d8a64a'; x.fillRect(-7, -5, 14, 10);
+      x.fillStyle = P.itemColor || '#E9DCC0'; x.fillRect(-7, -5, 14, 10);
       x.fillStyle = '#5a3a10'; x.fillRect(-3, -2, 6, 4); x.restore();
     }
     // start + goal
     x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 2; x.beginPath(); x.arc(start[0], start[1], hw+3, 0, MG_TAU); x.stroke();
     const ready = got() === items.length;
-    x.strokeStyle = ready ? '#5dd07a' : 'rgba(93,208,122,.35)'; x.lineWidth = 3; x.beginPath(); x.arc(end[0], end[1], hw+6, 0, MG_TAU); x.stroke();
+    x.strokeStyle = ready ? '#E9DCC0' : 'rgba(233,220,192,.3)'; x.lineWidth = ready ? 4 : 2; x.beginPath(); x.arc(end[0], end[1], hw+6, 0, MG_TAU); x.stroke();
     // marker
-    x.fillStyle = hot > 0 ? '#e84a5c' : '#f0c878';
-    x.shadowColor = hot > 0 ? 'rgba(232,74,92,.9)' : 'rgba(240,200,120,.9)'; x.shadowBlur = 14;
+    x.fillStyle = hot > 0 ? '#B3261E' : '#E9DCC0';
     x.beginPath(); x.arc(tok.x, tok.y, 8, 0, MG_TAU); x.fill(); x.shadowBlur = 0;
-    x.strokeStyle = '#0b1426'; x.lineWidth = 2; x.beginPath(); x.arc(tok.x, tok.y, 3, 0, MG_TAU); x.stroke();
+    x.strokeStyle = '#1C1C1A'; x.lineWidth = 2; x.beginPath(); x.arc(tok.x, tok.y, 3, 0, MG_TAU); x.stroke();
     if(!drag && running && noise === 0 && got() === 0){
       x.fillStyle = 'rgba(255,255,255,.75)'; x.font = '600 11px Oswald, sans-serif'; x.textAlign = 'center';
-      x.fillText(_isTouchMG() ? 'DRAG THE GOLD MARKER' : 'DRAG THE MARKER · OR ARROW KEYS', tok.x + 60 > W ? W - 70 : tok.x + 62, tok.y - 16);
+      x.fillText(_isTouchMG() ? 'DRAG THE MARKER' : 'DRAG THE MARKER · OR ARROW KEYS', tok.x + 60 > W ? W - 70 : tok.x + 62, tok.y - 16);
     }
   };
   return {
@@ -12421,7 +12620,7 @@ MG_TYPES.wires = function(api, P){
       api.msg(`${doneN}/${pairs.length} CONNECTED`, 'good');
       if(doneN === pairs.length){ running = false; api.success(); }
     } else {
-      te.classList.add('bad'); const ln = line(sel, te, '#e84a5c', true);
+      te.classList.add('bad'); const ln = line(sel, te, '#B3261E', true);
       setTimeout(()=>{ te.classList.remove('bad'); ln.remove(); }, 450);
       api.strike(P.missText || 'Spark! Wrong terminal.');
     }
@@ -12474,7 +12673,7 @@ MG_TYPES.spot = function(api, P){
       if(!running || !api.playing() || s.classList.contains('flag') || s.classList.contains('clean')) return;
       if(p.flag){
         s.classList.add('flag'); found++; mgSfx('good'); mgHaptic(20); cntTxt();
-        if(p.note){ const n = mgEl('span', 'mg-flagnote', '⚑ ' + p.note); s.after(n); }
+        if(p.note){ const n = mgEl('span', 'mg-flagnote', icon('flag') + p.note); s.after(n); }
         if(found === total){ running = false; api.success(); }
       } else { s.classList.add('clean'); api.strike(p.why || 'That part is normal.'); }
     });
@@ -12542,11 +12741,11 @@ MG_TYPES.pattern = function(api, P){
   for(let i=0;i<9;i++){
     const [x, y] = pos(i);
     const ring = document.createElementNS(svgNS, 'circle'); ring.setAttribute('cx', x); ring.setAttribute('cy', y); ring.setAttribute('r', 22); ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', 'rgba(255,255,255,.08)'); ring.setAttribute('stroke-width', 2); svg.appendChild(ring);
-    const d = document.createElementNS(svgNS, 'circle'); d.setAttribute('cx', x); d.setAttribute('cy', y); d.setAttribute('r', 8); d.setAttribute('fill', '#55627a'); svg.appendChild(d);
+    const d = document.createElementNS(svgNS, 'circle'); d.setAttribute('cx', x); d.setAttribute('cy', y); d.setAttribute('r', 8); d.setAttribute('fill', '#6B6B63'); svg.appendChild(d);
     dots.push({ d, ring });
   }
   const pl = document.createElementNS(svgNS, 'polyline'); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke-width', '7'); pl.setAttribute('stroke-linecap', 'round'); pl.setAttribute('stroke-linejoin', 'round'); svg.insertBefore(pl, svg.firstChild);
-  const live = document.createElementNS(svgNS, 'line'); live.setAttribute('stroke', 'rgba(240,200,120,.5)'); live.setAttribute('stroke-width', '5'); live.setAttribute('stroke-linecap', 'round'); svg.insertBefore(live, svg.firstChild);
+  const live = document.createElementNS(svgNS, 'line'); live.setAttribute('stroke', 'rgba(233,220,192,.5)'); live.setAttribute('stroke-width', '5'); live.setAttribute('stroke-linecap', 'round'); svg.insertBefore(live, svg.firstChild);
   const cnt = mgEl('div', 'mg-sort-count'); cnt.style.marginTop = '8px'; api.stage.appendChild(cnt);
   const neighbours = i=>{ const r = Math.floor(i/3), c = i%3, out = []; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ if(!dr && !dc) continue; const rr = r+dr, cc = c+dc; if(rr>=0 && rr<3 && cc>=0 && cc<3) out.push(rr*3+cc); } return out; };
   const make = ()=>{
@@ -12556,23 +12755,23 @@ MG_TYPES.pattern = function(api, P){
   };
   let pattern = make(), input = [], round = 0, phase = 'idle', wt = 0, wi = 0, drawing = false, pid = null;
   const paint = (seq, col)=>{
-    dots.forEach((o, i)=>{ const on = seq.includes(i); o.d.setAttribute('fill', on ? col : '#55627a'); o.d.setAttribute('r', on ? 11 : 8); o.ring.setAttribute('stroke', on ? col : 'rgba(255,255,255,.08)'); });
+    dots.forEach((o, i)=>{ const on = seq.includes(i); o.d.setAttribute('fill', on ? col : '#6B6B63'); o.d.setAttribute('r', on ? 11 : 8); o.ring.setAttribute('stroke', on ? col : 'rgba(255,255,255,.08)'); });
     pl.setAttribute('stroke', col); pl.setAttribute('points', seq.map(i=>pos(i).join(',')).join(' '));
   };
   const cntTxt = ()=>{ cnt.textContent = phase === 'watch' ? 'WATCH THE PATTERN…' : phase === 'input' ? `YOUR TURN  ·  ${input.length}/${len}` + (rounds > 1 ? `  ·  ROUND ${round+1}/${rounds}` : '') : ''; };
-  const watch = ()=>{ phase = 'watch'; wt = 0; wi = 0; input = []; paint([], '#f0c878'); cntTxt(); };
+  const watch = ()=>{ phase = 'watch'; wt = 0; wi = 0; input = []; paint([], '#E9DCC0'); cntTxt(); };
   const addDot = i=>{
     if(phase !== 'input' || input.includes(i)) return;
     input.push(i);
     if(pattern[input.length-1] !== i){
-      paint(input, '#e84a5c'); drawing = false; phase = 'idle';
+      paint(input, '#B3261E'); drawing = false; phase = 'idle';
       api.strike(P.missText || 'Wrong dot — the phone buzzes.');
       setTimeout(()=>{ if(api.playing()) watch(); }, 700);
       return;
     }
-    mgSfx('tick'); paint(input, '#f0c878'); cntTxt();
+    mgSfx('tick'); paint(input, '#E9DCC0'); cntTxt();
     if(input.length === len){
-      drawing = false; phase = 'idle'; paint(input, '#5dd07a'); mgSfx('good');
+      drawing = false; phase = 'idle'; paint(input, '#0B6E4F'); mgSfx('good');
       round++;
       if(round >= rounds){ api.success(); }
       else { api.msg(P.roundText || 'UNLOCKED — NEXT SCREEN', 'good'); setTimeout(()=>{ if(api.playing()){ pattern = make(); watch(); } }, 800); }
@@ -12591,18 +12790,18 @@ MG_TYPES.pattern = function(api, P){
   });
   const end = e=>{ if(e.pointerId === pid){ drawing = false; pid = null; live.setAttribute('x2', live.getAttribute('x1') || 0); live.setAttribute('y2', live.getAttribute('y1') || 0); } };
   pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
-  paint([], '#f0c878');
+  paint([], '#E9DCC0');
   return {
-    start(){ watch(); api.actions([{ label:'CLEAR', cls:'ghost', onClick:()=>{ if(phase === 'input'){ input = []; paint([], '#f0c878'); cntTxt(); } } }, { label:'SHOW AGAIN', cls:'ghost', note:'costs a strike', onClick:()=>{ if(phase === 'input'){ api.strike('Peeked.'); if(api.playing()) watch(); } } }]); },
+    start(){ watch(); api.actions([{ label:'CLEAR', cls:'ghost', onClick:()=>{ if(phase === 'input'){ input = []; paint([], '#E9DCC0'); cntTxt(); } } }, { label:'SHOW AGAIN', cls:'ghost', note:'costs a strike', onClick:()=>{ if(phase === 'input'){ api.strike('Peeked.'); if(api.playing()) watch(); } } }]); },
     update(dt){
       if(phase !== 'watch' || !dt) return;
       wt += dt;
       const step = (P.showStep || 0.5) / D.speed;
       const k = Math.min(len, Math.floor(wt / step) + 1);
-      if(k !== wi){ wi = k; paint(pattern.slice(0, k), '#f0c878'); mgSfx('tick'); }
-      if(wt > step*len + 0.7){ phase = 'input'; input = []; paint([], '#f0c878'); cntTxt(); }
+      if(k !== wi){ wi = k; paint(pattern.slice(0, k), '#E9DCC0'); mgSfx('tick'); }
+      if(wt > step*len + 0.7){ phase = 'input'; input = []; paint([], '#E9DCC0'); cntTxt(); }
     },
-    reveal(){ paint(pattern, 'rgba(93,208,122,.6)'); },
+    reveal(){ paint(pattern, 'rgba(233,220,192,.6)'); },
     dbg(){ return { pattern:pattern.slice(), phase, input:input.slice(), len, pad, pos:[0,1,2,3,4,5,6,7,8].map(pos) }; },
     destroy(){},
   };
@@ -12633,13 +12832,13 @@ MG_TYPES.tune = function(api, P){
   const wave = (x, f, a, ph)=> a * Math.sin((2 + f*10) * x * MG_TAU / W * 1.0 * 1.4 + ph);
   const draw = (inBand)=>{
     const x = cv.x; x.clearRect(0, 0, W, H);
-    x.fillStyle = '#05080f'; x.fillRect(0, 0, W, H);
-    x.strokeStyle = 'rgba(122,220,208,.08)'; x.lineWidth = 1;
+    x.fillStyle = '#1C1C1A'; x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(233,220,192,.08)'; x.lineWidth = 1;
     for(let i=0;i<W;i+=W/10){ x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
     for(let j=0;j<H;j+=H/6){ x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); }
     const line = (f, a, col, w, dash)=>{ x.strokeStyle = col; x.lineWidth = w; x.setLineDash(dash || []); x.beginPath(); for(let i=0;i<=W;i+=2){ const y = H/2 - wave(i, f, 0.1 + a*0.9, phase) * (H*0.42); i ? x.lineTo(i, y) : x.moveTo(i, y); } x.stroke(); x.setLineDash([]); };
-    line(ta, tb, 'rgba(240,200,120,.85)', 2, [5, 5]);
-    line(fa, fb, inBand ? '#5dd07a' : '#7adcd0', 2.6);
+    line(ta, tb, 'rgba(233,220,192,.85)', 2, [5, 5]);
+    line(fa, fb, inBand ? '#E9DCC0' : '#A89F8A', inBand ? 3.4 : 2.2);
     x.fillStyle = 'rgba(255,255,255,.55)'; x.font = '600 10px JetBrains Mono, monospace'; x.textAlign = 'left';
     x.fillText(P.screenLabel || 'TARGET ---   YOU ───', 8, 14);
   };
@@ -12661,7 +12860,7 @@ MG_TYPES.tune = function(api, P){
         const inBand = Math.abs(fa - ta) < tolA && Math.abs(fb - tb) < tolB;
         lock = Math.max(0, Math.min(1, lock + (inBand ? dt/hold : -dt/(hold*1.7))));
         fill.style.width = (lock*100).toFixed(1) + '%'; val.textContent = Math.round(lock*100) + '%';
-        api.msg(inBand ? (P.lockText || 'HOLD IT…') : (Math.abs(fa - ta) >= tolA ? (fa < ta ? `${P.labelA || 'FREQ'} ↑` : `${P.labelA || 'FREQ'} ↓`) : (fb < tb ? `${P.labelB || 'GAIN'} ↑` : `${P.labelB || 'GAIN'} ↓`)), inBand ? 'good' : '');
+        api.msg(inBand ? (P.lockText || 'HOLD IT…') : (Math.abs(fa - ta) >= tolA ? (fa < ta ? `${P.labelA || 'FREQ'} HIGHER` : `${P.labelA || 'FREQ'} LOWER`) : (fb < tb ? `${P.labelB || 'GAIN'} HIGHER` : `${P.labelB || 'GAIN'} LOWER`)), inBand ? 'good' : '');
         if(lock >= 1){ running = false; const tf = api.timeFrac(); api.success({ stars: tf < 0.5 ? 3 : tf < 0.8 ? 2 : 1 }); }
         draw(inBand);
       } else draw(false);
@@ -12689,7 +12888,7 @@ MG_TYPES.sort = function(api, P){
   const show = ()=>{
     const x = items[i]; t = 0;
     counter.textContent = `ITEM ${Math.min(i+1, items.length)} / ${items.length}`;
-    card.innerHTML = x ? `<div class="ic">${x.ic}</div><div class="nm">${x.nm}</div>${x.ds ? `<div class="ds">${x.ds}</div>` : ''}` : '';
+    card.innerHTML = x ? `<div class="ic">${icon(x.ic) || x.ic}</div><div class="nm">${x.nm}</div>${x.ds ? `<div class="ds">${x.ds}</div>` : ''}` : '';
     card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
   };
   const next = ()=>{ i++; if(i >= items.length){ running = false; api.success(); return; } show(); };
@@ -12700,7 +12899,7 @@ MG_TYPES.sort = function(api, P){
     else { const b = P.bins.find(b=>b.id === x.bin); api.strike(x.why || `That goes in ${b ? b.label : 'another bag'}.`); if(api.playing()) next(); }
   };
   P.bins.forEach((b, k)=>{ const el = mgEl('button', 'mg-bin', b.label); el.addEventListener('pointerdown', e=>{ e.preventDefault(); choose(b.id); }); bins.appendChild(el); });
-  card.innerHTML = `<div class="ic">${P.coverIc || '🧤'}</div><div class="nm">${P.coverText || 'READY'}</div>`;
+  card.innerHTML = `<div class="ic">${icon(P.coverIc || 'glove') || P.coverIc}</div><div class="nm">${P.coverText || 'READY'}</div>`;
   counter.textContent = `${items.length} ITEMS`;
   return {
     start(){ running = true; show(); },
@@ -12717,8 +12916,8 @@ MG_TYPES.sort = function(api, P){
 MG_TYPES.mash = function(api, P){
   const D = api.diff;
   const btn = mgEl('button', 'mg-mash');
-  btn.innerHTML = `<svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" fill="rgba(11,20,38,.95)" stroke="rgba(216,166,74,.35)" stroke-width="14"/>
-      <circle id="mg-mash-ring" cx="100" cy="100" r="86" fill="none" stroke="#f0c878" stroke-width="14" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="540" stroke-dashoffset="540"/></svg>
+  btn.innerHTML = `<svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" fill="rgba(28,28,26,.95)" stroke="rgba(233,220,192,.35)" stroke-width="14"/>
+      <circle id="mg-mash-ring" cx="100" cy="100" r="86" fill="none" stroke="#E9DCC0" stroke-width="14" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="540" stroke-dashoffset="540"/></svg>
     <div class="lbl">${P.label || 'TAP!'}<small>${P.small || 'AS FAST AS YOU CAN'}</small></div>`;
   api.stage.appendChild(btn);
   const ring = btn.querySelector('#mg-mash-ring');
@@ -12875,7 +13074,7 @@ function sideComplete(qid){
   if(q.rep) applyEffect(q.rep);
   S.game.sideBest = S.game.sideBest || {};
   (S.game.sideBest[SIDE.mid] = S.game.sideBest[SIDE.mid] || {})[qid] = true;
-  setTimeout(()=>toast('◆ SIDE QUEST COMPLETE', `${q.title} · +${q.xp||0} XP`, 2300), 250);
+  setTimeout(()=>toast(icon('diamond') + 'SIDE QUEST COMPLETE', `${q.title} · +${q.xp||0} XP`, 2300), 250);
   if(typeof sfxEvidence === 'function') sfxEvidence();
   if(typeof haptic === 'function') haptic([15,30,15]);
   sideChip(true);
@@ -12896,7 +13095,7 @@ function sideOnMini(id, stars){
   for(const q of SIDE.list){
     if(q.mini !== id) continue;
     if(stars >= (q.minStars || 1)) setTimeout(()=>sideComplete(q.id), 900);
-    else setTimeout(()=>sideFail(q.id, `needed ${'★'.repeat(q.minStars||1)}`), 900);
+    else setTimeout(()=>sideFail(q.id, `needed ${q.minStars||1} star${(q.minStars||1) > 1 ? 's' : ''}`), 900);
   }
   if(id === 'm5_pots' && stars >= 3 && typeof unlock === 'function') unlock('steady_hands');
   const best = S.game.mgBest || {};
@@ -12981,7 +13180,7 @@ function sidePing(tr, d){
     const yaw = ENGINE.cameraYaw, fx = Math.sin(yaw), fz = Math.cos(yaw), rx = -Math.cos(yaw), rz = Math.sin(yaw);
     const f = dx*fx + dz*fz, r = dx*rx + dz*rz;
     const deg = Math.atan2(-f, r) * 180 / Math.PI;
-    el.innerHTML = `FAINT TRACE · ${Math.round(d)} m <span class="arr" style="transform:rotate(${deg.toFixed(0)}deg)">➤</span>`;
+    el.innerHTML = `FAINT TRACE · ${Math.round(d)} m <span class="arr" style="transform:rotate(${deg.toFixed(0)}deg)">${icon('pointer')}</span>`;
   }
   el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('show'), 2400);
 }
@@ -13008,7 +13207,7 @@ function sideStartCard(mid){
   if(!qs.length){ box.style.display = 'none'; return; }
   const best = (S.game.sideBest && S.game.sideBest[mid]) || {};
   box.style.display = '';
-  box.innerHTML = `<h4>SIDE QUESTS · OPTIONAL · COUNT TOWARD YOUR GRADE</h4>` + qs.map(q=>`<div class="q">${q.title}${best[q.id] ? ' ✓' : ''} <span>— ${q.desc}</span></div>`).join('');
+  box.innerHTML = `<h4>SIDE QUESTS · OPTIONAL · COUNT TOWARD YOUR GRADE</h4>` + qs.map(q=>`<div class="q">${q.title}${best[q.id] ? ' ' + icon('check') : ''} <span>— ${q.desc}</span></div>`).join('');
 }
 function sideCaseFile(st){
   if(!st || !SIDE.list.length || S.game.currentMission !== SIDE.mid) return;
@@ -13029,14 +13228,14 @@ function sideAftermath(grid){
   const names = { m1_drill:'Phishing drill', m2_unlock:'Phone unlock', m2_alert:'Credit alert', m3_wipe:'Kill the wipe', m3_cash:'Bag the table', m4_panel:'False panel', m5_pots:'Libation pots',
                   m5_cache:'Padlock', m6_ropes:'Cut Tobi free', m6_sims:'Bag the SIMs', m7_gen:'Generator wiring', m7_trace:'Handset lock', m8_gate:'Back-gate padlock', m8_free:'Cut the ties' };
   const skills = Object.keys(mg).filter(k=>mg[k].ok || mg[k].fails).map(k=>{
-    const r = mg[k]; const v = r.ok && !r.forced ? '★'.repeat(r.stars) + '☆'.repeat(3 - r.stars) : r.forced ? 'FORCED' : 'FAILED';
+    const r = mg[k]; const v = r.ok && !r.forced ? `<span class="mg-stars-inline" aria-label="${r.stars} of 3 stars">${icon('star', 'fill').repeat(r.stars)}${icon('star').repeat(3 - r.stars)}</span>` : r.forced ? 'FORCED' : 'FAILED';
     return `<div class="stat-row"><span class="lbl">${names[k] || k}</span><span class="val ${r.ok && !r.forced ? 'ok' : 'fail'}">${v}</span></div>`;
   }).join('');
   const b = document.createElement('div');
   b.className = 'aftermath-block sq-block'; b.style.gridColumn = '1/-1';
   b.innerHTML = `<h3>SIDE QUESTS · ${c.done}/${c.total}</h3>` + SIDE.list.map(q=>{
       const k = s[q.id];
-      return `<div class="stat-row"><span class="lbl">${q.title}</span><span class="val ${k === 'done' ? 'ok' : k === 'failed' ? 'fail' : 'no'}">${k === 'done' ? '✓ +' + q.xp + ' XP' : k === 'failed' ? 'FAILED' : 'MISSED'}</span></div>`;
+      return `<div class="stat-row"><span class="lbl">${q.title}</span><span class="val ${k === 'done' ? 'ok' : k === 'failed' ? 'fail' : 'no'}">${k === 'done' ? icon('check') + ' +' + q.xp + ' XP' : k === 'failed' ? 'FAILED' : 'MISSED'}</span></div>`;
     }).join('') + (skills ? `<h3 style="margin-top:14px">FIELD SKILLS</h3>${skills}` : '');
   // after the operational stats + reputation blocks
   const blocks = grid.querySelectorAll('.aftermath-block:not(.grade-block)');
@@ -13046,7 +13245,7 @@ function sideCardLine(mid){
   const qs = (SIDE_QUESTS[mid] || []); if(!qs.length) return '';
   const best = (S.game.sideBest && S.game.sideBest[mid]) || {};
   const n = qs.filter(q=>best[q.id]).length;
-  return `<div class="region" style="margin:8px 0 0;color:${n === qs.length ? '#5dd07a' : '#d8a64a'}">◆ SIDE QUESTS ${n}/${qs.length}</div>`;
+  return `<div class="region sq-count${n === qs.length ? ' all' : ''}" style="margin:8px 0 0">${icon(n === qs.length ? 'check' : 'diamond')}SIDE QUESTS ${n}/${qs.length}</div>`;
 }
 
 /* ---------- per-case extras: the drill terminal, Mama Bisi ---------- */
@@ -13121,13 +13320,13 @@ const MG_CFG = {
     force:{ label:'YANK THE BATTERY', note:'Dirty shutdown · −8 intel', apply:()=>applyEffect({ intel:-8 }) } }),
   m3_cash:()=>({ id:'m3_cash', type:'sort', kicker:'CASE 03 · CHAIN OF CUSTODY', title:'BAG THE TABLE',
     sub:"Everything on Obi's table goes somewhere. <b>Seize</b> the money, <b>bag</b> the evidence, <b>leave</b> what's personal — his lawyer will check every item.",
-    params:{ perItem:3.8, count:7, coverIc:'🧤', coverText:'GLOVES ON',
+    params:{ perItem:3.8, count:7, coverIc:'glove', coverText:'GLOVES ON',
       bins:[ { id:'cash', label:'SEIZE · CASH' }, { id:'ev', label:'BAG · EVIDENCE' }, { id:'leave', label:'LEAVE · PERSONAL' } ],
-      items:[ { ic:'💵', nm:'₦1,000 bundles ×40', ds:'bank bands torn off', bin:'cash' }, { ic:'💵', nm:'US$100 notes', ds:'rubber-banded, unsorted', bin:'cash' },
-              { ic:'🧾', nm:'POS agent receipts', ds:'three agents, same afternoon', bin:'ev' }, { ic:'📒', nm:'Spiral notebook', ds:'initials and amounts', bin:'ev' },
-              { ic:'💳', nm:'Six ATM cards', ds:'six different names — none of them his', bin:'ev' }, { ic:'🔌', nm:'Hardware crypto wallet', ds:'taped under the table', bin:'ev' },
-              { ic:'🖼️', nm:'Title-conferment photo', ds:'family keepsake', bin:'leave' }, { ic:'📿', nm:'Rosary', ds:"his late mother's", bin:'leave' },
-              { ic:'🎒', nm:"Child's school bag", ds:'not part of the case', bin:'leave' } ] } }),
+      items:[ { ic:'cash', nm:'₦1,000 bundles ×40', ds:'bank bands torn off', bin:'cash' }, { ic:'cash', nm:'US$100 notes', ds:'rubber-banded, unsorted', bin:'cash' },
+              { ic:'receipt', nm:'POS agent receipts', ds:'three agents, same afternoon', bin:'ev' }, { ic:'notebook', nm:'Spiral notebook', ds:'initials and amounts', bin:'ev' },
+              { ic:'card', nm:'Six ATM cards', ds:'six different names — none of them his', bin:'ev' }, { ic:'chip', nm:'Hardware crypto wallet', ds:'taped under the table', bin:'ev' },
+              { ic:'photo', nm:'Title-conferment photo', ds:'family keepsake', bin:'leave' }, { ic:'beads', nm:'Rosary', ds:"his late mother's", bin:'leave' },
+              { ic:'bag', nm:"Child's school bag", ds:'not part of the case', bin:'leave' } ] } }),
   m4_panel:()=>({ id:'m4_panel', type:'steady', kicker:'CASE 04 · FALSE PANEL', title:'FIND THE LATCH', time:35,
     sub:'The compartment is a welded false wall. Run the probe along the seam to trip the hidden latches — <b>stay in the seam</b>; scraping spooks the cattle.',
     winNote:'Two clicks. The panel drops on its hinge.',
@@ -13142,7 +13341,7 @@ const MG_CFG = {
     onFail:()=>{ S.game._shrineSpills = (S.game._shrineSpills||0) + 1; if(S.game._shrineSpills <= 2){ applyEffect({ publicTrust:-2 }); setTimeout(()=>toast('PA EZE', '"Gently, my child. Gently."', 2000), 300); } },
     force:{ label:'TIP THE POT OUT', note:'−5 Public Trust', apply:()=>applyEffect({ publicTrust:-5 }) } }),
   m5_cache:()=>({ id:'m5_cache', type:'dial', kicker:'CASE 05 · CARTEL CACHE', title:'PICK THE PADLOCK', time:30,
-    sub:'A chain through the jerry-can handles and a cheap brass padlock. <b>Tap as the needle crosses the gold arc</b> to set each pin.',
+    sub:'A chain through the jerry-can handles and a cheap brass padlock. <b>Tap as the needle crosses the marked arc</b> to set each pin.',
     winNote:'The shackle drops. Cash, a ledger — and the smell of diesel.',
     params:{ pins:3, actLabel:'SET PIN', missText:'The pick slips.' },
     force:{ label:'BOLT-CUTTERS', note:'Loud · −2 Public Trust', apply:()=>applyEffect({ publicTrust:-2 }) } }),
@@ -13157,12 +13356,12 @@ const MG_CFG = {
     force:{ label:'DRAG HIM OUT, CHAIR AND ALL', note:'He\'s hurt · −3 Public Trust', apply:()=>applyEffect({ publicTrust:-3 }) } }),
   m6_sims:()=>({ id:'m6_sims', type:'sort', kicker:'CASE 06 · SPILLED CRATE', title:'BAG THE SIMS',
     sub:"Ifeanyi's crate split open. <b>Bag</b> what proves the scheme, <b>log</b> the paper, <b>leave</b> the rubbish — fast.",
-    params:{ perItem:3.2, count:7, coverIc:'📦', coverText:'CRATE SPLIT OPEN',
+    params:{ perItem:3.2, count:7, coverIc:'box', coverText:'CRATE SPLIT OPEN',
       bins:[ { id:'sim', label:'SIM BAG' }, { id:'doc', label:'DOC BAG' }, { id:'junk', label:'LEAVE' } ],
-      items:[ { ic:'📶', nm:'Pre-activated SIMs ×24', ds:'same batch number', bin:'sim' }, { ic:'📶', nm:'SIMs ×12', ds:'registered to "Mama Florence"', bin:'sim' },
-              { ic:'📶', nm:'SIM carrier cards ×30', ds:'serials still attached', bin:'sim' }, { ic:'🧾', nm:'Activation slips', ds:'agent stamp: Asaba Main Market', bin:'doc' },
-              { ic:'📒', nm:'Dispatch notebook', ds:'routes, dates, initials', bin:'doc' }, { ic:'🥤', nm:'Empty Malta can', ds:'', bin:'junk' },
-              { ic:'🧻', nm:'Packing tissue', ds:'', bin:'junk' }, { ic:'🍪', nm:'Half a packet of biscuits', ds:'', bin:'junk' } ] },
+      items:[ { ic:'sim', nm:'Pre-activated SIMs ×24', ds:'same batch number', bin:'sim' }, { ic:'sim', nm:'SIMs ×12', ds:'registered to "Mama Florence"', bin:'sim' },
+              { ic:'sim', nm:'SIM carrier cards ×30', ds:'serials still attached', bin:'sim' }, { ic:'receipt', nm:'Activation slips', ds:'agent stamp: Asaba Main Market', bin:'doc' },
+              { ic:'notebook', nm:'Dispatch notebook', ds:'routes, dates, initials', bin:'doc' }, { ic:'can', nm:'Empty Malta can', ds:'', bin:'junk' },
+              { ic:'roll', nm:'Packing tissue', ds:'', bin:'junk' }, { ic:'biscuit', nm:'Half a packet of biscuits', ds:'', bin:'junk' } ] },
     onFail:()=>applyEffect({ intel:-4 }),
     force:{ label:'SWEEP IT ALL IN', note:'Contaminated bag · −6 intel', apply:()=>applyEffect({ intel:-6 }) } }),
   m7_gen:()=>{
@@ -13175,7 +13374,7 @@ const MG_CFG = {
       force:{ label:'LET OSARO DO IT', note:'−3 Agency Favour · slower', apply:()=>applyEffect({ agencyFavour:-3 }) } };
   },
   m7_trace:()=>({ id:'m7_trace', type:'tune', kicker:'CASE 07 · BTS CABINET', title:'LOCK THE HANDSET', time:40, noStrikes:true,
-    sub:'The handset is hopping channels. <b>Match the gold trace</b> with FREQ and GAIN and hold it until the lock fills — the trace window is still closing.',
+    sub:'The handset is hopping channels. <b>Match the target trace</b> with FREQ and GAIN and hold it until the lock fills — the trace window is still closing.',
     winNote:'Lock held. Now read the sectors.',
     params:{ labelA:'FREQ', labelB:'GAIN', hold:2.6, meterLabel:'LOCK', lockText:'HOLDING LOCK…', screenLabel:'HANDSET ---   CABINET ───' },
     onTick:dt=>{ const g = S.game; if(g._towerAmbush && !g._towerTraced && !g._towerExpired) g._towerWindow -= dt * (typeof timerRate === 'function' ? timerRate() : 1); },

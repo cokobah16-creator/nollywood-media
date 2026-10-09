@@ -1,1 +1,166 @@
-/* beta/paper.css — friends-beta pass (see docs/SYNC-2026-10-08-beta.md) */
+/* beta/paper.css — friends-beta pass (see docs/SYNC-2026-10-08-beta.md)
+   =========================================================================
+   The case-file identity, part 2. Palette, flat fills and the paper sheets
+   themselves live in place in styles.css (:root tokens) and v12/v12.css;
+   this sheet loads after both and carries what has to win over them:
+     1. line icons (icons.js) sizing in every context that shows one
+     2. right / wrong marks that are shapes, not just colours
+     3. overrides for colours written inline by JS this stream doesn't own
+     4. the minimap, re-skinned over the SVG presentation attributes
+     5. colour-blind mode for the v12 + beta elements
+     6. touch: no keyboard hints, and every tappable thing >= 44x44px
+   Tokens: --manila --ink --green --red --grey (+ --manila-2/3, --ink-2/3,
+   --ink-soft, --paper-2, --rule-ink, --rule-paper, --radius, --font-head,
+   --font-mono, --i-check / --i-cross masks), all defined in styles.css.
+   ========================================================================= */
+
+/* ---------- 1. line icons ---------- */
+.ico{display:inline-block;width:1em;height:1em;flex:none;vertical-align:-.14em;overflow:visible}
+.btn .ico{margin:0 .35em;vertical-align:-.16em}
+.alert-badge > .ico > .ico{width:14px;height:14px}
+.evidence-count .ico{font-size:14px;margin-right:6px;vertical-align:-.2em}
+.evidence-count .num{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace)}
+.hud-casebar b{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace)}
+.action-btn > .ico > .ico{width:20px;height:20px}
+.rep-icon .ico{width:16px;height:16px}
+.dialogue-continue .ico{font-size:12px;margin-right:4px}
+.case-row > .ico > .ico{width:20px;height:20px;border:0}
+.ach-ico .ico{font-size:22px}
+.ach.got .ach-ico{color:var(--manila,#E9DCC0)}
+.mg-sort-item .ic .ico{font-size:40px;stroke-width:1.5}
+.skill-node .check .ico{font-size:14px}
+#scan-ping .arr .ico{font-size:13px}
+.mg-flagnote .ico{font-size:11px;margin-right:4px;vertical-align:-.12em}
+.mg-x .ico,.v12-x .ico{font-size:18px}
+.region .ico{font-size:11px;margin-right:4px}
+.toast .big .ico{font-size:.9em;margin-right:.35em}
+.ico.fill{fill:currentColor}
+.mg-stars-inline{display:inline-flex;gap:2px;vertical-align:-2px}
+.mg-xp{color:var(--manila,#E9DCC0);font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace)}
+/* lock-pick pins: filled square = set, outline = open (was ■ □) */
+.mg-pin{display:inline-block;width:9px;height:9px;margin-left:6px;border:1.5px solid currentColor;border-radius:1px;vertical-align:0}
+.mg-pin.set{background:currentColor}
+/* side-quest tally on the mission cards: a diamond, or a check when all are done */
+.mission-card .region.sq-count{color:var(--manila-2,#A89F8A)}
+.mission-card .region.sq-count.all{color:var(--manila,#E9DCC0)}
+.start-sq div.q .ico{color:var(--manila,#E9DCC0);vertical-align:-.15em}
+
+/* ---------- 2. right / wrong: a mark as well as a colour ---------- */
+.puzzle-option.correct::after,.puzzle-option.wrong::after,
+.v12-line.ok::after,.mg-lead.done::after,.mg-term.done::after,.mg-term.bad::after,
+.v12-doc-msg.good::before,.v12-doc-msg.bad::before,.sol-tell.good::before,.sol-tell.bad::before{
+  content:'';display:inline-block;width:14px;height:14px;flex:none;vertical-align:-2px;background:currentColor;
+  -webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
+.puzzle-option.wrong::after,.mg-term.bad::after,.v12-doc-msg.bad::before,.sol-tell.bad::before{
+  -webkit-mask-image:var(--i-cross);mask-image:var(--i-cross)}
+.puzzle-option.correct::after,.puzzle-option.wrong::after{margin-left:8px}
+.v12-line.ok::after{margin-left:8px;background:var(--green,#0B6E4F)}
+.mg-lead.done::after,.mg-term.done::after{margin-left:auto;background:var(--green,#0B6E4F)}
+.mg-term.done::after{margin-left:8px;order:-1}
+.mg-term.bad::after{margin-left:8px;order:-1}
+.v12-doc-msg.good::before,.v12-doc-msg.bad::before,.sol-tell.good::before,.sol-tell.bad::before{margin-right:6px}
+.sol-tell.good::before{background:var(--manila,#E9DCC0)}
+.sol-tell.bad::before{background:var(--manila,#E9DCC0)}
+/* the minigame verdict line: the square placeholder becomes the line icon */
+.mg-msg.good::before,.mg-msg.bad::before{border-radius:0;background:var(--manila,#E9DCC0);
+  -webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
+.mg-msg.bad::before{-webkit-mask-image:var(--i-cross);mask-image:var(--i-cross)}
+/* .ops-th.done carries its own check icon in the markup */
+.ops-b.gold.done::before{content:'';display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px;background:currentColor;
+  -webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
+
+/* ---------- 3. colours written inline by JS (needs !important to beat style="") ---------- */
+/* reputation bars (v12_core.js V12.REP, art_pass_v8 legacy bars): trust manila, standing / favour
+   grey, heat stamp red, integrity green; on paper the light ones turn ink */
+.v12-rep .b i[style*="#4aa3e8"],.eb-status .rb i[style*="#4aa3e8"]{background:var(--manila,#E9DCC0)!important}
+.v12-rep .b i[style*="#b07be8"],.eb-status .rb i[style*="#b07be8"]{background:var(--manila-3,#8C8473)!important}
+.v12-rep .b i[style*="#e8774a"]{background:var(--red,#B3261E)!important}
+.eb-status .rb i[style*="#5dd07a"]{background:var(--green,#0B6E4F)!important}
+.ops-side .v12-rep .b i[style*="#4aa3e8"],.aftermath-block .v12-rep .b i[style*="#4aa3e8"]{background:var(--ink,#1C1C1A)!important}
+.ops-side .v12-rep .b i[style*="#b07be8"],.aftermath-block .v12-rep .b i[style*="#b07be8"]{background:var(--grey,#6B6B63)!important}
+/* aftermath.js season list + badges, written with inline colours for a dark panel */
+.aftermath-block [style*="color:#bcc6d4"]{color:var(--ink,#1C1C1A)!important}
+.aftermath-block [style*="color:#7a8aa3"]{color:var(--ink-soft,#4F4C44)!important}
+[style*="color:#5dd07a"][style*="border:1px solid"]{color:var(--green,#0B6E4F)!important;border-color:var(--green,#0B6E4F)!important;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif)!important;border-radius:2px}
+[style*="color:#ffd76a"]{color:var(--ink-soft,#4F4C44)!important;border-color:var(--grey,#6B6B63)!important;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif)!important;border-radius:2px}
+.mission-card [style*="color:#5dd07a"]:not([style*="border"]){color:var(--manila,#E9DCC0)!important}
+.mission-card [style*="color:#d8a64a"]{color:var(--manila-2,#A89F8A)!important}
+/* v12_finale.js accusation nudge on the ops side panel (gold text on what is now paper) */
+.ops-side [style*="color:#f0c878"],.acc-frame [style*="color:#f0c878"]{color:var(--red,#B3261E)!important}
+/* side-quest line on the mission card (art_pass_v8 writes palette colours inline now) */
+.mission-card .region .ico{color:var(--manila-2,#A89F8A)}
+
+/* ---------- 4. minimap: ink disc, manila streets and player, palette pins ---------- */
+#minimap-svg > circle:first-of-type{fill:var(--ink,#1C1C1A)}
+#minimap-streets *{fill:var(--manila-2,#A89F8A);stroke:var(--manila-3,#8C8473)}
+#minimap-arrow,#minimap-svg > circle:not(:first-of-type){fill:var(--manila,#E9DCC0);stroke:var(--ink,#1C1C1A);stroke-width:.6}
+#minimap-pois circle{stroke:var(--ink,#1C1C1A);stroke-width:.6;fill:var(--manila-2,#A89F8A)}
+#minimap-pois circle[fill="#d8a64a"]{fill:var(--manila,#E9DCC0)}
+#minimap-pois circle[fill="#5dd07a"],#minimap-pois circle[fill="#5db86a"],#minimap-pois circle[fill="#3a9a3a"]{fill:var(--green,#0B6E4F);stroke:var(--manila,#E9DCC0)}
+#minimap-pois circle[fill="#e07d4a"],#minimap-pois circle[fill="#c84a3a"],#minimap-pois circle[fill="#ff5050"],#minimap-pois circle[fill="#e84a5c"]{fill:var(--red,#B3261E);stroke:var(--manila,#E9DCC0)}
+.minimap-label{background:var(--ink,#1C1C1A);padding:1px 6px;border-radius:2px}
+.minimap-label:empty{display:none}
+
+/* ---------- 5. colour-blind mode (beyond styles.css) ---------- */
+body.cb .v12-rep .b i[style*="#e8774a"]{background:var(--manila,#E9DCC0)!important;outline:1px dashed var(--red,#B3261E)}
+body.cb .v12-line.ok{background:rgba(28,28,26,.12);border-left-color:var(--ink,#1C1C1A);outline-color:var(--ink,#1C1C1A)}
+body.cb .v12-line.ok::after{background:var(--ink,#1C1C1A)}
+body.cb .cg-g{background:var(--manila,#E9DCC0)}
+body.cb .sol-b.legit{background:var(--manila,#E9DCC0);border-color:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A)}
+body.cb .sol-sq i.g{background:var(--manila,#E9DCC0)}
+body.cb .mission-card.completed .stamp{background:var(--manila,#E9DCC0);border-color:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A)}
+body.cb .stat-row .val.up,body.cb .v12-doc-msg.good,body.cb .sq-block .stat-row .val.ok{color:var(--ink,#1C1C1A)}
+body.cb #minimap-pois circle[fill="#5dd07a"],body.cb #minimap-pois circle[fill="#5db86a"]{fill:var(--manila,#E9DCC0);stroke:var(--ink,#1C1C1A)}
+body.cb .ops-th.done{border-color:var(--ink,#1C1C1A)}
+body.cb .ops-th.done b{color:var(--ink,#1C1C1A)}
+
+/* ---------- 6. touch ---------- */
+/* no keyboard hints on touch devices (body.touch-active is set once by bindInput) */
+/* (span.k, not .k: the raid plan's known-fact rows are div.plan-row.k) */
+.touch-active :is(span.k,.kbd,span.key,.wl-key,.ck,.sol-keys,.controls-hint,.controls-grid,.action-btn .key){display:none!important}
+
+/* every tappable thing is at least 44x44 on touch */
+.touch-active :is(.btn,.seg button,.ops-b,.ops-tab,.ops-erase,.acc-item,.acc-card,.v12-opt,.puzzle-option,.dialogue-choice,
+  .ph-opt,.ph-row,.mg-bin,.mg-peek,.mg-procs .row:not(.head),.cd-opts button,.car-ctl button,.v12-share,.sol-b,.skills-link){min-height:44px}
+.touch-active :is(.btn,.seg button,.ops-b,.ops-tab,.ops-erase,.v12-share,.mg-peek){min-width:44px}
+.touch-active :is(.seg button,.ops-b,.ops-tab,.ops-erase,.v12-share,.mg-peek,.skills-link){display:inline-flex;align-items:center;justify-content:center}
+.touch-active .ops-b.wide{display:flex}
+.touch-active :is(.v12-x,.ph-x,#mg-x,.mg-x){min-width:44px;min-height:44px;display:inline-grid;place-items:center}
+.touch-active .ph-back{min-width:44px;min-height:44px}
+.touch-active .ops-chip{min-height:44px;justify-content:center}
+.touch-active .v12-opt,.touch-active .acc-item,.touch-active .puzzle-option{display:flex;align-items:center}
+.touch-active .v12-line.live{min-height:44px;padding-top:12px;padding-bottom:12px}
+.touch-active .hud-casebar button{min-height:44px}
+.touch-active #side-chip{min-height:44px;padding-top:0;padding-bottom:0}
+.touch-active .mg-procs .row:not(.head){align-items:center}
+.touch-active .set-ctl input[type=range]{height:44px}
+.touch-active .settings-head .btn,.touch-active .settings-foot .btn{padding-top:0;padding-bottom:0;display:inline-flex;align-items:center;justify-content:center}
+/* the red-flag game taps phrases inside a message: each phrase becomes a tappable block */
+.touch-active .mg-seg{display:inline-block;min-height:44px;padding:12px 4px;line-height:1.4;vertical-align:middle}
+.touch-active .mg-doc{line-height:1.5}
+/* the remembered-hint toast, the rep bars' tooltips etc. are not interactive and are left alone */
+
+/* short screens keep 44px targets too */
+@media (max-height:520px){
+  .touch-active #screen-title .title-actions .btn,.touch-active .v12-doc-actions .btn,.touch-active .sol-actions .btn{min-height:44px;padding-top:0;padding-bottom:0;display:inline-flex;align-items:center;justify-content:center}
+}
+@media (max-height:480px){ .touch-active .car-ctl button{min-height:44px} }
+
+/* office phone: contact discs on the palette (paper, ink initials; the unknown number in stamp red) */
+.ph-av{background:var(--paper-2,#DCCDAB);color:var(--ink,#1C1C1A);border:1px solid var(--manila,#E9DCC0)}
+.ph-av.ph-unk{background:var(--red,#B3261E);color:var(--manila,#E9DCC0);border-color:var(--red,#B3261E)}
+/* tune mini-game: 44px touch targets on the FREQ / GAIN sliders */
+.touch-active .mg-slider input{height:44px}
+.touch-active .mg-slider input::-webkit-slider-thumb{width:44px;height:44px;margin-top:-19px}
+.touch-active .mg-slider input::-moz-range-thumb{width:42px;height:42px}
+
+/* small-text contrast (≥4.5:1): locked awards dim their icon and name, not the how-to-earn line;
+   no red text on ink; red-on-paper warnings and Recruit highlights carry ink text with a coloured rule */
+.ach{opacity:1}
+.ach:not(.got) .ach-ico,.ach:not(.got) .ach-name{opacity:.55}
+.ach:not(.got) .ach-desc{color:var(--manila-2,#A89F8A)}
+.epi-place{color:var(--manila-2,#A89F8A)}
+#radio-sub .rs-tag{color:var(--manila-2,#A89F8A);opacity:1}
+.plan-pred .bad{color:var(--ink,#1C1C1A);border-left:3px solid var(--red,#B3261E);padding-left:6px}
+.phone-screen .red{color:var(--ink,#1C1C1A);text-decoration:underline wavy var(--red,#B3261E);text-decoration-thickness:1.5px;text-underline-offset:3px}
+.phone-screen .green{color:var(--ink,#1C1C1A);text-decoration:underline solid var(--green,#0B6E4F);text-decoration-thickness:2px;text-underline-offset:3px}

@@ -5,9 +5,10 @@
    Feel: camera shake, characters turning to face you, a tackle when you
    catch a runner, an evidence flash, and fades between missions.
 
-   "Next thing to do" = the first interactable (in scene order, which follows
-   each mission's flow) the player hasn't successfully used yet. An
-   interaction counts as used when it changed something: an objective,
+   "Next thing to do" comes from WAY.resolve() (beta/wayfind.js): the objective
+   the HUD shows, mapped to a place. guideTarget() below is its last resort:
+   the first interactable (in scene order) the player hasn't successfully used
+   yet. An interaction counts as used when it changed something: an objective,
    evidence, a story flag, or it opened a conversation or puzzle.
    ========================================================================= */
 
@@ -45,54 +46,64 @@ function guideTarget(){
 function ensureGuideEls(){
   if(GUIDE.el) return;
   const host = document.getElementById('hud') || document.body;
+  const ico = n => (typeof icon === 'function' ? icon(n) : '');
   GUIDE.el = document.createElement('div'); GUIDE.el.id = 'guide-marker';
-  GUIDE.el.innerHTML = '<div class="gm-chev">▼</div><div class="gm-dist"></div>';
-  GUIDE.arrow = document.createElement('div'); GUIDE.arrow.id = 'guide-arrow'; GUIDE.arrow.textContent = '➤';
+  GUIDE.el.innerHTML = `<div class="gm-chev">${ico('down')}</div><div class="gm-dist"></div>`;
+  GUIDE.arrow = document.createElement('div'); GUIDE.arrow.id = 'guide-arrow';
+  GUIDE.arrow.innerHTML = `<span class="ga-ico">${ico('pointer')}</span><span class="ga-dist"></span>`;
   host.appendChild(GUIDE.el); host.appendChild(GUIDE.arrow);
 }
 
+/* The marker over the target follows SETTINGS.marker; the edge arrow is always on.
+   Both (and the HUD tracker) come from WAY.resolve() in beta/wayfind.js; the
+   fallback below only runs if that layer is missing. */
 const _gv = { v:null };
 function updateGuidance(dt){
   ensureGuideEls();
-  const show = SETTINGS.marker === 'on' && ENGINE.movementEnabled && !isOverlayOpen() && ENGINE.player && ENGINE.camera;
-  const t = show ? guideTarget() : null;
-  if(!t){ GUIDE.el.style.display = 'none'; GUIDE.arrow.style.display = 'none'; }
-  else {
-    if(!_gv.v) _gv.v = new THREE.Vector3();
-    const m = t.mesh, h = (m.userData && m.userData._skinned) ? 2.25 : (m.userData && m.userData._rig) ? 2.25 * (m.scale ? m.scale.y : 1) : (t.labelY !== undefined ? t.labelY + 0.55 : 1.6);
-    _gv.v.set(m.position.x, (m.position.y||0) + h, m.position.z);
-    const dist = Math.hypot(m.position.x - ENGINE.player.position.x, m.position.z - ENGINE.player.position.z);
-    _gv.v.project(ENGINE.camera);
-    const W = window.innerWidth, H = window.innerHeight;
-    const behind = _gv.v.z > 1;
-    let x = (_gv.v.x*0.5+0.5)*W, y = (-_gv.v.y*0.5+0.5)*H;
-    const onScreen = !behind && x > 40 && x < W-40 && y > 70 && y < H-70;
-    if(onScreen){
-      GUIDE.arrow.style.display = 'none';
-      GUIDE.el.style.display = dist < 2.2 ? 'none' : 'block';
-      GUIDE.el.style.transform = `translate(${x}px, ${y}px) translate(-50%,-100%)`;
-      GUIDE.el.querySelector('.gm-dist').textContent = dist.toFixed(0) + ' m';
-    } else {
-      GUIDE.el.style.display = 'none';
-      if(behind){ x = W - x; y = H - y; }
-      const cx = W/2, cy = H/2, dx = x - cx, dy = y - cy;
-      const ang = Math.atan2(dy, dx);
-      const r = Math.min(W, H) * 0.42;
-      GUIDE.arrow.style.display = 'block';
-      GUIDE.arrow.style.transform = `translate(${cx + Math.cos(ang)*r}px, ${cy + Math.sin(ang)*r}px) translate(-50%,-50%) rotate(${ang}rad)`;
+  if(typeof WAY !== 'undefined' && typeof WAY.guide === 'function'){
+    try{ WAY.guide(dt); }catch(e){ console.warn('[NACECA] guidance', e); }
+  } else {
+    const t = (ENGINE.player && ENGINE.camera) ? guideTarget() : null;
+    if(!t){ GUIDE.el.style.display = 'none'; GUIDE.arrow.style.display = 'none'; }
+    else {
+      if(!_gv.v) _gv.v = new THREE.Vector3();
+      const m = t.mesh;
+      _gv.v.set(m.position.x, (m.position.y||0) + 1.6, m.position.z);
+      const dist = Math.hypot(m.position.x - ENGINE.player.position.x, m.position.z - ENGINE.player.position.z);
+      _gv.v.project(ENGINE.camera);
+      const W = window.innerWidth, H = window.innerHeight, behind = _gv.v.z > 1;
+      let x = (_gv.v.x*0.5+0.5)*W, y = (-_gv.v.y*0.5+0.5)*H;
+      if(!behind && x > 40 && x < W-40 && y > 70 && y < H-70){
+        GUIDE.arrow.style.display = 'none';
+        GUIDE.el.style.display = (SETTINGS.marker === 'on' && dist >= 2.2) ? 'block' : 'none';
+        GUIDE.el.style.transform = `translate(${x}px, ${y}px) translate(-50%,-100%)`;
+        GUIDE.el.querySelector('.gm-dist').textContent = dist.toFixed(0) + ' m';
+      } else {
+        GUIDE.el.style.display = 'none';
+        if(behind){ x = W - x; y = H - y; }
+        const cx = W/2, cy = H/2, ang = Math.atan2(y - cy, x - cx), r = Math.min(W, H) * 0.42;
+        GUIDE.arrow.style.display = 'flex';
+        GUIDE.arrow.style.transform = `translate(${cx + Math.cos(ang)*r}px, ${cy + Math.sin(ang)*r}px)`;
+        (GUIDE.arrow.querySelector('.ga-ico svg') || GUIDE.arrow.firstChild).style.transform = `rotate(${ang}rad)`;
+        GUIDE.arrow.lastChild.textContent = dist.toFixed(0) + ' m';
+      }
     }
   }
-  // hints after 60 s with no progress (only while actually playing)
+  // hints after 60 s with no progress (updateGuidance only runs while playing: time in menus doesn't count)
+  const tnow = performance.now();
+  if(GUIDE._lastRun && tnow - GUIDE._lastRun > 500 && GUIDE.lastProgress) GUIDE.lastProgress += tnow - GUIDE._lastRun;
+  GUIDE._lastRun = tnow;
   const sig = progressSig();
   if(sig !== GUIDE.lastSig){ GUIDE.lastSig = sig; GUIDE.lastProgress = performance.now(); }
-  if(SETTINGS.hints === 'on' && ENGINE.movementEnabled && !isOverlayOpen()){
+  if(SETTINGS.hints === 'on'){
     if(!GUIDE.lastProgress) GUIDE.lastProgress = performance.now();
     if(performance.now() - GUIDE.lastProgress > 60000){
       GUIDE.lastProgress = performance.now();
-      const tt = guideTarget();
-      if(tt) toast('HINT', `Try this next: ${tt.label}.${SETTINGS.marker==='on'?' Follow the gold marker.':''}`, 3200);
+      const r = (typeof WAY !== 'undefined' && WAY.resolve) ? WAY.resolve() : guideTarget();
+      const what = (typeof WAY !== 'undefined' && WAY.trackerText && WAY.trackerText()) || (r && r.label);   // the words on the HUD
+      if(r && what) toast('HINT', `Try this next: ${what}.${r.uiOnly ? '' : ' Follow the arrow.'}`, 3200);
     }
-  } else if(isOverlayOpen()) GUIDE.lastProgress = performance.now();
+  }
 }
 function resetGuidance(){ GUIDE.lastProgress = performance.now(); GUIDE.lastSig = ''; }
 

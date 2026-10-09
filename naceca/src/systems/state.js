@@ -31,6 +31,8 @@ const defaultState = () => ({
     moralChoices: {},
     flags: {},             // mission-scoped story flags (shrine_access, shrine, tower...)
     headlines: [],
+    difficulty: 'senior',  // casework: 'recruit' (deduction hints on) | 'senior' (hints off)
+    accusations: {},       // filed charge sheets per case (lagos | route | voice) — permanent for the save
   }
 });
 

@@ -20,7 +20,7 @@ function openSkillTree(){
         const unlocked = S.player.skills.includes(s.id);
         const locked = s.requires && !S.player.skills.includes(s.requires);
         return `<div class="skill-node ${unlocked?'unlocked':''} ${locked?'locked':''}" data-sid="${s.id}">
-          <div class="name">${s.name}${unlocked?'<span class="check">✔</span>':''}</div>
+          <div class="name">${s.name}${unlocked?'<span class="check" aria-label="unlocked">'+icon('check')+'</span>':''}</div>
           <div class="desc">${s.desc}</div>
         </div>`;
       }).join('')}

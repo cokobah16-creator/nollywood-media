@@ -1,1 +1,60 @@
-/* beta/wayfind.css — friends-beta pass (see docs/SYNC-2026-10-08-beta.md) */
+/* beta/wayfind.css — friends-beta pass (see docs/SYNC-2026-10-08-beta.md)
+   Objective tracker, guide marker, edge arrow, minimap blips. Flat fills,
+   1px rules, no glows; manila on ink, green/red only as fills/borders. */
+
+/* ---------- HUD tracker: "Speak with informant Tunde · 42 m" ---------- */
+.hud-mission .obj.way-obj .obj-txt{flex:0 1 auto;min-width:0}
+.hud-mission .obj.way-obj .obj-dist{display:inline-block;margin-left:.4em;white-space:nowrap;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0;color:var(--manila,#E9DCC0);font-variant-numeric:tabular-nums}
+.hud-mission .obj.way-obj .obj-dist:empty{display:none}
+
+/* ---------- guide marker over the target (Settings › objective marker) ---------- */
+#guide-marker{position:fixed;left:0;top:0;pointer-events:none;z-index:7;display:none;text-align:center;
+  color:var(--manila,#E9DCC0);font-family:'Oswald','Arial Narrow',sans-serif;text-shadow:none;filter:none}
+#guide-marker .gm-chev{display:flex;justify-content:center;font-size:22px;line-height:1;color:var(--manila,#E9DCC0)}
+#guide-marker .gm-chev .ico{width:22px;height:22px;stroke-width:2.4}
+#guide-marker .gm-dist{display:inline-block;margin-top:1px;padding:1px 5px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10px;letter-spacing:0;
+  color:var(--manila,#E9DCC0);background:var(--ink,#1C1C1A);border:1px solid var(--green,#0B6E4F);border-radius:2px}
+#guide-marker.chase .gm-dist{border-color:var(--red,#B3261E)}
+
+/* ---------- edge arrow: always on when the target is off screen ---------- */
+#guide-arrow{position:fixed;left:0;top:0;pointer-events:none;z-index:7;display:none;flex-direction:column;align-items:center;gap:3px;
+  width:48px;margin:-20px 0 0 -24px;text-shadow:none;filter:none;font-size:inherit;color:var(--manila,#E9DCC0)}
+#guide-arrow .ga-ico{display:grid;place-items:center;width:36px;height:36px;border-radius:3px;
+  background:var(--green,#0B6E4F);border:1px solid var(--manila,#E9DCC0);color:var(--manila,#E9DCC0);transform-origin:50% 50%}
+#guide-arrow .ga-ico .ico{width:22px;height:22px;stroke-width:2;fill:currentColor}
+#guide-arrow .ga-dist{padding:1px 5px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10px;line-height:14px;letter-spacing:0;white-space:nowrap;
+  color:var(--manila,#E9DCC0);background:var(--ink,#1C1C1A);border:1px solid rgba(233,220,192,.45);border-radius:2px}
+#guide-arrow.chase .ga-ico{background:var(--red,#B3261E)}
+/* nothing points into menus, dialogue or the car */
+body:has(.overlay.show) #guide-arrow,body:has(.overlay.show) #guide-marker,.v12-car #guide-arrow,.v12-car #guide-marker{display:none!important}
+
+/* ---------- minimap ---------- */
+#minimap-svg .mm-me{fill:var(--manila,#E9DCC0);stroke:var(--ink,#1C1C1A);stroke-width:.8;stroke-linejoin:round}
+#minimap-svg .mm-obj-dot{fill:var(--green,#0B6E4F);stroke:var(--manila,#E9DCC0);stroke-width:1}
+#minimap-svg .mm-obj-tip{fill:var(--manila,#E9DCC0);display:none}
+#minimap-svg .mm-obj.rim .mm-obj-tip{display:inline}
+#minimap-svg .mm-sus-dot{fill:var(--red,#B3261E);stroke:var(--manila,#E9DCC0);stroke-width:1}
+#minimap-svg .mm-sus-ping{fill:none;stroke:var(--red,#B3261E);stroke-width:1.2;opacity:0}
+#minimap-svg .mm-sus.lastseen .mm-sus-dot{fill:none;stroke:var(--red,#B3261E);stroke-width:1.6;stroke-dasharray:2.2 1.6}
+#minimap-svg .mm-sus.lastseen .mm-sus-ping{opacity:.9}
+#minimap-svg .mm-sus-ping.go{transform-box:fill-box;transform-origin:center;animation:mmPing 1.1s ease-out 1}
+@keyframes mmPing{0%{transform:scale(.6);opacity:1}100%{transform:scale(3.2);opacity:0}}
+.reduce-motion #minimap-svg .mm-sus-ping.go{animation:none}
+
+/* ---------- touch layout: chase meters, radio strip and onboarding hint never stack ---------- */
+/* phones, portrait: the meters sit just above the thumbs, full width so label and value stay on one line;
+   the hint drops below the radio strip */
+@media (min-height:481px){
+  .touch-active #hud-meters{top:auto;bottom:calc(320px + env(safe-area-inset-bottom,0px));left:calc(14px + env(safe-area-inset-left,0px));right:calc(14px + env(safe-area-inset-right,0px));width:auto;transform:none}
+  .touch-active #hint-chip{top:calc(272px + env(safe-area-inset-top,0px))}
+}
+/* phones, landscape: the meters go between the stick and the action cluster, under the radio strip;
+   the hint wraps in the same channel so the sprint button never covers it */
+@media (max-height:480px){
+  .touch-active #hud-meters{top:calc(150px + env(safe-area-inset-top,0px));bottom:auto;left:50%;right:auto;transform:translateX(-50%);width:min(300px,38vw)}
+  .touch-active #hint-chip{top:calc(238px + env(safe-area-inset-top,0px));width:auto;max-width:calc(100vw - 480px);min-width:260px;white-space:normal;line-height:1.35}
+}
+/* the region label's sub-line stays on one line, so it never grows off the top of the screen */
+@media (min-width:761px){
+  .hud-topright .minimap-label .sub{display:inline-block;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+}

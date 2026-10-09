@@ -5,6 +5,9 @@
    subtitles, graphics presets (+ automatic downgrade on slow phones), touch
    layout, objective marker, hints, reduce motion, colour-blind mode, haptics,
    and music ducking under dialogue.
+   Casework difficulty (Recruit / Senior Agent) is NOT a device setting: it
+   belongs to the investigation (S.game.difficulty) and travels with the save.
+   SETTINGS.difficulty is "Action pace" — timers, chases, minigames only.
    ========================================================================= */
 
 const SETTINGS_KEY = 'naceca_settings_v1';
@@ -38,6 +41,27 @@ function timerRate(){
 // how fast fleeing suspects run (relative)
 function chaseRate(){ return {story:0.9, standard:1, hard:1.06}[SETTINGS.difficulty] || 1; }
 function isStoryMode(){ return SETTINGS.difficulty === 'story'; }
+
+/* ---------- casework difficulty (per investigation, saved with S) ----------
+   'recruit' = deduction hints on · 'senior' = hints off (default; old saves → senior).
+   Callers outside this file: (typeof isRecruit === 'function' && isRecruit()). */
+function gameDifficulty(){
+  const d = (typeof S !== 'undefined' && S && S.game) ? S.game.difficulty : null;
+  return d === 'recruit' ? 'recruit' : 'senior';
+}
+function isRecruit(){ return gameDifficulty() === 'recruit'; }
+function syncDifficultyClass(){
+  const b = document.body; if(!b) return;
+  const r = isRecruit();
+  b.classList.toggle('cw-recruit', r);
+  b.classList.toggle('cw-senior', !r);
+}
+function setGameDifficulty(v){
+  if(typeof S === 'undefined' || !S || !S.game) return;
+  S.game.difficulty = v === 'recruit' ? 'recruit' : 'senior';
+  syncDifficultyClass();
+  if(typeof V12 !== 'undefined' && V12 && typeof V12.log === 'function') V12.log('casework', { d:S.game.difficulty });
+}
 
 /* ---------- haptics ---------- */
 function haptic(pattern){
@@ -104,6 +128,7 @@ function applySettings(){
   b.classList.toggle('cb', SETTINGS.colourBlind === 'on');
   applyAudioLevels();
   applyGraphics(SETTINGS.gfx === 'auto' ? (_gfxActive || autoGfxGuess()) : SETTINGS.gfx);
+  syncDifficultyClass();
 }
 
 /* ---------- settings screen ---------- */
@@ -113,8 +138,12 @@ const SETTINGS_UI = [
   { key:'sfx',     label:'Effects',  type:'range' },
   { key:'ambient', label:'Ambience', type:'range' },
   { group:'GAMEPLAY' },
-  { key:'difficulty', label:'Difficulty', opts:[['story','Story'],['standard','Standard'],['hard','Hard']],
-    note:'Story slows timers and suspects, and wrong puzzle answers stay crossed out.' },
+  { key:'casework', label:'Casework', opts:[['recruit','Recruit'],['senior','Senior Agent']],
+    get:()=>gameDifficulty(), set:v=>setGameDifficulty(v), when:()=>!!(S && S.game && S.game.currentMission),
+    note:'Recruit: deduction hints on. Senior Agent: no hints. Saved with this investigation.',
+    offNote:'Chosen when you start an investigation. Continue one to change it.' },
+  { key:'difficulty', label:'Action pace', opts:[['story','Relaxed'],['standard','Standard'],['hard','Hard']],
+    note:'Timers, chase speed and minigames. Deduction hints are set by Casework.' },
   { key:'timed', label:'Timed sequences', opts:[['normal','Normal'],['extended','Extended'],['off','No timers']],
     note:'Wipe, smoke and trace clocks. Chases still run.' },
   { key:'marker', label:'Objective marker', opts:[['on','On'],['off','Off']] },
@@ -137,7 +166,7 @@ function ensureSettingsScreen(){
   ov.className = 'overlay'; ov.id = 'screen-settings';
   ov.innerHTML = `<div class="overlay-bg"></div>
     <div class="settings-frame">
-      <div class="settings-head"><h2>SETTINGS</h2><button class="btn ghost" id="btn-settings-close">◀ BACK</button></div>
+      <div class="settings-head"><h2>SETTINGS</h2><button class="btn ghost" id="btn-settings-close">${typeof icon === 'function' ? icon('back') : ''} BACK</button></div>
       <div class="settings-body" id="settings-body"></div>
       <div class="settings-foot"><button class="btn ghost" id="btn-settings-reset">RESET TO DEFAULTS</button></div>
     </div>`;
@@ -147,27 +176,35 @@ function ensureSettingsScreen(){
 }
 function renderSettings(){
   const body = document.getElementById('settings-body'); body.innerHTML = '';
-  for(const row of SETTINGS_UI){
-    if(row.group){ const h = document.createElement('div'); h.className = 'set-group'; h.textContent = row.group; body.appendChild(h); continue; }
-    const el = document.createElement('div'); el.className = 'set-row';
+  SETTINGS_UI.forEach((row, ri)=>{
+    if(row.group){ const h = document.createElement('div'); h.className = 'set-group'; h.textContent = row.group; body.appendChild(h); return; }
+    const el = document.createElement('div'); el.className = 'set-row'; el.dataset.key = row.key;
+    const cur = row.get ? row.get() : SETTINGS[row.key];
+    const live = !row.when || row.when();
     let ctl = '';
     if(row.type === 'range'){
-      ctl = `<input type="range" min="0" max="100" step="5" value="${SETTINGS[row.key]}" data-k="${row.key}"><span class="set-val">${SETTINGS[row.key]}</span>`;
+      ctl = `<input type="range" min="0" max="100" step="5" value="${cur}" data-k="${row.key}"><span class="set-val">${cur}</span>`;
     } else {
-      ctl = `<div class="seg">${row.opts.map(([v,l])=>`<button class="${SETTINGS[row.key]===v?'on':''}" data-k="${row.key}" data-v="${v}">${l}</button>`).join('')}</div>`;
+      ctl = `<div class="seg">${row.opts.map(([v,l])=>`<button class="${cur===v?'on':''}" data-r="${ri}" data-k="${row.key}" data-v="${v}" aria-pressed="${cur===v}" ${live?'':'disabled'}>${l}</button>`).join('')}</div>`;
     }
-    el.innerHTML = `<div class="set-label">${row.label}${row.note?`<div class="set-note">${row.note}</div>`:''}</div><div class="set-ctl">${ctl}</div>`;
+    const note = live ? row.note : (row.offNote || row.note);
+    el.innerHTML = `<div class="set-label">${row.label}${note?`<div class="set-note">${note}</div>`:''}</div><div class="set-ctl">${ctl}</div>`;
     body.appendChild(el);
-  }
+  });
   body.querySelectorAll('input[type=range]').forEach(inp=>{
     inp.addEventListener('input', ()=>{ SETTINGS[inp.dataset.k] = +inp.value; inp.nextElementSibling.textContent = inp.value; applyAudioLevels(); saveSettings(); });
   });
   body.querySelectorAll('.seg button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      SETTINGS[btn.dataset.k] = btn.dataset.v;
-      if(btn.dataset.k === 'gfx') _gfxActive = null;
-      saveSettings(); applySettings();
-      btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b===btn));
+      if(btn.disabled) return;
+      const row = SETTINGS_UI[+btn.dataset.r] || {};
+      if(row.set) row.set(btn.dataset.v);
+      else {
+        SETTINGS[btn.dataset.k] = btn.dataset.v;
+        if(btn.dataset.k === 'gfx') _gfxActive = null;
+        saveSettings(); applySettings();
+      }
+      btn.parentElement.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on', b===btn); b.setAttribute('aria-pressed', b===btn); });
       if(typeof sfxClick === 'function') sfxClick();
     });
   });

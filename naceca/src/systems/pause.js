@@ -14,6 +14,16 @@ function togglePause(){
   }
 }
 
+/* NEW INVESTIGATION: fresh state with the chosen casework difficulty, then the cold open.
+   The title button opens the new-game sheet first (beta/casework.js) when it exists. */
+function startNewInvestigation(diff){
+  S = defaultState();
+  S.game.difficulty = diff === 'recruit' ? 'recruit' : 'senior';
+  if(typeof syncDifficultyClass === 'function') syncDifficultyClass();
+  showHUD(false);
+  loadMission('m0');
+}
+
 function bindMenuButtons(){
   // first interaction unlocks audio context (autoplay policy)
   document.addEventListener('pointerdown', ()=>{ initAudio(); }, {once:true});
@@ -28,12 +38,11 @@ function bindMenuButtons(){
   });
 
   $('#btn-newgame').addEventListener('click', ()=>{
-    S = defaultState();
-    showHUD(false);
-    loadMission('m0');
+    if(typeof openNewGameSheet === 'function') openNewGameSheet();
+    else startNewInvestigation('senior');
   });
   $('#btn-continue').addEventListener('click', ()=>{
-    if(loadGame()){ showRecap(resumeCampaign); }
+    if(loadGame()){ if(typeof syncDifficultyClass === 'function') syncDifficultyClass(); showRecap(resumeCampaign); }
     else { toast('NO SAVE FOUND','Start a new investigation'); }
   });
   $('#btn-mission-select').addEventListener('click', ()=>{
@@ -47,7 +56,7 @@ function bindMenuButtons(){
   $('#btn-resume').addEventListener('click', togglePause);
   $('#btn-save').addEventListener('click', saveGame);
   $('#btn-load').addEventListener('click', ()=>{
-    if(loadGame()){ togglePause(); resumeCampaign(); toast('LOADED','progress restored'); }
+    if(loadGame()){ if(typeof syncDifficultyClass === 'function') syncDifficultyClass(); togglePause(); resumeCampaign(); toast('LOADED','progress restored'); }
     else toast('NO SAVE');
   });
   $('#btn-quit').addEventListener('click', ()=>{
@@ -60,6 +69,7 @@ function bindMenuButtons(){
   $('#btn-erase').addEventListener('click', ()=>{
     eraseSave();
     S = defaultState();
+    if(typeof syncDifficultyClass === 'function') syncDifficultyClass();
     showOverlay('screen-title');
   });
   $('#btn-aftermath-continue').addEventListener('click', ()=>{

@@ -41,20 +41,18 @@ const STREET_LOOK = {
 V12.wrap('drawPortrait', orig => function(kind, speaker, mood){
   if(typeof kind === 'string' && kind.indexOf('street:') === 0){
     const L = STREET_LOOK[kind.slice(7)] || { cloth:'#4a5a7a', head:'bare', tag:'' };
-    const headPath = L.head === 'gele' ? '<path d="M30 30 Q50 6 72 26 Q78 34 70 38 L30 38 Q24 34 30 30Z" fill="#141a26"/>'
-      : L.head === 'cap' ? '<path d="M33 30 Q50 16 67 30 L67 34 L33 34Z" fill="#141a26"/>' : '';
+    const headPath = L.head === 'gele' ? '<path d="M30 30 Q50 6 72 26 Q78 34 70 38 L30 38 Q24 34 30 30Z" fill="#141412"/>'
+      : L.head === 'cap' ? '<path d="M33 30 Q50 16 67 30 L67 34 L33 34Z" fill="#141412"/>' : '';
     const wrap = document.getElementById('dialogue-portrait');
     if(wrap){ wrap.innerHTML = `<div class="portrait-frame street-card"><svg viewBox="0 0 100 100" aria-hidden="true">
-      <defs><radialGradient id="stbg" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#26324a"/><stop offset="1" stop-color="#070b14"/></radialGradient>
-      <linearGradient id="strim" x1="0" x2="1"><stop offset="0" stop-color="#d8a64a" stop-opacity="0"/><stop offset="1" stop-color="#f0c878" stop-opacity=".9"/></linearGradient></defs>
-      <rect width="100" height="100" fill="url(#stbg)"/>
+      <rect width="100" height="100" fill="#262623"/>
       <path d="M14 100 Q16 70 50 66 Q84 70 86 100Z" fill="${L.cloth}" opacity=".55"/>
-      <path d="M14 100 Q16 70 50 66 Q84 70 86 100Z" fill="#0c111c" opacity=".55"/>
-      <ellipse cx="50" cy="44" rx="16" ry="19" fill="#0c111c"/>
-      <rect x="44" y="58" width="12" height="10" fill="#0c111c"/>
+      <path d="M14 100 Q16 70 50 66 Q84 70 86 100Z" fill="#141412" opacity=".55"/>
+      <ellipse cx="50" cy="44" rx="16" ry="19" fill="#141412"/>
+      <rect x="44" y="58" width="12" height="10" fill="#141412"/>
       ${headPath}
-      <path d="M64 30 Q70 44 63 58" stroke="url(#strim)" stroke-width="1.6" fill="none"/>
-      <path d="M80 92 Q78 74 58 68" stroke="url(#strim)" stroke-width="1.4" fill="none"/>
+      <path d="M64 30 Q70 44 63 58" stroke="#A89F8A" stroke-width="1.2" fill="none"/>
+      <path d="M80 92 Q78 74 58 68" stroke="#A89F8A" stroke-width="1.1" fill="none"/>
       </svg><div class="street-tag">${V12.esc(L.tag)}</div><div class="portrait-vignette"></div></div>`; }
     return;
   }

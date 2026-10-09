@@ -4,6 +4,13 @@
    Edit the modules; run build.py to rebuild naceca.html.
    ========================================================================= */
 /* ===================== 12. SCENE: IKEJA MARKET ===================== */
+// KC's lanes once his path runs out: the two east stall lanes (x 7.6 / 12.6) and the gaps between the stalls
+const MARKET_LANES = (()=>{
+  const xs = [7.6, 12.6], zs = [17.5, 12.5, 7.4, 0, -7.5, -12.5, -17.5, -20.5];
+  const nodes = [], edges = [];
+  zs.forEach((z, r)=>{ xs.forEach(x=>nodes.push([x, z])); edges.push([r*2, r*2+1]); if(r) edges.push([(r-1)*2, r*2], [(r-1)*2+1, r*2+1]); });
+  return { nodes, edges };
+})();
 function buildSceneMarketLegacy(){
   const scene = newScene({bg:'#1a2845', fog:'#2a3a5a'});
   scene.fog.near = 14; scene.fog.far = 50;
@@ -141,12 +148,16 @@ function buildSceneMarketLegacy(){
       if(S.game.moralChoices.market_runner){ toast('ALREADY DECIDED','Head back to the van'); return; }
       if(CHASE.active){ return; }
       // he sees the badge and bolts — shoving a trader's tray into your path
-      ENGINE._stagger = 0.9;
+      ENGINE._stagger = 0.5;
       toast('HE\'S RUNNING','KC shoves a tray at you and breaks for the back of the stalls. Sprint — and mind the traders.', 2600);
       musicForScene && musicForScene('m6_chase');
       startChase({
-        runner: kc, label:'KC', speed:4.9, catchDist:1.45, headStart:0.4,
+        // he bolts from arm's length: a 1.2 s dash (×1.5) so the catch radius doesn't end it on the spot
+        runner: kc, label:'KC', speed:4.3, catchDist:1.9, headStart:0.4, burst:[1.2, 1.5],
         path: [[8,4],[8,7.4],[12.6,7.4],[12.6,-2.4],[12.6,-7.5],[7.6,-7.5],[7.6,-12.5],[12.6,-12.5],[12.6,-20.5]],
+        // the back exit is blocked: he doubles back through the east stall lanes until he's caught or 20 s out of range
+        endPause: 1.2, endLine: 'The back exit is blocked. KC turns back into the stalls.',
+        lanes: MARKET_LANES,
         crowd: ENGINE._marketCrowd || [],
         onCaught: ()=>{
           kc.rotation.y += Math.PI;
@@ -209,7 +220,7 @@ function buildSceneMarketLegacy(){
      <rect x="-30" y="9"  width="60" height="3" fill="#2a3550" opacity=".3"/>`,
     [
       {x:-6, z:-2, color:'#5db86a', r:1.6}, // tunde
-      {x: 8, z: 4, color:'#e07d4a', r:1.6}, // suspect
+      {x: 8, z: 4, color:'#e07d4a', r:1.6, suspect:true}, // suspect (hidden once the chase starts: the red blip takes over)
       {x: 0, z:14, color:'#5dd07a', r:2.0}, // exit van
       {x: 7.5,z:4, color:'#d8a64a', r:1.2}, // phone evidence
     ]

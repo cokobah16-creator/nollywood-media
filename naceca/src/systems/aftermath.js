@@ -2,6 +2,9 @@
    NACECA · systems/aftermath.js
    Auto-extracted from game.js by split_modules.py
    Edit the modules; run build.py to rebuild naceca.html.
+   Beta casework wraps generateHeadline and showAftermath (beta/casework.js):
+   a wrong name on a charge sheet changes the raid's headline, and the
+   aftermath shows the charge sheet as the prosecutor reviewed it.
    ========================================================================= */
 /* ===================== 18. AFTERMATH ===================== */
 function generateHeadline(){
@@ -102,31 +105,28 @@ function generateHeadline(){
   return { pub:'THE LAGOS LEDGER', head:'NACECA Mansion Raid: Suspect In Custody, Evidence Bagged', ded:'A measured operation. The case file moves to prosecution.' };
 }
 
+/* small flat label for the preview (styled in beta/casework.css) */
+function _afBadge(text, kind){ return `<span class="cw-badge${kind ? ' ' + kind : ''}">${text}</span>`; }
+
 function nextMissionPreview(){
   const cur = S.game.currentMission;
   if(cur==='m3'){
-    return `Mission 4 — <b>Checkpoint Shakedown</b> · joint op with Anti-Kidnapping Squad on the Benin Bypass.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 4 — <b>Checkpoint Shakedown</b> · joint op with Anti-Kidnapping Squad on the Benin Bypass. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m4'){
-    return `Mission 5 — <b>Forest Shrine Compound</b> · investigate a shrine used as fear-cover by the cartel. Respect the sacred ground while you search.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 5 — <b>Forest Shrine Compound</b> · investigate a shrine used as fear-cover by the cartel. Respect the sacred ground while you search. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m5'){
-    return `Mission 6 — <b>The Disappeared</b> · hostage rescue in an Asaba warehouse. Chase the runner, or save the captive — pick one, lose the other.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 6 — <b>The Disappeared</b> · hostage rescue in an Asaba warehouse. Chase the runner, or save the captive — pick one, lose the other. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m6'){
-    return `Mission 7 — <b>No Signal Zone</b> · sabotaged telecom tower behind the UNIBEN gate. Restore power, trace the ransom calls, decide under fire.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 7 — <b>No Signal Zone</b> · sabotaged telecom tower behind the UNIBEN gate. Restore power, trace the ransom calls, decide under fire. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m7'){
-    return `Mission 8 — <b>The Voice</b> · Season 1 finale. Ekosodin, after dark. Find the house, get Osas out, and face whoever has been making those calls.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(93,208,122,.5);color:#5dd07a;font-family:Oswald;font-size:10px;letter-spacing:.18em">PLAYABLE</span>`;
+    return `Mission 8 — <b>The Voice</b> · Season 1 finale. Ekosodin, after dark. Find the house, get Osas out, and face whoever has been making those calls. ${_afBadge('PLAYABLE')}`;
   }
   if(cur==='m8'){
-    return `<b>Season 1 is complete.</b> Continue for the epilogue — and for who protected her.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(216,166,74,.6);color:#ffd76a;font-family:Oswald;font-size:10px;letter-spacing:.18em">SEASON 2 — COMING</span>`;
+    return `<b>Season 1 is complete.</b> Continue for the epilogue — and for who protected her. ${_afBadge('SEASON 2 — COMING', 'soon')}`;
   }
   return 'Open the mission select to choose your next operation.';
 }
@@ -178,12 +178,12 @@ function showAftermath(){
       <div class="head">${head.head}</div>
       <div class="ded">${head.ded}</div>
     </div>
-    <div class="aftermath-block" style="grid-column:1/-1">
+    <div class="aftermath-block cw-wide">
       <h3>NEXT IN THE INVESTIGATION</h3>
-      <div style="font-size:13px;color:#bcc6d4;line-height:1.7">
+      <div class="cw-next">
         ${nextMissionPreview()}
       </div>
-      <div style="font-size:12px;color:#7a8aa3;margin-top:8px">Season 2 (missions 9–12) is outlined in the mission select. Each card holds the briefing and chosen region.</div>
+      <div class="cw-next-sub">Season 2 (missions 9–12) is outlined in the mission select. Each card holds the briefing and chosen region.</div>
     </div>`;
 
   if(typeof onAftermath==='function') onAftermath(op, head);

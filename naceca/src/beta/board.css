@@ -1,1 +1,117 @@
-/* beta/board.css — friends-beta pass (see docs/SYNC-2026-10-08-beta.md) */
+/* beta/board.css — friends-beta pass (see docs/SYNC-2026-10-08-beta.md)
+   The operations table's new pieces: the case slip (warrant stamp, strength,
+   strikes, leads out in the field), the FILE button, struck lines, the
+   magistrate's ruling and the Recruit analyst's note.
+   Paper, not neon: manila sheets, ink type, 1px rules, rubber stamps in
+   stamp red. Flat fills only. Right/wrong always carries a mark or a word. */
+
+/* ---------- the case slip, pinned at the top of the board ---------- */
+.bd-case{position:relative;z-index:4;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 18px;align-items:center;
+  margin:0 0 12px;padding:9px 12px 9px;background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);
+  border:1px solid var(--ink,#1C1C1A);border-radius:2px;font-family:'Oswald','Arial Narrow',sans-serif}
+.bd-case-l{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+.bd-case-n{font-size:10.5px;letter-spacing:.22em;line-height:1.2;white-space:nowrap}
+.bd-case-m{display:flex;flex-direction:column;gap:4px;min-width:0}
+.bd-str{display:flex;align-items:center;gap:8px;font-size:10.5px;letter-spacing:.18em}
+.bd-str b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;font-weight:700;letter-spacing:0;min-width:2.2ch;text-align:right}
+.bd-bar{position:relative;display:block;flex:1;max-width:190px;height:7px;border:1px solid var(--ink,#1C1C1A);border-radius:1px;overflow:hidden}
+.bd-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink,#1C1C1A)}
+.bd-need{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;line-height:1.3}
+.bd-case-r{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:6px;font-size:10.5px;letter-spacing:.18em}
+.bd-strikes{display:inline-flex;gap:3px}
+.bd-x{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:1px solid var(--ink,#1C1C1A);border-radius:2px;color:var(--red,#B3261E);font-size:15px}
+.bd-x.on{border-color:var(--red,#B3261E)}
+.bd-x .ico{stroke-width:2.6}
+.bd-strk-n{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;letter-spacing:0}
+.bd-pen{flex-basis:100%;text-align:right;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0;color:var(--red,#B3261E);font-weight:700}
+.bd-locked{grid-column:1 / -1;display:flex;align-items:flex-start;gap:7px;padding-top:7px;border-top:1px solid var(--ink,#1C1C1A);
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;line-height:1.45}
+.bd-locked .ico{flex:0 0 auto;font-size:15px;margin-top:1px}
+
+/* ---------- rubber stamps: the word carries the meaning, the colour only backs it ---------- */
+.bd-stamp{display:inline-block;padding:4px 9px 3px;border:2px solid currentColor;border-radius:3px;transform:rotate(-4deg);
+  font-family:'Oswald','Arial Narrow',sans-serif;font-weight:700;font-size:15px;letter-spacing:.2em;line-height:1;text-transform:uppercase;white-space:nowrap}
+.bd-stamp.sm{font-size:11.5px;padding:3px 7px 2px;border-width:1.5px;transform:rotate(-3deg)}
+.bd-stamp.s-signed{color:var(--green,#0B6E4F)}
+.bd-stamp.s-pending{color:var(--ink,#1C1C1A)}
+.bd-stamp.s-refused{color:var(--red,#B3261E)}
+
+/* ---------- FILE: the one primary action on the table ---------- */
+.bd-file{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:6px 14px;cursor:pointer;
+  background:var(--green,#0B6E4F);color:var(--manila,#E9DCC0);border:1px solid var(--green,#0B6E4F);border-radius:2px;
+  font-family:'Oswald','Arial Narrow',sans-serif;font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;white-space:nowrap}
+.bd-file .ico{font-size:16px}
+.bd-file:hover:not(:disabled){background:var(--ink,#1C1C1A);border-color:var(--ink,#1C1C1A)}
+.bd-file:focus-visible,.bd-btn:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.bd-file:disabled{background:transparent;color:inherit;border-color:currentColor;opacity:.45;cursor:default}
+
+/* ---------- struck links on the board: dashed stamp-red line, a cross at the middle ---------- */
+.ops-svg path.struck{stroke:var(--red,#B3261E);stroke-width:2;stroke-dasharray:3 5;opacity:.95}
+.ops-svg path.struck.hl{stroke-width:2.8}
+.ops-svg .bd-xmark circle{fill:var(--manila,#E9DCC0);stroke:var(--red,#B3261E);stroke-width:1.5}
+.ops-svg .bd-xmark path{fill:none;stroke:var(--red,#B3261E);stroke-width:2;stroke-linecap:round}
+
+/* the big stamp that lands on the frame after a filing */
+.ops-stamp.bd-bad{color:var(--red,#B3261E);border-color:var(--red,#B3261E)}
+
+/* ---------- the dossier: struck links and the Recruit analyst's note ---------- */
+.ops-ul li.bd-struck{justify-content:flex-start;gap:8px}
+.ops-ul li.bd-struck > span:last-child{text-decoration:line-through;text-decoration-thickness:1px}
+.bd-tag-x{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;padding:1px 5px;border:1px solid var(--red,#B3261E);border-radius:2px;
+  font-family:'Oswald','Arial Narrow',sans-serif;font-size:9.5px;letter-spacing:.16em}
+.bd-tag-x .ico{color:var(--red,#B3261E);font-size:11px;stroke-width:2.6}
+.ops-ul li.bd-noted{justify-content:flex-start;gap:8px}
+.bd-tag-n{display:inline-flex;align-items:center;flex:0 0 auto;padding:1px 5px;border:1px solid currentColor;border-radius:2px;
+  font-family:'Oswald','Arial Narrow',sans-serif;font-size:9.5px;letter-spacing:.16em}
+.bd-note{display:flex;flex-direction:column;gap:3px;margin:8px 0 6px;padding:8px 10px;background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);
+  border:1px solid var(--ink,#1C1C1A);border-radius:2px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;line-height:1.45}
+.bd-note b{display:flex;align-items:center;gap:6px;font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;font-size:10px;letter-spacing:.22em}
+
+/* ---------- the magistrate's ruling: a manila sheet over the table ---------- */
+.ops-mbox.bd-ruling{background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);border:1px solid var(--ink,#1C1C1A);border-radius:2px;
+  box-shadow:none;max-width:520px}
+.bd-ruling .ops-h{color:var(--ink,#1C1C1A);font-size:12px;padding-bottom:6px;border-bottom:1px solid var(--ink,#1C1C1A)}
+.bd-rul{list-style:none;margin:8px 0 0;padding:0}
+.bd-rul li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--ink,#1C1C1A)}
+.bd-rul li > .ico{flex:0 0 auto;font-size:20px;margin-top:1px;stroke-width:2.4}
+.bd-rul li.ok > .ico{color:var(--green,#0B6E4F)}
+.bd-rul li.bad > .ico{color:var(--red,#B3261E)}
+.bd-rul li div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bd-rul li b{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:700;font-size:12px;letter-spacing:.2em}
+.bd-rul li.ok b{color:var(--green,#0B6E4F)}
+.bd-rul li.bad b{color:var(--red,#B3261E)}
+.bd-rul li.noted > .ico,.bd-rul li.noted b{color:var(--ink-soft,#4F4C44)}
+.bd-rul li em{font-style:normal;font-family:'Oswald','Arial Narrow',sans-serif;font-size:14px;letter-spacing:.03em}
+.bd-rul li span{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;line-height:1.4}
+.bd-refused,.bd-lifted{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;padding:8px 10px;border:2px solid var(--red,#B3261E);border-radius:2px;
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;line-height:1.45}
+.bd-lifted{border:1px solid var(--ink,#1C1C1A)}
+.bd-refused .ico,.bd-lifted .ico{flex:0 0 auto;font-size:16px;margin-top:1px}
+.bd-refused .ico{color:var(--red,#B3261E)}
+.bd-refused b,.bd-lifted b{font-family:'Oswald','Arial Narrow',sans-serif;letter-spacing:.14em}
+.bd-rws{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.bd-rw{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-family:'Oswald','Arial Narrow',sans-serif;font-size:11px;letter-spacing:.18em}
+.bd-rw-s{font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0;font-size:11.5px}
+.bd-btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 18px;cursor:pointer;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--ink,#1C1C1A);border-radius:2px;
+  font-family:'Oswald','Arial Narrow',sans-serif;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+.bd-btn:hover{background:var(--green,#0B6E4F);border-color:var(--green,#0B6E4F)}
+
+/* ---------- touch: every tap target at least 44px ---------- */
+.touch-active .bd-file,.touch-active .bd-btn{min-height:44px;min-width:44px}
+.touch-active #ops-file{padding:8px 16px}
+
+/* ---------- narrow screens ---------- */
+@media (max-width:900px), (max-height:520px){
+  .bd-case{gap:5px 12px;padding:7px 10px;margin-bottom:10px}
+  .bd-stamp{font-size:13px}
+  .bd-file{font-size:11px;letter-spacing:.16em;padding:5px 10px}
+}
+@media (max-width:620px){
+  .bd-case{grid-template-columns:minmax(0,1fr);gap:6px}
+  .bd-case-l{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .bd-case-r{justify-content:flex-start}
+  .bd-pen{flex-basis:auto;margin-left:auto}
+  .bd-bar{max-width:none}
+  .ops-foot .bd-file{order:-1}
+}

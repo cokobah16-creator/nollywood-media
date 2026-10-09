@@ -61,7 +61,7 @@ for(const k of ['co_plate_partial','co_plate_none','co_plate_driver']){
 }
 // achievements for the new systems
 const ACH_NEW = [
-  { id:'first_ink',    name:'Click',           desc:'Ink your first three links on the operations table.' },
+  { id:'first_ink',    name:'Click',           desc:'File a link on the operations table that holds.' },
   { id:'did_the_work', name:'Did the Work',    desc:'Go into Lekki knowing the suspect count, the laptop and the side gate.' },
   { id:'night_shift',  name:'Night Shift',     desc:'Find Madam on the operations table.' },
   { id:'you_knew',     name:'You Knew',        desc:'Seal the right name before Osas says a word.' },
@@ -96,6 +96,7 @@ V12.wrap('loadGame', orig => function(){
   if(ok){
     V12.heat();
     if(!S.game.ops) S.game.ops = null;            // rebuilt lazily by the operations table
+    else if(typeof V12.ops === 'function') try{ V12.ops(); }catch(e){ console.warn('[v12] ops migrate', e); }   // older saves gain strikes, locks and cases; inks stay
     // capabilities replaced the old skill tree: refund anything that no longer exists
     if(!S.player._capV12){
       const old = ['breach','squad','scanner','master_t','calm','persuade','master_n','eye','data','crypto','master_f'];
@@ -150,7 +151,7 @@ const CAPS = {
   ],
   network: [
     { id:'sources',  name:'Street Sources', desc:'A contact texts you one fact at the start of each operation — unless your Underworld Heat scares them off.', where:'Every operation' },
-    { id:'money',    name:'Follow the Money', desc:'Money links on the operations table ink in pairs instead of threes.', where:'The operations table', requires:'sources' },
+    { id:'money',    name:'Follow the Money', desc:'Your first wrong money link on each case is forgiven: struck off, but no strike and no Integrity cost.', where:'The operations table', requires:'sources' },
     { id:'squad',    name:'Squad Trust',    desc:'Post Uche at the rear exit when you plan a raid. He holds the tower perimeter 15 s longer.', where:'Lekki raid plan · Ugbowo tower', requires:'money' },
   ],
 };
@@ -170,7 +171,7 @@ window.openSkillTree = function(){
       ${SKILLS[b.key].map(s => {
         const unlocked = S.player.skills.includes(s.id), locked = s.requires && !S.player.skills.includes(s.requires) && !unlocked;
         return `<div class="skill-node ${unlocked ? 'unlocked' : ''} ${locked ? 'locked' : ''}" data-sid="${s.id}">
-          <div class="name">${s.name}${unlocked ? '<span class="check">✔</span>' : ''}</div>
+          <div class="name">${s.name}${unlocked ? `<span class="check">${typeof icon === 'function' ? icon('check') : ''}</span>` : ''}</div>
           <div class="desc">${s.desc}</div><div class="v12-where">${s.where}</div></div>`;
       }).join('')}
     </div>`).join('');
@@ -323,6 +324,7 @@ V12.wrap('collectEvidence', orig => function(ev){
   try{
     if(ev && ev.id === 'cash' && !V12.hasEv('obi_notebook')) setTimeout(()=>window.collectEvidence({ id:'obi_notebook', name:"Obi's Notebook — Initials and Amounts", xp:40 }), 1900);
     V12.log('evidence', { id: ev && ev.id });
+    if(typeof V12.opsRefresh === 'function') V12.opsRefresh();      // new evidence can open a lead or lift a refused warrant
   }catch(e){}
   return r;
 });
@@ -330,7 +332,15 @@ V12.wrap('endDialogue', orig => function(){
   const key = DLG.scriptKey;
   const r = orig.apply(this, arguments);
   try{
-    if(key === 'market_runner' && !V12.hasEv('kc_sims')) setTimeout(()=>collectEvidence({ id:'kc_sims', name:"KC's SIM Batch — 50 SIMs, One Registrant", xp:50 }), 900);
+    // KC's SIM batch is a lead you earn: his statement after a fair arrest, or the sleeve sweep
+    if(key === 'market_runner'){
+      const ch = (S.game.moralChoices || {}).choice;
+      if(ch === 'detain' || ch === 'flip'){
+        S.game.flags = S.game.flags || {}; S.game.flags.kc_statement = true;
+        if(!V12.hasEv('kc_sims')) setTimeout(()=>collectEvidence({ id:'kc_sims', name:"KC's Statement — His SIM Batch, 50 SIMs, One Registrant", xp:50 }), 900);
+        else if(typeof V12.opsRefresh === 'function') V12.opsRefresh();
+      }
+    }
     if(key === 'checkpoint_resolve' && S.game.moralChoices.checkpoint === 'flip_driver' && !V12.hasEv('musa_record'))
       setTimeout(()=>collectEvidence({ id:'musa_record', name:"Musa's Wired Statement — 'Madam' Gives the Engineer His Orders", xp:80 }), 700);
   }catch(e){ console.warn('[v12] endDialogue', e); }
@@ -338,7 +348,18 @@ V12.wrap('endDialogue', orig => function(){
 });
 V12.wrap('sideComplete', orig => function(qid){
   const r = orig.apply(this, arguments);
+  if(qid === 'm2_sims'){ S.game.flags = S.game.flags || {}; S.game.flags.kc_sweep = true; }
+  if(qid === 'm4_weld'){ S.game.flags = S.game.flags || {}; S.game.flags.weld_receipt = true; }
   if(qid === 'm2_sims' && !V12.hasEv('kc_sims')) setTimeout(()=>collectEvidence({ id:'kc_sims', name:"KC's SIM Batch — Sleeves Behind the Stalls", xp:50 }), 1400);
+  if((qid === 'm2_sims' || qid === 'm4_weld') && typeof V12.opsRefresh === 'function') V12.opsRefresh();
+  return r;
+});
+// the welder's receipt from the m4 sweep is a lead on the operations table
+V12.wrap('sideCollect', orig => function(tr){
+  const r = orig.apply(this, arguments);
+  try{
+    if(tr && tr.t && tr.t.id === 'm4b'){ S.game.flags = S.game.flags || {}; S.game.flags.weld_receipt = true; if(typeof V12.opsRefresh === 'function') V12.opsRefresh(); }
+  }catch(e){}
   return r;
 });
 
@@ -346,7 +367,7 @@ V12.wrap('sideComplete', orig => function(qid){
 V12.wrap('beginMissionCore', orig => function(id){
   const r = orig.apply(this, arguments);
   try{
-    if(id === 'm2'){ setEvidenceMax(2); V12.objAdd('o4_table', 'Ink three links on the operations table'); }
+    if(id === 'm2'){ setEvidenceMax(2); V12.objAdd('o4_table', 'Ink three links on the operations table'); V12.m2TableCheck(); }
     if(id === 'm3') setEvidenceMax(4);
   }catch(e){ console.warn('[v12] begin', e); }
   return r;
@@ -362,20 +383,35 @@ V12.wrap('beginMission', orig => function(id){
   }
   return r;
 });
-// M2: the van waits until the table has some ink on it (fail-forward after a real attempt)
+// M2's table objective closes on three inked links (a replay may already have them), or on three
+// strikes: the warrant is refused and the operation goes on without the table
+V12.m2TableCheck = function(){
+  try{
+    if(S.game.currentMission !== 'm2') return;
+    const o = (S.game.objectives || []).find(x => x.id === 'o4_table'); if(!o || o.done) return;
+    const ops = typeof V12.ops === 'function' ? V12.ops() : (S.game.ops || {});
+    const strikes = typeof V12.caseStrikes === 'function' ? V12.caseStrikes('lagos') : 0;
+    if((ops.inked || []).length >= 3) completeObjective('o4_table');
+    else if(strikes >= 3){ o.text = 'Operations table: refused at three strikes'; completeObjective('o4_table'); }
+  }catch(e){}
+};
+// M2: the van waits until the table has three links that hold, or three strikes (fail forward, at a cost)
 V12.wrap('buildSceneMarket', orig => function(){
   const r = orig.apply(this, arguments);
   const van = ENGINE.interactables.find(i => /^Board NACECA van/.test(i.label || ''));
   if(van && !van._v12){
     van._v12 = true; const go = van.onInteract;
     van.onInteract = function(){
-      const ops = S.game.ops || {}, inked = (ops.inked || []).length, tries = ops.tries || 0;
-      if(S.game._marketScanned && S.game.moralChoices.market_runner && inked < 3 && tries < 12){
-        toast('THE TABLE FIRST', 'Ink three links on the operations table before Lekki — open the CASE FILE', 2600);
-        if(typeof showHint === 'function') showHint('table_m2', 'Open the <b>CASE FILE</b> (TAB) and link what you found', 'Tap <b>CASE FILE</b> and link what you found');
+      const ops = typeof V12.ops === 'function' ? V12.ops() : (S.game.ops || {});
+      const inked = (ops.inked || []).length;
+      const strikes = typeof V12.caseStrikes === 'function' ? V12.caseStrikes('lagos') : 0;
+      if(S.game._marketScanned && S.game.moralChoices.market_runner && inked < 3 && strikes < 3){
+        toast('THE TABLE FIRST', 'File three links that hold on the operations table before Lekki — open the CASE FILE', 2600);
+        if(typeof showHint === 'function') showHint('table_m2', 'Open the <b>CASE FILE</b> (TAB), pencil what you found, then <b>FILE</b> the links you are sure of', 'Tap <b>CASE FILE</b>, pencil what you found, then <b>FILE</b> the links you are sure of');
         return;
       }
-      if(inked < 3 && tries >= 12) V12.say('SGT. UCHE', "We'll work the table in the van, sir. Let's move.");
+      if(S.game._marketScanned && S.game.moralChoices.market_runner && inked < 3 && strikes >= 3)
+        V12.say('SGT. UCHE', "The magistrate won't look at that table again today, sir. We go to Lekki without it.");
       return go.apply(this, arguments);
     };
   }
@@ -434,7 +470,7 @@ V12.wrap('applySettings', orig => function(){
 
 /* ---------- intel tiers that do something ---------- */
 V12.INTEL_TIERS = [
-  { at:50,  name:'WARRANT',    text:'A magistrate signs your search warrant: raids go in with legal cover.' },
+  { at:50,  name:'ON FILE',    text:'Zonal reads your reports first. A warrant is still won on the operations table.' },
   { at:120, name:'PATTERNS',   text:'Forensic traces near you light up on their own — no scan needed.' },
   { at:200, name:'PREDICTIVE', text:'You know their routes: runners in chases are slower.' },
 ];

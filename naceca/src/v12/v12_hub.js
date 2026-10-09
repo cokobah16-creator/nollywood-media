@@ -6,6 +6,10 @@
    people the last case touched, and some of them need an answer. The news
    board shows what the city made of it. The Commander sends you to the
    next case — in person in Lagos, on a video call from Benin.
+   Beta casework: before Lekki (h2) and Asaba (h5) the Commander wants a
+   charge sheet and reads the warrant before she briefs you (V12.raidGate,
+   beta/casework.js). A wrong name on that sheet comes back here: on the
+   phone and on the news board.
    ========================================================================= */
 (function(){
 'use strict';
@@ -13,6 +17,12 @@ const V12 = window.V12;
 const MC = ()=>S.game.moralChoices || {};
 const FL = ()=>S.game.flags || {};
 const W = V12.who;
+const ico = n => typeof icon === 'function' ? icon(n) : '';
+/* which case's charge sheet the Commander asks for at this hub */
+const HUB_CASE = V12.HUB_CASE = { h2:'lagos', h5:'route' };
+/* the person a settled charge sheet wrongly named, or null */
+const wrongHeld = c => { const r = typeof V12.accused === 'function' ? V12.accused(c) : null; return r && r.settled && r.ok && !r.ok.suspect ? r.suspect : null; };
+const exigent = c => { const r = typeof V12.accused === 'function' ? V12.accused(c) : null; return !!(r && r.warrant === 'exigent'); };
 
 /* ---------------- the hubs ---------------- */
 const HUBS = {
@@ -138,6 +148,8 @@ const PEOPLE_ON_PHONE = {
   kc:{ name:'KC', ini:'KC', col:'#e07d4a' }, sani:{ name:'Alhaji Sani', ini:'AS', col:'#1a78b8' }, chinedu:{ name:'Chinedu (Pa Eze\'s grandson)', ini:'C', col:'#c84a3a' },
   tobi:{ name:'Tobi Onuoha', ini:'TO', col:'#7a8aa3' }, tobisis:{ name:'Ngozi Onuoha', ini:'NO', col:'#7a8aa3' }, ehigie:{ name:'Mrs. Ehigie', ini:'E', col:'#b05a8a' },
   efe:{ name:'Efe', ini:'Ef', col:'#c9bd9b' }, unknown:{ name:'Unknown number', ini:'?', col:'#e84a5c' },
+  kcmum:{ name:'KC\'s mother', ini:'KM', col:'#e07d4a' }, posagent:{ name:'Ikeja POS agent', ini:'PA', col:'#4a8ad8' },
+  simagent:{ name:'SIM agent, Asaba Main Market', ini:'SA', col:'#7a8aa3' },
 };
 function phoneFor(h){
   const T = [], add = (who, msgs, reply, onRead)=>T.push({ who, msgs, reply, onRead });
@@ -165,6 +177,11 @@ function phoneFor(h){
     if(W.musa() === 'arrest_driver') add('musawife', [them('Officer, my husband Musa is in your cell. He is not a bad man. He drives. Please let them give him food.')]);
     if(W.kcFair()) add('kc', [them('Oga na KC. I dey Benin with my uncle now. The SIM man for Computer Village dey send carton go Asaba every week. Dem dey write "IFE" for the box.')], null, 'kc_asaba');
     if(V12.street('levy') === 'warned') add('sani', [them('Officer, all the drivers for the queue no dey pay anybody now without receipt. The boy no come back again.')]);
+    // the Lagos charge sheet named the wrong person
+    const wl = wrongHeld('lagos');
+    if(wl === 'kc') add('kcmum', [them('Officer, you wrote my son\'s name as the head of those people. He is seventeen. He sells data cards. They let him go, but the whole of Ikeja has read it.')]);
+    if(wl === 'pos') add('posagent', [them('This is the POS agent from Ikeja. I slept in your cell because your paper called me the leader. My machine licence is suspended. Nobody has said sorry.')]);
+    if(wl === 'tunde') add('tunde', [them('Oga… you arrest me? Me wey help you? Market people don see my face for station. I no fit help you again.')]);
   }
   if(h === 'h5'){
     const bvn = V12.reply('mum_bvn');
@@ -179,8 +196,15 @@ function phoneFor(h){
   }
   if(h === 'h6'){
     const tb = W.tobi(), lost = !!S.game._asabaHostageLost;
-    if(tb === 'rescue' || (tb === 'chase' && !lost)) add('tobi', [them('Officer Kelechi? This is Tobi Onuoha. The nurse gave me your number. Thank you. I kept their books for six months before I understood what I was keeping. If you ever find their payroll files, I can read them. I set up the ledger codes myself.')]);
-    else add('tobisis', [them('My brother Tobi was buried today. They say you were there that night. I don\'t know what to say to you. Just catch them.')]);
+    const wr = wrongHeld('route');
+    if(tb === 'rescue' || (tb === 'chase' && !lost)){
+      const tm = [them('Officer Kelechi? This is Tobi Onuoha. The nurse gave me your number. Thank you. I kept their books for six months before I understood what I was keeping. If you ever find their payroll files, I can read them. I set up the ledger codes myself.')];
+      if(wr === 'tobi') tm.push(them('They cuffed me to the bed this morning because your paper said I ran the route. It was lifted by noon. I will still read their payroll for you. I wanted you to know.'));
+      add('tobi', tm);
+    }
+    else add('tobisis', [them(wr === 'tobi' ? 'My brother Tobi was buried today, and the papers called him the cartel\'s accountant because of your charge sheet. Just catch them. Then tell the papers the truth.' : 'My brother Tobi was buried today. They say you were there that night. I don\'t know what to say to you. Just catch them.')]);
+    if(wr === 'agent') add('simagent', [them('Officer, I activate SIM cards at Asaba Main Market. Your people took me from my stall in front of my customers and let me go tonight. Who will buy from me now?')]);
+    if(wr === 'musa') add('musawife', [them('Officer, they came for Musa again today. They say your paper calls him the leader of the road. He drives. Please.')]);
     const msgs = [them('Good evening. I am Mrs. Ehigie. My son, Osas Ehigie, a UNIBEN student, was taken at the campus gate on Friday. His friends say he called NACECA last week about something at his work. Please. Nobody is helping me.')];
     if(W.heardOsas()) msgs.push(sys('You saved his voicemail at Lagos HQ: "a name on one of the payrolls… your agency."'));
     add('ehigie', msgs, { id:'ehigie_first', opts:[
@@ -230,7 +254,8 @@ V12.openPhone = function(onClose){
   const P = V12.mem().phone;
   let cur = null;
   const order = ()=>Object.keys(P).sort((a, b)=>((P[b].unread || 0) + (P[b].pending ? 1 : 0)) - ((P[a].unread || 0) + (P[a].pending ? 1 : 0)) || (HUB_ORDER.indexOf(P[b].last) - HUB_ORDER.indexOf(P[a].last)));
-  const avatar = id => { const p = PEOPLE_ON_PHONE[id] || { ini:'?', col:'#5a6a82' }; return `<span class="ph-av" style="background:${p.col}">${V12.esc(p.ini)}</span>`; };
+  // palette discs: paper with ink initials; an unknown number is the one stamped red
+  const avatar = id => { const p = PEOPLE_ON_PHONE[id] || { ini:'?' }; return `<span class="ph-av${id === 'unknown' ? ' ph-unk' : ''}">${V12.esc(p.ini)}</span>`; };
   const nameOf = id => (PEOPLE_ON_PHONE[id] || { name:id }).name;
   const draw = ()=>{
     const list = order().map(id => { const t = P[id], lastMsg = t.msgs[t.msgs.length - 1] || { text:'' }, n = (t.unread || 0) + (t.pending ? 1 : 0);
@@ -240,10 +265,10 @@ V12.openPhone = function(onClose){
       const t = P[cur];
       const bub = t.msgs.map(m => { const fresh = m._fresh; m._fresh = false; return `<div class="ph-b ${m.f}${fresh ? ' fresh' : ''}">${V12.esc(m.text)}</div>`; }).join('');
       const rep = t.pending ? `<div class="ph-reply"><div class="ph-rh">REPLY</div>${t.pending.opts.map((o, i)=>`<button class="ph-opt" data-i="${i}">${V12.esc(o.text)}</button>`).join('')}</div>` : '';
-      conv = `<div class="ph-ch"><button class="ph-back" aria-label="Back">‹</button>${avatar(cur)}<b>${V12.esc(nameOf(cur))}</b></div><div class="ph-msgs" id="ph-msgs">${bub}</div>${rep}`;
+      conv = `<div class="ph-ch"><button class="ph-back" aria-label="Back">${ico('back')}</button>${avatar(cur)}<b>${V12.esc(nameOf(cur))}</b></div><div class="ph-msgs" id="ph-msgs">${bub}</div>${rep}`;
     }
     ov.innerHTML = `<div class="overlay-bg"></div><div class="ph-frame ${cur ? 'reading' : ''}">
-      <div class="ph-top"><span>${V12.esc((HUBS[S.game.currentMission] || {}).sub || 'PHONE')}</span><button class="ph-x" aria-label="Close">✕</button></div>
+      <div class="ph-top"><span>${V12.esc((HUBS[S.game.currentMission] || {}).sub || 'PHONE')}</span><button class="ph-x" aria-label="Close">${ico('close')}</button></div>
       <div class="ph-body"><div class="ph-list">${list || '<div class="ph-empty">No messages.</div>'}</div><div class="ph-conv">${conv}</div></div></div>`;
     ov.querySelector('.ph-x').onclick = close;
     ov.querySelectorAll('.ph-row').forEach(b => b.onclick = ()=>{ open(b.dataset.id); });
@@ -289,6 +314,9 @@ function ticker(){
   }
   if(V12.street('levy') === 'ignored') out.push('EDO · Fake "levy" collectors fleece truck drivers on the Benin Bypass');
   if(V12.street('levy') === 'reported') out.push('EDO · Anti-Kidnapping Squad arrests two over fake transport-levy cards on the Benin Bypass');
+  if(exigent('lagos') && V12.started('m4')) out.push('LEGAL · Obi\'s lawyers to challenge NACECA\'s warrantless entry at Lekki');
+  if(exigent('route') && V12.started('m7')) out.push('LEGAL · Defence says the Asaba raid had no warrant');
+  if(wrongHeld('lagos') && V12.started('m4')) out.push('WAVE24 PHONE-IN · "They arrested the wrong person first. Who checks NACECA\'s homework?"');
   return out;
 }
 /* small items from the street, for days with no front page */
@@ -300,6 +328,9 @@ function smallClips(){
   if(pz === 'flagged') out.push({ pub:'THE LAGOS LEDGER', head:'NACECA opens file on "Grace Divine" cooperative', ded:'The Allen Avenue scheme promised members thirty percent a month.' });
   if(lv === 'reported') out.push({ pub:'NATIONAL DISPATCH', head:'Two held over fake "union levy" cards on Benin Bypass', ded:'Drivers had paid five thousand naira per truck to men with hologram stickers.' });
   if(tp === 'respect') out.push({ pub:'THE DAILY GONG', head:'Ozalla elders: "The officer who greeted us is welcome"', ded:'A palm-wine tapper says he told NACECA about night vehicles with Asaba plates.' });
+  const wl = wrongHeld('lagos'), wr = wrongHeld('route');
+  if(wl) out.unshift({ pub:'THE LAGOS LEDGER', head:'Ikeja asks who signed NACECA\'s charge sheet', ded:({ kc:'A 17-year-old data-card seller was held as "the kingpin" before the Lekki arrest. His mother has hired a lawyer.', pos:'A POS agent spent a night in the cells as "the ringleader". The agent\'s licence is suspended.', tunde:'A man who helped officers at Ikeja market was arrested on their own charge sheet. Traders have stopped talking.' })[wl] || 'The wrong name went on the sheet first.' });
+  if(wr) out.unshift({ pub:'THE DAILY GONG', head:'Asaba asks why NACECA charged the wrong name', ded:({ tobi:'The accountant officers pulled from the warehouse fire was named as its principal. The order was lifted by noon.', agent:'A SIM agent was taken from a market stall and released without charge.', musa:'A cattle driver from the Benin Bypass was re-arrested as "the route\'s principal".' })[wr] || 'The wrong name went on the sheet first.' });
   return out;
 }
 V12.openNews = function(onClose){
@@ -310,7 +341,7 @@ V12.openNews = function(onClose){
   const clip = (a, big)=>a ? `<article class="nb-clip ${big ? 'big' : ''}" style="--r:${big ? -0.6 : (Math.random()*4 - 2).toFixed(1)}deg">
       <div class="nb-pub">${V12.esc(a.pub || '')}</div><h3>${V12.esc(a.head || '')}</h3><p>${V12.esc(a.ded || '')}</p>${a.grade ? `<span class="nb-g g-${a.grade}">${a.grade}</span>` : ''}</article>` : '';
   ov.innerHTML = `<div class="overlay-bg"></div><div class="nb-frame">
-    <div class="nb-head"><div><div class="plan-k">THE NEWS BOARD</div><div class="plan-t">WHAT THE CITY MADE OF IT</div></div><button class="ph-x nb-x" aria-label="Close">✕</button></div>
+    <div class="nb-head"><div><div class="plan-k">THE NEWS BOARD</div><div class="plan-t">WHAT THE CITY MADE OF IT</div></div><button class="ph-x nb-x" aria-label="Close">${ico('close')}</button></div>
     <div class="nb-board">${main ? clip(main, true) : '<p class="ops-p">No front pages yet.</p>'}<div class="nb-rest">${rest.map(a => clip(a, false)).join('')}</div></div>
     <div class="nb-ticker">${ticker().map(t => `<span>${V12.esc(t)}</span>`).join('')}</div>
     <div class="nb-foot">${main ? '<button class="btn" id="nb-share">SHARE THIS FRONT PAGE</button>' : ''}<button class="btn primary" id="nb-done">BACK TO THE OFFICE</button></div></div>`;
@@ -358,6 +389,8 @@ function dressHub(h){
            || (ENGINE.npcs || []).map(npcMesh).find(m => m && m.position && Math.abs(m.position.z + 8) < 0.8);
   // Benin: the Commander is in Lagos; a video call on the wall screen instead
   let callAnchor = cmd;
+  // Lagos without a Commander mesh (legacy scene, headless test): anchor the call at her desk
+  if(!callAnchor && H.city === 'lagos'){ callAnchor = new THREE.Object3D(); callAnchor.position.set(0, 1.4, -8.0); sc.add(callAnchor); }
   if(H.city === 'benin'){
     if(cmd){ cmd.visible = false; }
     callAnchor = new THREE.Object3D(); callAnchor.position.set(0, 1.4, -8.4); sc.add(callAnchor);
@@ -412,9 +445,14 @@ function dressHub(h){
   if(table) ENGINE.interactables.push({ mesh:table.mesh, label:'Work the operations table', verb:'inspect', range:3.4, optional:true, onInteract:()=>V12.openOps() });
   if(callAnchor) ENGINE.interactables.push({ mesh:callAnchor, label:H.objective, verb:'talk', range:H.city === 'benin' ? 3.6 : 2.6, onInteract:()=>{
     if(!(st.uche && st.phone)){ toast('NOT YET', 'Uche and your phone first.', 1800); return; }
-    DIALOGUE.hub_cmd_run = cmdLines(h);
-    if(H.city === 'benin') V12.videoCall(true);
-    startDialogue('hub_cmd_run', ()=>{ V12.videoCall(false); completeObjective('hb_cmd'); endHub(h); });
+    // the briefing (which names who to go for) comes after the charge sheet and the warrant
+    const brief = (pre)=>{
+      DIALOGUE.hub_cmd_run = (pre || []).concat(cmdLines(h));
+      if(H.city === 'benin') V12.videoCall(true);
+      startDialogue('hub_cmd_run', ()=>{ V12.videoCall(false); completeObjective('hb_cmd'); endHub(h); });
+    };
+    if(HUB_CASE[h] && typeof V12.raidGate === 'function') V12.raidGate(HUB_CASE[h], { where:'hub', video:H.city === 'benin' }, brief);
+    else brief([]);
   }});
   if(door && H.city === 'lagos'){ /* the street door is not the way out tonight */ }
   if(ENGINE.player){ ENGINE.player.position.set(0, 0, 6.6); ENGINE.player.rotation.y = Math.PI; ENGINE.cameraYaw = ENGINE.playerYaw = Math.PI; }
@@ -430,9 +468,16 @@ function refreshLabel(){
 /* a call from Lagos fills the video wall */
 V12.videoCall = function(on){
   let el = document.getElementById('v12-call');
-  if(!on){ if(el) el.classList.remove('show'); return; }
+  if(!on){ clearInterval(V12._vcWatch); if(el) el.classList.remove('show'); return; }
   if(!el){ el = V12.el('div', '', `<div class="vc-dot"></div><span>VIDEO CALL · LAGOS HQ · ENCRYPTED</span>`); el.id = 'v12-call'; document.getElementById('game-root').appendChild(el); }
   el.classList.add('show');
+  // the badge belongs to the call: if the call is closed any other way (ESC, the pause menu,
+  // a cancelled charge sheet), it goes once nothing call-related is on screen
+  clearInterval(V12._vcWatch);
+  V12._vcWatch = setInterval(()=>{
+    const open = !!document.querySelector('#screen-dialogue.show, .overlay.show');
+    if(!open){ clearInterval(V12._vcWatch); el.classList.remove('show'); }
+  }, 500);
 };
 
 function endHub(h){
