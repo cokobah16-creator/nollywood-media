@@ -78,8 +78,11 @@ module.exports = async h => {
   s = await snap(h);
   h.log('M0 follow:', JSON.stringify(s));
   h.assert(s.hud === 'Follow the courier' && s.glabel !== 'Buy credit at the kiosk', 'cold open: the marker is no longer stuck on the kiosk');
-  const courier = await h.ev(() => ({ x: CO.courier.position.x, z: CO.courier.position.z }));
-  h.assert(near(s.pos, courier) && near(s.gpos, courier), 'cold open tail: target is the courier, as HUD says');
+  // the courier keeps walking, so compare against his position read in the same frame as the resolver
+  const tail = await h.ev(() => { const r = WAY.resolve(), g = guideTarget();
+    return { pos:r && r.pos ? { x:+r.pos.x, z:+r.pos.z } : null, gpos:g && g.mesh ? { x:+g.mesh.position.x, z:+g.mesh.position.z } : null,
+             courier:{ x:CO.courier.position.x, z:CO.courier.position.z } }; });
+  h.assert(near(tail.pos, tail.courier) && near(tail.gpos, tail.courier), 'cold open tail: target is the courier, as HUD says');
   await h.ev(() => { CO.phase = 3; });
   s = await snap(h);
   h.assert(s.hud === 'Find a way past the gate' && s.label === 'Open the gate' && s.sameMesh, 'cold open: courier in the alley → the gate is next ' + JSON.stringify(s));
