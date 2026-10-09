@@ -112,7 +112,7 @@ function makeRibbon(width, color, opacity, order, y){
   g.setAttribute('position', attr); g.setIndex(new THREE.BufferAttribute(idx, 1)); g.setDrawRange(0, 0);
   const mat = new THREE.MeshBasicMaterial({ color, transparent:true, opacity, depthWrite:false, fog:false, side:THREE.DoubleSide, toneMapped:false });
   const mesh = new THREE.Mesh(g, mat);
-  mesh.frustumCulled = false; mesh.renderOrder = order; mesh.userData._routeLine = true; mesh.userData._smoke = true;   // _smoke: never a camera solid
+  mesh.frustumCulled = false; mesh.renderOrder = order; mesh.userData._routeLine = true;   // transparent, so camera collision already ignores it (don't tag _smoke: updateAtmosphere would billboard and sway it)
   ENGINE.scene.add(mesh);
   return { mesh, g, attr, pos, mat, width, y };
 }

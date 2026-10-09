@@ -6164,12 +6164,12 @@ function epilogueSlides(){
     const CC = (typeof CW !== 'undefined' && CW.CASES) || {};
     const wl = _cwWrong('lagos'), wr = _cwWrong('route'), wv = _cwWrong('voice');
     const swap = (name, text)=>{ const s0 = S_.find(x => x.name === name); if(s0) s0.text = text; };
-    if(wl === 'kc') swap('KC', 'KC was held as "the kingpin" on a NACECA charge sheet before Lekki. The charge collapsed in a week. In Ikeja they still call him "the boss", and he hates it.');
+    if(wl === 'kc') swap('KC', m.market_runner === 'escaped' ? 'KC was never found. Your charge sheet called him "the kingpin", and his face is still on a NACECA wanted notice in Computer Village.' : 'KC was held as "the kingpin" on a NACECA charge sheet before Lekki. The charge collapsed in a week. In Ikeja they still call him "the boss", and he hates it.');
     if(wl === 'tunde') S_.push({ art:'', name:'TUNDE', text:'Your informant spent a night in a NACECA cell on your own charge sheet. He is back at the Ikeja market. He does not answer unknown numbers, or NACECA\'s.' });
     if(wl === 'pos') S_.push({ art:'', name:'THE IKEJA POS AGENT', text:'Held overnight as "the ringleader" on your charge sheet. The agent\'s licence was suspended for a year. Nobody apologised.' });
     if(wr === 'tobi') swap('TOBI ONUOHA', m.asaba === 'rescue' ? 'Tobi read the drive line by line for the prosecution — after a morning cuffed to a hospital bed on your charge sheet. He asked for nothing, not even an apology.' : 'Tobi did not live to read the drive. For a week the papers called him the cartel\'s accountant, because of your charge sheet.');
     if(wr === 'agent') S_.push({ art:'', name:'THE ASABA SIM AGENT', text:'Taken from a stall at Asaba Main Market on your charge sheet and released without charge. The stall is still shut.' });
-    if(wr === 'musa'){ const mu = S_.find(x => x.name === 'MUSA'); if(mu) mu.text += ' He was re-arrested as "the route\'s principal" on your charge sheet; it took a month to get the charge dropped.'; }
+    if(wr === 'musa'){ const mu = S_.find(x => x.name === 'MUSA'); if(mu) mu.text += ' Your charge sheet also named him "the route\'s principal"; it took a month to get that charge dropped.'; }
     if(wv && CC.voice && CC.voice.epilogue && CC.voice.epilogue[wv]){
       const e = CC.voice.epilogue[wv], ex = S_.find(x => x.name === e.name);
       if(ex) ex.text = e.text; else S_.push({ art:e.art, name:e.name, text:e.text });
@@ -8397,8 +8397,8 @@ function updateAsabaTrigger(dt){
       startChase({
         runner: rn, label:'IFEANYI', speed:4.1, catchDist:1.9, headStart:0.3,
         path: [[2,1],[6,5],[11,5],[11,-4],[15.5,-1]],
-        // no way out at the van while you're on him: he doubles back round the bays until caught or 20 s out of range
-        endPause: 1.4, endLine: 'No way out at the van. Ifeanyi breaks back through the bays.',
+        // he can't start the van while you're on him: he doubles back round the bays until caught or 20 s out of range
+        endPause: 1.4, endLine: 'Too close to start the van. Ifeanyi breaks back through the bays.',
         lanes: ASABA_LANES,
         onCaught: ()=>{ if(!S.game._asabaChoice) makeAsabaChoice('chase', rn); },
         onEscaped: ()=>{
@@ -13025,15 +13025,11 @@ function updateInteractPrompt(){
   x = Math.max(8, Math.min(W - wl._w - 8, x)); y = Math.max(touch ? 140 : 80, Math.min(H - (touch ? 300 : 220), y));
   wl.style.transform = `translate(${x}px, ${y}px) translate(0,-50%)`;
 }
-/* phones: pressure meters (wipe countdown, chase gap) sit right under the mission panel */
+/* phones: pressure meters (wipe countdown, chase gap) are placed by the stylesheet (beta/wayfind.css),
+   clear of the radio strip, the hint and the stick; this only clears positions set by older builds */
 function placeMetersTouch(){
   const m = document.getElementById('hud-meters'); if(!m) return;
-  if(!document.body.classList.contains('touch-active')){ if(m.style.top){ m.style.top = ''; m.style.width = ''; } return; }
-  if(!m.childElementCount) return;
-  const panel = document.querySelector('.hud-topleft .hud-mission'); if(!panel) return;
-  const r = panel.getBoundingClientRect(); if(!r.height) return;
-  m.style.top = Math.round(r.bottom + 8) + 'px';
-  m.style.width = Math.round(Math.max(200, r.width)) + 'px';
+  if(m.style.top || m.style.width){ m.style.top = ''; m.style.width = ''; }
 }
 /* evidence markers: diamond pips; label only when close (and not under the action label) */
 function updateMarkers(){
@@ -13285,7 +13281,7 @@ function faceEachOther(it){
    something (reputation, time, evidence quality), but it never blocks the
    story: after a failure the player can try again, force it at a price,
    or back off and come back.
-     dial     padlock tumblers — tap as the needle crosses the gold arc
+     dial     padlock tumblers — tap as the needle crosses the marked arc
      steady   lift / trace along a path without touching the edges
      wires    reconnect coloured leads to the right terminals
      spot     tap the red flags in a message or document
@@ -13597,7 +13593,7 @@ window.addEventListener('keyup', e=>{
 
 /* =========================================================================
    DIAL — a padlock (or a pry bar, or a cuff key): the needle sweeps, tap
-   while it crosses the gold arc. Each pin narrows the arc and speeds the
+   while it crosses the marked arc. Each pin narrows the arc and speeds the
    needle; misses cost a strike and move the arc.
    params: pins, arc (rad), speed (rad/s), reverse, actLabel, skin
    ========================================================================= */
@@ -13629,10 +13625,8 @@ MG_TYPES.dial = function(api, P){
     const x = cv.x, s = size, c = s/2, R = s*0.42;
     x.clearRect(0, 0, s, s);
     // body
-    const g = x.createRadialGradient(c, c*0.85, R*0.1, c, c, R*1.15);
-    g.addColorStop(0, P.face || '#1d2a44'); g.addColorStop(1, '#070b14');
-    x.fillStyle = g; x.beginPath(); x.arc(c, c, R*1.12, 0, MG_TAU); x.fill();
-    x.strokeStyle = 'rgba(216,166,74,.55)'; x.lineWidth = 2; x.stroke();
+    x.fillStyle = P.face || '#262623'; x.beginPath(); x.arc(c, c, R*1.12, 0, MG_TAU); x.fill();
+    x.strokeStyle = 'rgba(233,220,192,.55)'; x.lineWidth = 2; x.stroke();
     // ticks
     for(let i=0;i<60;i++){
       const a = i/60*MG_TAU, r0 = R*(i%5 ? 0.93 : 0.86);
@@ -13641,7 +13635,7 @@ MG_TYPES.dial = function(api, P){
     }
     // sweet spot
     if(set < pins){
-      x.strokeStyle = '#f0c878'; x.lineWidth = 15; x.lineCap = 'butt';
+      x.strokeStyle = '#E9DCC0'; x.lineWidth = 15; x.lineCap = 'butt';
       x.shadowBlur = 0; // flat sweet-spot arc (no glow)
       x.beginPath(); x.arc(c, c, R*0.78, arcAt - width/2, arcAt + width/2); x.stroke();
       x.shadowBlur = 0;
@@ -13649,14 +13643,14 @@ MG_TYPES.dial = function(api, P){
     // needle
     x.strokeStyle = '#ffffff'; x.lineWidth = 4; x.lineCap = 'round';
     x.beginPath(); x.moveTo(c, c); x.lineTo(c + Math.cos(ang)*R*0.9, c + Math.sin(ang)*R*0.9); x.stroke();
-    x.fillStyle = '#e84a5c'; x.beginPath(); x.arc(c + Math.cos(ang)*R*0.9, c + Math.sin(ang)*R*0.9, 5, 0, MG_TAU); x.fill();
+    x.fillStyle = '#B3261E'; x.beginPath(); x.arc(c + Math.cos(ang)*R*0.9, c + Math.sin(ang)*R*0.9, 5, 0, MG_TAU); x.fill();
     // hub with shackle glyph
-    x.fillStyle = '#0b1426'; x.beginPath(); x.arc(c, c, R*0.3, 0, MG_TAU); x.fill();
-    x.strokeStyle = 'rgba(216,166,74,.8)'; x.lineWidth = 2; x.stroke();
-    x.fillStyle = '#f3ead2'; x.font = `700 ${Math.round(s*0.09)}px Oswald, Arial Narrow, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillStyle = '#1C1C1A'; x.beginPath(); x.arc(c, c, R*0.3, 0, MG_TAU); x.fill();
+    x.strokeStyle = 'rgba(233,220,192,.8)'; x.lineWidth = 2; x.stroke();
+    x.fillStyle = '#E9DCC0'; x.font = `700 ${Math.round(s*0.09)}px Oswald, Arial Narrow, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillText(`${set}/${pins}`, c, c);
     if(fl > 0){
-      x.strokeStyle = flGood ? `rgba(93,208,122,${fl})` : `rgba(232,74,92,${fl})`; x.lineWidth = 6;
+      x.strokeStyle = flGood ? `rgba(11,110,79,${fl})` : `rgba(179,38,30,${fl})`; x.lineWidth = 6;
       x.beginPath(); x.arc(c, c, R*1.1, 0, MG_TAU); x.stroke();
     }
   };
@@ -13732,13 +13726,11 @@ MG_TYPES.steady = function(api, P){
   const onUp = e=>{ if(e.pointerId === pid){ drag = false; pid = null; } };
   cv.c.addEventListener('pointerdown', onDown); cv.c.addEventListener('pointermove', onMove);
   cv.c.addEventListener('pointerup', onUp); cv.c.addEventListener('pointercancel', onUp);
-  const pal = P.palette || { bg:'#1c120c', rim:'#5a3a22', chan:'rgba(120,180,200,.20)', edge:'rgba(160,210,230,.35)' };
+  const pal = P.palette || { bg:'#1c120c', rim:'#5a3a22', chan:'rgba(233,220,192,.14)', edge:'rgba(233,220,192,.32)' };
   const draw = ()=>{
     const x = cv.x; x.clearRect(0, 0, W, H);
     if(P.skin === 'pot'){
-      const g = x.createRadialGradient(W/2, H/2, 10, W/2, H/2, Math.max(W, H)*0.62);
-      g.addColorStop(0, '#2a1a10'); g.addColorStop(0.75, pal.bg); g.addColorStop(1, '#0b0705');
-      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = pal.bg; x.fillRect(0, 0, W, H);
       x.strokeStyle = pal.rim; x.lineWidth = 10; x.beginPath(); x.ellipse(W/2, H/2, W/2-6, H/2-6, 0, 0, MG_TAU); x.stroke();
       // ritual clutter: cowries + kola, the things you must not disturb
       x.fillStyle = 'rgba(240,230,210,.22)';
@@ -13748,8 +13740,7 @@ MG_TYPES.steady = function(api, P){
       x.fillStyle = '#6a4630'; x.fillRect(0, H*0.32, W, H*0.36);
       x.fillStyle = 'rgba(255,255,255,.05)'; for(let i=0;i<8;i++) x.fillRect(0, H*0.32 + i*H*0.045, W, 1);
     } else {
-      const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#2a2e36'); g.addColorStop(1, '#14171c');
-      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = '#262623'; x.fillRect(0, 0, W, H);
       x.strokeStyle = 'rgba(255,255,255,.05)'; for(let i=0;i<W;i+=14){ x.beginPath(); x.moveTo(i, 0); x.lineTo(i-30, H); x.stroke(); }
       for(const [rx, ry] of [[12,12],[W-12,12],[12,H-12],[W-12,H-12]]){ x.fillStyle = '#4a4f58'; x.beginPath(); x.arc(rx, ry, 4, 0, MG_TAU); x.fill(); }
     }
@@ -13762,20 +13753,20 @@ MG_TYPES.steady = function(api, P){
     for(const it of items){
       if(it.got) continue;
       x.save(); x.translate(it.p[0], it.p[1]); x.rotate(-0.25);
-      x.fillStyle = P.itemColor || '#d8a64a'; x.fillRect(-7, -5, 14, 10);
+      x.fillStyle = P.itemColor || '#E9DCC0'; x.fillRect(-7, -5, 14, 10);
       x.fillStyle = '#5a3a10'; x.fillRect(-3, -2, 6, 4); x.restore();
     }
     // start + goal
     x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 2; x.beginPath(); x.arc(start[0], start[1], hw+3, 0, MG_TAU); x.stroke();
     const ready = got() === items.length;
-    x.strokeStyle = ready ? '#5dd07a' : 'rgba(93,208,122,.35)'; x.lineWidth = 3; x.beginPath(); x.arc(end[0], end[1], hw+6, 0, MG_TAU); x.stroke();
+    x.strokeStyle = ready ? '#E9DCC0' : 'rgba(233,220,192,.3)'; x.lineWidth = ready ? 4 : 2; x.beginPath(); x.arc(end[0], end[1], hw+6, 0, MG_TAU); x.stroke();
     // marker
-    x.fillStyle = hot > 0 ? '#e84a5c' : '#f0c878';
+    x.fillStyle = hot > 0 ? '#B3261E' : '#E9DCC0';
     x.beginPath(); x.arc(tok.x, tok.y, 8, 0, MG_TAU); x.fill(); x.shadowBlur = 0;
-    x.strokeStyle = '#0b1426'; x.lineWidth = 2; x.beginPath(); x.arc(tok.x, tok.y, 3, 0, MG_TAU); x.stroke();
+    x.strokeStyle = '#1C1C1A'; x.lineWidth = 2; x.beginPath(); x.arc(tok.x, tok.y, 3, 0, MG_TAU); x.stroke();
     if(!drag && running && noise === 0 && got() === 0){
       x.fillStyle = 'rgba(255,255,255,.75)'; x.font = '600 11px Oswald, sans-serif'; x.textAlign = 'center';
-      x.fillText(_isTouchMG() ? 'DRAG THE GOLD MARKER' : 'DRAG THE MARKER · OR ARROW KEYS', tok.x + 60 > W ? W - 70 : tok.x + 62, tok.y - 16);
+      x.fillText(_isTouchMG() ? 'DRAG THE MARKER' : 'DRAG THE MARKER · OR ARROW KEYS', tok.x + 60 > W ? W - 70 : tok.x + 62, tok.y - 16);
     }
   };
   return {
@@ -13843,7 +13834,7 @@ MG_TYPES.wires = function(api, P){
       api.msg(`${doneN}/${pairs.length} CONNECTED`, 'good');
       if(doneN === pairs.length){ running = false; api.success(); }
     } else {
-      te.classList.add('bad'); const ln = line(sel, te, '#e84a5c', true);
+      te.classList.add('bad'); const ln = line(sel, te, '#B3261E', true);
       setTimeout(()=>{ te.classList.remove('bad'); ln.remove(); }, 450);
       api.strike(P.missText || 'Spark! Wrong terminal.');
     }
@@ -13964,11 +13955,11 @@ MG_TYPES.pattern = function(api, P){
   for(let i=0;i<9;i++){
     const [x, y] = pos(i);
     const ring = document.createElementNS(svgNS, 'circle'); ring.setAttribute('cx', x); ring.setAttribute('cy', y); ring.setAttribute('r', 22); ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', 'rgba(255,255,255,.08)'); ring.setAttribute('stroke-width', 2); svg.appendChild(ring);
-    const d = document.createElementNS(svgNS, 'circle'); d.setAttribute('cx', x); d.setAttribute('cy', y); d.setAttribute('r', 8); d.setAttribute('fill', '#55627a'); svg.appendChild(d);
+    const d = document.createElementNS(svgNS, 'circle'); d.setAttribute('cx', x); d.setAttribute('cy', y); d.setAttribute('r', 8); d.setAttribute('fill', '#6B6B63'); svg.appendChild(d);
     dots.push({ d, ring });
   }
   const pl = document.createElementNS(svgNS, 'polyline'); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke-width', '7'); pl.setAttribute('stroke-linecap', 'round'); pl.setAttribute('stroke-linejoin', 'round'); svg.insertBefore(pl, svg.firstChild);
-  const live = document.createElementNS(svgNS, 'line'); live.setAttribute('stroke', 'rgba(240,200,120,.5)'); live.setAttribute('stroke-width', '5'); live.setAttribute('stroke-linecap', 'round'); svg.insertBefore(live, svg.firstChild);
+  const live = document.createElementNS(svgNS, 'line'); live.setAttribute('stroke', 'rgba(233,220,192,.5)'); live.setAttribute('stroke-width', '5'); live.setAttribute('stroke-linecap', 'round'); svg.insertBefore(live, svg.firstChild);
   const cnt = mgEl('div', 'mg-sort-count'); cnt.style.marginTop = '8px'; api.stage.appendChild(cnt);
   const neighbours = i=>{ const r = Math.floor(i/3), c = i%3, out = []; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ if(!dr && !dc) continue; const rr = r+dr, cc = c+dc; if(rr>=0 && rr<3 && cc>=0 && cc<3) out.push(rr*3+cc); } return out; };
   const make = ()=>{
@@ -13978,23 +13969,23 @@ MG_TYPES.pattern = function(api, P){
   };
   let pattern = make(), input = [], round = 0, phase = 'idle', wt = 0, wi = 0, drawing = false, pid = null;
   const paint = (seq, col)=>{
-    dots.forEach((o, i)=>{ const on = seq.includes(i); o.d.setAttribute('fill', on ? col : '#55627a'); o.d.setAttribute('r', on ? 11 : 8); o.ring.setAttribute('stroke', on ? col : 'rgba(255,255,255,.08)'); });
+    dots.forEach((o, i)=>{ const on = seq.includes(i); o.d.setAttribute('fill', on ? col : '#6B6B63'); o.d.setAttribute('r', on ? 11 : 8); o.ring.setAttribute('stroke', on ? col : 'rgba(255,255,255,.08)'); });
     pl.setAttribute('stroke', col); pl.setAttribute('points', seq.map(i=>pos(i).join(',')).join(' '));
   };
   const cntTxt = ()=>{ cnt.textContent = phase === 'watch' ? 'WATCH THE PATTERN…' : phase === 'input' ? `YOUR TURN  ·  ${input.length}/${len}` + (rounds > 1 ? `  ·  ROUND ${round+1}/${rounds}` : '') : ''; };
-  const watch = ()=>{ phase = 'watch'; wt = 0; wi = 0; input = []; paint([], '#f0c878'); cntTxt(); };
+  const watch = ()=>{ phase = 'watch'; wt = 0; wi = 0; input = []; paint([], '#E9DCC0'); cntTxt(); };
   const addDot = i=>{
     if(phase !== 'input' || input.includes(i)) return;
     input.push(i);
     if(pattern[input.length-1] !== i){
-      paint(input, '#e84a5c'); drawing = false; phase = 'idle';
+      paint(input, '#B3261E'); drawing = false; phase = 'idle';
       api.strike(P.missText || 'Wrong dot — the phone buzzes.');
       setTimeout(()=>{ if(api.playing()) watch(); }, 700);
       return;
     }
-    mgSfx('tick'); paint(input, '#f0c878'); cntTxt();
+    mgSfx('tick'); paint(input, '#E9DCC0'); cntTxt();
     if(input.length === len){
-      drawing = false; phase = 'idle'; paint(input, '#5dd07a'); mgSfx('good');
+      drawing = false; phase = 'idle'; paint(input, '#0B6E4F'); mgSfx('good');
       round++;
       if(round >= rounds){ api.success(); }
       else { api.msg(P.roundText || 'UNLOCKED — NEXT SCREEN', 'good'); setTimeout(()=>{ if(api.playing()){ pattern = make(); watch(); } }, 800); }
@@ -14013,18 +14004,18 @@ MG_TYPES.pattern = function(api, P){
   });
   const end = e=>{ if(e.pointerId === pid){ drawing = false; pid = null; live.setAttribute('x2', live.getAttribute('x1') || 0); live.setAttribute('y2', live.getAttribute('y1') || 0); } };
   pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
-  paint([], '#f0c878');
+  paint([], '#E9DCC0');
   return {
-    start(){ watch(); api.actions([{ label:'CLEAR', cls:'ghost', onClick:()=>{ if(phase === 'input'){ input = []; paint([], '#f0c878'); cntTxt(); } } }, { label:'SHOW AGAIN', cls:'ghost', note:'costs a strike', onClick:()=>{ if(phase === 'input'){ api.strike('Peeked.'); if(api.playing()) watch(); } } }]); },
+    start(){ watch(); api.actions([{ label:'CLEAR', cls:'ghost', onClick:()=>{ if(phase === 'input'){ input = []; paint([], '#E9DCC0'); cntTxt(); } } }, { label:'SHOW AGAIN', cls:'ghost', note:'costs a strike', onClick:()=>{ if(phase === 'input'){ api.strike('Peeked.'); if(api.playing()) watch(); } } }]); },
     update(dt){
       if(phase !== 'watch' || !dt) return;
       wt += dt;
       const step = (P.showStep || 0.5) / D.speed;
       const k = Math.min(len, Math.floor(wt / step) + 1);
-      if(k !== wi){ wi = k; paint(pattern.slice(0, k), '#f0c878'); mgSfx('tick'); }
-      if(wt > step*len + 0.7){ phase = 'input'; input = []; paint([], '#f0c878'); cntTxt(); }
+      if(k !== wi){ wi = k; paint(pattern.slice(0, k), '#E9DCC0'); mgSfx('tick'); }
+      if(wt > step*len + 0.7){ phase = 'input'; input = []; paint([], '#E9DCC0'); cntTxt(); }
     },
-    reveal(){ paint(pattern, 'rgba(93,208,122,.6)'); },
+    reveal(){ paint(pattern, 'rgba(233,220,192,.6)'); },
     dbg(){ return { pattern:pattern.slice(), phase, input:input.slice(), len, pad, pos:[0,1,2,3,4,5,6,7,8].map(pos) }; },
     destroy(){},
   };
@@ -14055,13 +14046,13 @@ MG_TYPES.tune = function(api, P){
   const wave = (x, f, a, ph)=> a * Math.sin((2 + f*10) * x * MG_TAU / W * 1.0 * 1.4 + ph);
   const draw = (inBand)=>{
     const x = cv.x; x.clearRect(0, 0, W, H);
-    x.fillStyle = '#05080f'; x.fillRect(0, 0, W, H);
-    x.strokeStyle = 'rgba(122,220,208,.08)'; x.lineWidth = 1;
+    x.fillStyle = '#1C1C1A'; x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(233,220,192,.08)'; x.lineWidth = 1;
     for(let i=0;i<W;i+=W/10){ x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
     for(let j=0;j<H;j+=H/6){ x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); }
     const line = (f, a, col, w, dash)=>{ x.strokeStyle = col; x.lineWidth = w; x.setLineDash(dash || []); x.beginPath(); for(let i=0;i<=W;i+=2){ const y = H/2 - wave(i, f, 0.1 + a*0.9, phase) * (H*0.42); i ? x.lineTo(i, y) : x.moveTo(i, y); } x.stroke(); x.setLineDash([]); };
-    line(ta, tb, 'rgba(240,200,120,.85)', 2, [5, 5]);
-    line(fa, fb, inBand ? '#5dd07a' : '#7adcd0', 2.6);
+    line(ta, tb, 'rgba(233,220,192,.85)', 2, [5, 5]);
+    line(fa, fb, inBand ? '#E9DCC0' : '#A89F8A', inBand ? 3.4 : 2.2);
     x.fillStyle = 'rgba(255,255,255,.55)'; x.font = '600 10px JetBrains Mono, monospace'; x.textAlign = 'left';
     x.fillText(P.screenLabel || 'TARGET ---   YOU ───', 8, 14);
   };
@@ -14083,7 +14074,7 @@ MG_TYPES.tune = function(api, P){
         const inBand = Math.abs(fa - ta) < tolA && Math.abs(fb - tb) < tolB;
         lock = Math.max(0, Math.min(1, lock + (inBand ? dt/hold : -dt/(hold*1.7))));
         fill.style.width = (lock*100).toFixed(1) + '%'; val.textContent = Math.round(lock*100) + '%';
-        api.msg(inBand ? (P.lockText || 'HOLD IT…') : (Math.abs(fa - ta) >= tolA ? (fa < ta ? `${P.labelA || 'FREQ'} ↑` : `${P.labelA || 'FREQ'} ↓`) : (fb < tb ? `${P.labelB || 'GAIN'} ↑` : `${P.labelB || 'GAIN'} ↓`)), inBand ? 'good' : '');
+        api.msg(inBand ? (P.lockText || 'HOLD IT…') : (Math.abs(fa - ta) >= tolA ? (fa < ta ? `${P.labelA || 'FREQ'} HIGHER` : `${P.labelA || 'FREQ'} LOWER`) : (fb < tb ? `${P.labelB || 'GAIN'} HIGHER` : `${P.labelB || 'GAIN'} LOWER`)), inBand ? 'good' : '');
         if(lock >= 1){ running = false; const tf = api.timeFrac(); api.success({ stars: tf < 0.5 ? 3 : tf < 0.8 ? 2 : 1 }); }
         draw(inBand);
       } else draw(false);
@@ -14139,8 +14130,8 @@ MG_TYPES.sort = function(api, P){
 MG_TYPES.mash = function(api, P){
   const D = api.diff;
   const btn = mgEl('button', 'mg-mash');
-  btn.innerHTML = `<svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" fill="rgba(11,20,38,.95)" stroke="rgba(216,166,74,.35)" stroke-width="14"/>
-      <circle id="mg-mash-ring" cx="100" cy="100" r="86" fill="none" stroke="#f0c878" stroke-width="14" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="540" stroke-dashoffset="540"/></svg>
+  btn.innerHTML = `<svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" fill="rgba(28,28,26,.95)" stroke="rgba(233,220,192,.35)" stroke-width="14"/>
+      <circle id="mg-mash-ring" cx="100" cy="100" r="86" fill="none" stroke="#E9DCC0" stroke-width="14" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="540" stroke-dashoffset="540"/></svg>
     <div class="lbl">${P.label || 'TAP!'}<small>${P.small || 'AS FAST AS YOU CAN'}</small></div>`;
   api.stage.appendChild(btn);
   const ring = btn.querySelector('#mg-mash-ring');
@@ -14564,7 +14555,7 @@ const MG_CFG = {
     onFail:()=>{ S.game._shrineSpills = (S.game._shrineSpills||0) + 1; if(S.game._shrineSpills <= 2){ applyEffect({ publicTrust:-2 }); setTimeout(()=>toast('PA EZE', '"Gently, my child. Gently."', 2000), 300); } },
     force:{ label:'TIP THE POT OUT', note:'−5 Public Trust', apply:()=>applyEffect({ publicTrust:-5 }) } }),
   m5_cache:()=>({ id:'m5_cache', type:'dial', kicker:'CASE 05 · CARTEL CACHE', title:'PICK THE PADLOCK', time:30,
-    sub:'A chain through the jerry-can handles and a cheap brass padlock. <b>Tap as the needle crosses the gold arc</b> to set each pin.',
+    sub:'A chain through the jerry-can handles and a cheap brass padlock. <b>Tap as the needle crosses the marked arc</b> to set each pin.',
     winNote:'The shackle drops. Cash, a ledger — and the smell of diesel.',
     params:{ pins:3, actLabel:'SET PIN', missText:'The pick slips.' },
     force:{ label:'BOLT-CUTTERS', note:'Loud · −2 Public Trust', apply:()=>applyEffect({ publicTrust:-2 }) } }),
@@ -14597,7 +14588,7 @@ const MG_CFG = {
       force:{ label:'LET OSARO DO IT', note:'−3 Agency Favour · slower', apply:()=>applyEffect({ agencyFavour:-3 }) } };
   },
   m7_trace:()=>({ id:'m7_trace', type:'tune', kicker:'CASE 07 · BTS CABINET', title:'LOCK THE HANDSET', time:40, noStrikes:true,
-    sub:'The handset is hopping channels. <b>Match the gold trace</b> with FREQ and GAIN and hold it until the lock fills — the trace window is still closing.',
+    sub:'The handset is hopping channels. <b>Match the target trace</b> with FREQ and GAIN and hold it until the lock fills — the trace window is still closing.',
     winNote:'Lock held. Now read the sectors.',
     params:{ labelA:'FREQ', labelB:'GAIN', hold:2.6, meterLabel:'LOCK', lockText:'HOLDING LOCK…', screenLabel:'HANDSET ---   CABINET ───' },
     onTick:dt=>{ const g = S.game; if(g._towerAmbush && !g._towerTraced && !g._towerExpired) g._towerWindow -= dt * (typeof timerRate === 'function' ? timerRate() : 1); },
@@ -15715,7 +15706,7 @@ V12.wrap('sideCollect', orig => function(tr){
 V12.wrap('beginMissionCore', orig => function(id){
   const r = orig.apply(this, arguments);
   try{
-    if(id === 'm2'){ setEvidenceMax(2); V12.objAdd('o4_table', 'Ink three links on the operations table'); }
+    if(id === 'm2'){ setEvidenceMax(2); V12.objAdd('o4_table', 'Ink three links on the operations table'); V12.m2TableCheck(); }
     if(id === 'm3') setEvidenceMax(4);
   }catch(e){ console.warn('[v12] begin', e); }
   return r;
@@ -15731,6 +15722,18 @@ V12.wrap('beginMission', orig => function(id){
   }
   return r;
 });
+// M2's table objective closes on three inked links (a replay may already have them), or on three
+// strikes: the warrant is refused and the operation goes on without the table
+V12.m2TableCheck = function(){
+  try{
+    if(S.game.currentMission !== 'm2') return;
+    const o = (S.game.objectives || []).find(x => x.id === 'o4_table'); if(!o || o.done) return;
+    const ops = typeof V12.ops === 'function' ? V12.ops() : (S.game.ops || {});
+    const strikes = typeof V12.caseStrikes === 'function' ? V12.caseStrikes('lagos') : 0;
+    if((ops.inked || []).length >= 3) completeObjective('o4_table');
+    else if(strikes >= 3){ o.text = 'Operations table: refused at three strikes'; completeObjective('o4_table'); }
+  }catch(e){}
+};
 // M2: the van waits until the table has three links that hold, or three strikes (fail forward, at a cost)
 V12.wrap('buildSceneMarket', orig => function(){
   const r = orig.apply(this, arguments);
@@ -16145,21 +16148,21 @@ const N = [
     dossier:'Obi\'s house in Old GRA. Lit up most nights, with a generator house at the side.',
     note:'Whose SIMs ping the towers around this house?' },
   // LAGOS · leads that go nowhere
-  { id:'s_tunde',   kind:'suspect',  g:['lagos'], tag:'INFORMANT', name:'Tunde', meta:'Ikeja market · informant', herring:true,
+  { id:'s_tunde',   kind:'suspect',  g:['lagos'], tag:'INFORMANT', name:'Tunde', meta:'Ikeja market · informant', herring:true, facts:['l_market'],
     req:()=>!!S.game._marketTunde || V12.hasEv('phishing_template') || V12.started('m3'),
     dossier:'Your informant at the Ikeja market. He pointed out the boy and the phone on his counter, and knew the boy moves SIMs for a syndicate. He asked not to be named.',
     note:'He came to you. Does any SIM, wallet or cash-out on this table carry his name?' },
-  { id:'e_bvn',     kind:'evidence', g:['lagos'], tag:'SMS', name:'"Re-validate BVN"', meta:'UNKNOWN-BANK · inbox', herring:true,
+  { id:'e_bvn',     kind:'evidence', g:['lagos'], tag:'SMS', name:'"Re-validate BVN"', meta:'UNKNOWN-BANK · inbox', herring:true, facts:['s_kc','l_market'],
     req:()=>docSeen('market_phone_scan') || V12.hasEv('phishing_template'),
     dossier:'From the scan of the phone on KC\'s counter. In the inbox, from "UNKNOWN-BANK": "ATTN: Re-validate BVN. Reply with full DOB+PIN. Urgent." No link, no page behind it.',
-    note:'Read where it sits on the phone. Was it sent from this device, or to it?' },
-  { id:'m_coop',    kind:'money',    g:['lagos'], tag:'COOPERATIVE', name:'Grace Divine Cooperative', meta:'Allen Avenue · 30% a month', herring:true,
-    req:()=>!!street('ponzi'),
+    note:'Reply-with-your-PIN, no link, no cloned page behind it. Is that the template you were briefed on?' },
+  { id:'m_coop',    kind:'money',    g:['lagos'], tag:'COOPERATIVE', name:'Grace Divine Cooperative', meta:'Allen Avenue · 30% a month', herring:true, facts:['l_market'],
+    req:()=>!!street('ponzi') || (S.game.completedMissions || []).includes('m2'),   // the flyers are all over the market
     dossier:()=>'Flyers at the Ikeja market: put in ₦20,000, collect ₦26,000 in four weeks. "Poultry, crypto, importation." Everyone who joined first has been paid.'
       + (street('ponzi') === 'warned' ? ' Paid, Sister Ngozi admits, out of the new members\' contributions.' : '')
       + (street('ponzi') === 'flagged' ? ' Office on Allen Avenue, second floor. The fraud desk has the flyer.' : ''),
     note:'Thirty percent a month, paid from the next person\'s deposit. The ring\'s money, or somebody else\'s fraud?' },
-  { id:'s_ada',     kind:'suspect',  g:['lagos'], tag:'NAME ON A PEN', name:'Ada', meta:'gold pen · Obi\'s study', herring:true,
+  { id:'s_ada',     kind:'suspect',  g:['lagos'], tag:'NAME ON A PEN', name:'Ada', meta:'gold pen · Obi\'s study', herring:true, facts:['s_obi','l_lekki'],
     req:()=>docSeen('mansion_safe') || V12.hasEv('safe_drives') || docSeen('night_click') || V12.started('m4'),
     dossier:'A gold pen in Obi\'s study, engraved "To Ada, 22·03·86". On his calendar, his wife\'s birthday is circled: 22 March.',
     note:'Obi\'s books pay initials, not first names. Does any entry fit hers?' },
@@ -16204,19 +16207,19 @@ const N = [
     dossier:'A warehouse in Asaba, where they held Tobi Onuoha, the accountant who asked about a transfer.',
     note:'The forest ledger\'s next leg.' },
   // THE ROUTE · leads that go nowhere
-  { id:'s_rabiu',   kind:'suspect',  g:['route'], tag:'CONSIGNOR', name:'Alh. Rabiu Mukhtar', meta:'Kano · on the waybill', herring:true,
+  { id:'s_rabiu',   kind:'suspect',  g:['route'], tag:'CONSIGNOR', name:'Alh. Rabiu Mukhtar', meta:'Kano · on the waybill', herring:true, facts:['s_musa','l_abattoir'],
     req:()=>docSeen('checkpoint_manifest') || docSeen('checkpoint_lie') || V12.hasEv('broken_seal') || V12.started('m5'),
     dossier:'Named on waybill KN-2026-04481 as consignor: 42 head of White Fulani, Kano to Sapele. Musa says the cattle belong to "one Alhaji for Kano".',
     note:'The cattle check out: 42 head. The extra 2,420 kg didn\'t. Whose lorry was it hidden in?' },
-  { id:'l_abattoir',kind:'place',    g:['route'], tag:'CONSIGNEE', name:'Delta Riverside Abattoir', meta:'Sapele · on the waybill', herring:true,
+  { id:'l_abattoir',kind:'place',    g:['route'], tag:'CONSIGNEE', name:'Delta Riverside Abattoir', meta:'Sapele · on the waybill', herring:true, facts:['s_rabiu','s_musa'],
     req:()=>docSeen('checkpoint_manifest') || docSeen('checkpoint_lie') || V12.hasEv('broken_seal') || V12.started('m5'),
     dossier:'Named on the waybill as consignee: Delta Riverside Abattoir Ltd. The route on the papers ends at Sapele.',
     note:'That\'s where the cattle were going. Where did the ledger say the next drop was?' },
-  { id:'s_levy',    kind:'suspect',  g:['route'], tag:'LEVY', name:'The "Levy" Boy', meta:'Bypass queue · ₦5,000 a truck', herring:true,
+  { id:'s_levy',    kind:'suspect',  g:['route'], tag:'LEVY', name:'The "Levy" Boy', meta:'Bypass queue · ₦5,000 a truck', herring:true, facts:['l_bypass'],
     req:()=>!!street('levy'),
     dossier:'Works the truck queue on the Bypass, collecting ₦5,000 from every truck as a "union levy". No receipt. His card reads "Edo Transport Revenue Agent"; the hologram is a sticker and the number is a mobile line.',
     note:'Every truck in the queue paid him. The cartel\'s toll, or a separate hustle?' },
-  { id:'s_paeze',   kind:'suspect',  g:['route'], tag:'CUSTODIAN', name:'Pa Eze', meta:'Ozalla shrine · forty years', herring:true, req:mis('m5'),
+  { id:'s_paeze',   kind:'suspect',  g:['route'], tag:'CUSTODIAN', name:'Pa Eze', meta:'Ozalla shrine · forty years', herring:true, facts:['l_shrine'], req:mis('m5'),
     dossier:()=>'Custodian of the Ozalla shrine for forty years. Uche, before you went in: "We don\'t know if he\'s a partner or a hostage to the situation."'
       + (MC().shrine === 'negotiate' ? ' He told you himself: men come at night with drums and jerry-cans, and he has known for two seasons that what they bring is not respect.' : ''),
     note:'He tends the ground. Who brought the jerry-cans, and in what cars?' },
@@ -16246,15 +16249,15 @@ const N = [
     dossier:'Student lodges, kiosks and compounds behind blue gates, north of the UNIBEN fence.',
     note:'Where the handset hands over.' },
   // THE VOICE · leads that go nowhere
-  { id:'s_osaro',   kind:'suspect',  g:['voice'], tag:'SITE ENGINEER', name:'Engr. Osaro', meta:'Ugbowo mast · the cabinet', herring:true,
+  { id:'s_osaro',   kind:'suspect',  g:['voice'], tag:'SITE ENGINEER', name:'Engr. Osaro', meta:'Ugbowo mast · the cabinet', herring:true, facts:['l_ugbowo','e_cdr'],
     req:()=>!!S.game._towerEngineer || docSeen('tower_call_trace') || V12.started('t7'),
     dossier:'Site engineer at the Ugbowo mast. Sat with the dead site for two nights after the fibre was cut, "clean, like they do it for a living". Runs the BTS cabinet the trace came from.',
     note:'An engineer, but which one? Where was he while the handset was handing over in the north?' },
-  { id:'l_hall3',   kind:'place',    g:['voice'], tag:'HOSTEL', name:'UNIBEN Hall 3', meta:'south-east of the mast', herring:true,
+  { id:'l_hall3',   kind:'place',    g:['voice'], tag:'HOSTEL', name:'UNIBEN Hall 3', meta:'south-east of the mast', herring:true, facts:['e_cdr','l_ugbowo'],
     req:()=>docSeen('tower_call_trace') || V12.hasEv('tower_cdr'),
     dossier:'Hostel block south-east of the mast. On the trace, Sector B faces it: TA 2, about 1.1 km, signal weak.',
     note:'Which sector read strong, and where did the handset hand over?' },
-  { id:'l_isihor',  kind:'place',    g:['voice'], tag:'MARKET', name:'Isihor Junction', meta:'west · the Lagos road', herring:true,
+  { id:'l_isihor',  kind:'place',    g:['voice'], tag:'MARKET', name:'Isihor Junction', meta:'west · the Lagos road', herring:true, facts:['e_cdr','l_ugbowo'],
     req:()=>docSeen('tower_call_trace') || V12.hasEv('tower_cdr'),
     dossier:'Market at Isihor junction, west of the mast on the Lagos road. On the trace, Sector C faces it: TA 14, about 7.7 km.',
     note:'What did Sector C actually see?' },
@@ -16276,6 +16279,10 @@ const L = [
   ['m_pos','l_market',10,'the cash-outs ran through Ikeja agents',1],
   ['s_obi','e_laptop',12,'Obi\'s own laptop'],
   ['e_cash','l_lekki',8,'seized at the mansion',1],
+  ['e_laptop','l_lekki',4,'seized in the study at Lekki'],
+  ['e_notebook','l_lekki',4,'seized at Lekki'],
+  ['e_notebook','m_pos',8,'"POS ×3" in the notebook: Obi pays the cash-outs',1],
+  ['e_wallet','l_lekki',6,'the wallet is registered to a Lekki address',1],
   ['e_cash','s_obi',8,'Obi\'s cash',1],
   ['e_madam','l_mushin',6,'dropped in Mushin'],
   ['e_notebook','s_obi',8,'Obi\'s own handwriting'],
@@ -16295,6 +16302,7 @@ const L = [
   ['s_ifeanyi','l_asaba',10,'Ifeanyi ran the warehouse'],
   ['s_ifeanyi','e_asims',10,'his crate'],
   ['e_asims','s_mama',12,'the same dead pensioner again'],
+  ['e_asims','l_asaba',6,'in a crate at the Asaba warehouse'],
   ['s_voice','l_ugbowo',10,'every call pinged the Ugbowo cell'],
   ['s_voice','e_cdr',16,'the negotiator\'s handset is in the records'],
   ['e_cdr','l_ugbowo',6,'pulled from the tower cabinet'],
@@ -16311,6 +16319,9 @@ const L = [
 ].map(([a,b,intel,hint,money]) => ({ a, b, intel, hint, money:!!money }));
 const key = (a, b) => a < b ? a + '|' + b : b + '|' + a;
 const LINK = Object.fromEntries(L.map(l => [key(l.a, l.b), l]));
+// a herring's own facts (Tunde works the market, Ada is Obi's wife) are true but say nothing
+// about the crime: filing one is set aside, with no strike. Linking a herring into the crime costs one.
+const FACT = new Set(N.filter(n => n.herring && n.facts).flatMap(n => n.facts.map(f => key(n.id, f))));
 V12.OPS_NODES = N; V12.OPS_LINKS = L;
 
 /* ---------- theories: inked chains that change cases ---------- */
@@ -16335,6 +16346,8 @@ const CASE_OF = { m0:'lagos', m1:'lagos', m2:'lagos', m3:'lagos', m3n:'lagos', h
   m4:'route', h4:'route', m5:'route', h5:'route', m6:'route', h6:'route',
   m7:'voice', h7:'voice', t7:'voice', m8:'voice' };
 const SIGN_AT = 60, STRIKE_COST = 12, MAX_STRIKES = 3, INTEGRITY_COST = 2;
+// past three the warrant is already refused: say so rather than print "4/3"
+const strikeOf = n => n <= MAX_STRIKES ? `${n}/${MAX_STRIKES}` : `${n} (warrant refused)`;
 const blankCase = () => ({ strikes:0, pen:0, forgiven:false, refused:null, lifted:0 });
 V12.CASE_NAME = CASE_NAME;
 
@@ -16350,6 +16363,7 @@ V12.ops = ()=>{
   if(!Array.isArray(o.inked)) o.inked = [];
   if(!o.theories || typeof o.theories !== 'object') o.theories = {};
   if(!Array.isArray(o.struck)) o.struck = [];
+  if(!Array.isArray(o.noted)) o.noted = [];
   if(!o.struckCase || typeof o.struckCase !== 'object') o.struckCase = {};
   if(!o.unlocked || typeof o.unlocked !== 'object') o.unlocked = {};
   if(!o.cases || typeof o.cases !== 'object') o.cases = {};
@@ -16407,7 +16421,8 @@ function refreshRefusal(c, quiet){
   const cs = V12.ops().cases[c];
   if(!cs || !cs.refused) return false;
   const snap = cs.refused, vis = caseVisibleIds(c), ink = caseInked(c).length;
-  if(vis.some(id => !(snap.vis || []).includes(id)) || ink > (snap.ink || 0)){
+  // a dead end turning up is not new evidence: only a real lead or a new link that holds reopens it
+  if(vis.some(id => !(NODE[id] && NODE[id].herring) && !(snap.vis || []).includes(id)) || ink > (snap.ink || 0)){
     cs.refused = null; cs.lifted = (cs.lifted || 0) + 1;
     V12.log('warrant_review', { c });
     if(!quiet) setTimeout(()=>toast('WARRANT REVIEW', CASE_NAME[c] + ': new evidence. The magistrate will look at it again.', 2800), 1900);
@@ -16432,7 +16447,12 @@ V12.warrantFor = c => {
   const keys = N.filter(n => n.lock && inCase(n, c) && visible(n)).length;
   const strength = clamp(Math.round(inkN * 10 + th + keys * 10 - cs.strikes * STRIKE_COST), 0, 100);
   const refused = !!cs.refused, signed = !refused && strength >= SIGN_AT;
-  const need = refused ? 'Find new evidence' : signed ? 'Ready to sign' : 'Ink more links';
+  // Senior gets a plain, always-true ask; Recruit is told where the missing strength is
+  let need = refused ? 'Find new evidence' : signed ? 'Ready to sign' : 'Needs stronger evidence';
+  if(!refused && !signed && recruit()){
+    const open = L.some(l => { const k = key(l.a, l.b); return !o.inked.includes(k) && linkIn(k, c) && visible(NODE[l.a]) && visible(NODE[l.b]); });
+    need = open ? 'Ink more links' : caseLocked(c).length ? 'Do the fieldwork' : 'Work the case: new leads to come';
+  }
   return { strength, signed, refused, strikes:cs.strikes, need };
 };
 V12.warrant = () => V12.warrantFor('lagos').signed;
@@ -16549,7 +16569,8 @@ function render(){
     CASES.forEach(c => refreshRefusal(c));
     const inTab = n => UI.group === 'all' || n.g.includes(UI.group);
     const nodes = N.filter(n => inTab(n) && visible(n));
-    const hidden = N.filter(n => inTab(n) && !n.herring && !reqOk(n)).length;
+    // no number: a count that skipped the dead ends would tell you which new cards are dead ends
+    const hidden = N.some(n => inTab(n) && !reqOk(n));
     const linksOf = id => o.inked.filter(k => k.split('|').includes(id)).length;
     const counts = recruit();
     inner.innerHTML = caseStrip(caseForView()) + `<div class="ops-cols">${COLS.map(c => {
@@ -16558,7 +16579,7 @@ function render(){
         <button class="ops-chip k-${n.kind} ${UI.sel === n.id ? 'sel' : ''} ${V12.evQ(evIdOf(n)) === 'weak' ? 'weak' : ''} ${o.seen && !o.seen[n.id] ? 'new' : ''}" data-id="${n.id}">
           <span class="t">${tagOf(n)}</span><span class="n">${n.name}</span><span class="m">${n.meta}</span>${counts && linksOf(n.id) ? `<span class="c">${linksOf(n.id)}</span>` : ''}
         </button>`).join('') || '<div class="ops-empty">—</div>'}</div>`;
-    }).join('')}</div><svg class="ops-svg" id="ops-svg"></svg>${hidden ? `<div class="ops-more">${hidden} more lead${hidden>1?'s':''} unlock as the case moves</div>` : ''}`;
+    }).join('')}</div><svg class="ops-svg" id="ops-svg"></svg>${hidden ? '<div class="ops-more">More leads may turn up as the case moves</div>' : ''}`;
     o.seen = o.seen || {}; nodes.forEach(n => { o.seen[n.id] = true; });
     inner.querySelectorAll('.ops-chip').forEach(b => b.addEventListener('click', ()=>tapNode(b.dataset.id)));
   }
@@ -16572,7 +16593,7 @@ const stampWord = w => w.refused ? 'refused' : w.signed ? 'signed' : 'pending';
 function stampHTML(w, sm){ const s = stampWord(w); return `<span class="bd-stamp s-${s}${sm ? ' sm' : ''}">${s.toUpperCase()}</span>`; }
 function strikesHTML(n){
   const marks = Array.from({ length:MAX_STRIKES }, (_, i) => `<span class="bd-x ${i < n ? 'on' : ''}">${i < n ? ic('cross') : ''}</span>`).join('');
-  return `<span class="bd-strikes" role="img" aria-label="${n} of ${MAX_STRIKES} strikes">${marks}</span><b class="bd-strk-n">${n}/${MAX_STRIKES}</b>`;
+  return `<span class="bd-strikes" role="img" aria-label="${n} of ${MAX_STRIKES} strikes">${marks}</span><b class="bd-strk-n">${Math.min(n, MAX_STRIKES)}/${MAX_STRIKES}</b>`;
 }
 function caseStrip(c){
   const w = V12.warrantFor(c), cs = V12.ops().cases[c] || blankCase();
@@ -16597,6 +16618,7 @@ function tapNode(id){
   const k = key(UI.sel, id);
   if(o.inked.includes(k)){ toast('ALREADY INKED', (LINK[k] || {}).hint || '', 1800); UI.sel = id; render(); return; }
   if(o.struck.includes(k)){ toast('STRUCK OFF', 'The magistrate already refused that link.', 1800); if(typeof sfxFail === 'function') sfxFail(); UI.sel = null; render(); return; }
+  if(o.noted.includes(k)){ toast('SET ASIDE', 'True, but the magistrate ruled it isn\'t evidence of the crime.', 2000); UI.sel = null; render(); return; }
   const i = o.pencils.indexOf(k);
   if(i >= 0){ o.pencils.splice(i, 1); toast('ERASED', '', 900); UI.sel = null; render(); return; }
   if(o.pencils.length >= 6){ toast('SIX PENCILS IS THE LIMIT', 'File or erase one before you draw another', 2000); if(typeof sfxFail === 'function') sfxFail(); return; }
@@ -16627,6 +16649,12 @@ function fileLinks(){
     const [a, b] = k.split('|');
     const c = caseForPair(a, b), cs = o.cases[c];
     if(o.struck.includes(k)){ res.push({ k, ok:false, again:true, c }); continue; }   // never costs twice
+    if(FACT.has(k)){
+      if(!o.noted.includes(k)) o.noted.push(k);
+      res.push({ k, ok:false, noted:true, c });
+      V12.log('noted', { k, c });
+      continue;
+    }
     o.struck.push(k); o.struckCase[k] = c;
     const money = (NODE[a] && NODE[a].kind === 'money') || (NODE[b] && NODE[b].kind === 'money');
     if(money && V12.has('money') && !cs.forgiven){
@@ -16652,7 +16680,7 @@ function fileLinks(){
       V12.log('warrant_refused', { c });
     }
   }
-  const nOk = res.filter(r => r.ok).length, struck = res.filter(r => !r.ok && !r.again);
+  const nOk = res.filter(r => r.ok).length, struck = res.filter(r => !r.ok && !r.again && !r.noted), nNoted = res.filter(r => r.noted).length;
   const costs = struck.filter(r => r.strike);
   if(nOk && typeof sfxComplete === 'function') sfxComplete();
   if(costs.length){ if(typeof sfxFail === 'function') sfxFail(); if(typeof haptic === 'function') haptic([60, 40, 60]); }
@@ -16660,13 +16688,16 @@ function fileLinks(){
   const parts = [];
   if(nOk) parts.push(`+${intel} INTEL`);
   if(costs.length) parts.push(`INTEGRITY −${costs.length * INTEGRITY_COST}`);
-  costs.forEach(r => parts.push(`${CASE_NAME[r.c]} STRIKE ${r.strike}/${MAX_STRIKES}`));
+  costs.forEach(r => parts.push(`${CASE_NAME[r.c]} STRIKE ${strikeOf(r.strike).toUpperCase()}`));
   if(struck.some(r => r.forgiven)) parts.push('ONE MONEY LINK FORGIVEN');
-  const big = nOk && struck.length ? `FILED · ${nOk} INKED · ${struck.length} STRUCK` : nOk ? (nOk === 1 ? 'LINK INKED' : nOk + ' LINKS INKED') : 'STRUCK OFF';
-  toast(big, parts.join(' · '), 3000);
+  if(nNoted) parts.push(nNoted === 1 ? 'ONE LINK SET ASIDE' : nNoted + ' LINKS SET ASIDE');
+  const big = nOk && struck.length ? `FILED · ${nOk} INKED · ${struck.length} STRUCK` : nOk ? (nOk === 1 ? 'LINK INKED' : nOk + ' LINKS INKED') : struck.length ? 'STRUCK OFF' : nNoted ? 'SET ASIDE' : 'FILED';
+  const sheet = !!document.getElementById('ops-modal');
+  if(!sheet) toast(big, parts.join(' · '), 3000);
   if(nOk) stamp('INKED'); else if(struck.length) stamp('STRUCK', 'bad');
-  if(refusedNow.length) setTimeout(()=>toast('WARRANT REFUSED', refusedNow.map(c => CASE_NAME[c]).join(', ') + ': three strikes. Bring new evidence.', 3200), 3100);
-  V12.log('file', { n:pens.length, ok:nOk, struck:struck.length });
+  if(typeof V12.m2TableCheck === 'function') V12.m2TableCheck();
+  if(refusedNow.length && !sheet) setTimeout(()=>toast('WARRANT REFUSED', refusedNow.map(c => CASE_NAME[c]).join(', ') + ': three strikes. Bring new evidence.', 3200), 3100);
+  V12.log('file', { n:pens.length, ok:nOk, struck:struck.length, noted:nNoted });
   // a filing is on the record: save it, so a reload can't take a strike back
   // (not before the campaign's first save point, so a fresh game never overwrites an older save early)
   if(typeof saveGame === 'function' && (S.game.completedMissions || []).includes('m1')) try{ saveGame(true); }catch(e){}
@@ -16675,7 +16706,7 @@ function fileLinks(){
   return res;
 }
 V12.fileLinks = fileLinks;
-V12.pencil = (a, b) => { const o = V12.ops(), k = key(a, b); if(!o.pencils.includes(k) && !o.inked.includes(k) && !o.struck.includes(k)){ o.pencils.push(k); o.tries = (o.tries || 0) + 1; o.sinceInk = (o.sinceInk || 0) + 1; } return k; };
+V12.pencil = (a, b) => { const o = V12.ops(), k = key(a, b); if(!o.pencils.includes(k) && !o.inked.includes(k) && !o.struck.includes(k) && !o.noted.includes(k)){ o.pencils.push(k); o.tries = (o.tries || 0) + 1; o.sinceInk = (o.sinceInk || 0) + 1; } return k; };
 
 function inkLinks(keys, opt){
   opt = opt || {};
@@ -16732,9 +16763,10 @@ function rulingModal(res, refusedNow, lifted){
   const rows = res.map(r => {
     const [a, b] = r.k.split('|');
     if(r.ok) return `<li class="ok">${ic('check')}<div><b>INKED</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span>${esc((LINK[r.k] || {}).hint || '')}</span></div></li>`;
+    if(r.noted) return `<li class="noted">${ic('doc')}<div><b>SET ASIDE</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span>True, but not evidence of the crime. No strike.</span></div></li>`;
     const why = r.again ? 'Already struck off. No further cost.'
       : r.forgiven ? 'Follow the Money: forgiven. No strike, no Integrity cost.'
-      : `${CASE_NAME[r.c]} strike ${r.strike}/${MAX_STRIKES} · Integrity −${INTEGRITY_COST}`;
+      : `${CASE_NAME[r.c]} strike ${strikeOf(r.strike)} · Integrity −${INTEGRITY_COST}`;
     return `<li class="bad">${ic('cross')}<div><b>STRUCK OFF</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span>${why}</span></div></li>`;
   }).join('');
   const cases = [...new Set(res.map(r => r.c || caseForPair(...r.k.split('|'))))];
@@ -16805,12 +16837,13 @@ function side(){
     const other = k => k.split('|').find(x => x !== n.id);
     const mine = o.inked.filter(k => k.split('|').includes(n.id)).map(k => `<li class="ink"><b>${esc(nm(other(k)))}</b><span>${(LINK[k] || {}).hint || ''}</span></li>`).join('');
     const struck = o.struck.filter(k => k.split('|').includes(n.id)).map(k => `<li class="bd-struck"><span class="bd-tag-x">${ic('cross')}STRUCK</span><span>${esc(nm(other(k)))}</span></li>`).join('');
+    const noted = o.noted.filter(k => k.split('|').includes(n.id)).map(k => `<li class="bd-noted"><span class="bd-tag-n">SET ASIDE</span><span>${esc(nm(other(k)))}</span></li>`).join('');
     const pens = o.pencils.filter(k => k.split('|').includes(n.id)).map(k => `<li class="pen">pencilled to ${esc(nm(other(k)))} <button class="ops-erase" data-k="${k}">erase</button></li>`).join('');
     const weak = V12.evQ(evIdOf(n)) === 'weak';
     const note = recruit() && n.note ? `<div class="bd-note"><b>${ic('search')} ANALYST'S NOTE</b><span>${n.note}</span></div>` : '';
     el.innerHTML = `<div class="ops-kind k-${n.kind}">${tagOf(n)}</div><div class="ops-name">${n.name}</div><p class="ops-p bd-facts">${dossierOf(n)}</p>${note}
       ${weak ? '<p class="ops-weak">CONTESTED — the defence will attack how this was obtained.</p>' : ''}
-      <div class="ops-h">LINKS</div><ul class="ops-ul">${mine}${struck}${pens}${!mine && !struck && !pens ? '<li class="none">Nothing yet.</li>' : ''}</ul>
+      <div class="ops-h">LINKS</div><ul class="ops-ul">${mine}${struck}${noted}${pens}${!mine && !struck && !noted && !pens ? '<li class="none">Nothing yet.</li>' : ''}</ul>
       <p class="ops-tip">Tap another card to pencil a link from <b>${n.name}</b>. Tap this card again to put it down.</p>`;
     el.querySelectorAll('.ops-erase').forEach(b => b.addEventListener('click', ()=>{ const i = o.pencils.indexOf(b.dataset.k); if(i >= 0) o.pencils.splice(i, 1); render(); }));
     return;
@@ -16827,7 +16860,7 @@ function side(){
       : `<div class="ops-th"><b>${t.q}</b><span>Unconfirmed</span></div>`).join('') : `<p class="ops-p">${rec ? 'No theories yet. Link what you\'ve found.' : 'No theories proven yet. Inked chains of links become theories.'}</p>`}
     <div class="ops-h">HOW IT WORKS</div>
     <p class="ops-p">Tap two cards to pencil a link. Pencils are free: erase and redraw as you like, up to six at a time.</p>
-    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. Three strikes and the warrant is refused until you bring new evidence.</p>
+    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. One that is true but says nothing about the crime is set aside, at no cost. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. Three strikes and the warrant is refused until you bring new evidence.</p>
     <p class="ops-p">Not every lead on this table belongs to the ring.</p>
     ${mid && objs.length ? `<div class="ops-h">${(mname || 'OPERATION').toUpperCase()}</div><div id="ops-objs"><div>${objs.map(x => `<div class="so ${x.done ? 'done' : ''}">${x.text}</div>`).join('')}</div></div>` : ''}
     <div class="ops-h">REPUTATION</div>${V12.repBars()}
@@ -16934,10 +16967,13 @@ const V12 = window.V12;
 const ico = n => typeof icon === 'function' ? icon(n) : '';
 /* the Lagos warrant as the board sees it, plus what the charge sheet decided */
 function lagosWarrant(){
+  const rec = typeof V12.accused === 'function' ? V12.accused('lagos') : null;
+  // once the gate has decided (signed, or exigent entry), the filed record is the warrant —
+  // a replay must not re-read the live board and flip it either way
+  if(rec && (rec.warrant === 'signed' || rec.warrant === 'exigent')) return { signed:rec.warrant === 'signed', exigent:rec.warrant === 'exigent', rec };
   let w = null;
   try{ if(typeof V12.warrantFor === 'function') w = V12.warrantFor('lagos'); }catch(e){ w = null; }
   const signed = w && typeof w === 'object' ? !!w.signed : !!V12.warrant();
-  const rec = typeof V12.accused === 'function' ? V12.accused('lagos') : null;
   return { signed, exigent:!signed && !!(rec && rec.warrant === 'exigent'), rec };
 }
 V12.lagosWarrant = lagosWarrant;
@@ -17039,7 +17075,7 @@ V12.planM3 = function(onGo){
     applyEffect(({ knock:{ integrity:+6, publicTrust:+5, agencyFavour:-2 }, quiet:{ integrity:+2, publicTrust:+2, agencyFavour:+3 }, loud:{ integrity:-4, publicTrust:-4, agencyFavour:+5, force:+1 } })[plan.entry]);
     // no warrant costs once: if the player already chose exigent circumstances at filing, it's paid
     const W = lagosWarrant();
-    if(known.warrant) applyEffect({ agencyFavour:+2 });
+    if(known.warrant){ if(!(W.rec && W.rec.planCredit)){ applyEffect({ agencyFavour:+2 }); if(W.rec) W.rec.planCredit = true; } }
     else if(!W.exigent){
       if(window.CW && typeof CW.goExigent === 'function' && W.rec) CW.goExigent('lagos');
       else applyEffect({ agencyFavour:-5 });
@@ -17297,11 +17333,16 @@ window.finaleResolve = function(){
   if(body) rows.push('HOLDS: Body-cam — her own words in the yard.');
   if(sealed && sealed.before) rows.push(sealed.who === 'adaeze' ? 'HOLDS: Your sealed report — filed before tonight.' : 'FAILS: Your sealed report named someone else.');
   const nmOf = (k, id)=>(window.CW && CW.optName) ? CW.optName('voice', k, id) : id;
-  if(rec && rec.method) rows.push(ok.method ? `HOLDS: Motive — ${nmOf('method', rec.method)}.` : `FAILS: Motive — you argued "${nmOf('method', rec.method)}". The payroll says otherwise.`);
-  if(rec && rec.money) rows.push(ok.money ? `HOLDS: Money trail — ${nmOf('money', rec.money)}.` : `FAILS: Money trail — you argued "${nmOf('money', rec.money)}". Nobody can follow it to her.`);
+  // a motive or money trail argued against the wrong person never holds, however right the reading was
+  if(rec && rec.method) rows.push(!ok.method ? `FAILS: Motive — you argued "${nmOf('method', rec.method)}". The payroll says otherwise.`
+    : right ? `HOLDS: Motive — ${nmOf('method', rec.method)}.` : `SET ASIDE: Motive — "${nmOf('method', rec.method)}", argued against the wrong person.`);
+  if(rec && rec.money) rows.push(!ok.money ? `FAILS: Money trail — you argued "${nmOf('money', rec.money)}". Nobody can follow it to her.`
+    : right ? `HOLDS: Money trail — ${nmOf('money', rec.money)}.` : `SET ASIDE: Money trail — "${nmOf('money', rec.money)}", argued against the wrong person.`);
   const VC = voiceCase();
   const heldLine = (!right && A.who && VC && VC.held && VC.held[A.who]) ? VC.held[A.who] + ' ' : '';
-  const sysLine = { speaker:'NACECA SYSTEM', text:heldLine + (rows.length ? 'The case you put to her: ' + rows.join(' · ') : 'The case you put to her: nothing that will hold up in court.') + (hurt ? ' Osas is hurt in the scramble — a broken wrist, nothing worse.' : ' Osas walks out on his own feet.') };
+  const nmWho = id => (V12.CANDIDATES.find(c => c.id === id) || {}).name || 'someone else';
+  const lead = right ? 'The case you put to her: ' : `Your accusation named ${nmWho(A.who)}. What that leaves against her: `;
+  const sysLine = { speaker:'NACECA SYSTEM', text:heldLine + (rows.length ? lead + rows.join(' · ') : lead + 'nothing that will hold up in court.') + (hurt ? ' Osas is hurt in the scramble — a broken wrist, nothing worse.' : ' Osas walks out on his own feet.') };
   const key = 'fin_end_' + outcome;
   DIALOGUE[key + '_run'] = [sysLine].concat(DIALOGUE[key]);
   V12.log('finale', { outcome, s, right, body, method:ok.method, money:ok.money });
@@ -17539,7 +17580,7 @@ function theClick(){
       { text:'Madam is Ada, Obi\'s wife' },
     ],
     proof:['MON 05 OCT    C.A.'], look:['MON 05 OCT', 'SAT 03 OCT', 'last call'],
-    fail:{ mode:'continue', note:'You\'re too tired to see it tonight. The notebook and the phone go on the table as they are: link them yourself.' },
+    fail:{ mode:'continue', note:hl ? 'You\'re too tired to see it tonight. The notebook and the phone go on the table as they are: link them yourself.' : 'You\'re too tired to see it tonight. Everything you have goes on the table as it is.' },
     onCorrect:{ intel:10 },
     onSolved:()=>{ S.game.flags.v12_madam = true; S.game._nightClickGood = true; },
     onFailed:()=>{ S.game._nightClickGood = false; },   // Madam is earned at the table, not handed over
@@ -17557,7 +17598,7 @@ function theClick(){
     const good = !!S.game._nightClickGood;
     setTimeout(()=>{
       if(good) toast('A NEW SUSPECT', '"MADAM" — on the operations table', 2600);
-      else toast('THE TABLE', 'The notebook and the courier\'s phone are on it. Make the link yourself.', 2800);
+      else toast('THE TABLE', hl ? 'The notebook and the courier\'s phone are on it. Make the link yourself.' : 'Tonight\'s papers are on it. Make of them what you can.', 2800);
       V12.openOps('lagos');
     }, 700);
   });
@@ -17738,20 +17779,18 @@ const STREET_LOOK = {
 V12.wrap('drawPortrait', orig => function(kind, speaker, mood){
   if(typeof kind === 'string' && kind.indexOf('street:') === 0){
     const L = STREET_LOOK[kind.slice(7)] || { cloth:'#4a5a7a', head:'bare', tag:'' };
-    const headPath = L.head === 'gele' ? '<path d="M30 30 Q50 6 72 26 Q78 34 70 38 L30 38 Q24 34 30 30Z" fill="#141a26"/>'
-      : L.head === 'cap' ? '<path d="M33 30 Q50 16 67 30 L67 34 L33 34Z" fill="#141a26"/>' : '';
+    const headPath = L.head === 'gele' ? '<path d="M30 30 Q50 6 72 26 Q78 34 70 38 L30 38 Q24 34 30 30Z" fill="#141412"/>'
+      : L.head === 'cap' ? '<path d="M33 30 Q50 16 67 30 L67 34 L33 34Z" fill="#141412"/>' : '';
     const wrap = document.getElementById('dialogue-portrait');
     if(wrap){ wrap.innerHTML = `<div class="portrait-frame street-card"><svg viewBox="0 0 100 100" aria-hidden="true">
-      <defs><radialGradient id="stbg" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#26324a"/><stop offset="1" stop-color="#070b14"/></radialGradient>
-      <linearGradient id="strim" x1="0" x2="1"><stop offset="0" stop-color="#d8a64a" stop-opacity="0"/><stop offset="1" stop-color="#f0c878" stop-opacity=".9"/></linearGradient></defs>
-      <rect width="100" height="100" fill="url(#stbg)"/>
+      <rect width="100" height="100" fill="#262623"/>
       <path d="M14 100 Q16 70 50 66 Q84 70 86 100Z" fill="${L.cloth}" opacity=".55"/>
-      <path d="M14 100 Q16 70 50 66 Q84 70 86 100Z" fill="#0c111c" opacity=".55"/>
-      <ellipse cx="50" cy="44" rx="16" ry="19" fill="#0c111c"/>
-      <rect x="44" y="58" width="12" height="10" fill="#0c111c"/>
+      <path d="M14 100 Q16 70 50 66 Q84 70 86 100Z" fill="#141412" opacity=".55"/>
+      <ellipse cx="50" cy="44" rx="16" ry="19" fill="#141412"/>
+      <rect x="44" y="58" width="12" height="10" fill="#141412"/>
       ${headPath}
-      <path d="M64 30 Q70 44 63 58" stroke="url(#strim)" stroke-width="1.6" fill="none"/>
-      <path d="M80 92 Q78 74 58 68" stroke="url(#strim)" stroke-width="1.4" fill="none"/>
+      <path d="M64 30 Q70 44 63 58" stroke="#A89F8A" stroke-width="1.2" fill="none"/>
+      <path d="M80 92 Q78 74 58 68" stroke="#A89F8A" stroke-width="1.1" fill="none"/>
       </svg><div class="street-tag">${V12.esc(L.tag)}</div><div class="portrait-vignette"></div></div>`; }
     return;
   }
@@ -18263,7 +18302,8 @@ V12.openPhone = function(onClose){
   const P = V12.mem().phone;
   let cur = null;
   const order = ()=>Object.keys(P).sort((a, b)=>((P[b].unread || 0) + (P[b].pending ? 1 : 0)) - ((P[a].unread || 0) + (P[a].pending ? 1 : 0)) || (HUB_ORDER.indexOf(P[b].last) - HUB_ORDER.indexOf(P[a].last)));
-  const avatar = id => { const p = PEOPLE_ON_PHONE[id] || { ini:'?', col:'#5a6a82' }; return `<span class="ph-av" style="background:${p.col}">${V12.esc(p.ini)}</span>`; };
+  // palette discs: paper with ink initials; an unknown number is the one stamped red
+  const avatar = id => { const p = PEOPLE_ON_PHONE[id] || { ini:'?' }; return `<span class="ph-av${id === 'unknown' ? ' ph-unk' : ''}">${V12.esc(p.ini)}</span>`; };
   const nameOf = id => (PEOPLE_ON_PHONE[id] || { name:id }).name;
   const draw = ()=>{
     const list = order().map(id => { const t = P[id], lastMsg = t.msgs[t.msgs.length - 1] || { text:'' }, n = (t.unread || 0) + (t.pending ? 1 : 0);
@@ -18476,9 +18516,16 @@ function refreshLabel(){
 /* a call from Lagos fills the video wall */
 V12.videoCall = function(on){
   let el = document.getElementById('v12-call');
-  if(!on){ if(el) el.classList.remove('show'); return; }
+  if(!on){ clearInterval(V12._vcWatch); if(el) el.classList.remove('show'); return; }
   if(!el){ el = V12.el('div', '', `<div class="vc-dot"></div><span>VIDEO CALL · LAGOS HQ · ENCRYPTED</span>`); el.id = 'v12-call'; document.getElementById('game-root').appendChild(el); }
   el.classList.add('show');
+  // the badge belongs to the call: if the call is closed any other way (ESC, the pause menu,
+  // a cancelled charge sheet), it goes once nothing call-related is on screen
+  clearInterval(V12._vcWatch);
+  V12._vcWatch = setInterval(()=>{
+    const open = !!document.querySelector('#screen-dialogue.show, .overlay.show');
+    if(!open){ clearInterval(V12._vcWatch); el.classList.remove('show'); }
+  }, 500);
 };
 
 function endHub(h){
@@ -20401,40 +20448,38 @@ V12.headlineCard = async function(h){
   await fonts();
   const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H;
   const x = c.getContext('2d');
-  const g = x.createRadialGradient(W/2, 380, 80, W/2, 600, 1000); g.addColorStop(0, '#1a2540'); g.addColorStop(1, '#05080f');
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
-  x.fillStyle = 'rgba(216,166,74,.06)'; for(let i = 0; i < W; i += 60){ x.fillRect(i, 0, 1, H); } for(let j = 0; j < H; j += 60){ x.fillRect(0, j, W, 1); }
-  x.textAlign = 'center'; x.fillStyle = '#ffffff'; x.font = '700 92px Oswald, "Arial Narrow", sans-serif'; x.fillText('NACECA', W/2, 140);
-  x.fillStyle = '#f0c878'; x.font = '600 30px Oswald, "Arial Narrow", sans-serif'; x.fillText('O P E R A T I O N   S E R P E N T \' S   R O U T E', W/2, 192);
+  x.fillStyle = '#1C1C1A'; x.fillRect(0, 0, W, H);
+  x.fillStyle = 'rgba(233,220,192,.06)'; for(let i = 0; i < W; i += 60){ x.fillRect(i, 0, 1, H); } for(let j = 0; j < H; j += 60){ x.fillRect(0, j, W, 1); }
+  x.textAlign = 'center'; x.fillStyle = '#E9DCC0'; x.font = '700 92px Oswald, "Arial Narrow", sans-serif'; x.fillText('NACECA', W/2, 140);
+  x.fillStyle = '#A89F8A'; x.font = '600 30px Oswald, "Arial Narrow", sans-serif'; x.fillText('O P E R A T I O N   S E R P E N T \' S   R O U T E', W/2, 192);
   // the clipping
   const cx = 70, cy = 250, cw = W - 140, ch = 820;
   x.save(); x.translate(W/2, cy + ch/2); x.rotate(-0.012); x.translate(-W/2, -(cy + ch/2));
-  x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 40; x.shadowOffsetY = 18;
-  x.fillStyle = '#f3ead2'; x.fillRect(cx, cy, cw, ch); x.shadowColor = 'transparent';
+  x.fillStyle = '#E9DCC0'; x.fillRect(cx, cy, cw, ch);
   x.fillStyle = 'rgba(0,0,0,.025)'; for(let j = cy; j < cy + ch; j += 4) x.fillRect(cx, j, cw, 1);
-  x.textAlign = 'left'; x.fillStyle = '#7a4a18'; x.font = '600 28px Oswald, "Arial Narrow", sans-serif';
+  x.textAlign = 'left'; x.fillStyle = '#B3261E'; x.font = '600 28px Oswald, "Arial Narrow", sans-serif';
   const mast = (h.pub || 'THE DAILY GONG') + ' · MORNING EDITION', spaced = mast.split('').join(' ').replace(/ {3}/g, '   ');
   x.fillText(x.measureText(spaced).width <= cw - 120 ? spaced : mast, cx + 60, cy + 80);
-  x.fillStyle = '#1a1d24'; x.fillRect(cx + 60, cy + 104, cw - 120, 4); x.fillRect(cx + 60, cy + 114, cw - 120, 1.5);
-  x.font = '700 70px Oswald, "Arial Narrow", sans-serif'; x.fillStyle = '#1a1d24';
+  x.fillStyle = '#1C1C1A'; x.fillRect(cx + 60, cy + 104, cw - 120, 4); x.fillRect(cx + 60, cy + 114, cw - 120, 1.5);
+  x.font = '700 70px Oswald, "Arial Narrow", sans-serif'; x.fillStyle = '#1C1C1A';
   let y = cy + 200; for(const ln of wrap(x, h.head || '', cw - 120).slice(0, 5)){ x.fillText(ln, cx + 60, y); y += 82; }
-  x.font = 'italic 34px Inter, Georgia, serif'; x.fillStyle = '#5a4a32'; y += 18;
+  x.font = 'italic 34px Inter, Georgia, serif'; x.fillStyle = '#4F4C44'; y += 18;
   for(const ln of wrap(x, h.ded || '', cw - 120).slice(0, 5)){ x.fillText(ln, cx + 60, y); y += 48; }
   x.restore();
   // grade stamp
   if(h.grade){
-    const col = { S:'#c99a2e', A:'#2f8f4a', B:'#2a7ab8', C:'#c07a20', D:'#b8323f' }[h.grade] || '#7a4a18';
+    const col = { S:'#0B6E4F', A:'#0B6E4F', B:'#1C1C1A', C:'#B3261E', D:'#B3261E' }[h.grade] || '#B3261E';
     x.save(); x.translate(W - 190, cy + ch - 120); x.rotate(-0.22);
     x.strokeStyle = col; x.lineWidth = 9; x.beginPath(); x.arc(0, 0, 88, 0, Math.PI * 2); x.stroke();
     x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 74, 0, Math.PI * 2); x.stroke();
     x.fillStyle = col; x.textAlign = 'center'; x.font = '700 92px Oswald, sans-serif'; x.fillText(h.grade, 0, 24);
     x.font = '600 15px Oswald, sans-serif'; x.fillText('G R A D E', 0, 50); x.restore();
   }
-  x.textAlign = 'center'; x.fillStyle = '#9ba8bd'; x.font = '600 26px Oswald, sans-serif';
+  x.textAlign = 'center'; x.fillStyle = '#A89F8A'; x.font = '600 26px Oswald, sans-serif';
   if(h.region) x.fillText(h.region.toUpperCase(), W/2, 1150);
-  x.fillStyle = '#ffffff'; x.font = '600 34px Oswald, sans-serif'; x.fillText('A NIGERIAN DETECTIVE GAME — PLAY THE CASE', W/2, 1222);
-  const url = V12.shareUrl(); if(url){ x.fillStyle = '#f0c878'; x.font = '500 26px Inter, sans-serif'; x.fillText(url.replace(/^https?:\/\//, ''), W/2, 1272); }
-  x.fillStyle = '#5a6a82'; x.font = '500 20px Inter, sans-serif'; x.fillText('Fiction. All characters, agencies and cases are fictional.', W/2, 1318);
+  x.fillStyle = '#E9DCC0'; x.font = '600 34px Oswald, sans-serif'; x.fillText('A NIGERIAN DETECTIVE GAME — PLAY THE CASE', W/2, 1222);
+  const url = V12.shareUrl(); if(url){ x.fillStyle = '#E9DCC0'; x.font = '500 26px Inter, sans-serif'; x.fillText(url.replace(/^https?:\/\//, ''), W/2, 1272); }
+  x.fillStyle = '#8C8473'; x.font = '500 20px Inter, sans-serif'; x.fillText('Fiction. All characters, agencies and cases are fictional.', W/2, 1318);
   return c;
 };
 V12.shareHeadline = async function(h){
@@ -20760,8 +20805,7 @@ window.addEventListener('error', e => { try{ V12.log('js_error', { msg:String(e.
 .mg-msg.good::before,.mg-msg.bad::before{border-radius:0;background:var(--manila,#E9DCC0);
   -webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
 .mg-msg.bad::before{-webkit-mask-image:var(--i-cross);mask-image:var(--i-cross)}
-.ops-th.done b::before{content:'';display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1px;background:currentColor;
-  -webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
+/* .ops-th.done carries its own check icon in the markup */
 .ops-b.gold.done::before{content:'';display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px;background:currentColor;
   -webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
 
@@ -20842,6 +20886,25 @@ body.cb .ops-th.done b{color:var(--ink,#1C1C1A)}
 }
 @media (max-height:480px){ .touch-active .car-ctl button{min-height:44px} }
 
+/* office phone: contact discs on the palette (paper, ink initials; the unknown number in stamp red) */
+.ph-av{background:var(--paper-2,#DCCDAB);color:var(--ink,#1C1C1A);border:1px solid var(--manila,#E9DCC0)}
+.ph-av.ph-unk{background:var(--red,#B3261E);color:var(--manila,#E9DCC0);border-color:var(--red,#B3261E)}
+/* tune mini-game: 44px touch targets on the FREQ / GAIN sliders */
+.touch-active .mg-slider input{height:44px}
+.touch-active .mg-slider input::-webkit-slider-thumb{width:44px;height:44px;margin-top:-19px}
+.touch-active .mg-slider input::-moz-range-thumb{width:42px;height:42px}
+
+/* small-text contrast (≥4.5:1): locked awards dim their icon and name, not the how-to-earn line;
+   no red text on ink; red-on-paper warnings and Recruit highlights carry ink text with a coloured rule */
+.ach{opacity:1}
+.ach:not(.got) .ach-ico,.ach:not(.got) .ach-name{opacity:.55}
+.ach:not(.got) .ach-desc{color:var(--manila-2,#A89F8A)}
+.epi-place{color:var(--manila-2,#A89F8A)}
+#radio-sub .rs-tag{color:var(--manila-2,#A89F8A);opacity:1}
+.plan-pred .bad{color:var(--ink,#1C1C1A);border-left:3px solid var(--red,#B3261E);padding-left:6px}
+.phone-screen .red{color:var(--ink,#1C1C1A);text-decoration:underline wavy var(--red,#B3261E);text-decoration-thickness:1.5px;text-underline-offset:3px}
+.phone-screen .green{color:var(--ink,#1C1C1A);text-decoration:underline solid var(--green,#0B6E4F);text-decoration-thickness:2px;text-underline-offset:3px}
+
 </style>
 <style id="beta-wayfind">
 /* beta/wayfind.css — friends-beta pass (see docs/SYNC-2026-10-08-beta.md)
@@ -20886,6 +20949,24 @@ body:has(.overlay.show) #guide-arrow,body:has(.overlay.show) #guide-marker,.v12-
 #minimap-svg .mm-sus-ping.go{transform-box:fill-box;transform-origin:center;animation:mmPing 1.1s ease-out 1}
 @keyframes mmPing{0%{transform:scale(.6);opacity:1}100%{transform:scale(3.2);opacity:0}}
 .reduce-motion #minimap-svg .mm-sus-ping.go{animation:none}
+
+/* ---------- touch layout: chase meters, radio strip and onboarding hint never stack ---------- */
+/* phones, portrait: the meters sit just above the thumbs, full width so label and value stay on one line;
+   the hint drops below the radio strip */
+@media (min-height:481px){
+  .touch-active #hud-meters{top:auto;bottom:calc(320px + env(safe-area-inset-bottom,0px));left:calc(14px + env(safe-area-inset-left,0px));right:calc(14px + env(safe-area-inset-right,0px));width:auto;transform:none}
+  .touch-active #hint-chip{top:calc(272px + env(safe-area-inset-top,0px))}
+}
+/* phones, landscape: the meters go between the stick and the action cluster, under the radio strip;
+   the hint wraps in the same channel so the sprint button never covers it */
+@media (max-height:480px){
+  .touch-active #hud-meters{top:calc(150px + env(safe-area-inset-top,0px));bottom:auto;left:50%;right:auto;transform:translateX(-50%);width:min(300px,38vw)}
+  .touch-active #hint-chip{top:calc(238px + env(safe-area-inset-top,0px));width:auto;max-width:calc(100vw - 480px);min-width:260px;white-space:normal;line-height:1.35}
+}
+/* the region label's sub-line stays on one line, so it never grows off the top of the screen */
+@media (min-width:761px){
+  .hud-topright .minimap-label .sub{display:inline-block;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+}
 
 </style>
 <style id="beta-board">
@@ -20951,6 +21032,9 @@ body:has(.overlay.show) #guide-arrow,body:has(.overlay.show) #guide-marker,.v12-
 .bd-tag-x{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;padding:1px 5px;border:1px solid var(--red,#B3261E);border-radius:2px;
   font-family:'Oswald','Arial Narrow',sans-serif;font-size:9.5px;letter-spacing:.16em}
 .bd-tag-x .ico{color:var(--red,#B3261E);font-size:11px;stroke-width:2.6}
+.ops-ul li.bd-noted{justify-content:flex-start;gap:8px}
+.bd-tag-n{display:inline-flex;align-items:center;flex:0 0 auto;padding:1px 5px;border:1px solid currentColor;border-radius:2px;
+  font-family:'Oswald','Arial Narrow',sans-serif;font-size:9.5px;letter-spacing:.16em}
 .bd-note{display:flex;flex-direction:column;gap:3px;margin:8px 0 6px;padding:8px 10px;background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);
   border:1px solid var(--ink,#1C1C1A);border-radius:2px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;line-height:1.45}
 .bd-note b{display:flex;align-items:center;gap:6px;font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;font-size:10px;letter-spacing:.22em}
@@ -20968,6 +21052,7 @@ body:has(.overlay.show) #guide-arrow,body:has(.overlay.show) #guide-marker,.v12-
 .bd-rul li b{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:700;font-size:12px;letter-spacing:.2em}
 .bd-rul li.ok b{color:var(--green,#0B6E4F)}
 .bd-rul li.bad b{color:var(--red,#B3261E)}
+.bd-rul li.noted > .ico,.bd-rul li.noted b{color:var(--ink-soft,#4F4C44)}
 .bd-rul li em{font-style:normal;font-family:'Oswald','Arial Narrow',sans-serif;font-size:14px;letter-spacing:.03em}
 .bd-rul li span{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;line-height:1.4}
 .bd-refused,.bd-lifted{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;padding:8px 10px;border:2px solid var(--red,#B3261E);border-radius:2px;
@@ -21122,6 +21207,7 @@ body.reduce-motion .cw-sheet.filed .cw-stamp{animation:none}
 .cw-rv-s{display:inline-flex;gap:4px;align-items:center;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:12px;letter-spacing:.14em;padding:2px 8px;border:1px solid;border-radius:2px}
 .cw-rv-row.ok .cw-rv-s{color:var(--green, #0B6E4F);border-color:var(--green, #0B6E4F)}
 .cw-rv-row.no .cw-rv-s{color:var(--red, #B3261E);border-color:var(--red, #B3261E)}
+.cw-rv-row.aside .cw-rv-s{color:var(--ink-soft, #4F4C44);border-color:var(--ink-soft, #4F4C44)}
 .cw-rv-note{font-size:13px;line-height:1.45;margin:8px 0 0}
 
 /* small flat labels the aftermath used to inline */
@@ -21132,7 +21218,7 @@ body.reduce-motion .cw-sheet.filed .cw-stamp{animation:none}
 .cw-callout{display:flex;gap:6px;align-items:flex-start;margin-top:8px;padding-left:8px;border-left:2px solid currentColor}
 
 /* ---------- document checks: Senior Agent reads the raw extraction ---------- */
-body.cw-senior .phone-screen .green, body.cw-senior .phone-screen .red{color:inherit}
+body.cw-senior .phone-screen .green, body.cw-senior .phone-screen .red{color:inherit;text-decoration:none;font-weight:inherit}
 body.cw-senior .cw-hint{display:none}
 .v12-doc-msg .ico{vertical-align:-.15em;margin-right:2px}
 
@@ -21160,6 +21246,10 @@ body.cw-senior .cw-hint{display:none}
   .cw-cards{grid-template-columns:repeat(6, minmax(0, 1fr))}
   .cw-card img, .cw-card .cw-noimg{width:40px;height:40px}
 }
+
+/* a locked setting looks locked: dimmed, no pointer; the current choice keeps a dashed rule */
+.seg button:disabled{opacity:.45;cursor:default}
+.seg button.on:disabled{opacity:.7;border-style:dashed}
 
 </style>
 <script>/* ---------- beta/casework.js ---------- */
@@ -21256,12 +21346,16 @@ const CASES = CW.CASES = {
     moneyEv:['cash', 'obi_notebook'],
     exigentEv:['laptop', 'cash', 'safe_drives'],
     held:{
-      kc:'KC was held as "the ringleader" on your charge sheet and released without charge.',
+      kc:()=>(S.game.moralChoices || {}).market_runner === 'escaped'
+        ? 'Your charge sheet named KC as "the ringleader". He was never found: his face went up on a NACECA wanted notice in Computer Village.'
+        : 'KC was held as "the ringleader" on your charge sheet and released without charge.',
       tunde:'Tunde, your own informant, spent a night in a NACECA cell on your charge sheet.',
       pos:'An Ikeja POS agent spent the night in a cell as "the ringleader" on your charge sheet.',
     },
     headline:{
-      kc:{ pub:'WAVE24 NEWS', head:'Teen Data-Card Seller Held as "Kingpin" Hours Before Lekki Chief\'s Arrest', ded:'NACECA charged a 17-year-old from Ikeja market as the ring\'s leader. By morning its officers had Chief Obi in cuffs. KC\'s mother wants to know who signed the sheet.' },
+      kc:()=>(S.game.moralChoices || {}).market_runner === 'escaped'
+        ? { pub:'WAVE24 NEWS', head:'Missing Teen Named as "Kingpin" Hours Before Lekki Chief\'s Arrest', ded:'NACECA put a 17-year-old from Ikeja market on a wanted notice as the ring\'s leader. By morning its officers had Chief Obi in cuffs. KC\'s mother wants to know who signed the sheet.' }
+        : { pub:'WAVE24 NEWS', head:'Teen Data-Card Seller Held as "Kingpin" Hours Before Lekki Chief\'s Arrest', ded:'NACECA charged a 17-year-old from Ikeja market as the ring\'s leader. By morning its officers had Chief Obi in cuffs. KC\'s mother wants to know who signed the sheet.' },
       tunde:{ pub:'THE DAILY GONG', head:'NACECA Arrests Its Own Market Informant as Lekki Raid Nets a Chief', ded:'The man who pointed officers at Ikeja\'s SIM runners spent a night in their cells. Nobody at the market will talk to NACECA now.' },
       pos:{ pub:'THE LAGOS LEDGER', head:'POS Agent Detained as Ringleader — Then NACECA Arrests a Chief', ded:'An Ikeja cash-out agent was held overnight on a NACECA charge sheet. Traders say the agent only ran the machine.' },
     },
@@ -21300,14 +21394,19 @@ const CASES = CW.CASES = {
           : (a === 'chase' && !S.game._asabaHostageLost) ? 'Tobi Onuoha was pulled from the fire, then held on your charge sheet until noon.'
           : 'Your charge sheet named Tobi Onuoha as the route\'s principal. His family read it in the papers.'; },
       agent:'A SIM agent was taken from a stall at Asaba Main Market on your charge sheet and released without charge.',
-      musa:'Musa was re-arrested as "the route\'s principal" on your charge sheet.',
+      musa:()=>{ const cp = (S.game.moralChoices || {}).checkpoint;
+        return cp === 'arrest_driver' ? 'Musa, in a cell since the Bypass, was charged as "the route\'s principal" on your charge sheet.'
+          : cp === 'tail_driver' ? 'Musa was pulled off the road and held as "the route\'s principal" on your charge sheet. The tail on him went with it.'
+          : 'Musa was re-arrested as "the route\'s principal" on your charge sheet.'; },
     },
     headline:{
       tobi:()=>{ const a = (S.game.moralChoices || {}).asaba, alive = a === 'rescue' || (a === 'chase' && !S.game._asabaHostageLost);
         return alive ? { pub:'WAVE24 NEWS', head:'Rescued Accountant Held on NACECA Charge Sheet After Asaba Fire', ded:'Tobi Onuoha was named as the route\'s principal hours after officers pulled him from the smoke. The order was lifted by noon.' }
           : { pub:'WAVE24 NEWS', head:'Dead Accountant Named as Cartel Principal on NACECA Charge Sheet', ded:'Tobi Onuoha\'s family learned from the papers that the agency had charged him. They are asking for an apology.' }; },
       agent:{ pub:'THE DAILY GONG', head:'Asaba Market SIM Agent Held as Route Boss, Released Without Charge', ded:'Officers took the agent from a stall in front of customers. The fixer NACECA wanted was another man entirely.' },
-      musa:{ pub:'NATIONAL DISPATCH', head:'Lorry Driver Re-Arrested as "Route Principal" After Asaba Raid', ded:'Musa drove cattle on the Benin Bypass. His family says he only drove, and the papers agree with them.' },
+      musa:()=>(S.game.moralChoices || {}).checkpoint === 'arrest_driver'
+        ? { pub:'NATIONAL DISPATCH', head:'Jailed Lorry Driver Charged as "Route Principal" After Asaba Raid', ded:'Musa has been in a cell since the Benin Bypass. His family says he only drove, and the papers agree with them.' }
+        : { pub:'NATIONAL DISPATCH', head:'Lorry Driver Re-Arrested as "Route Principal" After Asaba Raid', ded:'Musa drove cattle on the Benin Bypass. His family says he only drove, and the papers agree with them.' },
     },
   },
   voice: {
@@ -21316,7 +21415,7 @@ const CASES = CW.CASES = {
     method:[
       { id:'ransom',  name:'Kidnap for ransom', line:'Hold the student until the family pays, and keep the calls short so they can\'t be traced.' },
       { id:'rogue',   name:'A rogue Anti-Kidnapping Squad cell', line:'Officers on the Bypass running their own kidnap trade from behind the checkpoint.' },
-      { id:'shield',  name:'Shielded the ring, silenced a witness', line:'Kept Obi, the Engineer and Ifeanyi close as "sources", blocked the mast watch and the backup, took Osas for the payroll copies.', ok:true },
+      { id:'shield',  name:'Shielded the ring, silenced a witness', line:'Protected the ring from inside, blocked the mast watch and the backup, and took Osas for the payroll copies.', ok:true },
       { id:'custody', name:'Obi directing it from custody', line:'Calls placed for him from outside the cell, by people still on his payroll.' },
     ],
     money:[
@@ -21328,7 +21427,7 @@ const CASES = CW.CASES = {
     recruit:{ suspect:'Whose words keep coming back on the calls?', method:'Osas found a payroll. Was this ever about money for the family?', money:'Who does Obi\'s notebook pay every Friday?' },
     wrongEff:{ publicTrust:-10, integrity:-5 },
     held:{
-      uche:'On your word, Sgt. Uche was arrested in the yard, in front of his own squad.',
+      uche:'On your word, Sgt. Uche was arrested at HQ the next morning, in front of his own squad.',
       osaro:'On your word, Engr. Osaro was arrested at the Ugbowo mast, in front of his crew.',
       obi:'On your word, Chief Obi was charged again from his cell. His lawyers called it a stunt.',
       ifeanyi:'On your word, Ifeanyi was charged as the Voice. The papers ran his face for a week.',
@@ -21641,6 +21740,7 @@ wrap('startDialogue', orig => function(key){
 /* =====================================================================
    7. Consequences
    ===================================================================== */
+const WRONG_LINE_AF = CW.WRONG_LINE_AF = 2, WRONG_LINE_PTS = CW.WRONG_LINE_PTS = 5;
 CW.settle = function(c){
   const rec = V12.accused(c), C = CASES[c];
   if(!rec || !C || rec.settled || c === 'voice') return false;
@@ -21658,6 +21758,9 @@ CW.settle = function(c){
     }
   }
   if(ok.suspect && ok.method && ok.money) eff.agencyFavour = (eff.agencyFavour || 0) + 3;
+  // each wrong line the prosecutor has to walk back costs the agency standing (and the grade, below)
+  const wrongLines = (ok.method ? 0 : 1) + (ok.money ? 0 : 1);
+  if(wrongLines) eff.agencyFavour = (eff.agencyFavour || 0) - WRONG_LINE_AF * wrongLines;
   if(Object.keys(eff).length) applyEffect(eff);
   rec.eff = eff;
   trail('settle', { c, eff });
@@ -21702,6 +21805,7 @@ wrap('computeGrade', orig => function(){
     if(rec && r){
       let pts = r.pts;
       if(rec.ok && rec.ok.suspect && rec.ok.method && rec.ok.money) pts += 5;
+      if(rec.ok) pts -= WRONG_LINE_PTS * ((rec.ok.method ? 0 : 1) + (rec.ok.money ? 0 : 1));
       if(rec.warrant === 'exigent') pts = Math.min(pts, 69);
       r.pts = Math.round(pts); r.g = gradeOf(pts);
     }
@@ -21715,12 +21819,14 @@ CW.review = function(m){
   const grid = document.getElementById('aftermath-grid'); if(!rec || !grid) return;
   const old = grid.querySelector('.cw-review'); if(old) old.remove();
   const ok = rec.ok || {};
-  const row = (k)=>`<div class="cw-rv-row ${ok[k] ? 'ok' : 'no'}"><span class="cw-rv-k">${LABEL[k]}</span><span class="cw-rv-v">${esc(CW.optName(c, k, rec[k]))}</span><span class="cw-rv-s">${ok[k] ? ico('check') + 'HOLDS' : ico('cross') + 'FAILS'}</span></div>`;
+  // in the finale a right motive or money trail argued against the wrong person is set aside, not upheld
+  const aside = k => c === 'voice' && k !== 'suspect' && ok[k] && !ok.suspect;
+  const row = (k)=>`<div class="cw-rv-row ${aside(k) ? 'aside' : ok[k] ? 'ok' : 'no'}"><span class="cw-rv-k">${LABEL[k]}</span><span class="cw-rv-v">${esc(CW.optName(c, k, rec[k]))}</span><span class="cw-rv-s">${aside(k) ? 'SET ASIDE' : ok[k] ? ico('check') + 'HOLDS' : ico('cross') + 'FAILS'}</span></div>`;
   const C = CASES[c], notes = [];
   if(!ok.suspect){ const held = c === 'voice' ? val((C.held || {})[rec.suspect]) : CW.held(c, rec); if(held) notes.push(held); }
   if(c !== 'voice'){
-    if(!ok.method) notes.push('The method on your sheet doesn\'t match the evidence: the defence will contest it.');
-    if(!ok.money) notes.push(c === 'lagos' ? 'The money trail on your sheet is wrong: the cash and the notebook are contested, and the money-trail bonus is struck.' : 'The money trail on your sheet is wrong: the shrine cash and the forest ledger are contested.');
+    if(!ok.method) notes.push(`The method on your sheet doesn't match the evidence: the defence will contest it. Agency Standing −${WRONG_LINE_AF}, grade −${WRONG_LINE_PTS}.`);
+    if(!ok.money) notes.push((c === 'lagos' ? 'The money trail on your sheet is wrong: the cash and the notebook are contested, and the money-trail bonus is struck.' : 'The money trail on your sheet is wrong: the shrine cash and the forest ledger are contested.') + ` Agency Standing −${WRONG_LINE_AF}, grade −${WRONG_LINE_PTS}.`);
     if(ok.suspect && ok.method && ok.money) notes.push('Every line held. Agency Standing +3.');
     notes.push(rec.warrant === 'exigent' ? 'No warrant: you went in under exigent circumstances. The raid evidence is contested and the grade is capped at B.' : rec.warrant === 'signed' ? 'Warrant signed before the raid.' : '');
   } else {
@@ -21744,7 +21850,8 @@ V12.caseDecisions = function(){
   const out = [];
   for(const c of ['lagos', 'route', 'voice']){
     const r = V12.accused(c); if(!r) continue;
-    let t = `Charge sheet, ${CASES[c].label.toLowerCase()}: named ${CW.optName(c, 'suspect', r.suspect)}.`;
+    const lbl = { lagos:'Lagos', route:'the Route', voice:'the Voice' }[c] || CASES[c].label;
+    let t = `Charge sheet, ${lbl}: named ${CW.optName(c, 'suspect', r.suspect)}.`;
     if(c !== 'voice' && r.settled && r.ok && !r.ok.suspect) t += ' Wrongly held.';
     if(r.warrant === 'exigent') t += ' Went in without a warrant.';
     out.push(t);
@@ -22167,7 +22274,7 @@ WAY.guide = function(dt){
     const show = SETTINGS.marker === 'on' && dist >= 2.2;
     if(show){
       if(!GS.mkOn){ GS.mk.style.display = 'block'; GS.mkOn = true; }
-      GS.mk.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%,-100%)`;
+      styleC(GS.mk, 'transform', `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%,-100%)`);
       if(GS.mkDist !== dtxt){ GS.mk.querySelector('.gm-dist').textContent = dtxt; GS.mkDist = dtxt; }
     } else if(GS.mkOn){ GS.mk.style.display = 'none'; GS.mkOn = false; }
     WAY._guideState = show ? 'marker' : 'onscreen';
@@ -22177,9 +22284,9 @@ WAY.guide = function(dt){
     if(s.behind){ x = W - x; y = H - y; }
     const e = WAY.edgePoint(x, y);
     if(!GS.arOn){ GS.arw.style.display = 'flex'; GS.arOn = true; }
-    GS.arw.style.transform = `translate(${e.x.toFixed(1)}px, ${e.y.toFixed(1)}px)`;
+    styleC(GS.arw, 'transform', `translate(${e.x.toFixed(1)}px, ${e.y.toFixed(1)}px)`);
     const ico = GS.arw.querySelector('.ga-ico svg') || GS.arw.firstChild;   // the pointer turns, the chip stays square
-    ico.style.transform = `rotate(${e.ang.toFixed(3)}rad)`;
+    styleC(ico, 'transform', `rotate(${e.ang.toFixed(2)}rad)`);
     if(GS.distTxt !== dtxt){ GS.arw.lastChild.textContent = dtxt; GS.distTxt = dtxt; }
     WAY._arrowAt = e; WAY._guideState = 'arrow';
   }
@@ -22231,6 +22338,10 @@ function rimPos(dx, dz){
   if(r <= RIM) return { x:dx, y:dz, clamped:false, ang:Math.atan2(dz, dx) };
   return { x:dx/r*RIM, y:dz/r*RIM, clamped:true, ang:Math.atan2(dz, dx) };
 }
+// per-frame writers: touch the DOM only when the value actually changes
+function styleC(el, n, v){ const k = '_s_' + n; if(el[k] !== v){ el[k] = v; el.style[n] = v; } }
+function attrC(el, n, v){ const k = '_a_' + n; if(el[k] !== v){ el[k] = v; el.setAttribute(n, v); } }
+function clsC(el, c, on){ if(el.classList.contains(c) !== !!on) el.classList.toggle(c, !!on); }
 function setG(g, on){ const d = on ? '' : 'none'; if(g.style.display !== d) g.style.display = d; }
 WAY.minimap = function(){
   if(!ENGINE.player || !mmSetup()) return;
@@ -22256,17 +22367,17 @@ WAY.minimap = function(){
   const ch = WAY.chase ? WAY.chase() : null;
   if(ch && ch.pos){
     const q = rimPos((ch.pos.x - px)*k, (ch.pos.z - pz)*k);
-    MM.sus.setAttribute('transform', `translate(${q.x.toFixed(2)} ${q.y.toFixed(2)})`);
+    attrC(MM.sus, 'transform', `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)})`);
     const ls = ch.mode === 'lastseen';
-    MM.sus.classList.toggle('lastseen', ls); MM.sus.classList.toggle('rim', q.clamped);
+    clsC(MM.sus, 'lastseen', ls); clsC(MM.sus, 'rim', q.clamped);
     if(ls && MM.ping !== ch.ping){ MM.ping = ch.ping; MM.susPing.classList.remove('go'); void MM.svg.getBoundingClientRect(); MM.susPing.classList.add('go'); }
     setG(MM.sus, true); MM.susState = { x:q.x, y:q.y, rim:q.clamped, mode:ch.mode };
   } else { setG(MM.sus, false); MM.susState = null; }
   const r = ch ? null : WAY.resolve();
   if(r && !r.uiOnly && r.pos && WAY.playerOk()){
     const q = rimPos((r.pos.x - px)*k, (r.pos.z - pz)*k);
-    MM.obj.setAttribute('transform', `translate(${q.x.toFixed(2)} ${q.y.toFixed(2)}) rotate(${(q.ang*180/Math.PI).toFixed(1)})`);
-    MM.obj.classList.toggle('rim', q.clamped);
+    attrC(MM.obj, 'transform', `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)}) rotate(${(q.ang*180/Math.PI).toFixed(0)})`);
+    clsC(MM.obj, 'rim', q.clamped);
     setG(MM.obj, true); MM.objState = { x:q.x, y:q.y, rim:q.clamped };
   } else { setG(MM.obj, false); MM.objState = null; }
 };
@@ -22393,7 +22504,7 @@ function makeRibbon(width, color, opacity, order, y){
   g.setAttribute('position', attr); g.setIndex(new THREE.BufferAttribute(idx, 1)); g.setDrawRange(0, 0);
   const mat = new THREE.MeshBasicMaterial({ color, transparent:true, opacity, depthWrite:false, fog:false, side:THREE.DoubleSide, toneMapped:false });
   const mesh = new THREE.Mesh(g, mat);
-  mesh.frustumCulled = false; mesh.renderOrder = order; mesh.userData._routeLine = true; mesh.userData._smoke = true;   // _smoke: never a camera solid
+  mesh.frustumCulled = false; mesh.renderOrder = order; mesh.userData._routeLine = true;   // transparent, so camera collision already ignores it (don't tag _smoke: updateAtmosphere would billboard and sway it)
   ENGINE.scene.add(mesh);
   return { mesh, g, attr, pos, mat, width, y };
 }

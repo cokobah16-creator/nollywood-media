@@ -209,7 +209,7 @@ function theClick(){
       { text:'Madam is Ada, Obi\'s wife' },
     ],
     proof:['MON 05 OCT    C.A.'], look:['MON 05 OCT', 'SAT 03 OCT', 'last call'],
-    fail:{ mode:'continue', note:'You\'re too tired to see it tonight. The notebook and the phone go on the table as they are: link them yourself.' },
+    fail:{ mode:'continue', note:hl ? 'You\'re too tired to see it tonight. The notebook and the phone go on the table as they are: link them yourself.' : 'You\'re too tired to see it tonight. Everything you have goes on the table as it is.' },
     onCorrect:{ intel:10 },
     onSolved:()=>{ S.game.flags.v12_madam = true; S.game._nightClickGood = true; },
     onFailed:()=>{ S.game._nightClickGood = false; },   // Madam is earned at the table, not handed over
@@ -227,7 +227,7 @@ function theClick(){
     const good = !!S.game._nightClickGood;
     setTimeout(()=>{
       if(good) toast('A NEW SUSPECT', '"MADAM" — on the operations table', 2600);
-      else toast('THE TABLE', 'The notebook and the courier\'s phone are on it. Make the link yourself.', 2800);
+      else toast('THE TABLE', hl ? 'The notebook and the courier\'s phone are on it. Make the link yourself.' : 'Tonight\'s papers are on it. Make of them what you can.', 2800);
       V12.openOps('lagos');
     }, 700);
   });

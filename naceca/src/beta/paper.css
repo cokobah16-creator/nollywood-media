@@ -65,8 +65,7 @@
 .mg-msg.good::before,.mg-msg.bad::before{border-radius:0;background:var(--manila,#E9DCC0);
   -webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
 .mg-msg.bad::before{-webkit-mask-image:var(--i-cross);mask-image:var(--i-cross)}
-.ops-th.done b::before{content:'';display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1px;background:currentColor;
-  -webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
+/* .ops-th.done carries its own check icon in the markup */
 .ops-b.gold.done::before{content:'';display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px;background:currentColor;
   -webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
 
@@ -146,3 +145,22 @@ body.cb .ops-th.done b{color:var(--ink,#1C1C1A)}
   .touch-active #screen-title .title-actions .btn,.touch-active .v12-doc-actions .btn,.touch-active .sol-actions .btn{min-height:44px;padding-top:0;padding-bottom:0;display:inline-flex;align-items:center;justify-content:center}
 }
 @media (max-height:480px){ .touch-active .car-ctl button{min-height:44px} }
+
+/* office phone: contact discs on the palette (paper, ink initials; the unknown number in stamp red) */
+.ph-av{background:var(--paper-2,#DCCDAB);color:var(--ink,#1C1C1A);border:1px solid var(--manila,#E9DCC0)}
+.ph-av.ph-unk{background:var(--red,#B3261E);color:var(--manila,#E9DCC0);border-color:var(--red,#B3261E)}
+/* tune mini-game: 44px touch targets on the FREQ / GAIN sliders */
+.touch-active .mg-slider input{height:44px}
+.touch-active .mg-slider input::-webkit-slider-thumb{width:44px;height:44px;margin-top:-19px}
+.touch-active .mg-slider input::-moz-range-thumb{width:42px;height:42px}
+
+/* small-text contrast (≥4.5:1): locked awards dim their icon and name, not the how-to-earn line;
+   no red text on ink; red-on-paper warnings and Recruit highlights carry ink text with a coloured rule */
+.ach{opacity:1}
+.ach:not(.got) .ach-ico,.ach:not(.got) .ach-name{opacity:.55}
+.ach:not(.got) .ach-desc{color:var(--manila-2,#A89F8A)}
+.epi-place{color:var(--manila-2,#A89F8A)}
+#radio-sub .rs-tag{color:var(--manila-2,#A89F8A);opacity:1}
+.plan-pred .bad{color:var(--ink,#1C1C1A);border-left:3px solid var(--red,#B3261E);padding-left:6px}
+.phone-screen .red{color:var(--ink,#1C1C1A);text-decoration:underline wavy var(--red,#B3261E);text-decoration-thickness:1.5px;text-underline-offset:3px}
+.phone-screen .green{color:var(--ink,#1C1C1A);text-decoration:underline solid var(--green,#0B6E4F);text-decoration-thickness:2px;text-underline-offset:3px}

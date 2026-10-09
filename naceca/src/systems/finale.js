@@ -111,12 +111,12 @@ function epilogueSlides(){
     const CC = (typeof CW !== 'undefined' && CW.CASES) || {};
     const wl = _cwWrong('lagos'), wr = _cwWrong('route'), wv = _cwWrong('voice');
     const swap = (name, text)=>{ const s0 = S_.find(x => x.name === name); if(s0) s0.text = text; };
-    if(wl === 'kc') swap('KC', 'KC was held as "the kingpin" on a NACECA charge sheet before Lekki. The charge collapsed in a week. In Ikeja they still call him "the boss", and he hates it.');
+    if(wl === 'kc') swap('KC', m.market_runner === 'escaped' ? 'KC was never found. Your charge sheet called him "the kingpin", and his face is still on a NACECA wanted notice in Computer Village.' : 'KC was held as "the kingpin" on a NACECA charge sheet before Lekki. The charge collapsed in a week. In Ikeja they still call him "the boss", and he hates it.');
     if(wl === 'tunde') S_.push({ art:'', name:'TUNDE', text:'Your informant spent a night in a NACECA cell on your own charge sheet. He is back at the Ikeja market. He does not answer unknown numbers, or NACECA\'s.' });
     if(wl === 'pos') S_.push({ art:'', name:'THE IKEJA POS AGENT', text:'Held overnight as "the ringleader" on your charge sheet. The agent\'s licence was suspended for a year. Nobody apologised.' });
     if(wr === 'tobi') swap('TOBI ONUOHA', m.asaba === 'rescue' ? 'Tobi read the drive line by line for the prosecution — after a morning cuffed to a hospital bed on your charge sheet. He asked for nothing, not even an apology.' : 'Tobi did not live to read the drive. For a week the papers called him the cartel\'s accountant, because of your charge sheet.');
     if(wr === 'agent') S_.push({ art:'', name:'THE ASABA SIM AGENT', text:'Taken from a stall at Asaba Main Market on your charge sheet and released without charge. The stall is still shut.' });
-    if(wr === 'musa'){ const mu = S_.find(x => x.name === 'MUSA'); if(mu) mu.text += ' He was re-arrested as "the route\'s principal" on your charge sheet; it took a month to get the charge dropped.'; }
+    if(wr === 'musa'){ const mu = S_.find(x => x.name === 'MUSA'); if(mu) mu.text += ' Your charge sheet also named him "the route\'s principal"; it took a month to get that charge dropped.'; }
     if(wv && CC.voice && CC.voice.epilogue && CC.voice.epilogue[wv]){
       const e = CC.voice.epilogue[wv], ex = S_.find(x => x.name === e.name);
       if(ex) ex.text = e.text; else S_.push({ art:e.art, name:e.name, text:e.text });

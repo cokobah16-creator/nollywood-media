@@ -98,7 +98,7 @@ module.exports = async h => {
   });
   h.assert(/seventeen/.test(later.phone || ''), 'a phone message from KC\'s mother at the next hub');
   h.assert(/Ikeja asks who signed/.test(later.news), 'a news-board clip about the wrongful arrest');
-  h.assert(/Charge sheet, lagos: named KC\. Wrongly held\./.test(later.notes), 'a line in the board notes\' decisions');
+  h.assert(/Charge sheet, Lagos: named KC\. Wrongly held\./.test(later.notes), 'a line in the board notes\' decisions');
   h.assert(/kingpin/.test(later.epi || ''), 'an epilogue line for KC');
 
   // ---------- 3. wrong METHOD ----------
@@ -108,7 +108,8 @@ module.exports = async h => {
   af = await L.aftermath('m3');
   const q3 = await h.ev(() => S.game.evQ || {});
   h.log('method aftermath', af.d, q3);
-  h.assert(af.d.pt === 0 && af.d.af === 0, 'wrong method: no reputation change (and no all-right bonus)');
+  h.assert(af.d.pt === 0 && af.d.af === -2, 'wrong method: Agency Favour −2 exactly (and no all-right bonus)');
+  h.assert(/Agency Standing −2, grade −5/.test(af.review), 'wrong method: the review states the cost');
   h.assert(q3.phishing_template === 'weak' && q3.kc_sims === 'weak', 'wrong method: the phishing template and KC\'s SIMs are contested');
   h.assert(!/Teen|Informant|POS Agent/.test(af.head.head), 'headline unchanged for a right suspect');
 
@@ -120,7 +121,7 @@ module.exports = async h => {
   af = await L.aftermath('m3');
   const q4 = await h.ev(() => ({ q:S.game.evQ || {}, lost:S.game.accusations.lagos.tmoneyLost, strong:Object.keys((S.game.ops.theories.t_madam = true, V12.strongAgainstAdaeze())) }));
   h.log('money aftermath', af.d, af.intel, q4);
-  h.assert(af.d.pt === 0 && af.d.af === 0, 'wrong money: no reputation change');
+  h.assert(af.d.pt === 0 && af.d.af === -2, 'wrong money: Agency Favour −2 exactly');
   h.assert(q4.q.cash === 'weak' && q4.q.obi_notebook === 'weak', 'wrong money: the cash and the notebook are contested');
   h.assert(af.intel === -15 && q4.lost === true, 'wrong money: the t_money +15 intel is struck');
   h.assert(!q4.strong.includes('obi_notebook'), 'the contested notebook no longer counts as a finale proof');

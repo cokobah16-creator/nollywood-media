@@ -162,11 +162,16 @@ window.finaleResolve = function(){
   if(body) rows.push('HOLDS: Body-cam — her own words in the yard.');
   if(sealed && sealed.before) rows.push(sealed.who === 'adaeze' ? 'HOLDS: Your sealed report — filed before tonight.' : 'FAILS: Your sealed report named someone else.');
   const nmOf = (k, id)=>(window.CW && CW.optName) ? CW.optName('voice', k, id) : id;
-  if(rec && rec.method) rows.push(ok.method ? `HOLDS: Motive — ${nmOf('method', rec.method)}.` : `FAILS: Motive — you argued "${nmOf('method', rec.method)}". The payroll says otherwise.`);
-  if(rec && rec.money) rows.push(ok.money ? `HOLDS: Money trail — ${nmOf('money', rec.money)}.` : `FAILS: Money trail — you argued "${nmOf('money', rec.money)}". Nobody can follow it to her.`);
+  // a motive or money trail argued against the wrong person never holds, however right the reading was
+  if(rec && rec.method) rows.push(!ok.method ? `FAILS: Motive — you argued "${nmOf('method', rec.method)}". The payroll says otherwise.`
+    : right ? `HOLDS: Motive — ${nmOf('method', rec.method)}.` : `SET ASIDE: Motive — "${nmOf('method', rec.method)}", argued against the wrong person.`);
+  if(rec && rec.money) rows.push(!ok.money ? `FAILS: Money trail — you argued "${nmOf('money', rec.money)}". Nobody can follow it to her.`
+    : right ? `HOLDS: Money trail — ${nmOf('money', rec.money)}.` : `SET ASIDE: Money trail — "${nmOf('money', rec.money)}", argued against the wrong person.`);
   const VC = voiceCase();
   const heldLine = (!right && A.who && VC && VC.held && VC.held[A.who]) ? VC.held[A.who] + ' ' : '';
-  const sysLine = { speaker:'NACECA SYSTEM', text:heldLine + (rows.length ? 'The case you put to her: ' + rows.join(' · ') : 'The case you put to her: nothing that will hold up in court.') + (hurt ? ' Osas is hurt in the scramble — a broken wrist, nothing worse.' : ' Osas walks out on his own feet.') };
+  const nmWho = id => (V12.CANDIDATES.find(c => c.id === id) || {}).name || 'someone else';
+  const lead = right ? 'The case you put to her: ' : `Your accusation named ${nmWho(A.who)}. What that leaves against her: `;
+  const sysLine = { speaker:'NACECA SYSTEM', text:heldLine + (rows.length ? lead + rows.join(' · ') : lead + 'nothing that will hold up in court.') + (hurt ? ' Osas is hurt in the scramble — a broken wrist, nothing worse.' : ' Osas walks out on his own feet.') };
   const key = 'fin_end_' + outcome;
   DIALOGUE[key + '_run'] = [sysLine].concat(DIALOGUE[key]);
   V12.log('finale', { outcome, s, right, body, method:ok.method, money:ok.money });

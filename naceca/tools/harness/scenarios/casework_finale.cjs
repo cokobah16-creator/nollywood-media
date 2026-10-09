@@ -41,7 +41,8 @@ module.exports = async h => {
   const res = await h.ev(() => ({ key:DLG.scriptKey, line:(DIALOGUE.fin_end_unproven_run || DIALOGUE.fin_end_contested_run || DIALOGUE.fin_end_proven_run || [])[0], outcome:S.game.moralChoices.finale }));
   h.log('resolution', res.key, res.outcome);
   h.assert(/On your word, Insp\. Chidi was arrested/.test(res.line.text), 'the named person is publicly arrested');
-  h.assert(/FAILS: Motive/.test(res.line.text) && /HOLDS: Money trail/.test(res.line.text), 'method and money are judged in the case put to her');
+  h.assert(/FAILS: Motive/.test(res.line.text) && /SET ASIDE: Money trail/.test(res.line.text) && !/HOLDS: Money/.test(res.line.text), 'a right money trail argued against the wrong person is set aside, not upheld');
+  h.assert(/Your accusation named Insp\. Chidi/.test(res.line.text), 'the line says who was accused');
   h.assert(!/[✓✗]/.test(res.line.text), 'right/wrong in words, not glyphs');
   await L.finishDialogue(150);
   await h.step(300);
@@ -49,7 +50,7 @@ module.exports = async h => {
     epi:(epilogueSlides().find(s => s.name === 'INSP. CHIDI') || {}).text }));
   h.log('finale headline', af.head.head);
   h.assert(/Insp\. Chidi Was Arrested in Error/.test(af.head.head), 'the finale headline carries the wrong arrest');
-  h.assert(/FAILS/.test(af.review) && /HOLDS/.test(af.review), 'the aftermath reviews the finale sheet');
+  h.assert(/FAILS/.test(af.review) && /SET ASIDE/.test(af.review) && !/HOLDS/.test(af.review), 'the aftermath reviews the finale sheet (nothing upheld against the wrong person)');
   h.assert(/no longer returns NACECA's calls/.test(af.epi || ''), 'an epilogue line for Insp. Chidi');
 
   // ---- replay M8: the accusation stands, no second sheet, no second cost ----

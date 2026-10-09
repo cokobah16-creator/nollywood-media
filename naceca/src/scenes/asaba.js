@@ -343,8 +343,8 @@ function updateAsabaTrigger(dt){
       startChase({
         runner: rn, label:'IFEANYI', speed:4.1, catchDist:1.9, headStart:0.3,
         path: [[2,1],[6,5],[11,5],[11,-4],[15.5,-1]],
-        // no way out at the van while you're on him: he doubles back round the bays until caught or 20 s out of range
-        endPause: 1.4, endLine: 'No way out at the van. Ifeanyi breaks back through the bays.',
+        // he can't start the van while you're on him: he doubles back round the bays until caught or 20 s out of range
+        endPause: 1.4, endLine: 'Too close to start the van. Ifeanyi breaks back through the bays.',
         lanes: ASABA_LANES,
         onCaught: ()=>{ if(!S.game._asabaChoice) makeAsabaChoice('chase', rn); },
         onEscaped: ()=>{

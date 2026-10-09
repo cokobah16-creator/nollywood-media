@@ -17,10 +17,13 @@ const V12 = window.V12;
 const ico = n => typeof icon === 'function' ? icon(n) : '';
 /* the Lagos warrant as the board sees it, plus what the charge sheet decided */
 function lagosWarrant(){
+  const rec = typeof V12.accused === 'function' ? V12.accused('lagos') : null;
+  // once the gate has decided (signed, or exigent entry), the filed record is the warrant —
+  // a replay must not re-read the live board and flip it either way
+  if(rec && (rec.warrant === 'signed' || rec.warrant === 'exigent')) return { signed:rec.warrant === 'signed', exigent:rec.warrant === 'exigent', rec };
   let w = null;
   try{ if(typeof V12.warrantFor === 'function') w = V12.warrantFor('lagos'); }catch(e){ w = null; }
   const signed = w && typeof w === 'object' ? !!w.signed : !!V12.warrant();
-  const rec = typeof V12.accused === 'function' ? V12.accused('lagos') : null;
   return { signed, exigent:!signed && !!(rec && rec.warrant === 'exigent'), rec };
 }
 V12.lagosWarrant = lagosWarrant;
@@ -122,7 +125,7 @@ V12.planM3 = function(onGo){
     applyEffect(({ knock:{ integrity:+6, publicTrust:+5, agencyFavour:-2 }, quiet:{ integrity:+2, publicTrust:+2, agencyFavour:+3 }, loud:{ integrity:-4, publicTrust:-4, agencyFavour:+5, force:+1 } })[plan.entry]);
     // no warrant costs once: if the player already chose exigent circumstances at filing, it's paid
     const W = lagosWarrant();
-    if(known.warrant) applyEffect({ agencyFavour:+2 });
+    if(known.warrant){ if(!(W.rec && W.rec.planCredit)){ applyEffect({ agencyFavour:+2 }); if(W.rec) W.rec.planCredit = true; } }
     else if(!W.exigent){
       if(window.CW && typeof CW.goExigent === 'function' && W.rec) CW.goExigent('lagos');
       else applyEffect({ agencyFavour:-5 });

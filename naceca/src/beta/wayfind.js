@@ -344,7 +344,7 @@ WAY.guide = function(dt){
     const show = SETTINGS.marker === 'on' && dist >= 2.2;
     if(show){
       if(!GS.mkOn){ GS.mk.style.display = 'block'; GS.mkOn = true; }
-      GS.mk.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%,-100%)`;
+      styleC(GS.mk, 'transform', `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%,-100%)`);
       if(GS.mkDist !== dtxt){ GS.mk.querySelector('.gm-dist').textContent = dtxt; GS.mkDist = dtxt; }
     } else if(GS.mkOn){ GS.mk.style.display = 'none'; GS.mkOn = false; }
     WAY._guideState = show ? 'marker' : 'onscreen';
@@ -354,9 +354,9 @@ WAY.guide = function(dt){
     if(s.behind){ x = W - x; y = H - y; }
     const e = WAY.edgePoint(x, y);
     if(!GS.arOn){ GS.arw.style.display = 'flex'; GS.arOn = true; }
-    GS.arw.style.transform = `translate(${e.x.toFixed(1)}px, ${e.y.toFixed(1)}px)`;
+    styleC(GS.arw, 'transform', `translate(${e.x.toFixed(1)}px, ${e.y.toFixed(1)}px)`);
     const ico = GS.arw.querySelector('.ga-ico svg') || GS.arw.firstChild;   // the pointer turns, the chip stays square
-    ico.style.transform = `rotate(${e.ang.toFixed(3)}rad)`;
+    styleC(ico, 'transform', `rotate(${e.ang.toFixed(2)}rad)`);
     if(GS.distTxt !== dtxt){ GS.arw.lastChild.textContent = dtxt; GS.distTxt = dtxt; }
     WAY._arrowAt = e; WAY._guideState = 'arrow';
   }
@@ -408,6 +408,10 @@ function rimPos(dx, dz){
   if(r <= RIM) return { x:dx, y:dz, clamped:false, ang:Math.atan2(dz, dx) };
   return { x:dx/r*RIM, y:dz/r*RIM, clamped:true, ang:Math.atan2(dz, dx) };
 }
+// per-frame writers: touch the DOM only when the value actually changes
+function styleC(el, n, v){ const k = '_s_' + n; if(el[k] !== v){ el[k] = v; el.style[n] = v; } }
+function attrC(el, n, v){ const k = '_a_' + n; if(el[k] !== v){ el[k] = v; el.setAttribute(n, v); } }
+function clsC(el, c, on){ if(el.classList.contains(c) !== !!on) el.classList.toggle(c, !!on); }
 function setG(g, on){ const d = on ? '' : 'none'; if(g.style.display !== d) g.style.display = d; }
 WAY.minimap = function(){
   if(!ENGINE.player || !mmSetup()) return;
@@ -433,17 +437,17 @@ WAY.minimap = function(){
   const ch = WAY.chase ? WAY.chase() : null;
   if(ch && ch.pos){
     const q = rimPos((ch.pos.x - px)*k, (ch.pos.z - pz)*k);
-    MM.sus.setAttribute('transform', `translate(${q.x.toFixed(2)} ${q.y.toFixed(2)})`);
+    attrC(MM.sus, 'transform', `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)})`);
     const ls = ch.mode === 'lastseen';
-    MM.sus.classList.toggle('lastseen', ls); MM.sus.classList.toggle('rim', q.clamped);
+    clsC(MM.sus, 'lastseen', ls); clsC(MM.sus, 'rim', q.clamped);
     if(ls && MM.ping !== ch.ping){ MM.ping = ch.ping; MM.susPing.classList.remove('go'); void MM.svg.getBoundingClientRect(); MM.susPing.classList.add('go'); }
     setG(MM.sus, true); MM.susState = { x:q.x, y:q.y, rim:q.clamped, mode:ch.mode };
   } else { setG(MM.sus, false); MM.susState = null; }
   const r = ch ? null : WAY.resolve();
   if(r && !r.uiOnly && r.pos && WAY.playerOk()){
     const q = rimPos((r.pos.x - px)*k, (r.pos.z - pz)*k);
-    MM.obj.setAttribute('transform', `translate(${q.x.toFixed(2)} ${q.y.toFixed(2)}) rotate(${(q.ang*180/Math.PI).toFixed(1)})`);
-    MM.obj.classList.toggle('rim', q.clamped);
+    attrC(MM.obj, 'transform', `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)}) rotate(${(q.ang*180/Math.PI).toFixed(0)})`);
+    clsC(MM.obj, 'rim', q.clamped);
     setG(MM.obj, true); MM.objState = { x:q.x, y:q.y, rim:q.clamped };
   } else { setG(MM.obj, false); MM.objState = null; }
 };

@@ -61,13 +61,20 @@ module.exports = async h => {
   await h.ev(() => { (S.game.docSeen = S.game.docSeen || {}).tower_call_trace = true; });
   h.assert(await vis('l_hall3') && await vis('l_isihor'), 'Hall 3 and Isihor appear once the trace sheet is read');
 
-  // filing any link to a herring is struck: there is no true link to find
+  // a herring's own fact is set aside at no cost; linking it into the crime is struck
   const r = await h.ev(() => {
-    V12.pencil('s_osaro', 'l_ugbowo');
+    V12.pencil('s_osaro', 'l_ugbowo'); V12.pencil('s_osaro', 's_voice');
     const res = V12.fileLinks();
-    return { ok:res.map(x => x.ok), struck:V12.ops().struck.slice(), strikes:V12.caseStrikes('voice') };
+    return { res:res.map(x => ({ k:x.k, ok:x.ok, noted:!!x.noted })), struck:V12.ops().struck.slice(), noted:V12.ops().noted.slice(), strikes:V12.caseStrikes('voice'),
+      again:(V12.pencil('s_osaro', 'l_ugbowo'), V12.ops().pencils.length) };
   });
-  h.assert(r.ok.length === 1 && r.ok[0] === false, 'Osaro–Ugbowo is struck off');
-  h.assert(r.strikes === 1, 'and costs the Voice case a strike');
+  h.log('herring filing', JSON.stringify(r));
+  h.assert(r.res.find(x => x.k === 'l_ugbowo|s_osaro').noted, 'Osaro–Ugbowo (he runs the mast) is set aside, not struck');
+  h.assert(r.struck.includes('s_osaro|s_voice') && !r.struck.includes('l_ugbowo|s_osaro'), 'Osaro–the Voice is struck off');
+  h.assert(r.strikes === 1, 'only the crime link costs the Voice case a strike');
+  h.assert(r.again === 0, 'a set-aside link can\'t be pencilled again');
+  // Grace Divine's flyers are on the table once the market is done, Ngozi or not
+  await h.start('m3', { completed:['m0', 'm1', 'm2'] });
+  h.assert(await vis('m_coop'), 'Grace Divine is on the table after the market (three Lagos dead ends before the charge sheet)');
   h.assert(h.errors.length === 0, 'no page errors');
 };

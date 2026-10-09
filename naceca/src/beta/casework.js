@@ -91,12 +91,16 @@ const CASES = CW.CASES = {
     moneyEv:['cash', 'obi_notebook'],
     exigentEv:['laptop', 'cash', 'safe_drives'],
     held:{
-      kc:'KC was held as "the ringleader" on your charge sheet and released without charge.',
+      kc:()=>(S.game.moralChoices || {}).market_runner === 'escaped'
+        ? 'Your charge sheet named KC as "the ringleader". He was never found: his face went up on a NACECA wanted notice in Computer Village.'
+        : 'KC was held as "the ringleader" on your charge sheet and released without charge.',
       tunde:'Tunde, your own informant, spent a night in a NACECA cell on your charge sheet.',
       pos:'An Ikeja POS agent spent the night in a cell as "the ringleader" on your charge sheet.',
     },
     headline:{
-      kc:{ pub:'WAVE24 NEWS', head:'Teen Data-Card Seller Held as "Kingpin" Hours Before Lekki Chief\'s Arrest', ded:'NACECA charged a 17-year-old from Ikeja market as the ring\'s leader. By morning its officers had Chief Obi in cuffs. KC\'s mother wants to know who signed the sheet.' },
+      kc:()=>(S.game.moralChoices || {}).market_runner === 'escaped'
+        ? { pub:'WAVE24 NEWS', head:'Missing Teen Named as "Kingpin" Hours Before Lekki Chief\'s Arrest', ded:'NACECA put a 17-year-old from Ikeja market on a wanted notice as the ring\'s leader. By morning its officers had Chief Obi in cuffs. KC\'s mother wants to know who signed the sheet.' }
+        : { pub:'WAVE24 NEWS', head:'Teen Data-Card Seller Held as "Kingpin" Hours Before Lekki Chief\'s Arrest', ded:'NACECA charged a 17-year-old from Ikeja market as the ring\'s leader. By morning its officers had Chief Obi in cuffs. KC\'s mother wants to know who signed the sheet.' },
       tunde:{ pub:'THE DAILY GONG', head:'NACECA Arrests Its Own Market Informant as Lekki Raid Nets a Chief', ded:'The man who pointed officers at Ikeja\'s SIM runners spent a night in their cells. Nobody at the market will talk to NACECA now.' },
       pos:{ pub:'THE LAGOS LEDGER', head:'POS Agent Detained as Ringleader — Then NACECA Arrests a Chief', ded:'An Ikeja cash-out agent was held overnight on a NACECA charge sheet. Traders say the agent only ran the machine.' },
     },
@@ -135,14 +139,19 @@ const CASES = CW.CASES = {
           : (a === 'chase' && !S.game._asabaHostageLost) ? 'Tobi Onuoha was pulled from the fire, then held on your charge sheet until noon.'
           : 'Your charge sheet named Tobi Onuoha as the route\'s principal. His family read it in the papers.'; },
       agent:'A SIM agent was taken from a stall at Asaba Main Market on your charge sheet and released without charge.',
-      musa:'Musa was re-arrested as "the route\'s principal" on your charge sheet.',
+      musa:()=>{ const cp = (S.game.moralChoices || {}).checkpoint;
+        return cp === 'arrest_driver' ? 'Musa, in a cell since the Bypass, was charged as "the route\'s principal" on your charge sheet.'
+          : cp === 'tail_driver' ? 'Musa was pulled off the road and held as "the route\'s principal" on your charge sheet. The tail on him went with it.'
+          : 'Musa was re-arrested as "the route\'s principal" on your charge sheet.'; },
     },
     headline:{
       tobi:()=>{ const a = (S.game.moralChoices || {}).asaba, alive = a === 'rescue' || (a === 'chase' && !S.game._asabaHostageLost);
         return alive ? { pub:'WAVE24 NEWS', head:'Rescued Accountant Held on NACECA Charge Sheet After Asaba Fire', ded:'Tobi Onuoha was named as the route\'s principal hours after officers pulled him from the smoke. The order was lifted by noon.' }
           : { pub:'WAVE24 NEWS', head:'Dead Accountant Named as Cartel Principal on NACECA Charge Sheet', ded:'Tobi Onuoha\'s family learned from the papers that the agency had charged him. They are asking for an apology.' }; },
       agent:{ pub:'THE DAILY GONG', head:'Asaba Market SIM Agent Held as Route Boss, Released Without Charge', ded:'Officers took the agent from a stall in front of customers. The fixer NACECA wanted was another man entirely.' },
-      musa:{ pub:'NATIONAL DISPATCH', head:'Lorry Driver Re-Arrested as "Route Principal" After Asaba Raid', ded:'Musa drove cattle on the Benin Bypass. His family says he only drove, and the papers agree with them.' },
+      musa:()=>(S.game.moralChoices || {}).checkpoint === 'arrest_driver'
+        ? { pub:'NATIONAL DISPATCH', head:'Jailed Lorry Driver Charged as "Route Principal" After Asaba Raid', ded:'Musa has been in a cell since the Benin Bypass. His family says he only drove, and the papers agree with them.' }
+        : { pub:'NATIONAL DISPATCH', head:'Lorry Driver Re-Arrested as "Route Principal" After Asaba Raid', ded:'Musa drove cattle on the Benin Bypass. His family says he only drove, and the papers agree with them.' },
     },
   },
   voice: {
@@ -151,7 +160,7 @@ const CASES = CW.CASES = {
     method:[
       { id:'ransom',  name:'Kidnap for ransom', line:'Hold the student until the family pays, and keep the calls short so they can\'t be traced.' },
       { id:'rogue',   name:'A rogue Anti-Kidnapping Squad cell', line:'Officers on the Bypass running their own kidnap trade from behind the checkpoint.' },
-      { id:'shield',  name:'Shielded the ring, silenced a witness', line:'Kept Obi, the Engineer and Ifeanyi close as "sources", blocked the mast watch and the backup, took Osas for the payroll copies.', ok:true },
+      { id:'shield',  name:'Shielded the ring, silenced a witness', line:'Protected the ring from inside, blocked the mast watch and the backup, and took Osas for the payroll copies.', ok:true },
       { id:'custody', name:'Obi directing it from custody', line:'Calls placed for him from outside the cell, by people still on his payroll.' },
     ],
     money:[
@@ -163,7 +172,7 @@ const CASES = CW.CASES = {
     recruit:{ suspect:'Whose words keep coming back on the calls?', method:'Osas found a payroll. Was this ever about money for the family?', money:'Who does Obi\'s notebook pay every Friday?' },
     wrongEff:{ publicTrust:-10, integrity:-5 },
     held:{
-      uche:'On your word, Sgt. Uche was arrested in the yard, in front of his own squad.',
+      uche:'On your word, Sgt. Uche was arrested at HQ the next morning, in front of his own squad.',
       osaro:'On your word, Engr. Osaro was arrested at the Ugbowo mast, in front of his crew.',
       obi:'On your word, Chief Obi was charged again from his cell. His lawyers called it a stunt.',
       ifeanyi:'On your word, Ifeanyi was charged as the Voice. The papers ran his face for a week.',
@@ -476,6 +485,7 @@ wrap('startDialogue', orig => function(key){
 /* =====================================================================
    7. Consequences
    ===================================================================== */
+const WRONG_LINE_AF = CW.WRONG_LINE_AF = 2, WRONG_LINE_PTS = CW.WRONG_LINE_PTS = 5;
 CW.settle = function(c){
   const rec = V12.accused(c), C = CASES[c];
   if(!rec || !C || rec.settled || c === 'voice') return false;
@@ -493,6 +503,9 @@ CW.settle = function(c){
     }
   }
   if(ok.suspect && ok.method && ok.money) eff.agencyFavour = (eff.agencyFavour || 0) + 3;
+  // each wrong line the prosecutor has to walk back costs the agency standing (and the grade, below)
+  const wrongLines = (ok.method ? 0 : 1) + (ok.money ? 0 : 1);
+  if(wrongLines) eff.agencyFavour = (eff.agencyFavour || 0) - WRONG_LINE_AF * wrongLines;
   if(Object.keys(eff).length) applyEffect(eff);
   rec.eff = eff;
   trail('settle', { c, eff });
@@ -537,6 +550,7 @@ wrap('computeGrade', orig => function(){
     if(rec && r){
       let pts = r.pts;
       if(rec.ok && rec.ok.suspect && rec.ok.method && rec.ok.money) pts += 5;
+      if(rec.ok) pts -= WRONG_LINE_PTS * ((rec.ok.method ? 0 : 1) + (rec.ok.money ? 0 : 1));
       if(rec.warrant === 'exigent') pts = Math.min(pts, 69);
       r.pts = Math.round(pts); r.g = gradeOf(pts);
     }
@@ -550,12 +564,14 @@ CW.review = function(m){
   const grid = document.getElementById('aftermath-grid'); if(!rec || !grid) return;
   const old = grid.querySelector('.cw-review'); if(old) old.remove();
   const ok = rec.ok || {};
-  const row = (k)=>`<div class="cw-rv-row ${ok[k] ? 'ok' : 'no'}"><span class="cw-rv-k">${LABEL[k]}</span><span class="cw-rv-v">${esc(CW.optName(c, k, rec[k]))}</span><span class="cw-rv-s">${ok[k] ? ico('check') + 'HOLDS' : ico('cross') + 'FAILS'}</span></div>`;
+  // in the finale a right motive or money trail argued against the wrong person is set aside, not upheld
+  const aside = k => c === 'voice' && k !== 'suspect' && ok[k] && !ok.suspect;
+  const row = (k)=>`<div class="cw-rv-row ${aside(k) ? 'aside' : ok[k] ? 'ok' : 'no'}"><span class="cw-rv-k">${LABEL[k]}</span><span class="cw-rv-v">${esc(CW.optName(c, k, rec[k]))}</span><span class="cw-rv-s">${aside(k) ? 'SET ASIDE' : ok[k] ? ico('check') + 'HOLDS' : ico('cross') + 'FAILS'}</span></div>`;
   const C = CASES[c], notes = [];
   if(!ok.suspect){ const held = c === 'voice' ? val((C.held || {})[rec.suspect]) : CW.held(c, rec); if(held) notes.push(held); }
   if(c !== 'voice'){
-    if(!ok.method) notes.push('The method on your sheet doesn\'t match the evidence: the defence will contest it.');
-    if(!ok.money) notes.push(c === 'lagos' ? 'The money trail on your sheet is wrong: the cash and the notebook are contested, and the money-trail bonus is struck.' : 'The money trail on your sheet is wrong: the shrine cash and the forest ledger are contested.');
+    if(!ok.method) notes.push(`The method on your sheet doesn't match the evidence: the defence will contest it. Agency Standing −${WRONG_LINE_AF}, grade −${WRONG_LINE_PTS}.`);
+    if(!ok.money) notes.push((c === 'lagos' ? 'The money trail on your sheet is wrong: the cash and the notebook are contested, and the money-trail bonus is struck.' : 'The money trail on your sheet is wrong: the shrine cash and the forest ledger are contested.') + ` Agency Standing −${WRONG_LINE_AF}, grade −${WRONG_LINE_PTS}.`);
     if(ok.suspect && ok.method && ok.money) notes.push('Every line held. Agency Standing +3.');
     notes.push(rec.warrant === 'exigent' ? 'No warrant: you went in under exigent circumstances. The raid evidence is contested and the grade is capped at B.' : rec.warrant === 'signed' ? 'Warrant signed before the raid.' : '');
   } else {
@@ -579,7 +595,8 @@ V12.caseDecisions = function(){
   const out = [];
   for(const c of ['lagos', 'route', 'voice']){
     const r = V12.accused(c); if(!r) continue;
-    let t = `Charge sheet, ${CASES[c].label.toLowerCase()}: named ${CW.optName(c, 'suspect', r.suspect)}.`;
+    const lbl = { lagos:'Lagos', route:'the Route', voice:'the Voice' }[c] || CASES[c].label;
+    let t = `Charge sheet, ${lbl}: named ${CW.optName(c, 'suspect', r.suspect)}.`;
     if(c !== 'voice' && r.settled && r.ok && !r.ok.suspect) t += ' Wrongly held.';
     if(r.warrant === 'exigent') t += ' Went in without a warrant.';
     out.push(t);

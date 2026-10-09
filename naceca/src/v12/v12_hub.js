@@ -254,7 +254,8 @@ V12.openPhone = function(onClose){
   const P = V12.mem().phone;
   let cur = null;
   const order = ()=>Object.keys(P).sort((a, b)=>((P[b].unread || 0) + (P[b].pending ? 1 : 0)) - ((P[a].unread || 0) + (P[a].pending ? 1 : 0)) || (HUB_ORDER.indexOf(P[b].last) - HUB_ORDER.indexOf(P[a].last)));
-  const avatar = id => { const p = PEOPLE_ON_PHONE[id] || { ini:'?', col:'#5a6a82' }; return `<span class="ph-av" style="background:${p.col}">${V12.esc(p.ini)}</span>`; };
+  // palette discs: paper with ink initials; an unknown number is the one stamped red
+  const avatar = id => { const p = PEOPLE_ON_PHONE[id] || { ini:'?' }; return `<span class="ph-av${id === 'unknown' ? ' ph-unk' : ''}">${V12.esc(p.ini)}</span>`; };
   const nameOf = id => (PEOPLE_ON_PHONE[id] || { name:id }).name;
   const draw = ()=>{
     const list = order().map(id => { const t = P[id], lastMsg = t.msgs[t.msgs.length - 1] || { text:'' }, n = (t.unread || 0) + (t.pending ? 1 : 0);
@@ -467,9 +468,16 @@ function refreshLabel(){
 /* a call from Lagos fills the video wall */
 V12.videoCall = function(on){
   let el = document.getElementById('v12-call');
-  if(!on){ if(el) el.classList.remove('show'); return; }
+  if(!on){ clearInterval(V12._vcWatch); if(el) el.classList.remove('show'); return; }
   if(!el){ el = V12.el('div', '', `<div class="vc-dot"></div><span>VIDEO CALL · LAGOS HQ · ENCRYPTED</span>`); el.id = 'v12-call'; document.getElementById('game-root').appendChild(el); }
   el.classList.add('show');
+  // the badge belongs to the call: if the call is closed any other way (ESC, the pause menu,
+  // a cancelled charge sheet), it goes once nothing call-related is on screen
+  clearInterval(V12._vcWatch);
+  V12._vcWatch = setInterval(()=>{
+    const open = !!document.querySelector('#screen-dialogue.show, .overlay.show');
+    if(!open){ clearInterval(V12._vcWatch); el.classList.remove('show'); }
+  }, 500);
 };
 
 function endHub(h){

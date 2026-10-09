@@ -40,11 +40,11 @@ module.exports = async h => {
   h.assert(f1.strikes === 1 && f1.integ === s0.integ - 2, 'one strike, Integrity −2');
   h.assert(f1.pencils.length === 0, 'filing clears the pencils');
   h.assert(f1.w.strength === 20 + 2 * 10 - 12, 'strength: +10 per ink, −12 per strike (got ' + f1.w.strength + ')');
-  h.assert(/INTEGRITY −2/.test(f1.toast) && /LAGOS STRIKE 1\/3/.test(f1.toast), 'the toast shows the Integrity cost and the strike: ' + f1.toast);
+  h.assert(!/STRIKE/.test(f1.toast || ''), 'no toast over the ruling sheet: ' + f1.toast);
   const ruling = await h.ev(() => { const m = document.querySelector('#ops-modal.show .bd-ruling'); return m ? { ok:m.querySelectorAll('li.ok').length, bad:m.querySelectorAll('li.bad').length, txt:m.textContent, icons:m.querySelectorAll('li svg.ico').length } : null; });
   h.assert(ruling && ruling.ok === 2 && ruling.bad === 1, 'the ruling lists two inked and one struck');
   h.assert(/INKED/.test(ruling.txt) && /STRUCK OFF/.test(ruling.txt) && ruling.icons === 3, 'right/wrong carry words and icons, not colour alone');
-  h.assert(/Integrity −2/.test(ruling.txt), 'the ruling shows the Integrity cost');
+  h.assert(/Integrity −2/.test(ruling.txt) && /LAGOS strike 1\/3/.test(ruling.txt), 'the ruling shows the Integrity cost and the strike');
   await h.ev(() => document.getElementById('bd-rul-ok').click());
   await h.step(200);
   const board = await h.ev(() => ({ strip:document.querySelector('.bd-case[data-case="lagos"]').textContent, struckPath:!!document.querySelector('#ops-svg path.struck'), xmark:!!document.querySelector('#ops-svg .bd-xmark'), marks:document.querySelectorAll('.bd-case .bd-x.on svg').length }));
@@ -99,7 +99,7 @@ module.exports = async h => {
   await h.start('m2', { completed:['m0', 'm1'], state:S => { S.player.skills = ['sources', 'money']; } });
   const fm = await h.ev(() => {
     const i0 = S.player.reputation.integrity;
-    V12.pencil('e_wallet', 'l_lekki'); const r1 = V12.fileLinks()[0];
+    V12.pencil('e_wallet', 'l_mushin'); const r1 = V12.fileLinks()[0];
     const k1 = V12.caseStrikes('lagos'), i1 = S.player.reputation.integrity;
     V12.pencil('m_pos', 'l_lekki'); V12.fileLinks();
     return { forgiven:!!r1.forgiven, k1, d1:i0 - i1, k2:V12.caseStrikes('lagos'), d2:i0 - S.player.reputation.integrity, struck:V12.ops().struck.length };
@@ -108,7 +108,7 @@ module.exports = async h => {
   h.assert(fm.k2 === 1 && fm.d2 === 2 && fm.struck === 2, 'second wrong money link costs a strike');
   // without the capability nothing is forgiven
   await h.start('m2', { completed:['m0', 'm1'] });
-  const nf = await h.ev(() => { V12.pencil('e_wallet', 'l_lekki'); V12.fileLinks(); return V12.caseStrikes('lagos'); });
+  const nf = await h.ev(() => { V12.pencil('e_wallet', 'l_mushin'); V12.fileLinks(); return V12.caseStrikes('lagos'); });
   h.assert(nf === 1, 'without Follow the Money a wrong money link is a strike');
 
   // a signed warrant: enough ink and theory

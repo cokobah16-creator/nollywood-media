@@ -367,7 +367,7 @@ V12.wrap('sideCollect', orig => function(tr){
 V12.wrap('beginMissionCore', orig => function(id){
   const r = orig.apply(this, arguments);
   try{
-    if(id === 'm2'){ setEvidenceMax(2); V12.objAdd('o4_table', 'Ink three links on the operations table'); }
+    if(id === 'm2'){ setEvidenceMax(2); V12.objAdd('o4_table', 'Ink three links on the operations table'); V12.m2TableCheck(); }
     if(id === 'm3') setEvidenceMax(4);
   }catch(e){ console.warn('[v12] begin', e); }
   return r;
@@ -383,6 +383,18 @@ V12.wrap('beginMission', orig => function(id){
   }
   return r;
 });
+// M2's table objective closes on three inked links (a replay may already have them), or on three
+// strikes: the warrant is refused and the operation goes on without the table
+V12.m2TableCheck = function(){
+  try{
+    if(S.game.currentMission !== 'm2') return;
+    const o = (S.game.objectives || []).find(x => x.id === 'o4_table'); if(!o || o.done) return;
+    const ops = typeof V12.ops === 'function' ? V12.ops() : (S.game.ops || {});
+    const strikes = typeof V12.caseStrikes === 'function' ? V12.caseStrikes('lagos') : 0;
+    if((ops.inked || []).length >= 3) completeObjective('o4_table');
+    else if(strikes >= 3){ o.text = 'Operations table: refused at three strikes'; completeObjective('o4_table'); }
+  }catch(e){}
+};
 // M2: the van waits until the table has three links that hold, or three strikes (fail forward, at a cost)
 V12.wrap('buildSceneMarket', orig => function(){
   const r = orig.apply(this, arguments);

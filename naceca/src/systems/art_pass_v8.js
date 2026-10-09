@@ -2441,15 +2441,11 @@ function updateInteractPrompt(){
   x = Math.max(8, Math.min(W - wl._w - 8, x)); y = Math.max(touch ? 140 : 80, Math.min(H - (touch ? 300 : 220), y));
   wl.style.transform = `translate(${x}px, ${y}px) translate(0,-50%)`;
 }
-/* phones: pressure meters (wipe countdown, chase gap) sit right under the mission panel */
+/* phones: pressure meters (wipe countdown, chase gap) are placed by the stylesheet (beta/wayfind.css),
+   clear of the radio strip, the hint and the stick; this only clears positions set by older builds */
 function placeMetersTouch(){
   const m = document.getElementById('hud-meters'); if(!m) return;
-  if(!document.body.classList.contains('touch-active')){ if(m.style.top){ m.style.top = ''; m.style.width = ''; } return; }
-  if(!m.childElementCount) return;
-  const panel = document.querySelector('.hud-topleft .hud-mission'); if(!panel) return;
-  const r = panel.getBoundingClientRect(); if(!r.height) return;
-  m.style.top = Math.round(r.bottom + 8) + 'px';
-  m.style.width = Math.round(Math.max(200, r.width)) + 'px';
+  if(m.style.top || m.style.width){ m.style.top = ''; m.style.width = ''; }
 }
 /* evidence markers: diamond pips; label only when close (and not under the action label) */
 function updateMarkers(){
@@ -2701,7 +2697,7 @@ function faceEachOther(it){
    something (reputation, time, evidence quality), but it never blocks the
    story: after a failure the player can try again, force it at a price,
    or back off and come back.
-     dial     padlock tumblers — tap as the needle crosses the gold arc
+     dial     padlock tumblers — tap as the needle crosses the marked arc
      steady   lift / trace along a path without touching the edges
      wires    reconnect coloured leads to the right terminals
      spot     tap the red flags in a message or document
@@ -3013,7 +3009,7 @@ window.addEventListener('keyup', e=>{
 
 /* =========================================================================
    DIAL — a padlock (or a pry bar, or a cuff key): the needle sweeps, tap
-   while it crosses the gold arc. Each pin narrows the arc and speeds the
+   while it crosses the marked arc. Each pin narrows the arc and speeds the
    needle; misses cost a strike and move the arc.
    params: pins, arc (rad), speed (rad/s), reverse, actLabel, skin
    ========================================================================= */
@@ -3045,10 +3041,8 @@ MG_TYPES.dial = function(api, P){
     const x = cv.x, s = size, c = s/2, R = s*0.42;
     x.clearRect(0, 0, s, s);
     // body
-    const g = x.createRadialGradient(c, c*0.85, R*0.1, c, c, R*1.15);
-    g.addColorStop(0, P.face || '#1d2a44'); g.addColorStop(1, '#070b14');
-    x.fillStyle = g; x.beginPath(); x.arc(c, c, R*1.12, 0, MG_TAU); x.fill();
-    x.strokeStyle = 'rgba(216,166,74,.55)'; x.lineWidth = 2; x.stroke();
+    x.fillStyle = P.face || '#262623'; x.beginPath(); x.arc(c, c, R*1.12, 0, MG_TAU); x.fill();
+    x.strokeStyle = 'rgba(233,220,192,.55)'; x.lineWidth = 2; x.stroke();
     // ticks
     for(let i=0;i<60;i++){
       const a = i/60*MG_TAU, r0 = R*(i%5 ? 0.93 : 0.86);
@@ -3057,7 +3051,7 @@ MG_TYPES.dial = function(api, P){
     }
     // sweet spot
     if(set < pins){
-      x.strokeStyle = '#f0c878'; x.lineWidth = 15; x.lineCap = 'butt';
+      x.strokeStyle = '#E9DCC0'; x.lineWidth = 15; x.lineCap = 'butt';
       x.shadowBlur = 0; // flat sweet-spot arc (no glow)
       x.beginPath(); x.arc(c, c, R*0.78, arcAt - width/2, arcAt + width/2); x.stroke();
       x.shadowBlur = 0;
@@ -3065,14 +3059,14 @@ MG_TYPES.dial = function(api, P){
     // needle
     x.strokeStyle = '#ffffff'; x.lineWidth = 4; x.lineCap = 'round';
     x.beginPath(); x.moveTo(c, c); x.lineTo(c + Math.cos(ang)*R*0.9, c + Math.sin(ang)*R*0.9); x.stroke();
-    x.fillStyle = '#e84a5c'; x.beginPath(); x.arc(c + Math.cos(ang)*R*0.9, c + Math.sin(ang)*R*0.9, 5, 0, MG_TAU); x.fill();
+    x.fillStyle = '#B3261E'; x.beginPath(); x.arc(c + Math.cos(ang)*R*0.9, c + Math.sin(ang)*R*0.9, 5, 0, MG_TAU); x.fill();
     // hub with shackle glyph
-    x.fillStyle = '#0b1426'; x.beginPath(); x.arc(c, c, R*0.3, 0, MG_TAU); x.fill();
-    x.strokeStyle = 'rgba(216,166,74,.8)'; x.lineWidth = 2; x.stroke();
-    x.fillStyle = '#f3ead2'; x.font = `700 ${Math.round(s*0.09)}px Oswald, Arial Narrow, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillStyle = '#1C1C1A'; x.beginPath(); x.arc(c, c, R*0.3, 0, MG_TAU); x.fill();
+    x.strokeStyle = 'rgba(233,220,192,.8)'; x.lineWidth = 2; x.stroke();
+    x.fillStyle = '#E9DCC0'; x.font = `700 ${Math.round(s*0.09)}px Oswald, Arial Narrow, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillText(`${set}/${pins}`, c, c);
     if(fl > 0){
-      x.strokeStyle = flGood ? `rgba(93,208,122,${fl})` : `rgba(232,74,92,${fl})`; x.lineWidth = 6;
+      x.strokeStyle = flGood ? `rgba(11,110,79,${fl})` : `rgba(179,38,30,${fl})`; x.lineWidth = 6;
       x.beginPath(); x.arc(c, c, R*1.1, 0, MG_TAU); x.stroke();
     }
   };
@@ -3148,13 +3142,11 @@ MG_TYPES.steady = function(api, P){
   const onUp = e=>{ if(e.pointerId === pid){ drag = false; pid = null; } };
   cv.c.addEventListener('pointerdown', onDown); cv.c.addEventListener('pointermove', onMove);
   cv.c.addEventListener('pointerup', onUp); cv.c.addEventListener('pointercancel', onUp);
-  const pal = P.palette || { bg:'#1c120c', rim:'#5a3a22', chan:'rgba(120,180,200,.20)', edge:'rgba(160,210,230,.35)' };
+  const pal = P.palette || { bg:'#1c120c', rim:'#5a3a22', chan:'rgba(233,220,192,.14)', edge:'rgba(233,220,192,.32)' };
   const draw = ()=>{
     const x = cv.x; x.clearRect(0, 0, W, H);
     if(P.skin === 'pot'){
-      const g = x.createRadialGradient(W/2, H/2, 10, W/2, H/2, Math.max(W, H)*0.62);
-      g.addColorStop(0, '#2a1a10'); g.addColorStop(0.75, pal.bg); g.addColorStop(1, '#0b0705');
-      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = pal.bg; x.fillRect(0, 0, W, H);
       x.strokeStyle = pal.rim; x.lineWidth = 10; x.beginPath(); x.ellipse(W/2, H/2, W/2-6, H/2-6, 0, 0, MG_TAU); x.stroke();
       // ritual clutter: cowries + kola, the things you must not disturb
       x.fillStyle = 'rgba(240,230,210,.22)';
@@ -3164,8 +3156,7 @@ MG_TYPES.steady = function(api, P){
       x.fillStyle = '#6a4630'; x.fillRect(0, H*0.32, W, H*0.36);
       x.fillStyle = 'rgba(255,255,255,.05)'; for(let i=0;i<8;i++) x.fillRect(0, H*0.32 + i*H*0.045, W, 1);
     } else {
-      const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#2a2e36'); g.addColorStop(1, '#14171c');
-      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = '#262623'; x.fillRect(0, 0, W, H);
       x.strokeStyle = 'rgba(255,255,255,.05)'; for(let i=0;i<W;i+=14){ x.beginPath(); x.moveTo(i, 0); x.lineTo(i-30, H); x.stroke(); }
       for(const [rx, ry] of [[12,12],[W-12,12],[12,H-12],[W-12,H-12]]){ x.fillStyle = '#4a4f58'; x.beginPath(); x.arc(rx, ry, 4, 0, MG_TAU); x.fill(); }
     }
@@ -3178,20 +3169,20 @@ MG_TYPES.steady = function(api, P){
     for(const it of items){
       if(it.got) continue;
       x.save(); x.translate(it.p[0], it.p[1]); x.rotate(-0.25);
-      x.fillStyle = P.itemColor || '#d8a64a'; x.fillRect(-7, -5, 14, 10);
+      x.fillStyle = P.itemColor || '#E9DCC0'; x.fillRect(-7, -5, 14, 10);
       x.fillStyle = '#5a3a10'; x.fillRect(-3, -2, 6, 4); x.restore();
     }
     // start + goal
     x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 2; x.beginPath(); x.arc(start[0], start[1], hw+3, 0, MG_TAU); x.stroke();
     const ready = got() === items.length;
-    x.strokeStyle = ready ? '#5dd07a' : 'rgba(93,208,122,.35)'; x.lineWidth = 3; x.beginPath(); x.arc(end[0], end[1], hw+6, 0, MG_TAU); x.stroke();
+    x.strokeStyle = ready ? '#E9DCC0' : 'rgba(233,220,192,.3)'; x.lineWidth = ready ? 4 : 2; x.beginPath(); x.arc(end[0], end[1], hw+6, 0, MG_TAU); x.stroke();
     // marker
-    x.fillStyle = hot > 0 ? '#e84a5c' : '#f0c878';
+    x.fillStyle = hot > 0 ? '#B3261E' : '#E9DCC0';
     x.beginPath(); x.arc(tok.x, tok.y, 8, 0, MG_TAU); x.fill(); x.shadowBlur = 0;
-    x.strokeStyle = '#0b1426'; x.lineWidth = 2; x.beginPath(); x.arc(tok.x, tok.y, 3, 0, MG_TAU); x.stroke();
+    x.strokeStyle = '#1C1C1A'; x.lineWidth = 2; x.beginPath(); x.arc(tok.x, tok.y, 3, 0, MG_TAU); x.stroke();
     if(!drag && running && noise === 0 && got() === 0){
       x.fillStyle = 'rgba(255,255,255,.75)'; x.font = '600 11px Oswald, sans-serif'; x.textAlign = 'center';
-      x.fillText(_isTouchMG() ? 'DRAG THE GOLD MARKER' : 'DRAG THE MARKER · OR ARROW KEYS', tok.x + 60 > W ? W - 70 : tok.x + 62, tok.y - 16);
+      x.fillText(_isTouchMG() ? 'DRAG THE MARKER' : 'DRAG THE MARKER · OR ARROW KEYS', tok.x + 60 > W ? W - 70 : tok.x + 62, tok.y - 16);
     }
   };
   return {
@@ -3259,7 +3250,7 @@ MG_TYPES.wires = function(api, P){
       api.msg(`${doneN}/${pairs.length} CONNECTED`, 'good');
       if(doneN === pairs.length){ running = false; api.success(); }
     } else {
-      te.classList.add('bad'); const ln = line(sel, te, '#e84a5c', true);
+      te.classList.add('bad'); const ln = line(sel, te, '#B3261E', true);
       setTimeout(()=>{ te.classList.remove('bad'); ln.remove(); }, 450);
       api.strike(P.missText || 'Spark! Wrong terminal.');
     }
@@ -3380,11 +3371,11 @@ MG_TYPES.pattern = function(api, P){
   for(let i=0;i<9;i++){
     const [x, y] = pos(i);
     const ring = document.createElementNS(svgNS, 'circle'); ring.setAttribute('cx', x); ring.setAttribute('cy', y); ring.setAttribute('r', 22); ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', 'rgba(255,255,255,.08)'); ring.setAttribute('stroke-width', 2); svg.appendChild(ring);
-    const d = document.createElementNS(svgNS, 'circle'); d.setAttribute('cx', x); d.setAttribute('cy', y); d.setAttribute('r', 8); d.setAttribute('fill', '#55627a'); svg.appendChild(d);
+    const d = document.createElementNS(svgNS, 'circle'); d.setAttribute('cx', x); d.setAttribute('cy', y); d.setAttribute('r', 8); d.setAttribute('fill', '#6B6B63'); svg.appendChild(d);
     dots.push({ d, ring });
   }
   const pl = document.createElementNS(svgNS, 'polyline'); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke-width', '7'); pl.setAttribute('stroke-linecap', 'round'); pl.setAttribute('stroke-linejoin', 'round'); svg.insertBefore(pl, svg.firstChild);
-  const live = document.createElementNS(svgNS, 'line'); live.setAttribute('stroke', 'rgba(240,200,120,.5)'); live.setAttribute('stroke-width', '5'); live.setAttribute('stroke-linecap', 'round'); svg.insertBefore(live, svg.firstChild);
+  const live = document.createElementNS(svgNS, 'line'); live.setAttribute('stroke', 'rgba(233,220,192,.5)'); live.setAttribute('stroke-width', '5'); live.setAttribute('stroke-linecap', 'round'); svg.insertBefore(live, svg.firstChild);
   const cnt = mgEl('div', 'mg-sort-count'); cnt.style.marginTop = '8px'; api.stage.appendChild(cnt);
   const neighbours = i=>{ const r = Math.floor(i/3), c = i%3, out = []; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ if(!dr && !dc) continue; const rr = r+dr, cc = c+dc; if(rr>=0 && rr<3 && cc>=0 && cc<3) out.push(rr*3+cc); } return out; };
   const make = ()=>{
@@ -3394,23 +3385,23 @@ MG_TYPES.pattern = function(api, P){
   };
   let pattern = make(), input = [], round = 0, phase = 'idle', wt = 0, wi = 0, drawing = false, pid = null;
   const paint = (seq, col)=>{
-    dots.forEach((o, i)=>{ const on = seq.includes(i); o.d.setAttribute('fill', on ? col : '#55627a'); o.d.setAttribute('r', on ? 11 : 8); o.ring.setAttribute('stroke', on ? col : 'rgba(255,255,255,.08)'); });
+    dots.forEach((o, i)=>{ const on = seq.includes(i); o.d.setAttribute('fill', on ? col : '#6B6B63'); o.d.setAttribute('r', on ? 11 : 8); o.ring.setAttribute('stroke', on ? col : 'rgba(255,255,255,.08)'); });
     pl.setAttribute('stroke', col); pl.setAttribute('points', seq.map(i=>pos(i).join(',')).join(' '));
   };
   const cntTxt = ()=>{ cnt.textContent = phase === 'watch' ? 'WATCH THE PATTERN…' : phase === 'input' ? `YOUR TURN  ·  ${input.length}/${len}` + (rounds > 1 ? `  ·  ROUND ${round+1}/${rounds}` : '') : ''; };
-  const watch = ()=>{ phase = 'watch'; wt = 0; wi = 0; input = []; paint([], '#f0c878'); cntTxt(); };
+  const watch = ()=>{ phase = 'watch'; wt = 0; wi = 0; input = []; paint([], '#E9DCC0'); cntTxt(); };
   const addDot = i=>{
     if(phase !== 'input' || input.includes(i)) return;
     input.push(i);
     if(pattern[input.length-1] !== i){
-      paint(input, '#e84a5c'); drawing = false; phase = 'idle';
+      paint(input, '#B3261E'); drawing = false; phase = 'idle';
       api.strike(P.missText || 'Wrong dot — the phone buzzes.');
       setTimeout(()=>{ if(api.playing()) watch(); }, 700);
       return;
     }
-    mgSfx('tick'); paint(input, '#f0c878'); cntTxt();
+    mgSfx('tick'); paint(input, '#E9DCC0'); cntTxt();
     if(input.length === len){
-      drawing = false; phase = 'idle'; paint(input, '#5dd07a'); mgSfx('good');
+      drawing = false; phase = 'idle'; paint(input, '#0B6E4F'); mgSfx('good');
       round++;
       if(round >= rounds){ api.success(); }
       else { api.msg(P.roundText || 'UNLOCKED — NEXT SCREEN', 'good'); setTimeout(()=>{ if(api.playing()){ pattern = make(); watch(); } }, 800); }
@@ -3429,18 +3420,18 @@ MG_TYPES.pattern = function(api, P){
   });
   const end = e=>{ if(e.pointerId === pid){ drawing = false; pid = null; live.setAttribute('x2', live.getAttribute('x1') || 0); live.setAttribute('y2', live.getAttribute('y1') || 0); } };
   pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
-  paint([], '#f0c878');
+  paint([], '#E9DCC0');
   return {
-    start(){ watch(); api.actions([{ label:'CLEAR', cls:'ghost', onClick:()=>{ if(phase === 'input'){ input = []; paint([], '#f0c878'); cntTxt(); } } }, { label:'SHOW AGAIN', cls:'ghost', note:'costs a strike', onClick:()=>{ if(phase === 'input'){ api.strike('Peeked.'); if(api.playing()) watch(); } } }]); },
+    start(){ watch(); api.actions([{ label:'CLEAR', cls:'ghost', onClick:()=>{ if(phase === 'input'){ input = []; paint([], '#E9DCC0'); cntTxt(); } } }, { label:'SHOW AGAIN', cls:'ghost', note:'costs a strike', onClick:()=>{ if(phase === 'input'){ api.strike('Peeked.'); if(api.playing()) watch(); } } }]); },
     update(dt){
       if(phase !== 'watch' || !dt) return;
       wt += dt;
       const step = (P.showStep || 0.5) / D.speed;
       const k = Math.min(len, Math.floor(wt / step) + 1);
-      if(k !== wi){ wi = k; paint(pattern.slice(0, k), '#f0c878'); mgSfx('tick'); }
-      if(wt > step*len + 0.7){ phase = 'input'; input = []; paint([], '#f0c878'); cntTxt(); }
+      if(k !== wi){ wi = k; paint(pattern.slice(0, k), '#E9DCC0'); mgSfx('tick'); }
+      if(wt > step*len + 0.7){ phase = 'input'; input = []; paint([], '#E9DCC0'); cntTxt(); }
     },
-    reveal(){ paint(pattern, 'rgba(93,208,122,.6)'); },
+    reveal(){ paint(pattern, 'rgba(233,220,192,.6)'); },
     dbg(){ return { pattern:pattern.slice(), phase, input:input.slice(), len, pad, pos:[0,1,2,3,4,5,6,7,8].map(pos) }; },
     destroy(){},
   };
@@ -3471,13 +3462,13 @@ MG_TYPES.tune = function(api, P){
   const wave = (x, f, a, ph)=> a * Math.sin((2 + f*10) * x * MG_TAU / W * 1.0 * 1.4 + ph);
   const draw = (inBand)=>{
     const x = cv.x; x.clearRect(0, 0, W, H);
-    x.fillStyle = '#05080f'; x.fillRect(0, 0, W, H);
-    x.strokeStyle = 'rgba(122,220,208,.08)'; x.lineWidth = 1;
+    x.fillStyle = '#1C1C1A'; x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(233,220,192,.08)'; x.lineWidth = 1;
     for(let i=0;i<W;i+=W/10){ x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
     for(let j=0;j<H;j+=H/6){ x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); }
     const line = (f, a, col, w, dash)=>{ x.strokeStyle = col; x.lineWidth = w; x.setLineDash(dash || []); x.beginPath(); for(let i=0;i<=W;i+=2){ const y = H/2 - wave(i, f, 0.1 + a*0.9, phase) * (H*0.42); i ? x.lineTo(i, y) : x.moveTo(i, y); } x.stroke(); x.setLineDash([]); };
-    line(ta, tb, 'rgba(240,200,120,.85)', 2, [5, 5]);
-    line(fa, fb, inBand ? '#5dd07a' : '#7adcd0', 2.6);
+    line(ta, tb, 'rgba(233,220,192,.85)', 2, [5, 5]);
+    line(fa, fb, inBand ? '#E9DCC0' : '#A89F8A', inBand ? 3.4 : 2.2);
     x.fillStyle = 'rgba(255,255,255,.55)'; x.font = '600 10px JetBrains Mono, monospace'; x.textAlign = 'left';
     x.fillText(P.screenLabel || 'TARGET ---   YOU ───', 8, 14);
   };
@@ -3499,7 +3490,7 @@ MG_TYPES.tune = function(api, P){
         const inBand = Math.abs(fa - ta) < tolA && Math.abs(fb - tb) < tolB;
         lock = Math.max(0, Math.min(1, lock + (inBand ? dt/hold : -dt/(hold*1.7))));
         fill.style.width = (lock*100).toFixed(1) + '%'; val.textContent = Math.round(lock*100) + '%';
-        api.msg(inBand ? (P.lockText || 'HOLD IT…') : (Math.abs(fa - ta) >= tolA ? (fa < ta ? `${P.labelA || 'FREQ'} ↑` : `${P.labelA || 'FREQ'} ↓`) : (fb < tb ? `${P.labelB || 'GAIN'} ↑` : `${P.labelB || 'GAIN'} ↓`)), inBand ? 'good' : '');
+        api.msg(inBand ? (P.lockText || 'HOLD IT…') : (Math.abs(fa - ta) >= tolA ? (fa < ta ? `${P.labelA || 'FREQ'} HIGHER` : `${P.labelA || 'FREQ'} LOWER`) : (fb < tb ? `${P.labelB || 'GAIN'} HIGHER` : `${P.labelB || 'GAIN'} LOWER`)), inBand ? 'good' : '');
         if(lock >= 1){ running = false; const tf = api.timeFrac(); api.success({ stars: tf < 0.5 ? 3 : tf < 0.8 ? 2 : 1 }); }
         draw(inBand);
       } else draw(false);
@@ -3555,8 +3546,8 @@ MG_TYPES.sort = function(api, P){
 MG_TYPES.mash = function(api, P){
   const D = api.diff;
   const btn = mgEl('button', 'mg-mash');
-  btn.innerHTML = `<svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" fill="rgba(11,20,38,.95)" stroke="rgba(216,166,74,.35)" stroke-width="14"/>
-      <circle id="mg-mash-ring" cx="100" cy="100" r="86" fill="none" stroke="#f0c878" stroke-width="14" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="540" stroke-dashoffset="540"/></svg>
+  btn.innerHTML = `<svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" fill="rgba(28,28,26,.95)" stroke="rgba(233,220,192,.35)" stroke-width="14"/>
+      <circle id="mg-mash-ring" cx="100" cy="100" r="86" fill="none" stroke="#E9DCC0" stroke-width="14" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="540" stroke-dashoffset="540"/></svg>
     <div class="lbl">${P.label || 'TAP!'}<small>${P.small || 'AS FAST AS YOU CAN'}</small></div>`;
   api.stage.appendChild(btn);
   const ring = btn.querySelector('#mg-mash-ring');
@@ -3980,7 +3971,7 @@ const MG_CFG = {
     onFail:()=>{ S.game._shrineSpills = (S.game._shrineSpills||0) + 1; if(S.game._shrineSpills <= 2){ applyEffect({ publicTrust:-2 }); setTimeout(()=>toast('PA EZE', '"Gently, my child. Gently."', 2000), 300); } },
     force:{ label:'TIP THE POT OUT', note:'−5 Public Trust', apply:()=>applyEffect({ publicTrust:-5 }) } }),
   m5_cache:()=>({ id:'m5_cache', type:'dial', kicker:'CASE 05 · CARTEL CACHE', title:'PICK THE PADLOCK', time:30,
-    sub:'A chain through the jerry-can handles and a cheap brass padlock. <b>Tap as the needle crosses the gold arc</b> to set each pin.',
+    sub:'A chain through the jerry-can handles and a cheap brass padlock. <b>Tap as the needle crosses the marked arc</b> to set each pin.',
     winNote:'The shackle drops. Cash, a ledger — and the smell of diesel.',
     params:{ pins:3, actLabel:'SET PIN', missText:'The pick slips.' },
     force:{ label:'BOLT-CUTTERS', note:'Loud · −2 Public Trust', apply:()=>applyEffect({ publicTrust:-2 }) } }),
@@ -4013,7 +4004,7 @@ const MG_CFG = {
       force:{ label:'LET OSARO DO IT', note:'−3 Agency Favour · slower', apply:()=>applyEffect({ agencyFavour:-3 }) } };
   },
   m7_trace:()=>({ id:'m7_trace', type:'tune', kicker:'CASE 07 · BTS CABINET', title:'LOCK THE HANDSET', time:40, noStrikes:true,
-    sub:'The handset is hopping channels. <b>Match the gold trace</b> with FREQ and GAIN and hold it until the lock fills — the trace window is still closing.',
+    sub:'The handset is hopping channels. <b>Match the target trace</b> with FREQ and GAIN and hold it until the lock fills — the trace window is still closing.',
     winNote:'Lock held. Now read the sectors.',
     params:{ labelA:'FREQ', labelB:'GAIN', hold:2.6, meterLabel:'LOCK', lockText:'HOLDING LOCK…', screenLabel:'HANDSET ---   CABINET ───' },
     onTick:dt=>{ const g = S.game; if(g._towerAmbush && !g._towerTraced && !g._towerExpired) g._towerWindow -= dt * (typeof timerRate === 'function' ? timerRate() : 1); },

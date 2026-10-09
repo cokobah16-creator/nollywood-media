@@ -57,11 +57,13 @@ module.exports = async h => {
     }
     // wrong method / money mark the route evidence contested
     S.game.accusations = {}; S.game.evQ = {};
+    const af0 = S.player.reputation.agencyFavour;
     CW.file('route', { suspect:'ifeanyi', method:'feed', money:'kano' }, { warrant:'signed' }); CW.settle('route');
-    out.q = Object.assign({}, S.game.evQ);
+    out.q = Object.assign({}, S.game.evQ); out.daf = S.player.reputation.agencyFavour - af0;
     return out;
   });
   h.assert(/SIM Agent Held/.test(other.agent) && /Lorry Driver Re-Arrested/.test(other.musa), 'the SIM agent and Musa get their own headlines');
+  h.assert(other.daf === -4, 'wrong route method and money: Agency Favour −2 each (' + other.daf + ')');
   h.assert(other.q.shrine_pots === 'weak' && other.q.asaba_sims === 'weak' && other.q.shrine_cache === 'weak' && other.q.e_shrine_ledger === 'weak', 'wrong route method and money: their evidence is contested');
 
   // ---- M6 reached without the hub: the sheet comes before Uche names the fixer ----

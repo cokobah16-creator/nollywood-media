@@ -35,40 +35,38 @@ V12.headlineCard = async function(h){
   await fonts();
   const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H;
   const x = c.getContext('2d');
-  const g = x.createRadialGradient(W/2, 380, 80, W/2, 600, 1000); g.addColorStop(0, '#1a2540'); g.addColorStop(1, '#05080f');
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
-  x.fillStyle = 'rgba(216,166,74,.06)'; for(let i = 0; i < W; i += 60){ x.fillRect(i, 0, 1, H); } for(let j = 0; j < H; j += 60){ x.fillRect(0, j, W, 1); }
-  x.textAlign = 'center'; x.fillStyle = '#ffffff'; x.font = '700 92px Oswald, "Arial Narrow", sans-serif'; x.fillText('NACECA', W/2, 140);
-  x.fillStyle = '#f0c878'; x.font = '600 30px Oswald, "Arial Narrow", sans-serif'; x.fillText('O P E R A T I O N   S E R P E N T \' S   R O U T E', W/2, 192);
+  x.fillStyle = '#1C1C1A'; x.fillRect(0, 0, W, H);
+  x.fillStyle = 'rgba(233,220,192,.06)'; for(let i = 0; i < W; i += 60){ x.fillRect(i, 0, 1, H); } for(let j = 0; j < H; j += 60){ x.fillRect(0, j, W, 1); }
+  x.textAlign = 'center'; x.fillStyle = '#E9DCC0'; x.font = '700 92px Oswald, "Arial Narrow", sans-serif'; x.fillText('NACECA', W/2, 140);
+  x.fillStyle = '#A89F8A'; x.font = '600 30px Oswald, "Arial Narrow", sans-serif'; x.fillText('O P E R A T I O N   S E R P E N T \' S   R O U T E', W/2, 192);
   // the clipping
   const cx = 70, cy = 250, cw = W - 140, ch = 820;
   x.save(); x.translate(W/2, cy + ch/2); x.rotate(-0.012); x.translate(-W/2, -(cy + ch/2));
-  x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 40; x.shadowOffsetY = 18;
-  x.fillStyle = '#f3ead2'; x.fillRect(cx, cy, cw, ch); x.shadowColor = 'transparent';
+  x.fillStyle = '#E9DCC0'; x.fillRect(cx, cy, cw, ch);
   x.fillStyle = 'rgba(0,0,0,.025)'; for(let j = cy; j < cy + ch; j += 4) x.fillRect(cx, j, cw, 1);
-  x.textAlign = 'left'; x.fillStyle = '#7a4a18'; x.font = '600 28px Oswald, "Arial Narrow", sans-serif';
+  x.textAlign = 'left'; x.fillStyle = '#B3261E'; x.font = '600 28px Oswald, "Arial Narrow", sans-serif';
   const mast = (h.pub || 'THE DAILY GONG') + ' · MORNING EDITION', spaced = mast.split('').join(' ').replace(/ {3}/g, '   ');
   x.fillText(x.measureText(spaced).width <= cw - 120 ? spaced : mast, cx + 60, cy + 80);
-  x.fillStyle = '#1a1d24'; x.fillRect(cx + 60, cy + 104, cw - 120, 4); x.fillRect(cx + 60, cy + 114, cw - 120, 1.5);
-  x.font = '700 70px Oswald, "Arial Narrow", sans-serif'; x.fillStyle = '#1a1d24';
+  x.fillStyle = '#1C1C1A'; x.fillRect(cx + 60, cy + 104, cw - 120, 4); x.fillRect(cx + 60, cy + 114, cw - 120, 1.5);
+  x.font = '700 70px Oswald, "Arial Narrow", sans-serif'; x.fillStyle = '#1C1C1A';
   let y = cy + 200; for(const ln of wrap(x, h.head || '', cw - 120).slice(0, 5)){ x.fillText(ln, cx + 60, y); y += 82; }
-  x.font = 'italic 34px Inter, Georgia, serif'; x.fillStyle = '#5a4a32'; y += 18;
+  x.font = 'italic 34px Inter, Georgia, serif'; x.fillStyle = '#4F4C44'; y += 18;
   for(const ln of wrap(x, h.ded || '', cw - 120).slice(0, 5)){ x.fillText(ln, cx + 60, y); y += 48; }
   x.restore();
   // grade stamp
   if(h.grade){
-    const col = { S:'#c99a2e', A:'#2f8f4a', B:'#2a7ab8', C:'#c07a20', D:'#b8323f' }[h.grade] || '#7a4a18';
+    const col = { S:'#0B6E4F', A:'#0B6E4F', B:'#1C1C1A', C:'#B3261E', D:'#B3261E' }[h.grade] || '#B3261E';
     x.save(); x.translate(W - 190, cy + ch - 120); x.rotate(-0.22);
     x.strokeStyle = col; x.lineWidth = 9; x.beginPath(); x.arc(0, 0, 88, 0, Math.PI * 2); x.stroke();
     x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 74, 0, Math.PI * 2); x.stroke();
     x.fillStyle = col; x.textAlign = 'center'; x.font = '700 92px Oswald, sans-serif'; x.fillText(h.grade, 0, 24);
     x.font = '600 15px Oswald, sans-serif'; x.fillText('G R A D E', 0, 50); x.restore();
   }
-  x.textAlign = 'center'; x.fillStyle = '#9ba8bd'; x.font = '600 26px Oswald, sans-serif';
+  x.textAlign = 'center'; x.fillStyle = '#A89F8A'; x.font = '600 26px Oswald, sans-serif';
   if(h.region) x.fillText(h.region.toUpperCase(), W/2, 1150);
-  x.fillStyle = '#ffffff'; x.font = '600 34px Oswald, sans-serif'; x.fillText('A NIGERIAN DETECTIVE GAME — PLAY THE CASE', W/2, 1222);
-  const url = V12.shareUrl(); if(url){ x.fillStyle = '#f0c878'; x.font = '500 26px Inter, sans-serif'; x.fillText(url.replace(/^https?:\/\//, ''), W/2, 1272); }
-  x.fillStyle = '#5a6a82'; x.font = '500 20px Inter, sans-serif'; x.fillText('Fiction. All characters, agencies and cases are fictional.', W/2, 1318);
+  x.fillStyle = '#E9DCC0'; x.font = '600 34px Oswald, sans-serif'; x.fillText('A NIGERIAN DETECTIVE GAME — PLAY THE CASE', W/2, 1222);
+  const url = V12.shareUrl(); if(url){ x.fillStyle = '#E9DCC0'; x.font = '500 26px Inter, sans-serif'; x.fillText(url.replace(/^https?:\/\//, ''), W/2, 1272); }
+  x.fillStyle = '#8C8473'; x.font = '500 20px Inter, sans-serif'; x.fillText('Fiction. All characters, agencies and cases are fictional.', W/2, 1318);
   return c;
 };
 V12.shareHeadline = async function(h){

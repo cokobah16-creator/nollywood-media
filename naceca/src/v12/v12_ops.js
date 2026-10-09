@@ -96,21 +96,21 @@ const N = [
     dossier:'Obi\'s house in Old GRA. Lit up most nights, with a generator house at the side.',
     note:'Whose SIMs ping the towers around this house?' },
   // LAGOS · leads that go nowhere
-  { id:'s_tunde',   kind:'suspect',  g:['lagos'], tag:'INFORMANT', name:'Tunde', meta:'Ikeja market · informant', herring:true,
+  { id:'s_tunde',   kind:'suspect',  g:['lagos'], tag:'INFORMANT', name:'Tunde', meta:'Ikeja market · informant', herring:true, facts:['l_market'],
     req:()=>!!S.game._marketTunde || V12.hasEv('phishing_template') || V12.started('m3'),
     dossier:'Your informant at the Ikeja market. He pointed out the boy and the phone on his counter, and knew the boy moves SIMs for a syndicate. He asked not to be named.',
     note:'He came to you. Does any SIM, wallet or cash-out on this table carry his name?' },
-  { id:'e_bvn',     kind:'evidence', g:['lagos'], tag:'SMS', name:'"Re-validate BVN"', meta:'UNKNOWN-BANK · inbox', herring:true,
+  { id:'e_bvn',     kind:'evidence', g:['lagos'], tag:'SMS', name:'"Re-validate BVN"', meta:'UNKNOWN-BANK · inbox', herring:true, facts:['s_kc','l_market'],
     req:()=>docSeen('market_phone_scan') || V12.hasEv('phishing_template'),
     dossier:'From the scan of the phone on KC\'s counter. In the inbox, from "UNKNOWN-BANK": "ATTN: Re-validate BVN. Reply with full DOB+PIN. Urgent." No link, no page behind it.',
-    note:'Read where it sits on the phone. Was it sent from this device, or to it?' },
-  { id:'m_coop',    kind:'money',    g:['lagos'], tag:'COOPERATIVE', name:'Grace Divine Cooperative', meta:'Allen Avenue · 30% a month', herring:true,
-    req:()=>!!street('ponzi'),
+    note:'Reply-with-your-PIN, no link, no cloned page behind it. Is that the template you were briefed on?' },
+  { id:'m_coop',    kind:'money',    g:['lagos'], tag:'COOPERATIVE', name:'Grace Divine Cooperative', meta:'Allen Avenue · 30% a month', herring:true, facts:['l_market'],
+    req:()=>!!street('ponzi') || (S.game.completedMissions || []).includes('m2'),   // the flyers are all over the market
     dossier:()=>'Flyers at the Ikeja market: put in ₦20,000, collect ₦26,000 in four weeks. "Poultry, crypto, importation." Everyone who joined first has been paid.'
       + (street('ponzi') === 'warned' ? ' Paid, Sister Ngozi admits, out of the new members\' contributions.' : '')
       + (street('ponzi') === 'flagged' ? ' Office on Allen Avenue, second floor. The fraud desk has the flyer.' : ''),
     note:'Thirty percent a month, paid from the next person\'s deposit. The ring\'s money, or somebody else\'s fraud?' },
-  { id:'s_ada',     kind:'suspect',  g:['lagos'], tag:'NAME ON A PEN', name:'Ada', meta:'gold pen · Obi\'s study', herring:true,
+  { id:'s_ada',     kind:'suspect',  g:['lagos'], tag:'NAME ON A PEN', name:'Ada', meta:'gold pen · Obi\'s study', herring:true, facts:['s_obi','l_lekki'],
     req:()=>docSeen('mansion_safe') || V12.hasEv('safe_drives') || docSeen('night_click') || V12.started('m4'),
     dossier:'A gold pen in Obi\'s study, engraved "To Ada, 22·03·86". On his calendar, his wife\'s birthday is circled: 22 March.',
     note:'Obi\'s books pay initials, not first names. Does any entry fit hers?' },
@@ -155,19 +155,19 @@ const N = [
     dossier:'A warehouse in Asaba, where they held Tobi Onuoha, the accountant who asked about a transfer.',
     note:'The forest ledger\'s next leg.' },
   // THE ROUTE · leads that go nowhere
-  { id:'s_rabiu',   kind:'suspect',  g:['route'], tag:'CONSIGNOR', name:'Alh. Rabiu Mukhtar', meta:'Kano · on the waybill', herring:true,
+  { id:'s_rabiu',   kind:'suspect',  g:['route'], tag:'CONSIGNOR', name:'Alh. Rabiu Mukhtar', meta:'Kano · on the waybill', herring:true, facts:['s_musa','l_abattoir'],
     req:()=>docSeen('checkpoint_manifest') || docSeen('checkpoint_lie') || V12.hasEv('broken_seal') || V12.started('m5'),
     dossier:'Named on waybill KN-2026-04481 as consignor: 42 head of White Fulani, Kano to Sapele. Musa says the cattle belong to "one Alhaji for Kano".',
     note:'The cattle check out: 42 head. The extra 2,420 kg didn\'t. Whose lorry was it hidden in?' },
-  { id:'l_abattoir',kind:'place',    g:['route'], tag:'CONSIGNEE', name:'Delta Riverside Abattoir', meta:'Sapele · on the waybill', herring:true,
+  { id:'l_abattoir',kind:'place',    g:['route'], tag:'CONSIGNEE', name:'Delta Riverside Abattoir', meta:'Sapele · on the waybill', herring:true, facts:['s_rabiu','s_musa'],
     req:()=>docSeen('checkpoint_manifest') || docSeen('checkpoint_lie') || V12.hasEv('broken_seal') || V12.started('m5'),
     dossier:'Named on the waybill as consignee: Delta Riverside Abattoir Ltd. The route on the papers ends at Sapele.',
     note:'That\'s where the cattle were going. Where did the ledger say the next drop was?' },
-  { id:'s_levy',    kind:'suspect',  g:['route'], tag:'LEVY', name:'The "Levy" Boy', meta:'Bypass queue · ₦5,000 a truck', herring:true,
+  { id:'s_levy',    kind:'suspect',  g:['route'], tag:'LEVY', name:'The "Levy" Boy', meta:'Bypass queue · ₦5,000 a truck', herring:true, facts:['l_bypass'],
     req:()=>!!street('levy'),
     dossier:'Works the truck queue on the Bypass, collecting ₦5,000 from every truck as a "union levy". No receipt. His card reads "Edo Transport Revenue Agent"; the hologram is a sticker and the number is a mobile line.',
     note:'Every truck in the queue paid him. The cartel\'s toll, or a separate hustle?' },
-  { id:'s_paeze',   kind:'suspect',  g:['route'], tag:'CUSTODIAN', name:'Pa Eze', meta:'Ozalla shrine · forty years', herring:true, req:mis('m5'),
+  { id:'s_paeze',   kind:'suspect',  g:['route'], tag:'CUSTODIAN', name:'Pa Eze', meta:'Ozalla shrine · forty years', herring:true, facts:['l_shrine'], req:mis('m5'),
     dossier:()=>'Custodian of the Ozalla shrine for forty years. Uche, before you went in: "We don\'t know if he\'s a partner or a hostage to the situation."'
       + (MC().shrine === 'negotiate' ? ' He told you himself: men come at night with drums and jerry-cans, and he has known for two seasons that what they bring is not respect.' : ''),
     note:'He tends the ground. Who brought the jerry-cans, and in what cars?' },
@@ -197,15 +197,15 @@ const N = [
     dossier:'Student lodges, kiosks and compounds behind blue gates, north of the UNIBEN fence.',
     note:'Where the handset hands over.' },
   // THE VOICE · leads that go nowhere
-  { id:'s_osaro',   kind:'suspect',  g:['voice'], tag:'SITE ENGINEER', name:'Engr. Osaro', meta:'Ugbowo mast · the cabinet', herring:true,
+  { id:'s_osaro',   kind:'suspect',  g:['voice'], tag:'SITE ENGINEER', name:'Engr. Osaro', meta:'Ugbowo mast · the cabinet', herring:true, facts:['l_ugbowo','e_cdr'],
     req:()=>!!S.game._towerEngineer || docSeen('tower_call_trace') || V12.started('t7'),
     dossier:'Site engineer at the Ugbowo mast. Sat with the dead site for two nights after the fibre was cut, "clean, like they do it for a living". Runs the BTS cabinet the trace came from.',
     note:'An engineer, but which one? Where was he while the handset was handing over in the north?' },
-  { id:'l_hall3',   kind:'place',    g:['voice'], tag:'HOSTEL', name:'UNIBEN Hall 3', meta:'south-east of the mast', herring:true,
+  { id:'l_hall3',   kind:'place',    g:['voice'], tag:'HOSTEL', name:'UNIBEN Hall 3', meta:'south-east of the mast', herring:true, facts:['e_cdr','l_ugbowo'],
     req:()=>docSeen('tower_call_trace') || V12.hasEv('tower_cdr'),
     dossier:'Hostel block south-east of the mast. On the trace, Sector B faces it: TA 2, about 1.1 km, signal weak.',
     note:'Which sector read strong, and where did the handset hand over?' },
-  { id:'l_isihor',  kind:'place',    g:['voice'], tag:'MARKET', name:'Isihor Junction', meta:'west · the Lagos road', herring:true,
+  { id:'l_isihor',  kind:'place',    g:['voice'], tag:'MARKET', name:'Isihor Junction', meta:'west · the Lagos road', herring:true, facts:['e_cdr','l_ugbowo'],
     req:()=>docSeen('tower_call_trace') || V12.hasEv('tower_cdr'),
     dossier:'Market at Isihor junction, west of the mast on the Lagos road. On the trace, Sector C faces it: TA 14, about 7.7 km.',
     note:'What did Sector C actually see?' },
@@ -227,6 +227,10 @@ const L = [
   ['m_pos','l_market',10,'the cash-outs ran through Ikeja agents',1],
   ['s_obi','e_laptop',12,'Obi\'s own laptop'],
   ['e_cash','l_lekki',8,'seized at the mansion',1],
+  ['e_laptop','l_lekki',4,'seized in the study at Lekki'],
+  ['e_notebook','l_lekki',4,'seized at Lekki'],
+  ['e_notebook','m_pos',8,'"POS ×3" in the notebook: Obi pays the cash-outs',1],
+  ['e_wallet','l_lekki',6,'the wallet is registered to a Lekki address',1],
   ['e_cash','s_obi',8,'Obi\'s cash',1],
   ['e_madam','l_mushin',6,'dropped in Mushin'],
   ['e_notebook','s_obi',8,'Obi\'s own handwriting'],
@@ -246,6 +250,7 @@ const L = [
   ['s_ifeanyi','l_asaba',10,'Ifeanyi ran the warehouse'],
   ['s_ifeanyi','e_asims',10,'his crate'],
   ['e_asims','s_mama',12,'the same dead pensioner again'],
+  ['e_asims','l_asaba',6,'in a crate at the Asaba warehouse'],
   ['s_voice','l_ugbowo',10,'every call pinged the Ugbowo cell'],
   ['s_voice','e_cdr',16,'the negotiator\'s handset is in the records'],
   ['e_cdr','l_ugbowo',6,'pulled from the tower cabinet'],
@@ -262,6 +267,9 @@ const L = [
 ].map(([a,b,intel,hint,money]) => ({ a, b, intel, hint, money:!!money }));
 const key = (a, b) => a < b ? a + '|' + b : b + '|' + a;
 const LINK = Object.fromEntries(L.map(l => [key(l.a, l.b), l]));
+// a herring's own facts (Tunde works the market, Ada is Obi's wife) are true but say nothing
+// about the crime: filing one is set aside, with no strike. Linking a herring into the crime costs one.
+const FACT = new Set(N.filter(n => n.herring && n.facts).flatMap(n => n.facts.map(f => key(n.id, f))));
 V12.OPS_NODES = N; V12.OPS_LINKS = L;
 
 /* ---------- theories: inked chains that change cases ---------- */
@@ -286,6 +294,8 @@ const CASE_OF = { m0:'lagos', m1:'lagos', m2:'lagos', m3:'lagos', m3n:'lagos', h
   m4:'route', h4:'route', m5:'route', h5:'route', m6:'route', h6:'route',
   m7:'voice', h7:'voice', t7:'voice', m8:'voice' };
 const SIGN_AT = 60, STRIKE_COST = 12, MAX_STRIKES = 3, INTEGRITY_COST = 2;
+// past three the warrant is already refused: say so rather than print "4/3"
+const strikeOf = n => n <= MAX_STRIKES ? `${n}/${MAX_STRIKES}` : `${n} (warrant refused)`;
 const blankCase = () => ({ strikes:0, pen:0, forgiven:false, refused:null, lifted:0 });
 V12.CASE_NAME = CASE_NAME;
 
@@ -301,6 +311,7 @@ V12.ops = ()=>{
   if(!Array.isArray(o.inked)) o.inked = [];
   if(!o.theories || typeof o.theories !== 'object') o.theories = {};
   if(!Array.isArray(o.struck)) o.struck = [];
+  if(!Array.isArray(o.noted)) o.noted = [];
   if(!o.struckCase || typeof o.struckCase !== 'object') o.struckCase = {};
   if(!o.unlocked || typeof o.unlocked !== 'object') o.unlocked = {};
   if(!o.cases || typeof o.cases !== 'object') o.cases = {};
@@ -358,7 +369,8 @@ function refreshRefusal(c, quiet){
   const cs = V12.ops().cases[c];
   if(!cs || !cs.refused) return false;
   const snap = cs.refused, vis = caseVisibleIds(c), ink = caseInked(c).length;
-  if(vis.some(id => !(snap.vis || []).includes(id)) || ink > (snap.ink || 0)){
+  // a dead end turning up is not new evidence: only a real lead or a new link that holds reopens it
+  if(vis.some(id => !(NODE[id] && NODE[id].herring) && !(snap.vis || []).includes(id)) || ink > (snap.ink || 0)){
     cs.refused = null; cs.lifted = (cs.lifted || 0) + 1;
     V12.log('warrant_review', { c });
     if(!quiet) setTimeout(()=>toast('WARRANT REVIEW', CASE_NAME[c] + ': new evidence. The magistrate will look at it again.', 2800), 1900);
@@ -383,7 +395,12 @@ V12.warrantFor = c => {
   const keys = N.filter(n => n.lock && inCase(n, c) && visible(n)).length;
   const strength = clamp(Math.round(inkN * 10 + th + keys * 10 - cs.strikes * STRIKE_COST), 0, 100);
   const refused = !!cs.refused, signed = !refused && strength >= SIGN_AT;
-  const need = refused ? 'Find new evidence' : signed ? 'Ready to sign' : 'Ink more links';
+  // Senior gets a plain, always-true ask; Recruit is told where the missing strength is
+  let need = refused ? 'Find new evidence' : signed ? 'Ready to sign' : 'Needs stronger evidence';
+  if(!refused && !signed && recruit()){
+    const open = L.some(l => { const k = key(l.a, l.b); return !o.inked.includes(k) && linkIn(k, c) && visible(NODE[l.a]) && visible(NODE[l.b]); });
+    need = open ? 'Ink more links' : caseLocked(c).length ? 'Do the fieldwork' : 'Work the case: new leads to come';
+  }
   return { strength, signed, refused, strikes:cs.strikes, need };
 };
 V12.warrant = () => V12.warrantFor('lagos').signed;
@@ -500,7 +517,8 @@ function render(){
     CASES.forEach(c => refreshRefusal(c));
     const inTab = n => UI.group === 'all' || n.g.includes(UI.group);
     const nodes = N.filter(n => inTab(n) && visible(n));
-    const hidden = N.filter(n => inTab(n) && !n.herring && !reqOk(n)).length;
+    // no number: a count that skipped the dead ends would tell you which new cards are dead ends
+    const hidden = N.some(n => inTab(n) && !reqOk(n));
     const linksOf = id => o.inked.filter(k => k.split('|').includes(id)).length;
     const counts = recruit();
     inner.innerHTML = caseStrip(caseForView()) + `<div class="ops-cols">${COLS.map(c => {
@@ -509,7 +527,7 @@ function render(){
         <button class="ops-chip k-${n.kind} ${UI.sel === n.id ? 'sel' : ''} ${V12.evQ(evIdOf(n)) === 'weak' ? 'weak' : ''} ${o.seen && !o.seen[n.id] ? 'new' : ''}" data-id="${n.id}">
           <span class="t">${tagOf(n)}</span><span class="n">${n.name}</span><span class="m">${n.meta}</span>${counts && linksOf(n.id) ? `<span class="c">${linksOf(n.id)}</span>` : ''}
         </button>`).join('') || '<div class="ops-empty">—</div>'}</div>`;
-    }).join('')}</div><svg class="ops-svg" id="ops-svg"></svg>${hidden ? `<div class="ops-more">${hidden} more lead${hidden>1?'s':''} unlock as the case moves</div>` : ''}`;
+    }).join('')}</div><svg class="ops-svg" id="ops-svg"></svg>${hidden ? '<div class="ops-more">More leads may turn up as the case moves</div>' : ''}`;
     o.seen = o.seen || {}; nodes.forEach(n => { o.seen[n.id] = true; });
     inner.querySelectorAll('.ops-chip').forEach(b => b.addEventListener('click', ()=>tapNode(b.dataset.id)));
   }
@@ -523,7 +541,7 @@ const stampWord = w => w.refused ? 'refused' : w.signed ? 'signed' : 'pending';
 function stampHTML(w, sm){ const s = stampWord(w); return `<span class="bd-stamp s-${s}${sm ? ' sm' : ''}">${s.toUpperCase()}</span>`; }
 function strikesHTML(n){
   const marks = Array.from({ length:MAX_STRIKES }, (_, i) => `<span class="bd-x ${i < n ? 'on' : ''}">${i < n ? ic('cross') : ''}</span>`).join('');
-  return `<span class="bd-strikes" role="img" aria-label="${n} of ${MAX_STRIKES} strikes">${marks}</span><b class="bd-strk-n">${n}/${MAX_STRIKES}</b>`;
+  return `<span class="bd-strikes" role="img" aria-label="${n} of ${MAX_STRIKES} strikes">${marks}</span><b class="bd-strk-n">${Math.min(n, MAX_STRIKES)}/${MAX_STRIKES}</b>`;
 }
 function caseStrip(c){
   const w = V12.warrantFor(c), cs = V12.ops().cases[c] || blankCase();
@@ -548,6 +566,7 @@ function tapNode(id){
   const k = key(UI.sel, id);
   if(o.inked.includes(k)){ toast('ALREADY INKED', (LINK[k] || {}).hint || '', 1800); UI.sel = id; render(); return; }
   if(o.struck.includes(k)){ toast('STRUCK OFF', 'The magistrate already refused that link.', 1800); if(typeof sfxFail === 'function') sfxFail(); UI.sel = null; render(); return; }
+  if(o.noted.includes(k)){ toast('SET ASIDE', 'True, but the magistrate ruled it isn\'t evidence of the crime.', 2000); UI.sel = null; render(); return; }
   const i = o.pencils.indexOf(k);
   if(i >= 0){ o.pencils.splice(i, 1); toast('ERASED', '', 900); UI.sel = null; render(); return; }
   if(o.pencils.length >= 6){ toast('SIX PENCILS IS THE LIMIT', 'File or erase one before you draw another', 2000); if(typeof sfxFail === 'function') sfxFail(); return; }
@@ -578,6 +597,12 @@ function fileLinks(){
     const [a, b] = k.split('|');
     const c = caseForPair(a, b), cs = o.cases[c];
     if(o.struck.includes(k)){ res.push({ k, ok:false, again:true, c }); continue; }   // never costs twice
+    if(FACT.has(k)){
+      if(!o.noted.includes(k)) o.noted.push(k);
+      res.push({ k, ok:false, noted:true, c });
+      V12.log('noted', { k, c });
+      continue;
+    }
     o.struck.push(k); o.struckCase[k] = c;
     const money = (NODE[a] && NODE[a].kind === 'money') || (NODE[b] && NODE[b].kind === 'money');
     if(money && V12.has('money') && !cs.forgiven){
@@ -603,7 +628,7 @@ function fileLinks(){
       V12.log('warrant_refused', { c });
     }
   }
-  const nOk = res.filter(r => r.ok).length, struck = res.filter(r => !r.ok && !r.again);
+  const nOk = res.filter(r => r.ok).length, struck = res.filter(r => !r.ok && !r.again && !r.noted), nNoted = res.filter(r => r.noted).length;
   const costs = struck.filter(r => r.strike);
   if(nOk && typeof sfxComplete === 'function') sfxComplete();
   if(costs.length){ if(typeof sfxFail === 'function') sfxFail(); if(typeof haptic === 'function') haptic([60, 40, 60]); }
@@ -611,13 +636,16 @@ function fileLinks(){
   const parts = [];
   if(nOk) parts.push(`+${intel} INTEL`);
   if(costs.length) parts.push(`INTEGRITY −${costs.length * INTEGRITY_COST}`);
-  costs.forEach(r => parts.push(`${CASE_NAME[r.c]} STRIKE ${r.strike}/${MAX_STRIKES}`));
+  costs.forEach(r => parts.push(`${CASE_NAME[r.c]} STRIKE ${strikeOf(r.strike).toUpperCase()}`));
   if(struck.some(r => r.forgiven)) parts.push('ONE MONEY LINK FORGIVEN');
-  const big = nOk && struck.length ? `FILED · ${nOk} INKED · ${struck.length} STRUCK` : nOk ? (nOk === 1 ? 'LINK INKED' : nOk + ' LINKS INKED') : 'STRUCK OFF';
-  toast(big, parts.join(' · '), 3000);
+  if(nNoted) parts.push(nNoted === 1 ? 'ONE LINK SET ASIDE' : nNoted + ' LINKS SET ASIDE');
+  const big = nOk && struck.length ? `FILED · ${nOk} INKED · ${struck.length} STRUCK` : nOk ? (nOk === 1 ? 'LINK INKED' : nOk + ' LINKS INKED') : struck.length ? 'STRUCK OFF' : nNoted ? 'SET ASIDE' : 'FILED';
+  const sheet = !!document.getElementById('ops-modal');
+  if(!sheet) toast(big, parts.join(' · '), 3000);
   if(nOk) stamp('INKED'); else if(struck.length) stamp('STRUCK', 'bad');
-  if(refusedNow.length) setTimeout(()=>toast('WARRANT REFUSED', refusedNow.map(c => CASE_NAME[c]).join(', ') + ': three strikes. Bring new evidence.', 3200), 3100);
-  V12.log('file', { n:pens.length, ok:nOk, struck:struck.length });
+  if(typeof V12.m2TableCheck === 'function') V12.m2TableCheck();
+  if(refusedNow.length && !sheet) setTimeout(()=>toast('WARRANT REFUSED', refusedNow.map(c => CASE_NAME[c]).join(', ') + ': three strikes. Bring new evidence.', 3200), 3100);
+  V12.log('file', { n:pens.length, ok:nOk, struck:struck.length, noted:nNoted });
   // a filing is on the record: save it, so a reload can't take a strike back
   // (not before the campaign's first save point, so a fresh game never overwrites an older save early)
   if(typeof saveGame === 'function' && (S.game.completedMissions || []).includes('m1')) try{ saveGame(true); }catch(e){}
@@ -626,7 +654,7 @@ function fileLinks(){
   return res;
 }
 V12.fileLinks = fileLinks;
-V12.pencil = (a, b) => { const o = V12.ops(), k = key(a, b); if(!o.pencils.includes(k) && !o.inked.includes(k) && !o.struck.includes(k)){ o.pencils.push(k); o.tries = (o.tries || 0) + 1; o.sinceInk = (o.sinceInk || 0) + 1; } return k; };
+V12.pencil = (a, b) => { const o = V12.ops(), k = key(a, b); if(!o.pencils.includes(k) && !o.inked.includes(k) && !o.struck.includes(k) && !o.noted.includes(k)){ o.pencils.push(k); o.tries = (o.tries || 0) + 1; o.sinceInk = (o.sinceInk || 0) + 1; } return k; };
 
 function inkLinks(keys, opt){
   opt = opt || {};
@@ -683,9 +711,10 @@ function rulingModal(res, refusedNow, lifted){
   const rows = res.map(r => {
     const [a, b] = r.k.split('|');
     if(r.ok) return `<li class="ok">${ic('check')}<div><b>INKED</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span>${esc((LINK[r.k] || {}).hint || '')}</span></div></li>`;
+    if(r.noted) return `<li class="noted">${ic('doc')}<div><b>SET ASIDE</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span>True, but not evidence of the crime. No strike.</span></div></li>`;
     const why = r.again ? 'Already struck off. No further cost.'
       : r.forgiven ? 'Follow the Money: forgiven. No strike, no Integrity cost.'
-      : `${CASE_NAME[r.c]} strike ${r.strike}/${MAX_STRIKES} · Integrity −${INTEGRITY_COST}`;
+      : `${CASE_NAME[r.c]} strike ${strikeOf(r.strike)} · Integrity −${INTEGRITY_COST}`;
     return `<li class="bad">${ic('cross')}<div><b>STRUCK OFF</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span>${why}</span></div></li>`;
   }).join('');
   const cases = [...new Set(res.map(r => r.c || caseForPair(...r.k.split('|'))))];
@@ -756,12 +785,13 @@ function side(){
     const other = k => k.split('|').find(x => x !== n.id);
     const mine = o.inked.filter(k => k.split('|').includes(n.id)).map(k => `<li class="ink"><b>${esc(nm(other(k)))}</b><span>${(LINK[k] || {}).hint || ''}</span></li>`).join('');
     const struck = o.struck.filter(k => k.split('|').includes(n.id)).map(k => `<li class="bd-struck"><span class="bd-tag-x">${ic('cross')}STRUCK</span><span>${esc(nm(other(k)))}</span></li>`).join('');
+    const noted = o.noted.filter(k => k.split('|').includes(n.id)).map(k => `<li class="bd-noted"><span class="bd-tag-n">SET ASIDE</span><span>${esc(nm(other(k)))}</span></li>`).join('');
     const pens = o.pencils.filter(k => k.split('|').includes(n.id)).map(k => `<li class="pen">pencilled to ${esc(nm(other(k)))} <button class="ops-erase" data-k="${k}">erase</button></li>`).join('');
     const weak = V12.evQ(evIdOf(n)) === 'weak';
     const note = recruit() && n.note ? `<div class="bd-note"><b>${ic('search')} ANALYST'S NOTE</b><span>${n.note}</span></div>` : '';
     el.innerHTML = `<div class="ops-kind k-${n.kind}">${tagOf(n)}</div><div class="ops-name">${n.name}</div><p class="ops-p bd-facts">${dossierOf(n)}</p>${note}
       ${weak ? '<p class="ops-weak">CONTESTED — the defence will attack how this was obtained.</p>' : ''}
-      <div class="ops-h">LINKS</div><ul class="ops-ul">${mine}${struck}${pens}${!mine && !struck && !pens ? '<li class="none">Nothing yet.</li>' : ''}</ul>
+      <div class="ops-h">LINKS</div><ul class="ops-ul">${mine}${struck}${noted}${pens}${!mine && !struck && !noted && !pens ? '<li class="none">Nothing yet.</li>' : ''}</ul>
       <p class="ops-tip">Tap another card to pencil a link from <b>${n.name}</b>. Tap this card again to put it down.</p>`;
     el.querySelectorAll('.ops-erase').forEach(b => b.addEventListener('click', ()=>{ const i = o.pencils.indexOf(b.dataset.k); if(i >= 0) o.pencils.splice(i, 1); render(); }));
     return;
@@ -778,7 +808,7 @@ function side(){
       : `<div class="ops-th"><b>${t.q}</b><span>Unconfirmed</span></div>`).join('') : `<p class="ops-p">${rec ? 'No theories yet. Link what you\'ve found.' : 'No theories proven yet. Inked chains of links become theories.'}</p>`}
     <div class="ops-h">HOW IT WORKS</div>
     <p class="ops-p">Tap two cards to pencil a link. Pencils are free: erase and redraw as you like, up to six at a time.</p>
-    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. Three strikes and the warrant is refused until you bring new evidence.</p>
+    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. One that is true but says nothing about the crime is set aside, at no cost. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. Three strikes and the warrant is refused until you bring new evidence.</p>
     <p class="ops-p">Not every lead on this table belongs to the ring.</p>
     ${mid && objs.length ? `<div class="ops-h">${(mname || 'OPERATION').toUpperCase()}</div><div id="ops-objs"><div>${objs.map(x => `<div class="so ${x.done ? 'done' : ''}">${x.text}</div>`).join('')}</div></div>` : ''}
     <div class="ops-h">REPUTATION</div>${V12.repBars()}
