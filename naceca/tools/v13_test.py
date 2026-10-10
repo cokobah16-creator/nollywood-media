@@ -1,4 +1,5 @@
-"""NACECA v13 test — the investigation layer on top of v12, through v12's real flows:
+"""NOTE: targets the vendor drop's standalone v13 semantics (before the friends-beta integration); superseded by tools/harness/scenarios/v13_port_flow.cjs.
+NACECA v13 test — the investigation layer on top of v12, through v12's real flows:
 raid-plan warrant, Night Shift → weekly briefing, pre-operation briefings (loadMission),
 gatekeeper calls, stakeout, undercover, production order, Ekosodin warrant routing,
 v12's accusation reading the findings, trial, epilogue, review. Phone viewport, screenshots.
