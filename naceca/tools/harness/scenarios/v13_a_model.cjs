@@ -122,8 +122,17 @@ module.exports = async h => {
   h.assert(money.rKey === 12 && money.rKeyToast.length === 1 && !/2019/.test(money.rKeyToast[0]), 'Recruit: the C.A. toast and +12 intel, without the tenure date');
 
   // ---- the briefing hook is on (v13_briefing's openBriefing releases Senior's nodes first) ----
-  const hook = await h.ev(() => typeof openBriefing === 'function' && !!openBriefing._v13a);
-  h.assert(hook, 'openBriefing is wrapped to release flagged money clues');
+  // the briefing calls window.intelOnBriefingOpen(k) as it opens (its own calls to openBriefing stay inside its module)
+  const hook = await h.ev(() => {
+    if(typeof window.intelOnBriefingOpen !== 'function') return { fn:false };
+    S.game.difficulty = 'senior';
+    const d = I(), c = PHONES.flatMap(p => p.items).find(x => x.rel && x.money && !d.money.unlocked[x.money]);
+    if(!c) return { fn:true, none:true };
+    d.flagged[c.id] = true;
+    const ids = window.intelOnBriefingOpen('m4');
+    return { fn:true, released:Array.isArray(ids) && ids.includes(c.money), open:!!d.money.unlocked[c.money] };
+  });
+  h.assert(hook.fn && (hook.none || (hook.released && hook.open)), 'the briefing hook releases Senior\'s flagged money clues ' + JSON.stringify(hook));
   await A.textRules(['Filed. It stays on the record.', 'Filed as unverified. You can come back to it once.', 'More come with the next briefing', 'A retainer on the first of every month'], 'model messages');
   h.assert(h.errors.length === 0, 'no page errors: ' + h.errors.join(' | '));
 };

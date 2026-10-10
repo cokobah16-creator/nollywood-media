@@ -647,16 +647,16 @@ if(window.V12 && typeof V12.wrap === 'function'){
     }catch(e){ console.warn('[v13] pause', e); }
     return orig.apply(this, arguments);
   });
-  // pause.js binds #btn-resume to the ORIGINAL togglePause at start-up, so this wrap never sees a Resume click:
-  // catch it first, and go back to the v13 flow the pause menu covered
-  document.addEventListener('click', e => { try{
-    if(!(e.target && e.target.closest && e.target.closest('#btn-resume')) || !V13NAV.under || !v13Shown('screen-pause')) return;
-    const under = V13NAV.under; V13NAV.under = null;
-    e.stopImmediatePropagation(); e.preventDefault();
-    const m = V13NAV.modals.find(x => x.id === under);
-    showOverlay(under);
-    if(m && m.resume) m.resume();
-  }catch(err){ console.warn('[v13] resume', err); } }, true);
+  // however the pause menu opens (Esc, the HUD button, or showOverlay directly), remember the v13 flow it covers
+  V12.wrap('showOverlay', orig => function(id){
+    try{
+      if(id === 'screen-pause' && !v13Shown('screen-pause') && !V13NAV.under && V13NAV.modals.length){
+        const cover = [...document.querySelectorAll('.overlay.show')].map(o => o.id).find(x => x && x !== 'screen-pause');
+        if(cover) V13NAV.under = cover;
+      }
+    }catch(e){}
+    return orig.apply(this, arguments);
+  });
   // a quit, a load or an erase ends any v13 flow that was open
   document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-load, #btn-erase')) v13NavReset(); }catch(err){} }, true);
   // evidence logged outside collectEvidence (v12.2 street talk) gets a record too
