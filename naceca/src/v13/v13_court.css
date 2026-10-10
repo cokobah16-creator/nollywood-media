@@ -1,28 +1,118 @@
-/* v13 · court and case review */
-/* court */
-.court-frame{width:min(680px,96vw)}
-.ct-crest{font-family:'Oswald',sans-serif;font-size:9.5px;letter-spacing:.24em;color:#d8a64a;text-align:center}
-.ct-title{font-family:'Oswald',sans-serif;font-size:22px;letter-spacing:.14em;color:#fff;text-align:center;margin:4px 0}
-.ct-pat{text-align:center;font-size:11px;letter-spacing:.2em;color:#93a1b6;margin-bottom:8px}
-.ct-ex{font-family:'Oswald',sans-serif;font-size:16px;color:#ffd76a;margin:6px 0}
-.ct-def{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.2em;color:#ff8a96;margin-top:8px}
-.ct-say{font-size:14px;color:#e6ecf4;font-style:italic;margin:4px 0 10px;line-height:1.5}
-.ct-rule{font-size:14px;line-height:1.5;padding:10px 12px;border-left:3px solid}.ct-rule.ok{border-color:#5dd07a;color:#d7f5df}.ct-rule.bad{border-color:#e84a5c;color:#ffd0d6}
-.ct-count{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px}.ct-count .rb{grid-column:1/-1;height:5px}
-.ct-count.ok b{color:#5dd07a}.ct-count.bad b{color:#ff8a96}.ct-count b{font-family:'Oswald',sans-serif;letter-spacing:.14em;font-size:12px}
-.ct-verdict{font-size:15px;color:#fff;margin:12px 0 6px;line-height:1.5}
-/* review */
-.review-frame{width:min(680px,96vw)}
-.rv-pct{text-align:center;margin:4px 0 10px}.rv-pct span{display:block;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.3em;color:#d8a64a}.rv-pct b{font-family:'Oswald',sans-serif;font-size:54px;color:#fff;line-height:1}
-.rv-parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;font-size:12px;color:#aab6c8;margin-bottom:6px}.rv-parts div{display:flex;justify-content:space-between}.rv-parts b{color:#fff}
-.rv-line{font-size:13px;color:#c8d2e0;margin:0 0 5px;line-height:1.45}.rv-line.ok{color:#c8f0d2}.rv-line.bad{color:#ffc2c9}
-@media(max-width:760px){
-  .desk-tabs button{padding:7px 7px;font-size:9.5px;letter-spacing:.04em}
-  .brf-head{font-size:20px}.ct-title{font-size:18px}
-  .so-scene{height:150px}
+/* v13 · court and case review — a manila court record and a manila report on an ink desk.
+   Built on the shared primitives (v13_shared.css: .v13-sheet, .v13-btn, .v13-stamp, .v13-mark-ok/-bad,
+   .v13-mono, .v13-dim, .v13-warn, .v13-meter), which this file never restyles. Flat fills, 1px rules,
+   2–4px radius; no gradients, glows, shadows, blur or filters. Numbers in JetBrains Mono, headings in
+   Oswald. Every rule is scoped to #screen-court, #screen-review or .v13-review (the review also renders
+   inside the Case Desk's REVIEW tab). */
+
+/* ---------- the overlays: an ink desk, 16px gutters, one document ---------- */
+:is(#screen-court,#screen-review){padding:max(12px, env(safe-area-inset-top, 0px)) 16px max(12px, env(safe-area-inset-bottom, 0px))}
+:is(#screen-court,#screen-review) > .overlay-bg{background:var(--ink,#1C1C1A)}
+#screen-court .ct-doc, #screen-review .rv-doc{width:min(760px, 100%);max-height:100%;margin:0;padding:0;display:flex;flex-direction:column;overflow:hidden}
+:is(#screen-court,#screen-review) .ct-head{flex:0 0 auto;padding:16px 22px 10px;border-bottom:2px solid var(--ink,#1C1C1A)}
+:is(#screen-court,#screen-review) .ct-crest{display:flex;align-items:center;gap:8px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;line-height:1.35}
+:is(#screen-court,#screen-review) .ct-crest .ico{flex:0 0 auto;font-size:18px}
+:is(#screen-court,#screen-review) .ct-title{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:700;font-size:28px;letter-spacing:.06em;line-height:1.1;margin:6px 0 4px;color:var(--ink,#1C1C1A)}
+:is(#screen-court,#screen-review) .ct-meta{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;font-size:11.5px;line-height:1.4}
+#screen-court .ct-pat{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.14em;white-space:nowrap}
+#screen-court .ct-pat b{margin-left:4px;font-size:13px;font-weight:700;letter-spacing:.04em}
+:is(#screen-court,#screen-review) .ct-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px 22px 14px}
+:is(#screen-court,#screen-review) .ct-foot{flex:0 0 auto;display:flex;justify-content:flex-end;gap:10px;padding:10px 22px 14px;border-top:2px solid var(--ink,#1C1C1A)}
+:is(#screen-court,#screen-review) .ct-foot:empty{display:none}
+:is(#screen-court,#screen-review) .ct-go{min-height:44px;padding:10px 20px;font-size:14px;letter-spacing:.14em}
+
+/* ---------- the court record ---------- */
+#screen-court .ct-sec-h{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.16em;text-transform:uppercase;border-bottom:1px solid var(--rule-paper,rgba(28,28,26,.32));padding:12px 0 5px;margin:0 0 8px}
+#screen-court .ct-sec-h:first-child{padding-top:0}
+#screen-court .ct-lead{font-size:14px;line-height:1.5;margin:0 0 10px}
+#screen-court .ct-note{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13.5px;line-height:1.45;margin:0 0 10px}
+#screen-court .ct-note.v13-warn{display:block}
+
+/* the finale charge sheet, as it stands before the court */
+#screen-court .ct-cs{margin:0 0 6px}
+#screen-court .ct-cs-row{display:grid;grid-template-columns:110px minmax(0, 1fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-court .ct-cs-row:first-child{border-top:0}
+#screen-court .ct-cs-k{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.14em}
+#screen-court .ct-cs-v{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:12px;line-height:1.4;min-width:0}
+#screen-court .ct-cs-s{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.12em;white-space:nowrap}
+
+/* the exhibit list */
+#screen-court .ct-exlist{list-style:none;margin:0 0 8px;padding:0}
+#screen-court .ct-exrow{display:grid;grid-template-columns:30px minmax(0, 1fr);gap:8px;padding:8px 0;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-court .ct-exrow:first-child{border-top:0}
+#screen-court .ct-no{font-size:13px;padding-top:1px}
+#screen-court .ct-exname{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:15px;font-weight:600;letter-spacing:.02em;line-height:1.3}
+#screen-court .ct-big{font-size:19px;margin:0 0 8px}
+#screen-court .ct-weak{font-size:12.5px;line-height:1.4;margin-top:4px}
+#screen-court .ct-cert{margin-top:6px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.1em}
+
+/* the defence, and your answers */
+#screen-court .ct-who{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.16em;margin:8px 0 2px}
+#screen-court .ct-say{margin:4px 0 12px;padding:2px 0 2px 12px;border-left:3px solid var(--ink,#1C1C1A);font-size:15px;line-height:1.5;font-style:italic}
+#screen-court .ct-aside{font-size:12.5px;margin:-6px 0 10px}
+#screen-court .ct-opts{display:flex;flex-direction:column;gap:8px}
+#screen-court .ct-opt{display:flex;align-items:flex-start;gap:10px;width:100%;min-height:44px;padding:10px 12px;margin:0;background:transparent;border:1px solid var(--ink,#1C1C1A);border-radius:2px;color:var(--ink,#1C1C1A);font:inherit;font-size:14px;line-height:1.4;text-align:left;cursor:pointer;box-shadow:none;-webkit-tap-highlight-color:transparent}
+#screen-court .ct-opt:hover{background:rgba(28,28,26,.08)}
+#screen-court .ct-opt:disabled{opacity:.45;cursor:not-allowed;background:transparent}
+#screen-court .ct-opt:focus-visible{outline:2px solid var(--ink,#1C1C1A);outline-offset:2px}
+#screen-court .ct-n{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:1px solid var(--ink,#1C1C1A);border-radius:2px;font-size:12px;line-height:1}
+
+/* a ruling: an ink word with a green/red underline, the exhibit number in mono */
+#screen-court .ct-ruling{border-left:3px solid var(--ink,#1C1C1A);padding:2px 0 2px 12px}
+#screen-court .ct-rword{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:8px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:15px;letter-spacing:.12em}
+#screen-court .ct-pno{font-size:13px;letter-spacing:.04em}
+#screen-court .ct-ruling p{font-size:14.5px;line-height:1.5;margin:0 0 8px}
+
+/* judgment: one row per count, GUILTY / NOT PROVEN stamped */
+#screen-court .ct-count{display:grid;grid-template-columns:minmax(0, 1fr) auto;gap:8px 12px;align-items:center;padding:10px 0;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-court .ct-sec-h + .ct-count{border-top:0}
+#screen-court .ct-cname{font-size:14px;line-height:1.35}
+#screen-court .ct-cbar{grid-column:1/-1;display:grid;grid-template-columns:minmax(0, 1fr) auto;gap:10px;align-items:center}
+#screen-court .ct-cw{font-size:12px}
+#screen-court .ct-adj{font-size:13px;line-height:1.45;margin:0 0 6px}
+#screen-court .ct-adj :is(.v13-mark-ok,.v13-mark-bad){font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.1em;margin-right:4px}
+#screen-court .ct-verdict{font-size:16px;font-weight:600;line-height:1.5;margin:14px 0 6px}
+#screen-court .ct-tally{font-size:12px;margin:0}
+
+/* ---------- the case review (#screen-review and the Case Desk REVIEW tab) ---------- */
+.v13-review{text-align:left}
+.v13-review .rv-pct{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink,#1C1C1A);padding-bottom:8px;margin-bottom:8px}
+.v13-review .rv-pct-l{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.2em}
+.v13-review .rv-pct b{font-size:44px;font-weight:700;line-height:1}
+.v13-review .rv-parts{display:grid;grid-template-columns:repeat(auto-fill, minmax(210px, 1fr));gap:0 18px;font-size:12.5px;margin-bottom:6px}
+.v13-review .rv-parts div{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+.v13-review .rv-parts b{font-weight:600}
+.v13-review .v13-sheet-h{margin-top:16px}
+.v13-review .rv-cs{margin:0 0 10px}
+.v13-review .rv-cs-h{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:13px;font-weight:600;letter-spacing:.12em;margin:4px 0 2px}
+.v13-review .rv-row{display:grid;grid-template-columns:110px minmax(0, 1fr) auto;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+.v13-review .rv-k{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.14em}
+.v13-review .rv-v{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:12px;line-height:1.4;min-width:0}
+.v13-review .rv-w{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.12em;white-space:nowrap}
+.v13-review .rv-line{display:grid;grid-template-columns:20px minmax(0, 1fr);gap:6px;font-size:13.5px;line-height:1.45;margin:0 0 6px}
+.v13-review .rv-m{display:inline-flex;align-items:flex-start;padding-top:2px;text-decoration:none}
+.v13-review .rv-m .ico{font-size:16px;margin:0}
+.v13-review .rv-tag{display:block;margin-top:2px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:10.5px;letter-spacing:.14em}
+
+/* a toast that fires while the court record or the review is up sits above the document's header, not on its text */
+#game-root:has(> #screen-court.show, > #screen-review.show) > #toast{top:max(8px, env(safe-area-inset-top, 0px));transform:translate(-50%, 0) scale(.96)}
+#game-root:has(> #screen-court.show, > #screen-review.show) > #toast.show{transform:translate(-50%, 0) scale(1)}
+
+/* ---------- phones ---------- */
+@media (max-width:620px){
+  :is(#screen-court,#screen-review) .ct-head{padding:12px 14px 8px}
+  :is(#screen-court,#screen-review) .ct-title{font-size:21px}
+  :is(#screen-court,#screen-review) .ct-scroll{padding:10px 14px 12px}
+  :is(#screen-court,#screen-review) .ct-foot{padding:8px 14px 12px}
+  :is(#screen-court,#screen-review) .ct-go{flex:1 1 auto}
+  #screen-court .ct-cs-row, .v13-review .rv-row{grid-template-columns:minmax(0, 1fr) auto}
+  #screen-court .ct-cs-k, .v13-review .rv-k{grid-column:1/-1}
+  #screen-court .ct-say{font-size:14.5px}
+  .v13-review .rv-pct b{font-size:36px}
+  .v13-review .rv-parts{grid-template-columns:1fr}
 }
-
-.seg button:disabled{opacity:.38;cursor:not-allowed}
-
-#screen-ops .ops-b#ops-desk{letter-spacing:.12em}
-#plan-warrant{margin-top:8px}
+/* phone landscape: the header gets out of the way */
+@media (max-height:480px){
+  :is(#screen-court,#screen-review) .ct-head{padding:8px 14px 6px}
+  :is(#screen-court,#screen-review) .ct-title{font-size:18px;margin:2px 0}
+}
