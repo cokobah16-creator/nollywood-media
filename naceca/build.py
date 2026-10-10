@@ -96,6 +96,15 @@ BETA_DIR = os.path.join(SRC, "beta")
 BETA_CSS = ["paper.css", "wayfind.css", "board.css", "casework.css"]
 BETA_JS = ["casework.js", "wayfind.js", "chase.js"]
 
+# tactics layer (Playable Tactics: sight and noise, the market and mansion encounters, the playtest kit)
+# — after the beta, so it wins. Every file is optional: a missing one is skipped, so each team's branch
+# builds without the others' files, and deleting src/tactics/ plus these lines removes the layer.
+TACTICS_DIR = os.path.join(SRC, "tactics")
+TACTICS_CSS = ["tactics.css", "tac_market.css", "tac_mansion.css", "tac_pt.css"]
+TACTICS_JS = ["tac_api.js", "tac_pt_report.js", "tac_pt.js",
+              "tac_core.js", "tac_geo.js", "tac_interact.js", "tac_lanes.js", "tac_radio.js", "tac_sight.js",
+              "tac_market.js", "tac_mansion.js"]
+
 def build_bundle():
     parts = []
     parts.append(
@@ -174,6 +183,25 @@ def build_html(bundle):
         if "</script" in code.lower():
             raise SystemExit(f"beta/{name} contains a closing script tag")
         parts.append(f"<script>/* ---------- beta/{name} ---------- */\n{code}\n</script>")
+    # Append the tactics layer after the beta (missing files are skipped; each file is syntax-checked)
+    for name in TACTICS_CSS:
+        p = os.path.join(TACTICS_DIR, name)
+        if not os.path.exists(p):
+            continue
+        with open(p, "r", encoding="utf-8") as fh:
+            parts.append(f'<style id="tac-{name[:-4]}">\n{fh.read()}\n</style>')
+    for name in TACTICS_JS:
+        p = os.path.join(TACTICS_DIR, name)
+        if not os.path.exists(p):
+            print(f"  · tactics/{name} not present, skipped")
+            continue
+        with open(p, "r", encoding="utf-8") as fh:
+            code = fh.read()
+        if "</script" in code.lower():
+            raise SystemExit(f"tactics/{name} contains a closing script tag")
+        if os.system(f'node --check "{p}" 2>&1') != 0:
+            raise SystemExit(f"tactics/{name} has syntax errors")
+        parts.append(f"<script>/* ---------- tactics/{name} ---------- */\n{code}\n</script>")
     # a content stamp (not a time or git hash, so the same source always builds the same page):
     # the playtest log records which build a session came from
     import hashlib
