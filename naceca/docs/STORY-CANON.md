@@ -77,11 +77,22 @@ player chose to send the ledger to her office (stated only after the reveal); th
   lorries; pays the drivers, ₦85,000 to Musa; hires its lorries from Sapele Haulage) into the Foundation
   (₦2.1bn in; its "staff" paid through Crestfield Payroll Services) and Serpentine Homes (Benin GRA
   houses). No route money flows to Obi or Lagos. Route nodes can't be traced before the route charge sheet.
+  Obi's account (it quotes his notebook) joins the trail only once Lekki is behind you or the notebook is
+  in hand.
 - **Sapele Haulage Nig. Ltd** — RC 1611930, Plot 9 Ajogodo Road, Sapele; director Kunle Bamidele (also
   Bluewater's). It owns the lorry Musa drives and paid the welder (the beta's receipt). Musa never bought
-  the lorry: "already there when I bought the truck" is CONTRADICTED by the welder's receipt.
+  the lorry: "already there when I bought the truck" is CONTRADICTED by the lorry's registration (the M4
+  checkpoint papers: "registered to SAPELE HAULAGE NIG. LTD") or the welder's receipt — either is proof.
 - **Suite 4B, Zuma Court, Wuse II, Abuja** — one office behind Bluewater, Serpentine, the Foundation,
   C.A. Consulting, Apex Corporate Services (company secretary, Barr. Tamuno Briggs) and Silverline Media.
+  No name search finds them before the case reaches them (Bluewater, Apex and Serpentine from Case 04, the
+  Foundation once Lekki is behind you), so Case 02 and 03 can't put the cluster together.
+- **The Engineer order (h5)** — he stays in play whatever the player chooses: h7 and the tail (t7) follow
+  him. 'Pass it to a crime reporter': the story runs ("NACECA informant linked to kidnap ring") without his
+  name, and the press learns nothing about his calls. 'Ask her about it': after the reveal she says she
+  cut the Engineer off that night; her own "C." number still calls the ransom phone in the M7 tower data.
+- **Evidence sources** — Osas hid the payroll drive in his shoe (M8). The Lekki cash and Obi's notebook
+  were on the living-room coffee table; the laptop and the safe were in the study.
 - **Mrs. C. Amadi** — a retired teacher in Uselu on the Foundation's trustee list. A decoy "C.A.", never her.
 - **LND 590 XA** — a grey saloon with government plates: in the Lekki gatehouse log two nights before the
   raid, and at the Zuma Court handover (h5). That it is her office's pool car is said only at the trial (the

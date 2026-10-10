@@ -29,7 +29,7 @@ const INTEL_ITEMS = {
   tower_fibre:       { m:'m7', kind:'PHYSICAL',  tier:'confirmed',          src:'Fibre backhaul, Ugbowo mast' },
   tower_cdr:         { m:'m7', kind:'TELECOM',   tier:'confirmed', e:true,  src:'BTS cabinet, Ugbowo mast' },
   tower_fix:         { m:'m7', kind:'TELECOM',   tier:'probable',  e:true,  src:'Live sector timing, Ugbowo mast' },
-  fin_drive:         { m:'m8', kind:'DEVICE',    tier:'confirmed', e:true,  src:"Osas's pocket, Akintola Close" },
+  fin_drive:         { m:'m8', kind:'DEVICE',    tier:'confirmed', e:true,  src:"Osas's shoe, Akintola Close" },
   fin_courier_phone: { m:'m8', kind:'DEVICE',    tier:'confirmed', e:true,  src:'Taken from the courier, Ekosodin' },
   fin_recording:     { m:'m8', kind:'TELECOM',   tier:'confirmed', e:true,  src:'Field-office recording of the evening call' },
   // v12 evidence
@@ -37,7 +37,7 @@ const INTEL_ITEMS = {
   // KC's SIM batch comes from his statement (a fair arrest) or from the sleeve sweep: the source says which
   kc_sims:           { m:'m2', get kind(){ return kcSimsByStatement() ? 'TESTIMONY' : 'PHYSICAL'; }, get tier(){ return kcSimsByStatement() ? 'probable' : 'confirmed'; },
                        get src(){ return kcSimsByStatement() ? "KC's statement after his arrest, Ikeja market" : 'SIM sleeves behind the Ikeja stalls'; } },
-  obi_notebook:      { m:'m3', kind:'DOCUMENT',  tier:'confirmed',          src:"Chief Obi's study, beside the cash" },
+  obi_notebook:      { m:'m3', kind:'DOCUMENT',  tier:'confirmed',          src:'Coffee table, Lekki living room, beside the cash' },
   osas_voicemail:    { m:'m3n',kind:'TELECOM',   tier:'probable',  e:true,  src:'Your desk phone, Lagos HQ — left 14:02, heard 23:40' },
   // v12.2 evidence
   musa_record:       { m:'m4', kind:'TESTIMONY', tier:'probable',           src:'Musa, wired at the Benin Bypass after he turned' },
@@ -62,6 +62,15 @@ const TIER_WEIGHT = { confirmed:3, probable:2, allegation:1, rumour:0 };
 
 /* ---- 2. Phones: recovered handsets as investigative objects ----
    Flag what matters. rel:true items are real leads; the rest is someone's life. */
+/* Musa's phone is only ever read at the h4 sit-down. When that can no longer happen — he drove on with a
+   tail (the h4 lead is blocked), the lead was dropped (the phone went back to his family) or the save
+   missed the h4 briefing — the handset is out of reach: no locked "until you sit down with him" card. */
+function musaPhoneInReach(){
+  const g = (typeof S !== 'undefined' && S && S.game) || {}, d = g.intel || {}, lead = (d.leads || {}).musa;
+  if(lead === 'done') return true;
+  if((g.moralChoices || {}).checkpoint === 'tail_driver') return false;
+  return lead !== 'dropped' && (d.briefed || {}).m4 !== 'missed';
+}
 const PHONES = [
   { id:'kc', name:"KC's phone", model:'Cheap Android · cracked screen', needs:'phishing_template', items:[
     { id:'kc_msg_engineer', sec:'MESSAGES', from:'Engineer', text:'New batch. 400 numbers. Same BVN script. Dont use your own line.', rel:true, why:'KC runs the template; the Engineer supplies the numbers.' },
@@ -76,7 +85,8 @@ const PHONES = [
     { id:'kc_bank_airtime', sec:'BANK ALERTS', from:'Bank', text:'Debit ₦2,500.00 · Airtime recharge', rel:false },
     { id:'kc_del_control', sec:'DELETED', from:'(recovered fragment)', text:"…dont ever call C. from this line. if they pick you, you dont know me…", rel:true, why:'KC was told to protect "C." above everyone.' },
   ]},
-  { id:'musa', name:"Musa's phone", model:'Button phone + an old smartphone', needs:'ransom_ledger', items:[
+  // out of reach (above): no requirement can be met (intelHas(null) is false), so the desk lists no card for it
+  { id:'musa', name:"Musa's phone", model:'Button phone + an old smartphone', get needs(){ return musaPhoneInReach() ? 'ransom_ledger' : null; }, items:[
     { id:'musa_ride_asaba', sec:'RIDE HISTORY', from:'Ride app', text:'Benin Bypass to Riverview Suites, Asaba · 2 weeks ago, 23:40', rel:true, why:'Musa was in Asaba recently.' },
     { id:'musa_ph_hotel', sec:'PHOTOS', from:'Camera', text:'Musa outside Riverview Suites, Asaba. The Niger Bridge lights behind him.', rel:true, why:'He says he has never been to Asaba. His own camera disagrees.' },
     { id:'musa_call_engineer', sec:'CALLS', from:'Engineer', text:'02:10 · 02:14 · 02:31 — every pickup night', rel:true, why:'The Engineer calls before each pickup.' },
@@ -102,15 +112,17 @@ const PHONES = [
    "C.A. — 2,500,000" goes to the Ugbowo Relief Foundation as a "donation", and the Foundation pays C.A.
    Consulting a retainer on the first of every month (four of Obi's Fridays). The route's money (shrine →
    Asaba, the beta's answer) is banked afterwards through Bluewater; nothing here sends it to Obi or Lagos.
-   gate: 'lagos' — traceable once MONEY opens (intelMoneyOpen); 'route' — once the route charge sheet is on
-   the file (or Asaba is behind you); 'ca' — the route gate AND the h5 briefing reached (intelMoneyGate). */
+   gate: 'lagos' — traceable once MONEY opens (intelMoneyOpen); 'lekki' — not even listed until Lekki is
+   behind you or Obi's notebook is in hand (Obi's account quotes the notebook and names the Foundation);
+   'route' — once the route charge sheet is on the file (or Asaba is behind you); 'ca' — the route gate AND
+   the h5 briefing reached (intelMoneyGate). */
 const MONEY_NODES = {
   n_kc:        { name:'KC — personal wallet', kind:'PERSON', amt:150000, desc:'One credit from a POS agent, narration "SIM LOGISTICS".', next:['n_odogwu'], gate:'lagos' },
   n_odogwu:    { name:'Odogwu Ventures', kind:'POS AGENT', amt:38000000, desc:'Computer Village POS. ₦38M cashed out in three days, starting the day after a crypto wallet emptied through three OTC desks. The cash leaves for Lekki on Fridays in a dark-blue Sienna.', next:['n_otc','n_sister','n_obi'], reg:'odogwu', gate:'lagos' },
-  n_sister:    { name:"Owner's sister — school fees", kind:'RELATIVE', amt:420000, desc:"Three transfers to a secondary school in Nnewi. It's school fees. Dead end.", next:[], dead:true, gate:'lagos' },
+  n_sister:    { name:"Owner's sister — three transfers", kind:'RELATIVE', amt:420000, desc:"Three transfers to a secondary school in Nnewi. It's school fees.", next:[], dead:true, gate:'lagos' },
   n_otc:       { name:'Three OTC desks', kind:'CRYPTO', amt:0, desc:'Three over-the-counter desks bought the 0.62 BTC and paid the naira into the Ikeja POS floats. One desk is registered abroad and will not answer an NFIU request.', next:['n_wallet'], gate:'lagos' },
   n_wallet:    { name:'Wallet 0xE7…91A', kind:'CRYPTO', amt:100000000, desc:'Registered to a Lekki address. 0.62 BTC — about ₦100M — out to the OTC desks the night before the Ikeja cash-outs.', next:[], gate:'lagos' },
-  n_obi:       { name:'Chief Obi — Lekki account', kind:'PERSON', amt:10000000, desc:'Where the cash went home. Every Friday ₦2.5M leaves by transfer — the "C.A." line in his notebook — to the Ugbowo Relief Foundation, narration "DONATION". Four Fridays on file: ₦10M.', next:['n_charity'], gate:'lagos' },
+  n_obi:       { name:'Chief Obi — Lekki account', kind:'PERSON', amt:10000000, desc:'Where the cash went home. Every Friday ₦2.5M leaves by transfer — the "C.A." line in his notebook — to the Ugbowo Relief Foundation, narration "DONATION". Four Fridays on file: ₦10M.', next:['n_charity'], gate:'lekki' },
   n_bluewater: { name:'Bluewater Logistics Ltd', kind:'COMPANY', amt:640000000, desc:'A "haulage" company with no lorries of its own. Banks the route\'s cash as haulage income, hires its lorries from Sapele Haulage, and pays the drivers (₦85,000 to Musa).', next:['n_sapele','n_serpentine','n_charity'], reg:'bluewater', gate:'route' },
   n_sapele:    { name:'Sapele Haulage Nig. Ltd', kind:'COMPANY', amt:46000000, desc:'Owns the cattle lorry Musa drives. Bluewater pays its lorry hire by the trip, and it paid a Sapele welder for a "chassis repair".', next:[], reg:'sapele', gate:'route' },
   n_serpentine:{ name:'Serpentine Homes Ltd', kind:'PROPERTY', amt:900000000, desc:'Four houses in Benin GRA bought for cash in a single week.', next:[], reg:'serpentine', gate:'route' },
@@ -121,18 +133,21 @@ const MONEY_NODES = {
 const MONEY_START_REQUESTS = 4;   // NFIU requests in hand when the trail opens
 const MONEY_PER_WEEK = 2;         // more arrive with each briefing (the name is the drop's; the timeline is day-scale)
 
-/* ---- 4. Corporate Affairs Commission search ---- */
+/* ---- 4. Corporate Affairs Commission search ----
+   from: a name search can't find the entry before that operation is done (Bluewater, Apex and Serpentine are
+   first named at the h4 call, the Foundation in Obi's account after Lekki), so no search in Case 02 or 03
+   builds the Zuma Court cluster. An entry the case has already found stays findable. */
 const REGISTRY = {
   odogwu:    { name:'Odogwu Ventures', no:'BN 2841177', type:'Business Name', inc:'02 Feb 2021', people:['Emeka Odogwu (proprietor)'], sec:'—', addr:'Shop 14, Computer Village, Ikeja', status:'ACTIVE' },
-  bluewater: { name:'Bluewater Logistics Ltd', no:'RC 1520443', type:'Private company', inc:'11 Jun 2018', people:['Kunle Bamidele (director)','Nkechi Eke (director)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  bluewater: { name:'Bluewater Logistics Ltd', no:'RC 1520443', type:'Private company', inc:'11 Jun 2018', people:['Kunle Bamidele (director)','Nkechi Eke (director)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', from:'m4' },
   // the lorry's owner (the beta's welder's receipt and Musa's dossier): Bluewater's director, not at Zuma Court
   sapele:    { name:'Sapele Haulage Nig. Ltd', no:'RC 1611930', type:'Private company', inc:'04 Feb 2020', people:['Kunle Bamidele (director)'], sec:'Apex Corporate Services', addr:'Plot 9, Ajogodo Road, Sapele', status:'ACTIVE' },
-  serpentine:{ name:'Serpentine Homes Ltd', no:'RC 1588102', type:'Private company', inc:'23 Aug 2019', people:['Bassey Okon (director)','Apex Nominees Ltd (shareholder)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
-  urf:       { name:'Ugbowo Relief Foundation', no:'IT 140226', type:'Incorporated Trustees (CAMA 2020, Part F)', inc:'30 Jan 2018', people:['Rev. Peter Osagie (trustee)','Mrs. Ivie Imade (trustee)','Mrs. C. Amadi (trustee)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  serpentine:{ name:'Serpentine Homes Ltd', no:'RC 1588102', type:'Private company', inc:'23 Aug 2019', people:['Bassey Okon (director)','Apex Nominees Ltd (shareholder)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', from:'m4' },
+  urf:       { name:'Ugbowo Relief Foundation', no:'IT 140226', type:'Incorporated Trustees (CAMA 2020, Part F)', inc:'30 Jan 2018', people:['Rev. Peter Osagie (trustee)','Mrs. Ivie Imade (trustee)','Mrs. C. Amadi (trustee)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', from:'m3' },
   // not findable by name before the money trail reaches it (n_ca); the Zuma Court address search lists it once the
   // case has reached the Bypass (byAddress: 'm4' — never from Case 02 or 03)
   ca:        { name:'C.A. Consulting Services Ltd', no:'RC 1544870', type:'Private company', inc:'14 Mar 2019', people:['Bimpe Oke (director — nominee)','Apex Nominees Ltd (100% shareholder)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', hidden:true, byAddress:'m4' },
-  apex:      { name:'Apex Corporate Services', no:'BN 2290315', type:'Business Name (company secretarial)', inc:'09 May 2017', people:['Barr. Tamuno Briggs (proprietor)'], sec:'—', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  apex:      { name:'Apex Corporate Services', no:'BN 2290315', type:'Business Name (company secretarial)', inc:'09 May 2017', people:['Barr. Tamuno Briggs (proprietor)'], sec:'—', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', from:'m4' },
   silverline:{ name:'Silverline Media Ltd', no:'RC 1702219', type:'Private company', inc:'18 Oct 2020', people:['Tari Ebi (director)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', hidden:true },
   amadi:     { name:'Mrs. C. Amadi', no:'—', type:'Person search', inc:'—', people:['Retired primary-school teacher, Uselu. Trustee of one foundation.'], sec:'—', addr:'Uselu, Benin City', status:'—', person:true, hidden:true },
 };
@@ -145,14 +160,17 @@ const ZUMA = 'Suite 4B, Zuma Court, Wuse II, Abuja';
 const STATEMENTS = [
   { id:'st_tunde', who:'TUNDE', art:'tunde_neutral', role:'Paid informant, Ikeja market', needs:'m2', claims:[
     { id:'t1', text:'"Every Friday a black Sienna drops the SIMs for the boy."', truth:'mistaken', proof:'kc_ph_van', why:"KC's own photo shows a dark-blue Sienna under sodium light. Right car, right day, wrong colour." },
-    { id:'t2', text:'"Those ransom calls come from Warri. Everybody for market knows."', truth:'mistaken', proof:'tower_fix', why:'The handset fix puts the caller in Ekosodin, Benin. Tunde repeated market talk.' },
+    // the Ugbowo call records (every M7 route logs them) settle it as surely as the live handset fix
+    { id:'t2', text:'"Those ransom calls come from Warri. Everybody for market knows."', truth:'mistaken', proof:['tower_fix', 'tower_cdr'], why:'The Ugbowo tower data puts the caller in Ekosodin, Benin. Tunde repeated market talk.' },
     { id:'t3', text:'"KC runs the whole thing. That boy is the oga."', truth:'contradicted', proof:'kc_msg_engineer', why:'KC takes his batches and his orders from others. Tunde knew the boy was a runner — he inflated the tip to raise his fee.' },
   ]},
   { id:'st_musa', who:'MUSA', art:'musa_evasive', role:'Lorry driver, Benin Bypass', needs:'m4', claims:[
-    { id:'u1', text:'"I have never been to Asaba in my life."', truth:'contradicted', proof:'musa_ph_hotel', why:'A photo on his own phone, outside an Asaba hotel, two weeks ago.' },
+    { id:'u1', text:'"I have never been to Asaba in my life."', truth:'contradicted', proof:['musa_ph_hotel', 'musa_ride_asaba'], why:'His own phone puts him at Riverview Suites, Asaba, two weeks ago.' },
     { id:'u2', text:'"The man who loads the truck — I only know him as the Engineer."', truth:'corroborated', proof:'musa_call_engineer', why:'His call log has "Engineer" before every pickup. He never had a name for him.' },
-    // the beta's welder's receipt (S.game.flags.weld_receipt): the lorry is Sapele Haulage's, and the welds are new
-    { id:'u3', text:'"The compartment was already there when I bought the truck."', truth:'contradicted', proof:'flag:weld_receipt', why:"He never bought that lorry. The welder's receipt for the fresh welds on the chassis rail is made out to Sapele Haulage Nig. Ltd, the company it is registered to." },
+    // he never bought the lorry: the checkpoint papers register it to Sapele Haulage (doc:checkpoint_lie; whoever holds
+    // musa_statement has read them, it is that document's reward), and the beta's welder's receipt
+    // (S.game.flags.weld_receipt) for the fresh welds is made out to the same company
+    { id:'u3', text:'"The compartment was already there when I bought the truck."', truth:'contradicted', proof:['flag:weld_receipt', 'doc:checkpoint_lie'], why:'He never bought that lorry. It is registered to Sapele Haulage Nig. Ltd, the company that paid for the fresh welds on the chassis rail.' },
     { id:'u4', text:'"Nobody pays me except the cattle traders."', truth:'contradicted', proof:'musa_bank_bw', why:'Bluewater Logistics paid him ₦85,000 for "haulage".' },
   ]},
   { id:'st_tobi', who:'TOBI ONUOHA', art:'tobi_neutral', role:'Accountant, recovered in Asaba', needs:'asaba_hostage', claims:[
@@ -217,7 +235,7 @@ const BRIEFINGS = {
         dropped:'Bluewater files a change of address. The old one will still be on record.' },
       { id:'initial', name:"Chase the ledger's 'E.' entries", desc:'Seven pickups initialled E.',
         res:'E. is the Engineer. Seven pickups, all between 02:00 and 03:00. He usually reaches a pickup by 23:00 the night before.', flag:'lead_e', intel:4,
-        dropped:'The E. entries stay a pattern without a face. You lose nothing you need.' },
+        dropped:'The E. entries stay a pattern without a face.' },
     ]},
   // h5: after the charge sheet, "Go tonight" — NACECA Abuja does the Abuja work, you direct it from Benin
   m5: { week:3, before:'m6', hub:'h5', title:'BRIEFING · AFTER OZALLA', intro:"Before you cross the bridge — one instruction from me. Then Abuja is yours for the afternoon: our people there can work two of these, and you direct them from Benin.",
