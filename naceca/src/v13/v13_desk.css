@@ -1,53 +1,200 @@
-/* v13 · Case Desk */
-/* desk */
-.desk-frame{width:min(760px,96vw)}
-.desk-tabs{margin:0 0 10px;gap:4px}
-.desk-tabs button{position:relative;padding:8px 9px;font-size:10.5px}
-.dk-badge{position:absolute;top:-6px;right:-6px;background:#e84a5c;color:#fff;font-style:normal;font-size:9px;min-width:15px;height:15px;line-height:15px;border-radius:8px;text-align:center;padding:0 3px}
-.desk-body{font-size:13px;color:#d9e1ec;line-height:1.45}
-.dk-intro{font-size:12.5px;color:#aab6c8;margin:0 0 10px;line-height:1.5}
-.dk-item,.mn,.claim,.reg-card,.brf-res{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);padding:10px 12px;margin:0 0 8px}
-.dk-row1{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.dk-name{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.05em;color:#fff}
-.dk-meta{font-size:11.5px;color:#93a1b6;margin-top:2px}
-.dk-integ{display:flex;align-items:center;gap:8px;margin:7px 0 2px;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.14em;color:#93a1b6}
-.dk-integ .rb,.uc-meter .rb,.ct-count .rb{flex:1;height:6px;background:rgba(255,255,255,.08);position:relative}
-.dk-integ .rb i,.uc-meter .rb i,.ct-count .rb i{position:absolute;left:0;top:0;bottom:0;display:block}
-.dk-integ b{color:#fff;font-size:12px;min-width:34px;text-align:right}
-.dk-flaws{margin:4px 0 0 16px;font-size:12px;color:#ffb3bc}
-.dk-cert{margin-top:6px;font-size:12px}
-.dk-chain{margin-top:6px;font-size:11.5px;color:#aab6c8}.dk-chain summary{cursor:pointer;color:#d8a64a;font-size:11px;letter-spacing:.06em}
-.dk-known{font-size:12px;color:#c8d2e0;margin:0 0 4px}
-.dk-card{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(216,166,74,.25);padding:10px 12px;margin:0 0 8px;color:inherit;cursor:pointer;flex-direction:row}
-.dk-card>div{flex:1}.dk-card.locked{opacity:.45;cursor:default;display:block}
-.st-card img{width:44px;height:44px;object-fit:cover;border-radius:50%;border:1px solid rgba(216,166,74,.5)}
-.phone-shell{margin-top:10px;background:#0a0f19;border:2px solid #2a3550;border-radius:18px;padding:12px}
-.phone-top{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.14em;color:#fff;display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}.phone-top span{color:#7f8da3;font-size:10px;letter-spacing:.04em}
-.phone-secs{margin-bottom:8px}.phone-secs button{font-size:10px;padding:6px 8px}
-.ph-item{border-bottom:1px solid rgba(255,255,255,.06);padding:8px 0;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
-.ph-item.flagged{background:rgba(232,74,92,.06)}
-.ph-from{grid-column:1;font-size:10.5px;color:#d8a64a;font-family:'Oswald',sans-serif;letter-spacing:.08em}
-.ph-text{grid-column:1;font-size:13px;color:#e6ecf4}
-.ph-item .mini-btn{grid-column:2;grid-row:1/3}
-.money-head{display:flex;gap:18px;margin-bottom:6px}.money-head span{display:block;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.18em;color:#93a1b6}.money-head b{font-family:'Oswald',sans-serif;font-size:22px;color:#fff}
-.money-meter{margin:0 0 10px;height:6px}
-.mn{border-left:3px solid #4a5a78}.mn.traced{border-left-color:#d8a64a}.mn.dead{opacity:.6;border-left-color:#555}.mn.key{border-left-color:#e84a5c;background:rgba(232,74,92,.07)}
-.mn-kind{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.18em;color:#93a1b6}
-.mn-desc{font-size:12.5px;color:#c8d2e0;margin-top:4px}.mn-amt{font-family:'Oswald',sans-serif;font-size:15px;color:#ffd76a;margin-top:3px}
-.mn .mini-btn{margin-top:6px}
-.reg-search{display:flex;gap:6px;margin-bottom:10px}
-.reg-search input,.nb-compose select,#nb-free{flex:1;min-width:0;background:#0b1426;border:1px solid rgba(216,166,74,.4);color:#fff;font-size:16px;padding:8px 10px;font-family:'Inter',sans-serif;user-select:text;-webkit-user-select:text}
-#nb-free{width:100%;font-size:14px;resize:vertical}
-.reg-crest{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.2em;color:#2a8a6a;margin-bottom:4px}
-.reg-card{background:#f3ead2;color:#1a1d24;border:none}.reg-card .dk-name{color:#0b1426}
-.reg-tbl{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}.reg-tbl td{padding:4px 6px;border-bottom:1px solid rgba(0,0,0,.08);vertical-align:top}.reg-tbl td:first-child{width:92px;color:#5a4a32;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em}
-.reg-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.reg-card .mini-btn{background:#0b1426;color:#f0d9a6}.reg-card .ok{color:#1d7a40}
-.claim-text{font-size:13.5px;color:#fff;margin-bottom:7px;font-style:italic}
-.claim .seg button{font-size:10px;padding:7px 8px}
-.claim-fb{font-size:12px;margin-top:6px}
-.st-who{margin:8px 0}
-.nb-compose{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.nb-compose select{font-size:14px;flex:1 1 140px}
-.nb-entry{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}.nb-entry .dim{font-size:11px;white-space:nowrap}
-.basis{list-style:none;margin:6px 0;font-size:12px;color:#7f8da3}.basis li.have{color:#c8f0d2}
-.w-acts{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
-.controls-warrant{margin:6px 0 10px;font-size:12px;color:#ffcf7a;text-align:center;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+/* v13 · Case Desk — an ink frame holding manila documents.
+   Everything here is scoped to #screen-desk (plus the desk's own buttons on the operations table,
+   the pause menu and the HUD). Palette tokens only, flat fills, 1px rules, 2–4px radius; no
+   gradients, glows, shadows or blur. Phones: 16px gutters, one row of tabs that scrolls sideways,
+   no page overflow, every target 44px. Shared primitives (.v13-btn, .v13-sheet, .v13-stamp,
+   .v13-mark-*, .v13-tier, .v13-meter …) live in v13_shared.css. */
+
+/* ---------- frame ---------- */
+#screen-desk.overlay{justify-content:flex-start;align-items:center;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+#screen-desk > .overlay-bg{background:var(--ink,#1C1C1A);opacity:1}
+#screen-desk > .overlay-bg::after{content:none;display:none}
+#screen-desk .desk-frame{width:min(800px,100%);max-width:100%;min-width:0;height:min(880px,100%);max-height:100%;
+  display:flex;flex-direction:column;background:var(--ink,#1C1C1A);border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-radius:3px;padding:14px 16px 12px;box-shadow:none}
+#screen-desk .desk-head{flex:0 0 auto;flex-wrap:nowrap;align-items:center;gap:10px;margin:0 0 10px}
+#screen-desk .desk-head h2{flex:1 1 auto;min-width:0;font-size:20px;letter-spacing:.22em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#screen-desk .desk-head .btn{min-width:0;flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:8px 12px;font-size:12px;letter-spacing:.14em}
+#screen-desk .desk-head .btn .ico{margin:0;font-size:15px}
+#screen-desk .dk-key{display:inline-block;margin-left:4px;padding:0 5px;border:1px solid var(--manila-3,#8C8473);border-radius:2px;
+  font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;letter-spacing:0;line-height:16px;color:var(--manila-2,#A89F8A)}
+
+/* ---------- tabs: one row, scrolls sideways on narrow screens ---------- */
+#screen-desk .desk-tabs{flex:0 0 auto;display:flex;flex-wrap:nowrap;gap:4px;margin:0 0 10px;padding:0 0 2px;
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#screen-desk .desk-tabs::-webkit-scrollbar{display:none}
+#screen-desk .desk-tabs button{flex:0 0 auto;position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  white-space:nowrap;padding:9px 12px;font-size:11px;letter-spacing:.12em}
+#screen-desk .desk-tabs button.dk-tab-ops{border-style:dashed;border-color:var(--manila-3,#8C8473)}
+#screen-desk .desk-tabs button .ico{font-size:14px}
+#screen-desk .dk-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border-radius:2px;
+  background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;font-weight:700;letter-spacing:0;font-style:normal}
+#screen-desk .desk-tabs button.on .dk-badge{background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0)}
+
+/* status line (what would have been a toast) */
+#screen-desk .dk-note{display:none;flex:0 0 auto;margin:0 0 10px;padding:8px 10px;background:var(--ink-2,#262623);border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-left:3px solid var(--manila,#E9DCC0);border-radius:2px}
+#screen-desk .dk-note.on{display:block}
+#screen-desk .dk-note b{display:block;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--manila,#E9DCC0)}
+#screen-desk .dk-note span{display:block;font-size:13px;color:var(--manila-2,#A89F8A);margin-top:2px}
+#screen-desk .dk-note .ico{font-size:14px;margin:0 6px 0 0;vertical-align:-2px}
+
+/* ---------- body ---------- */
+#screen-desk .desk-body{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 4px 8px 0;font-family:'Inter',system-ui,sans-serif;
+  font-size:14px;line-height:1.45;color:var(--manila,#E9DCC0);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#screen-desk .dk-card-t,#screen-desk .dk-ph-t,#screen-desk .dk-name,#screen-desk .dk-src{min-width:0}
+#screen-desk .dk-intro{font-size:13px;line-height:1.5;color:var(--manila-2,#A89F8A);margin:0 0 10px}
+#screen-desk .dk-intro b{color:var(--manila,#E9DCC0);font-weight:600}
+#screen-desk .dk-intro.v13-warn{color:var(--manila,#E9DCC0)}
+#screen-desk .dk-group{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;font-weight:500;letter-spacing:.26em;color:var(--manila,#E9DCC0);
+  margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--rule-ink,rgba(233,220,192,.24))}
+#screen-desk .dk-row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+#screen-desk .dk-name{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:16px;font-weight:600;letter-spacing:.03em;line-height:1.25;overflow-wrap:anywhere}
+#screen-desk .dk-src{display:flex;gap:6px;align-items:flex-start;font-size:12.5px;line-height:1.45;color:var(--manila-2,#A89F8A);margin:3px 0 0}
+#screen-desk .dk-src .ico{flex:0 0 auto;margin-top:2px}
+#screen-desk .dk-lbl{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:10px;letter-spacing:.16em;white-space:nowrap}
+#screen-desk .v13-sheet .dk-src,#screen-desk .v13-sheet .dk-meta{color:var(--ink-soft,#4F4C44)}
+#screen-desk .v13-sheet .dk-name{color:var(--ink,#1C1C1A)}
+#screen-desk .dk-back{margin:0 0 10px}
+#screen-desk .dk-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+#screen-desk .dk-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px 14px;margin:8px 0}
+#screen-desk .dk-facts dt{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:10px;letter-spacing:.16em;color:var(--ink-soft,#4F4C44)}
+#screen-desk .dk-facts dd{margin:1px 0 0;font-size:14px;color:var(--ink,#1C1C1A)}
+#screen-desk .dk-facts dd.v13-mono{font-size:16px;font-weight:600}
+
+/* cards on the ink (handsets, witnesses, registry hits) */
+#screen-desk .dk-card{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 8px;padding:10px 12px;text-align:left;
+  background:var(--ink-2,#262623);border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-radius:3px;color:var(--manila,#E9DCC0);font:inherit;cursor:pointer;box-shadow:none}
+#screen-desk button.dk-card:hover{border-color:var(--manila,#E9DCC0)}
+#screen-desk button.dk-card:focus-visible{outline:2px solid var(--manila,#E9DCC0);outline-offset:2px}
+#screen-desk .dk-card > .ico{flex:0 0 auto;font-size:16px;color:var(--manila-2,#A89F8A)}
+#screen-desk .dk-card-t{flex:1 1 auto;display:flex;flex-direction:column;gap:2px}
+#screen-desk .dk-ico{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid var(--manila-3,#8C8473);border-radius:2px;font-size:20px;color:var(--manila,#E9DCC0)}
+#screen-desk .dk-meta{font-size:12px;line-height:1.4;color:var(--manila-2,#A89F8A);overflow-wrap:anywhere}
+#screen-desk .dk-card.dk-locked{cursor:default;border-style:dashed;border-color:var(--manila-3,#8C8473);background:transparent}
+#screen-desk .dk-card.dk-locked .dk-ico{border-style:dashed}
+#screen-desk .dk-st-card img{flex:0 0 auto;width:44px;height:44px;object-fit:cover;object-position:50% 20%;border:1px solid var(--manila-3,#8C8473);border-radius:2px;background:var(--ink,#1C1C1A)}
+
+/* ---------- LOCKER: one manila sheet per exhibit ---------- */
+#screen-desk .dk-ex-h{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#screen-desk .dk-ex-h .v13-mono{letter-spacing:.04em}
+#screen-desk .dk-adm{display:flex;align-items:center;gap:10px;margin:10px 0 2px}
+#screen-desk .dk-adm .v13-meter{flex:1 1 auto;min-width:60px}
+#screen-desk .dk-adm b{flex:0 0 auto;font-size:14px;min-width:56px;text-align:right}
+#screen-desk .dk-adm b small{font-size:11px;font-weight:400}
+#screen-desk .dk-flaws{list-style:none;margin:6px 0 0;padding:0}
+#screen-desk .dk-flaws li{display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.4;padding:3px 0;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-desk .dk-flaws li .ico{flex:0 0 auto;margin-top:2px;color:var(--red,#B3261E)}
+#screen-desk .dk-flaws li span{flex:1 1 auto}
+#screen-desk .dk-flaws li b{flex:0 0 auto;font-size:12px}
+#screen-desk .dk-cert{margin-top:10px;font-size:13px}
+#screen-desk .dk-chain{margin-top:8px;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-desk .dk-chain summary{display:flex;align-items:center;gap:8px;min-height:36px;cursor:pointer;list-style:none;
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+#screen-desk .dk-chain summary::-webkit-details-marker{display:none}
+#screen-desk .dk-chain summary .ico{transition:transform .15s ease}
+#screen-desk .dk-chain[open] summary .ico{transform:rotate(180deg)}
+#screen-desk .dk-chain summary b{font-size:11px;margin-left:auto}
+#screen-desk .dk-chain ol{list-style:none;margin:2px 0 4px;padding:0}
+#screen-desk .dk-chain li{font-size:12.5px;line-height:1.4;padding:3px 0 3px 10px;border-left:1px solid var(--ink,#1C1C1A);margin-left:4px}
+#screen-desk .dk-chain li i{display:block;font-style:normal;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:11px;color:var(--ink-soft,#4F4C44)}
+#screen-desk .dk-known{display:grid;gap:6px;margin:0 0 6px}
+#screen-desk .dk-known div{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:13px}
+#screen-desk .dk-known b{font-weight:600}
+#screen-desk .dk-known span{color:var(--manila-2,#A89F8A)}
+
+/* ---------- PHONES: an ink handset ---------- */
+#screen-desk .dk-device{margin-top:2px;padding:12px;background:var(--ink-2,#262623);border:1px solid var(--manila-3,#8C8473);border-radius:4px}
+#screen-desk .dk-device-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--rule-ink,rgba(233,220,192,.24));
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:13px;letter-spacing:.14em}
+#screen-desk .dk-device-top .v13-mono{font-size:11px;letter-spacing:0;color:var(--manila-2,#A89F8A)}
+#screen-desk .dk-secs{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 0 6px;padding-bottom:2px}
+#screen-desk .dk-secs::-webkit-scrollbar{display:none}
+#screen-desk .dk-secs button{flex:0 0 auto;white-space:nowrap;font-size:10.5px;padding:7px 10px}
+#screen-desk .dk-ph{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--rule-ink,rgba(233,220,192,.24))}
+#screen-desk .dk-ph:last-child{border-bottom:0}
+#screen-desk .dk-ph.flagged{border-left:3px solid var(--manila,#E9DCC0);padding-left:9px}
+#screen-desk .dk-ph-from{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.1em;color:var(--manila-2,#A89F8A);overflow-wrap:anywhere}
+#screen-desk .dk-ph-text{font-size:14px;line-height:1.45;color:var(--manila,#E9DCC0);overflow-wrap:anywhere}
+#screen-desk .dk-flag{min-width:96px}
+#screen-desk .dk-coach{grid-column:1/-1;display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;padding:6px 0 2px 10px;border-left:3px solid var(--green,#0B6E4F)}
+#screen-desk .dk-coach.norel{border-left-color:var(--red,#B3261E)}
+#screen-desk .dk-coach .ico{flex:0 0 auto;margin-top:2px}
+#screen-desk .dk-coach b{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:600;letter-spacing:.12em;font-size:11px}
+
+/* ---------- MONEY: ruled ledger rows on a manila sheet ---------- */
+#screen-desk .dk-ledger .dk-facts{margin-top:0}
+#screen-desk .dk-money-meter{margin:4px 0 10px}
+#screen-desk .dk-mn{padding:10px 0;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-desk .dk-mn .dk-row1{align-items:center}
+#screen-desk .dk-mn .dk-name{flex:1 1 auto;font-size:15px}
+#screen-desk .dk-mn .v13-tier{flex:0 0 auto}
+#screen-desk .dk-mn .v13-btn{margin-top:8px}
+#screen-desk .dk-mn-desc{font-size:13.5px;line-height:1.45;margin-top:6px}
+#screen-desk .dk-mn-amt{font-size:15px;font-weight:700;margin-top:4px}
+#screen-desk .dk-mn.key{border-left:3px solid var(--red,#B3261E);padding-left:9px}
+#screen-desk .dk-keytag{font-size:11px;padding:0 6px}
+#screen-desk .dk-mn.dead .dk-mn-amt{color:var(--ink-soft,#4F4C44)}
+
+/* ---------- REGISTRY ---------- */
+#screen-desk .dk-search{margin:0 0 10px}
+#screen-desk .dk-search .dk-lbl{display:block;margin:0 0 4px;color:var(--manila-2,#A89F8A)}
+#screen-desk .dk-search-row{display:flex;gap:8px}
+#screen-desk #reg-q{flex:1 1 auto;min-width:0;min-height:44px;padding:10px 12px;background:var(--ink-2,#262623);border:1px solid var(--manila-3,#8C8473);border-radius:2px;
+  color:var(--manila,#E9DCC0);font:16px/1.2 'Inter',system-ui,sans-serif;user-select:text;-webkit-user-select:text;box-shadow:none}
+#screen-desk #reg-q::placeholder{color:var(--manila-3,#8C8473);opacity:1}
+#screen-desk #reg-q:focus{outline:2px solid var(--manila,#E9DCC0);outline-offset:1px}
+#screen-desk .dk-search-row .v13-btn{min-height:44px;flex:0 0 auto}
+#screen-desk .dk-regmsg{margin:-2px 0 10px}
+#screen-desk .dk-reg-tbl{width:100%;border-collapse:collapse;margin:8px 0 0;table-layout:fixed}
+#screen-desk .dk-reg-tbl th{width:96px;padding:6px 8px 6px 0;text-align:left;vertical-align:top;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:10px;font-weight:500;letter-spacing:.14em;color:var(--ink-soft,#4F4C44)}
+#screen-desk .dk-reg-tbl td{padding:6px 0;font-size:13px;line-height:1.4;vertical-align:top;overflow-wrap:anywhere}
+#screen-desk .dk-reg-tbl tr{border-bottom:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-desk .dk-chips{display:flex;flex-wrap:wrap}
+#screen-desk .dk-chips .v13-chip{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.06em;text-align:left}
+
+/* ---------- STATEMENTS: a witness statement, one verdict per claim ---------- */
+#screen-desk .dk-claim{padding:12px 0 10px;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-desk .dk-claim:first-of-type{margin-top:8px}
+#screen-desk .dk-claim-n{font-size:10px;letter-spacing:.12em;color:var(--ink-soft,#4F4C44)}
+#screen-desk .dk-claim-text{margin:4px 0 10px;font-size:14.5px;line-height:1.5;font-style:italic}
+#screen-desk .dk-verdicts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+#screen-desk .dk-verdicts button{min-height:40px;padding:8px 6px;white-space:normal;line-height:1.2;text-align:center;
+  background:transparent;border:1px solid var(--ink,#1C1C1A);color:var(--ink,#1C1C1A);font-size:11px;letter-spacing:.08em}
+#screen-desk .dk-verdicts button:hover{background:rgba(28,28,26,.08)}
+#screen-desk .dk-verdicts button.on{background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border-color:var(--ink,#1C1C1A)}
+#screen-desk .dk-verdicts button.armed{background:var(--red,#B3261E);border-color:var(--red,#B3261E);color:var(--manila,#E9DCC0);font-weight:700}
+#screen-desk .dk-filed{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 8px}
+#screen-desk .dk-filed .dk-src{margin:0}
+#screen-desk .dk-armnote{margin-top:8px}
+#screen-desk .dk-fb{display:flex;gap:6px;align-items:flex-start;margin-top:8px;font-size:13px;line-height:1.45}
+#screen-desk .dk-fb .ico{flex:0 0 auto;margin-top:2px}
+
+/* ---------- WARRANTS: read-only stamped sheets ---------- */
+#screen-desk .dk-w-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px 12px;flex-wrap:wrap}
+#screen-desk .dk-w-title{flex:1 1 220px;margin:0;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:16px;font-weight:600;letter-spacing:.05em;line-height:1.25;color:var(--ink,#1C1C1A)}
+#screen-desk .dk-warrant .v13-stamp{flex:0 0 auto;margin:2px 4px 0 0}
+
+/* ---------- touch: 44px everywhere, room for thumbs ---------- */
+.touch-active #screen-desk .dk-chain summary{min-height:44px}
+.touch-active #screen-desk .dk-verdicts button{min-height:44px}
+.touch-active #screen-desk .desk-tabs button{min-height:44px;padding-top:0;padding-bottom:0}
+
+/* ---------- narrow screens ---------- */
+@media (max-width:560px){
+  #screen-desk .desk-frame{padding:12px 12px 10px}
+  #screen-desk .desk-head h2{font-size:17px;letter-spacing:.16em}
+  #screen-desk .dk-verdicts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #screen-desk .v13-sheet{padding:12px}
+  #screen-desk .dk-reg-tbl th{width:84px}
+  #screen-desk .dk-flag{min-width:88px;padding-left:8px;padding-right:8px}
+}
+@media (max-height:520px){
+  #screen-desk.overlay{padding-top:max(8px,env(safe-area-inset-top,0px));padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}
+  #screen-desk .desk-frame{padding:10px 14px 8px}
+  #screen-desk .desk-head{margin-bottom:6px}
+  #screen-desk .desk-tabs{margin-bottom:6px}
+}
+
+/* ---------- the desk's buttons elsewhere ---------- */
+#screen-ops .ops-b#ops-desk{letter-spacing:.12em}
+#btn-missions-desk .ico,#btn-pause-desk .ico{font-size:15px}
