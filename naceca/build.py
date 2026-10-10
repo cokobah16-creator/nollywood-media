@@ -174,6 +174,11 @@ def build_html(bundle):
         if "</script" in code.lower():
             raise SystemExit(f"beta/{name} contains a closing script tag")
         parts.append(f"<script>/* ---------- beta/{name} ---------- */\n{code}\n</script>")
+    # a content stamp (not a time or git hash, so the same source always builds the same page):
+    # the playtest log records which build a session came from
+    import hashlib
+    stamp = hashlib.sha1((html + "".join(parts)).encode("utf-8")).hexdigest()[:10]
+    parts.insert(0, f"<script>window.NACECA_BUILD = {{ src:'{stamp}' }};</script>")
     idx = html.rindex("</body>")
     html = html[:idx] + "\n".join(parts) + "\n" + html[idx:]
     with open(HTML_OUT, "w", encoding="utf-8") as f:
