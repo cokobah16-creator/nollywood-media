@@ -23,7 +23,7 @@
 'use strict';
 
 const DESK = window.DESK = Object.assign(window.DESK || {}, {
-  tab:'locker', open:false, susp:false, ret:null, back:null, prev:null, opsCap:null,
+  tab:'locker', open:false, susp:false, ret:null, back:null, prev:null, opsCap:null, frames:[],
   phone:null, sec:null, reg:null, st:null, regQ:'', regHits:null, regMsg:'', regAddr:null, regAddrHits:null,
   arm:null, stMsg:null, note:null,
 });
@@ -33,8 +33,10 @@ const ico = (n, c) => (typeof icon === 'function' ? icon(n, c) : '');
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 // the briefing and the court print through the desk's escaper; keep it global unless someone else already has one
 if(typeof esc === 'undefined') window.esc = h;
-// canon in anything the desk prints from data: the squad is always spelled out
-const canon = s => String(s == null ? '' : s).replace(/\bwith AKS\b/g, 'with the Anti-Kidnapping Squad').replace(/\bAKS\b/g, 'the Anti-Kidnapping Squad');
+// canon in anything the desk prints from data: the squad is always spelled out, and a route written with
+// arrow glyphs (the car tail's region, the route theory, some exhibit names) reads as words (design §0)
+const canon = s => String(s == null ? '' : s).replace(/\bwith AKS\b/g, 'with the Anti-Kidnapping Squad').replace(/\bAKS\b/g, 'the Anti-Kidnapping Squad')
+  .replace(/\s*[\u2190-\u21FF]\s*/g, ' to ');
 const t = s => h(canon(s));
 const V = () => window.V12 || {};
 const shown = id => { const el = document.getElementById(id); return !!(el && el.classList.contains('show')); };
@@ -92,10 +94,11 @@ function ensureDesk(){
   (document.getElementById('game-root') || document.body).appendChild(ov);
   // something else took the screen (a cutscene, a title card, the game's own flow): the desk is no longer open.
   // The pause menu over the desk is the exception: its Resume (the model's v13Modal resume) brings the desk back.
+  // A scripted beat over the field (a dialogue, a puzzle) is normally caught by the showOverlay wrap below.
   new MutationObserver(() => {
     if(!DESK.open || DESK.susp || ov.classList.contains('show')) return;
     if(shown('screen-pause')){ if(typeof ENGINE !== 'undefined' && DESK.prev) ENGINE.movementEnabled = DESK.prev.move; return; }
-    DESK.open = false; DESK.back = null; DESK.arm = null; DESK.note = null; modalOff();
+    dropDesk(FIELD.some(shown));
   }).observe(ov, { attributes:true, attributeFilter:['class'] });
   document.getElementById('btn-desk-close').addEventListener('click', closeDesk);
   document.getElementById('desk-tabs').addEventListener('click', e => {
@@ -119,6 +122,32 @@ const modalOn = () => { if(typeof v13Modal === 'function') safe(() => v13Modal('
 const modalOff = () => { if(typeof v13ModalEnd === 'function') safe(() => v13ModalEnd('screen-desk')); };
 const freeze = () => { if(typeof ENGINE !== 'undefined') ENGINE.movementEnabled = false; if(typeof showHUD === 'function') showHUD(false); };
 
+/* ---------- when the desk ends without a way back ----------
+   The beats the game opens over the live field and closes straight back to it (startDialogue's own busy list).
+   One of them can land while the desk is open, or waiting under a table it opened: a timed line after a
+   puzzle (M4's Musa flip 0.7 s after the lie puzzle), a queued dialogue. It takes the screen, and when it ends
+   the game goes back to the field, so the desk hands back what it took away (movement, and the HUD in an
+   operation) as it goes: the beat then plays over the live game, as it would have without the desk. */
+const FIELD = ['screen-dialogue', 'screen-puzzle', 'screen-minigame'];
+function dropDesk(handBack){
+  const first = DESK.frames.length ? DESK.frames[0].prev : DESK.prev;   // what the first desk of a nested pair took away
+  DESK.open = false; DESK.susp = false; DESK.frames = []; DESK.back = null; DESK.arm = null; DESK.note = null; DESK.opsCap = null;
+  modalOff();
+  if(!handBack || !first) return;
+  if(typeof ENGINE !== 'undefined') ENGINE.movementEnabled = first.move;
+  if(S.game.currentMission && first.move !== false && typeof showHUD === 'function') showHUD(true);
+}
+if(V().wrap && typeof window.showOverlay === 'function' && !window.showOverlay._v13desk){
+  V().wrap('showOverlay', orig => {
+    const f = function(id){ const r = orig.apply(this, arguments); if(DESK.open && FIELD.includes(id)) safe(() => dropDesk(true)); return r; };
+    f._v13desk = true; return f;
+  });
+}
+// a quit, a load, an erase or a new operation reset the model's return stack: a desk still waiting down that
+// chain (under its table, or a screen the table opened) has nowhere to come back to. The flow that reset it
+// owns movement and the HUD from here.
+document.addEventListener('v13:navreset', () => { if(DESK.open && !shown('screen-desk')) safe(() => dropDesk(false)); });
+
 function openDesk(tab, opts){
   opts = opts || {};
   ensureDesk();
@@ -126,6 +155,10 @@ function openDesk(tab, opts){
   // the desk is waiting under an operations table it opened: closing that table brings it back
   if(DESK.open && DESK.susp){
     if(shown('screen-ops') && typeof V().closeOps === 'function'){ V().closeOps(); if(DESK.open && !DESK.susp){ renderDesk(); return; } }
+    // still waiting further down that chain (the table's CAPABILITIES, then the pause menu's CASE DESK): open a
+    // second desk on top. The first keeps its way back and what it took away; closing the second hands back to
+    // it, so the chain still unwinds through it (never to a frozen field).
+    if(DESK.open && DESK.susp){ DESK.frames.push({ ret:DESK.ret, back:DESK.back, prev:DESK.prev, opsCap:DESK.opsCap }); DESK.open = false; }
     DESK.susp = false;
   }
   if(DESK.open && shown('screen-desk')){ DESK.arm = null; renderDesk(); return; }
@@ -160,6 +193,9 @@ function closeDesk(){
   modalOff();
   if(ov) ov.classList.remove('show');
   if(typeof ENGINE !== 'undefined') ENGINE.movementEnabled = prev.move;
+  // the second desk of a nested pair: the first is waiting again, down the chain it started
+  const outer = DESK.frames.pop();
+  if(outer){ Object.assign(DESK, outer, { open:true, susp:true }); modalOn(); }
   if(back){ safe(back); }
   else if(ret === 'screen-ops' && typeof V().openOps === 'function'){
     // back to the table it was opened from, keeping whatever that table was going to return to
@@ -190,7 +226,9 @@ function deskOpsTable(){
   if(typeof V().openOps !== 'function') return;
   if(!DESK.open){ opsOpen(undefined, () => openDesk()); return; }
   DESK.susp = true; DESK.arm = null;
-  modalOff();
+  // the desk stays registered while it waits (the model's Esc skips an overlay that is not on screen): a pause
+  // menu opened further down this chain (Esc on the table's CAPABILITIES) then knows it covers a v13 flow and
+  // RESUME goes back into the chain, not to a field the desk has frozen
   const ov = document.getElementById('screen-desk'); if(ov) ov.classList.remove('show');
   opsOpen(undefined, reshowDesk);
 }

@@ -610,11 +610,31 @@ function radioPlay(mid){
    Navigation (design A2): one Esc / pause rule for v13 overlays, and one
    return stack for the operations table. Nobody else assigns V12._onOpsClose.
    ========================================================================= */
-const V13NAV = { stack:[], modals:[], under:null };
+const V13NAV = { stack:[], modals:[], under:null, dormant:[] };
+// the base game's dialogue box: a gatekeeper call borrows it, but every base dialogue uses it too, so a
+// registration on it is never brought back after a reset
+const V13_BORROWED = ['screen-dialogue'];
 function v13Shown(id){ const el = id && document.getElementById(id); return !!(el && el.classList.contains('show')); }
+/* A quit, a load, an erase or a new operation ends every v13 flow that was open: the return stack goes, and
+   each registration goes dormant. Its owner still counts it as registered (the briefing keeps its own record
+   until the briefing finishes), so when the owner shows that overlay again (the same briefing, reopened after
+   Quit, then Continue) it is live again; until then it changes nothing. Listeners on 'v13:navreset' (the desk)
+   drop whatever was waiting down the old chain. */
 function v13NavReset(){
+  V13NAV.modals.forEach(m => { if(!V13_BORROWED.includes(m.id)){ v13Undorm(m.id); V13NAV.dormant.push(m); } });
   V13NAV.stack.length = 0; V13NAV.modals.length = 0; V13NAV.under = null;
   if(window.V12 && V12._onOpsClose === v13NavPop) V12._onOpsClose = null;
+  try{ document.dispatchEvent(new CustomEvent('v13:navreset')); }catch(e){}
+}
+function v13Undorm(id){ const i = V13NAV.dormant.findIndex(m => m.id === id); if(i >= 0) V13NAV.dormant.splice(i, 1); }
+// a dormant registration whose overlay is on screen again (or the one just shown) is live again
+function v13Wake(id){
+  for(let i = V13NAV.dormant.length - 1; i >= 0; i--){
+    const m = V13NAV.dormant[i];
+    if(id ? m.id !== id : !v13Shown(m.id)) continue;
+    V13NAV.dormant.splice(i, 1);
+    if(!V13NAV.modals.some(x => x.id === m.id)) V13NAV.modals.push(m);
+  }
 }
 /* v13OpenOps(group, back): open the operations table; closing it runs back() (the entry pushed last first) */
 function v13OpenOps(group, back){
@@ -647,11 +667,13 @@ function v13Modal(id, o){
 function v13ModalEnd(id){
   const i = V13NAV.modals.findIndex(m => m.id === id);
   if(i >= 0) V13NAV.modals.splice(i, 1);
+  v13Undorm(id);
 }
 function v13TopShownModal(){ for(let i = V13NAV.modals.length - 1; i >= 0; i--) if(v13Shown(V13NAV.modals[i].id)) return V13NAV.modals[i]; return null; }
 if(window.V12 && typeof V12.wrap === 'function'){
   V12.wrap('togglePause', orig => function(){
     try{
+      if(V13NAV.dormant.length) v13Wake();
       const ev = window.event, esc = !!(ev && ev.type === 'keydown' && (ev.code === 'Escape' || ev.key === 'Escape'));
       if(!v13Shown('screen-pause')){
         if(esc && v13Shown('screen-ops') && V13NAV.stack.length && typeof V12.closeOps === 'function'){ V12.closeOps(); return; }
@@ -677,12 +699,15 @@ if(window.V12 && typeof V12.wrap === 'function'){
   // however the pause menu opens (Esc, the HUD button, or showOverlay directly), remember the v13 flow it covers
   V12.wrap('showOverlay', orig => function(id){
     try{
+      if(V13NAV.dormant.length) v13Wake();
       if(id === 'screen-pause' && !v13Shown('screen-pause') && !V13NAV.under && V13NAV.modals.length){
         const cover = [...document.querySelectorAll('.overlay.show')].map(o => o.id).find(x => x && x !== 'screen-pause');
         if(cover) V13NAV.under = cover;
       }
     }catch(e){}
-    return orig.apply(this, arguments);
+    const r = orig.apply(this, arguments);
+    try{ if(id && V13NAV.dormant.length) v13Wake(id); }catch(e){}
+    return r;
   });
   // a quit, a load or an erase ends any v13 flow that was open
   document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-load, #btn-erase')) v13NavReset(); }catch(err){} }, true);
