@@ -52,9 +52,11 @@ are kept as docs/SYNC-2026-10-07-v13.md.
 ## Playtest log (same session)
 src/v12/v12_pt.js now records interaction outcomes (progress / opened / refused / noop), misses, refusals,
 per-objective time (play time), walking efficiency and arrow use, stuck/away, hints, chase and wipe endings,
-silent mission ends, choices, device and build, and the two questions after the slice ("What was your most
-satisfying decision?" / "What happened that felt unfair?" — after the mansion by default, `?slice=m2` etc.).
-Export from Settings › PLAYTEST.
+silent mission ends, choices, device and build, the real settings and difficulty at load, and the two
+questions after the slice ("What was your most satisfying decision?" / "What happened that felt unfair?").
+They come up over the mansion aftermath by default; `?slice=m2` (or any mission id) moves the end, and a
+mission that ends silently (the market van, Night Shift) asks at the next calm moment instead. Dismissing
+the sheet by any other route asks again; only SAVE or SKIP counts as answered. Export from Settings › PLAYTEST.
 
 ## Tests
 Harness: `node tools/harness/run.cjs tools/harness/scenarios/<name>.cjs [--html <abs>] [--w --h --touch 1]`.
