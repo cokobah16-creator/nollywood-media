@@ -60,16 +60,7 @@ W('epilogueSlides', orig => function(){
     const sl = slides.find(x => x.name === 'COMMANDER ADAEZE');
     if(sl){ sl.text = t; sl.art = I().court.proven.length >= 2 ? 'adaeze_afraid' : 'adaeze_evasive'; }
   }, 'epilogue');
-  // the chase branch: Uche carried Tobi out alive (casework, v12.2 h6), so his slide can't say he died
-  safe(()=>{
-    const m = S.game.moralChoices || {};
-    if(m.asaba !== 'chase' || S.game._asabaHostageLost) return;
-    const sl = slides.find(x => x.name === 'TOBI ONUOHA'); if(!sl || !/^Tobi did not live/.test(sl.text || '')) return;
-    const r = (S.game.accusations || {}).route, named = !!(r && r.ok && r.ok.suspect === false && r.suspect === 'tobi');
-    sl.art = 'tobi_neutral';
-    sl.text = named ? 'Sgt. Uche carried Tobi out of the Asaba smoke, and your charge sheet held him until noon. He went home to his sister. He does not take NACECA\'s calls.'
-      : 'Sgt. Uche carried Tobi out of the Asaba smoke. He went home to his sister, and he does not talk about the warehouse.';
-  }, 'tobi');
+  // (Tobi's chase branch — alive when the hostage was not lost — is the base epilogue's own now: finale.js)
   return slides;
 });
 W('advanceEpilogue', orig => function(){

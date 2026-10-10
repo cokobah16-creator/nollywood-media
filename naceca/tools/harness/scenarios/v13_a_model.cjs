@@ -96,8 +96,12 @@ module.exports = async h => {
     out.gate1 = intelMoneyOpen();
     const a = S.game.intelScore;
     out.trace = moneyTrace('n_kc'); out.dTrace = S.game.intelScore - a;
+    // the key node waits for the route case (and the h5 briefing): C.A. Consulting is never traceable from Case 02
+    d.money.unlocked.n_ca = true; d.money.req = 5;
+    out.keyGated = moneyTrace('n_ca') === false && !d.money.traced.n_ca && d.money.req === 5;
+    S.game.completedMissions.push('m6');
     // the key node: same +2, no toast
-    d.money.unlocked.n_ca = true; d.money.req = 5; window.__toasts.length = 0; const b = S.game.intelScore;
+    window.__toasts.length = 0; const b = S.game.intelScore;
     out.key = moneyTrace('n_ca'); out.dKey = S.game.intelScore - b; out.keyToast = window.__toasts.length; out.inv = intelHas('inv_ca');
     // Recruit: as delivered
     S.game.difficulty = 'recruit';
@@ -117,13 +121,15 @@ module.exports = async h => {
   h.assert(!money.afterFlag.open && money.afterFlag.n === 0 && money.afterFlag.toasts === 0, 'Senior: a flag adds no node and no toast');
   h.assert(money.released.join() === 'n_kc' && money.afterBrief.open && money.afterBrief.nodes.join() === 'n_kc' && money.afterBrief.req === 4, 'the next briefing adds the flagged clue\'s node (no word about which flag)');
   h.assert(money.traceGated === false && money.trace === true && money.dTrace === 2, 'no trace before the gate; Senior trace +2');
+  h.assert(money.keyGated, 'the C.A. node cannot be traced before the route case (decision 11)');
   h.assert(money.key === true && money.dKey === 2 && money.keyToast === 0 && money.inv, 'Senior: the C.A. node gets the same +2, no toast; its exhibit lands quietly');
   h.assert(money.rFlag.open && money.rFlag.toast === 1 && money.rReleased === 0, 'Recruit: the flag opens the trail with a toast, as delivered');
   h.assert(money.rKey === 12 && money.rKeyToast.length === 1 && !/2019/.test(money.rKeyToast[0]), 'Recruit: the C.A. toast and +12 intel, without the tenure date');
 
-  // ---- the briefing hook is on (v13_briefing's openBriefing releases Senior's nodes first) ----
-  const hook = await h.ev(() => typeof openBriefing === 'function' && !!openBriefing._v13a);
-  h.assert(hook, 'openBriefing is wrapped to release flagged money clues');
+  // ---- the briefing hook is on: every briefing (Night Shift and the hub calls) calls the model's
+  // intelOnBriefingOpen as it opens, which releases Senior's flagged nodes (seam fix e2ed80a) ----
+  const hook = await h.ev(() => typeof openBriefing === 'function' && typeof window.intelOnBriefingOpen === 'function' && /intelOnBriefingOpen/.test(String(openBriefing)));
+  h.assert(hook, 'every briefing calls the model\'s hook to release flagged money clues');
   await A.textRules(['Filed. It stays on the record.', 'Filed as unverified. You can come back to it once.', 'More come with the next briefing', 'A retainer on the first of every month'], 'model messages');
   h.assert(h.errors.length === 0, 'no page errors: ' + h.errors.join(' | '));
 };

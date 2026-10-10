@@ -92,7 +92,11 @@ function epilogueSlides(){
     text: o==='proven' ? 'Convicted on four counts. She has never said who she answered to.'
         : o==='contested' ? 'On remand in Kirikiri, awaiting trial. Her lawyers file a new motion every week.'
         : 'Relieved of command. The inquiry has sat twice. No charges — yet.' });
+  // alive: rescued, or the chase with the hostage not lost (Uche carried him out — asaba_resolve_chase).
+  // Only the deliberate rescue takes the stand (canon: "Tobi (if rescued in M6) gives the testimony").
+  const tobiAlive = m.asaba === 'rescue' || (m.asaba === 'chase' && !S.game._asabaHostageLost);
   if(m.asaba === 'rescue') S_.push({ art:'tobi_neutral', name:'TOBI ONUOHA', text:'Tobi read the drive line by line for the prosecution. It took him eleven days. He asked for nothing.' });
+  else if(tobiAlive) S_.push({ art:'tobi_neutral', name:'TOBI ONUOHA', text:'Sgt. Uche carried Tobi out of the Asaba smoke. Tobi read the drive line by line for the prosecution from a hospital bed; his doctors kept him out of the witness box. He asked for nothing.' });
   else S_.push({ art:'tobi_afraid', name:'TOBI ONUOHA', text:'Tobi did not live to read the drive. The ledger he was taken for is evidence item fourteen.' });
   if(m.market_runner === 'escaped') S_.push({ art:'kc_evasive', name:'KC', text:'KC was never found. A boy who looked like him was seen in Computer Village, selling data cards.' });
   else if(kcFair) S_.push({ art:'kc_neutral', name:'KC', text:'KC sells data cards in Ikeja again — legally this time. He still won\'t look at a burgundy jacket.' });
@@ -114,7 +118,9 @@ function epilogueSlides(){
     if(wl === 'kc') swap('KC', m.market_runner === 'escaped' ? 'KC was never found. Your charge sheet called him "the kingpin", and his face is still on a NACECA wanted notice in Computer Village.' : 'KC was held as "the kingpin" on a NACECA charge sheet before Lekki. The charge collapsed in a week. In Ikeja they still call him "the boss", and he hates it.');
     if(wl === 'tunde') S_.push({ art:'', name:'TUNDE', text:'Your informant spent a night in a NACECA cell on your own charge sheet. He is back at the Ikeja market. He does not answer unknown numbers, or NACECA\'s.' });
     if(wl === 'pos') S_.push({ art:'', name:'THE IKEJA POS AGENT', text:'Held overnight as "the ringleader" on your charge sheet. The agent\'s licence was suspended for a year. Nobody apologised.' });
-    if(wr === 'tobi') swap('TOBI ONUOHA', m.asaba === 'rescue' ? 'Tobi read the drive line by line for the prosecution — after a morning cuffed to a hospital bed on your charge sheet. He asked for nothing, not even an apology.' : 'Tobi did not live to read the drive. For a week the papers called him the cartel\'s accountant, because of your charge sheet.');
+    if(wr === 'tobi') swap('TOBI ONUOHA', m.asaba === 'rescue' ? 'Tobi read the drive line by line for the prosecution — after a morning cuffed to a hospital bed on your charge sheet. He asked for nothing, not even an apology.'
+      : tobiAlive ? 'Sgt. Uche carried Tobi out of the Asaba smoke, and your charge sheet held him until noon. He read the drive for the prosecution from a hospital bed anyway; his doctors kept him out of the witness box.'
+      : 'Tobi did not live to read the drive. For a week the papers called him the cartel\'s accountant, because of your charge sheet.');
     if(wr === 'agent') S_.push({ art:'', name:'THE ASABA SIM AGENT', text:'Taken from a stall at Asaba Main Market on your charge sheet and released without charge. The stall is still shut.' });
     if(wr === 'musa'){ const mu = S_.find(x => x.name === 'MUSA'); if(mu) mu.text += ' Your charge sheet also named him "the route\'s principal"; it took a month to get that charge dropped.'; }
     if(wv && CC.voice && CC.voice.epilogue && CC.voice.epilogue[wv]){

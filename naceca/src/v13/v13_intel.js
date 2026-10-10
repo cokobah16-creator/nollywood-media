@@ -87,7 +87,7 @@ const INTEL_NAMES = {
   fin_drive:"Osas's flash drive", fin_courier_phone:"Courier's phone", fin_recording:'Recorded ransom call', bodycam_eko:'Body-cam — Akintola Close',
   co_madam:'"Tell Madam it\'s clean" phone', kc_sims:"KC's SIM batch", obi_notebook:"Obi's notebook — initials and amounts", osas_voicemail:"Osas's voicemail",
   lead_gatehouse:'Gatehouse log (lead)', lead_caretaker:"Caretaker's account (lead)", lead_pattern:'Ekosodin call pattern (lead)', lead_tip:"Tunde's tip (lead)",
-  zuma_cluster:'Six entities, one office', so_plate:'Plate logged at Zuma Court', so_poolcar:'Photo: envelope into the agency car', so_courier:'Photo: courier with cash bags',
+  zuma_cluster:'Six entities, one office', so_plate:'Plate logged at Zuma Court', so_poolcar:'Photo: envelope into a government car', so_courier:'Photo: courier with cash bags',
   n_charity:'Money trail: Ugbowo Relief Foundation', n_ca:'Money trail: C.A. Consulting', reg_ca:'CAC record: C.A. Consulting',
   'theory:t_money':'Inked theory — the ransom money runs through Obi', 'theory:t_sims':"Inked theory — KC's SIMs reach the mansion",
   'theory:t_route':'Inked theory — one route: Bypass → Shrine → Asaba', 'theory:t_voice':'Inked theory — Madam is the Voice',
@@ -106,6 +106,9 @@ function intelLabel(id){
 /* ---------- possession: the one question every system asks ---------- */
 function intelHas(id){
   if(!id) return false;
+  if(Array.isArray(id)) return id.some(x => intelHas(x));               // a proof list: any one is enough
+  if(id.startsWith('flag:')) return !!(S.game.flags && S.game.flags[id.slice(5)]);
+  if(id.startsWith('doc:')) return !!(S.game.docSeen && S.game.docSeen[id.slice(4)]);
   const d = I();
   if(/^m\dn?$/.test(id)) return (S.game.completedMissions||[]).includes(id);
   if(id.startsWith('theory:')) return !!(window.V12 && V12.theory && V12.theory(id.slice(7)));
@@ -119,11 +122,16 @@ function intelHas(id){
 }
 function intelSet(flag, v=true){ I().flags[flag] = v; }
 function heatNow(){ return (window.V12 && V12.heat) ? V12.heat() : 0; }
+/* Tobi came out of Asaba alive: rescued, or the chase without the hostage lost (Uche carried him — canon
+   asaba_resolve_chase: "he's breathing"). One rule for the lead, the statement, the review and the epilogue.
+   Court testimony stays with the deliberate rescue (STORY-CANON: "Tobi (if rescued in M6)"). */
+function intelTobiAlive(){ const a = (S.game.moralChoices || {}).asaba; return a === 'rescue' || (a === 'chase' && !S.game._asabaHostageLost); }
 
 /* ---------- who knows what ---------- */
+// the Locker shows this panel; before the reveal the Commander's entry reads as her unit (v13_desk.js)
 const FACTS = {
-  eko_house:'The house in Ekosodin', engineer:"The Engineer's calls to CONTROL", zuma:'Suite 4B, Zuma Court',
-  ledger:'The ransom ledger', poolcar:'The pool car at Lekki', cover:'Your Apex cover name',
+  eko_house:'The Ekosodin warrant', engineer:'The Engineer\'s calls to "C."', engineer_asked:'You asked about the Engineer', zuma:'Suite 4B, Zuma Court',
+  ledger:'The ransom ledger', poolcar:'The government car at Lekki', cover:'Your Apex cover name',
 };
 function knowAdd(fact, who){ const k = I().known; k[fact] = k[fact] || ['You']; if(!k[fact].includes(who)) k[fact].push(who); }
 
@@ -365,9 +373,24 @@ function moneyUnlock(ids, announce){
     if(announce && !intelSenior()) toast('MONEY TRAIL', MONEY_NODES[id].name + ' — follow it in the Case Desk', 2200);
   });
 }
+/* when a node can be traced (MONEY_NODES[].gate):
+   'lagos' — MONEY is open (the Lagos charge sheet, or Lekki behind you);
+   'route' — the route charge sheet is on the file, or Asaba is behind you: the route's own money can't
+             feed (or contradict) the route sheet before it is filed;
+   'ca'    — the route gate, and the h5 briefing reached (C.A. Consulting never before Case 05). */
+function intelMoneyGate(id){
+  const n = MONEY_NODES[id]; if(!n || !intelMoneyOpen()) return false;
+  const g = n.gate || 'lagos', done = S.game.completedMissions || [];
+  if(g === 'lagos') return true;
+  const r = (window.V12 && typeof V12.accused === 'function') ? V12.accused('route') : null;
+  const route = !!r || done.includes('m6');
+  if(g === 'route') return route;
+  const d = I(), atH5 = !!(d.briefed && d.briefed.m5) || !!(d.brf && d.brf.k === 'm5') || !!(window.BRF && BRF.k === 'm5');
+  return route && (atH5 || done.includes('m6'));
+}
 function moneyTrace(id){
   const m = I().money, n = MONEY_NODES[id];
-  if(!intelMoneyOpen()) return false;
+  if(!intelMoneyOpen() || !intelMoneyGate(id)) return false;
   if(!n || !m.unlocked[id] || m.traced[id]) return false;
   if(m.req <= 0){ toast('NO NFIU REQUESTS LEFT', 'More come with the next briefing'); if(typeof sfxFail==='function') sfxFail(); return false; }
   m.req--; m.traced[id] = true;
@@ -402,7 +425,11 @@ function regSearch(q){
 /* the address search always lists what is there; only Recruit is told what it means */
 function regAtAddress(addr){
   const d = I(), r = d.reg;
-  const hits = Object.keys(REGISTRY).filter(k=>REGISTRY[k].addr === addr && (!REGISTRY[k].hidden || r.found[k]));
+  // byAddress: hidden from a name search, but the register lists it under its address (C.A. Consulting) —
+  // from the operation it names on (a string), so never from Case 02 / 03
+  const done = S.game.completedMissions || [];
+  const byAddr = e => !!e.byAddress && (typeof e.byAddress !== 'string' || done.includes(e.byAddress));
+  const hits = Object.keys(REGISTRY).filter(k=>REGISTRY[k].addr === addr && (!REGISTRY[k].hidden || byAddr(REGISTRY[k]) || r.found[k]));
   regFind(hits);
   if(addr === ZUMA && hits.length >= 4 && !intelHas('zuma_cluster')){
     intelSet('zuma_cluster'); knowAdd('zuma', 'You');
@@ -528,8 +555,8 @@ function intelBackGate(){
 /* ---------- the finale: what the investigation adds to v12's accusation ---------- */
 function intelStrongExtras(){
   const out = {};
-  if(intelHas('inv_ca') && intelHas('reg_ca')) out.inv_ca = 'C.A. Consulting was incorporated the month she took command, and paid on the first, every month.';
-  if(intelHas('inv_gatehouse') && intelHas('so_plate_match')) out.inv_gatehouse = 'Her motor-pool car: at Lekki before the raid, and at the Zuma Court cash handover.';
+  if(intelHas('inv_ca') && intelHas('reg_ca')) out.inv_ca = 'C.A. Consulting: ₦10M from the Foundation on the first of every month — four of Obi\'s Fridays.';
+  if(intelHas('inv_gatehouse') && intelHas('so_plate_match')) out.inv_gatehouse = 'Her office\'s pool car: at Lekki before the raid, and at the Zuma Court cash handover.';
   if(intelHas('inv_stakeout') && intelHas('so_plate_match')) out.inv_stakeout = 'The envelope went into LND-412-KJ — the car signed out to her office.';
   return out;
 }
@@ -545,7 +572,7 @@ function intelRevealExtras(){
   };
   const after = [{ speaker:'COMMANDER ADAEZE', mood:'evasive', text: STYLE_LINE[st] || STYLE_LINE.proc }];
   if(d.order === 'comply') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You left the Engineer alone when I asked you to. You have no idea how much I wanted you to say no.' });
-  if(d.order === 'confront') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You came into my office and asked me to my face. I respected that. Then I changed every phone that night.' });
+  if(d.order === 'confront') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You asked me on an open call, with Uche in the room. I respected that. Then I changed every phone that night.' });
   return { before, after };
 }
 
@@ -645,6 +672,12 @@ if(window.V12 && typeof V12.wrap === 'function'){
         return;
       }
     }catch(e){ console.warn('[v13] pause', e); }
+    return orig.apply(this, arguments);
+  });
+  // the pause menu shown some other way (a HUD button, a forced showOverlay): remember the registered v13
+  // overlay it covers as it goes up, so Resume returns there too (design A2)
+  V12.wrap('showOverlay', orig => function(id){
+    try{ if(id === 'screen-pause' && !V13NAV.under && V13NAV.modals.length && !v13Shown('screen-pause')){ const top = v13TopShownModal(); if(top) V13NAV.under = top.id; } }catch(e){}
     return orig.apply(this, arguments);
   });
   // pause.js binds #btn-resume to the ORIGINAL togglePause at start-up, so this wrap never sees a Resume click:

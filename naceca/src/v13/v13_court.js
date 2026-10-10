@@ -21,8 +21,8 @@
 
 ACHIEVEMENTS.push(
   { id:'one_office',   name:'One Office',          desc:'Find the entities sharing one desk in Wuse II.' },
-  { id:'four_billion', name:'Follow the Money',    desc:'Trace the whole ₦4bn network from a ₦150,000 alert.' },
-  { id:'cover_held',   name:'Chidi Anyanwu',       desc:'Walk out of Apex with your cover intact.' },
+  { id:'four_billion', name:'Follow the Money',    desc:'Trace the whole ₦5bn network from a ₦150,000 alert.' },
+  { id:'cover_held',   name:'Obinna Anyanwu',      desc:'Walk out of Apex with your cover intact.' },
   { id:'clean_chain',  name:'Clean Chain',         desc:'Every exhibit you tendered was admitted.' },
 );
 
@@ -116,7 +116,7 @@ const COURT_OBJ = {
     opts:[['witness','Call the estate manager who kept it'],['tender','Tender the logbook on its own'],['withdraw','Withdraw it']] },
   photocopy:{ say:'These are printouts. A photocopy of a public record is not the record.',
     opts:[['ctc','Tender certified true copies from the CAC'],['portal','Explain they were printed from the CAC portal'],['withdraw','Withdraw them']] },
-  ident:{ say:'Night photographs, a blur in a back seat. The prosecution cannot say whose car that is.',
+  ident:{ say:'Photographs from a van across the street at dusk, a blur in a back seat. The prosecution cannot say whose car that is.',
     opts:[['plate','Tender the plate log against the motor-pool register'],['look','Ask the court to look closer'],['withdraw','Withdraw them']] },
   deception:{ say:'An officer lied his way into a law office under a false name. This was obtained by deception.',
     opts:[['s14','Argue sections 14 and 15 — improperly obtained is not inadmissible'],['deny','Deny the officer was undercover'],['withdraw','Withdraw it']] },
@@ -146,7 +146,7 @@ function courtObjection(x){
 }
 const COURT_WEAK = { tainted:'Recovered where the officer took a bribe', contested:'Contested in the field', custody:'Chain of custody broken', noorder:'No production order',
   warrantless:'No warrant: taken under exigent circumstances', inducement:'Witness promised leniency', accomplice:'Witness kept the books — an accomplice',
-  hearsay:'The gateman is not a witness', photocopy:'Printouts, not certified copies', ident:'Night photos — identification', deception:'Obtained undercover' };
+  hearsay:'The gateman is not a witness', photocopy:'Printouts, not certified copies', ident:'Dusk photos from a van — identification', deception:'Obtained undercover' };
 function courtWeak(x){
   if(x.k === 'contested') return { money:'Contested: your charge sheet put the money elsewhere', method:'Contested: your charge sheet named a different scheme', exigent:'Contested: seized without a warrant' }[x.why] || COURT_WEAK.contested;
   if(x.k === 'warrantless' && x.raid === 'shrine') return 'No warrant: the shrine was entered by force';
@@ -339,7 +339,7 @@ function courtHead(){
     <div class="ct-meta"><span class="v13-mono">CHARGE NO. FHC/B/41C/2026</span><span class="ct-pat" aria-label="Judge's patience ${ctPat()} of ${COURT_PATIENCE}">PATIENCE <b class="v13-mono">${ctPat()}/${COURT_PATIENCE}</b></span></div>`;
 }
 const ctFoot = (act, label) => `<button class="v13-btn primary ct-go" data-ct="${act}">${ctEsc(label)}${ctIco('next')}</button>`;
-const CT_DEF = 'CHIEF ABIODUN FAGBEMI, SAN · FOR THE DEFENCE';
+const CT_DEF = 'CHIEF ABIODUN FADEYI, SAN · FOR THE DEFENCE';
 function ctSheetSummary(){
   const rec = ctAcc('voice'); if(!rec) return '';
   const ok = rec.ok || {}, right = !!ok.suspect;
@@ -614,7 +614,10 @@ function renderReviewHTML(inDesk){
   if(wrongOn(lagos, 'tunde')) prot.push(['Tunde, your own informant, spent a night in a NACECA cell on your charge sheet.', false]);
   if(wrongOn(lagos, 'pos')) prot.push(['An Ikeja POS agent spent the night in a cell as "the ringleader" on your charge sheet.', false]);
   const alive = ctTobiAlive();
-  prot.push(!alive ? ['Tobi did not make it out of Asaba.', false] : mc.asaba === 'rescue' ? ['You carried Tobi out of the smoke.', true] : ['Sgt. Uche carried Tobi out of the smoke while you went after the fixer.', true]);
+  // one rule with the h6 lead and the epilogue (alive: rescue, or the chase with the hostage not lost); only the
+  // deliberate rescue gives evidence at the trial (STORY-CANON "Tobi (if rescued in M6)")
+  prot.push(!alive ? ['Tobi did not make it out of Asaba.', false] : mc.asaba === 'rescue' ? ['You carried Tobi out of the smoke.', true]
+    : ['Sgt. Uche carried Tobi out of the smoke while you went after the fixer. He read the payroll for the prosecution; his doctors kept him out of the witness box.', true]);
   if(wrongOn(route, 'tobi')) prot.push([alive ? 'Then your route charge sheet named Tobi the principal. He was held until noon.' : 'Your route charge sheet named Tobi the principal. His family read it in the papers.', false]);
   if(wrongOn(route, 'musa')) prot.push(['Musa was charged as "the route\'s principal" on your charge sheet.', false]);
   if(wrongOn(route, 'agent')) prot.push(['A SIM agent was taken from a stall at Asaba Main Market on your charge sheet.', false]);
@@ -642,9 +645,9 @@ function renderReviewHTML(inDesk){
     [ctHas('zuma_cluster'), `${NUM[nZ] || nZ} entities with different owners shared one office: Suite 4B, Zuma Court.`],
     [ctHas('so_plate_match'), 'The car at the Zuma Court handover was the same pool car that visited Lekki before the raid.'],
     [ctHas('reg_ca'), 'C.A. Consulting was incorporated on 14 March 2019. "C.A." was the Commander.'],
-    [!!flagged.kc_call_control, 'CONTROL always called at seven. So did the Voice.'],
+    [!!flagged.kc_call_control, '"C." always called at seven. So did the Voice.'],
     [!!flagged.musa_ph_hotel, "Musa's own camera put him in Asaba."],
-    [!!flagged.bu_ph_gate, 'The burner held a photo of the blue gate on Akintola Close, weeks before the tower trace.'],
+    [!!flagged.bu_ph_gate, 'The burner held a photo of the gate on Akintola Close, its number painted over, two nights before the tower trace.'],
     [ctHas('reg_silverline'), 'The fake Asaba assault story came out of the same office.'],
   ];
   h += hidden.map(([got,t])=>`<p class="rv-line"><span class="rv-m${got ? ' v13-mark-ok' : ''}">${got ? ctIco('check') : ''}</span><span>${ctEsc(t)}${got ? '<span class="rv-tag">FOUND</span>' : '<span class="rv-tag v13-dim">YOU NEVER FOUND THIS</span>'}</span></p>`).join('');
@@ -654,7 +657,7 @@ function renderReviewHTML(inDesk){
   h += `<div class="v13-sheet-h">DECISIONS THAT CHANGED THE STORY</div>`;
   const dec = [];
   if(d.custodyAsk) dec.push(d.custodyAsk === 'gave' ? 'You sent her the ledger. Page 14 never came back.' : 'You kept the ledger in the exhibit room.');
-  if(d.order) dec.push({ comply:'You left the Engineer alone when she asked.', quiet:'You investigated her source behind her back.', confront:'You asked her about the Engineer to her face. She changed every phone that night.', leak:'You leaked the Engineer to the press. He vanished.' }[d.order]);
+  if(d.order) dec.push({ comply:'You left the Engineer alone when she asked.', quiet:'You investigated her source behind her back.', confront:'You asked her about the Engineer on an open call. She changed every phone that night.', leak:'You leaked the Engineer to the press. He vanished.' }[d.order]);
   if(d.press) dec.push({ bodycam:'You released the Asaba body-cam.', quiet:'You stayed silent about the Asaba story.', trace:'You traced the Asaba story to its source.' }[d.press]);
   if(d.court){
     const n = (d.court.proven || []).length;

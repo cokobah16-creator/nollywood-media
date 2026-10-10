@@ -163,6 +163,8 @@ module.exports = async h => {
   h.log('week-1 deltas', d(k0, k1));
   h.assert(d(k0, k1).pt === 2 && d(k0, k1).intel === 8 + 12, 'POS custom +2 Trust once; POS 8 + gatehouse 12 intel once');
   h.assert(await h.ev(() => S.game.currentMission === 'm4' && !!document.querySelector('#screen-controls.show') && S.game.intel.briefed.m3 === true && !S.game.intel.brf && !S.game.intel.brfOpen), 'M4 next; Week 1 closed');
-  h.assert(await h.ev(() => S.game.intel.dropLog.filter(x => x.lead === 'drives').length === 1), 'one dropped lead');
+  // nothing came out of Lekki to decrypt here, so the drives lead was blocked: it is dropped, but leaves no
+  // "while you were busy" line (its dropped text would contradict the reason it was blocked — content pass)
+  h.assert(await h.ev(() => S.game.intel.leads.drives === 'dropped' && S.game.intel.dropLog.filter(x => x.lead === 'drives').length === 0), 'the blocked lead is dropped without a drop line');
   h.log('PASS v13_b_resume');
 };

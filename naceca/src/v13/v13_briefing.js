@@ -30,7 +30,7 @@ const AGENCY = 'NATIONAL ANTI-CORRUPTION &amp; ECONOMIC CRIMES AGENCY';
 
 const HUB_KEY = { h4:'m4', h5:'m5', h6:'m6', h7:'m7' };
 const WCASE = { w_cdr:'route', w_eko:'voice' };
-const TUNDE_HELD = "Tunde stopped taking NACECA's calls after the cell.";
+const TUNDE_HELD = "Tunde stopped taking your calls after your charge sheet put him in a cell.";
 
 /* runtime state of the briefing on screen (never saved: I().brf is the record) */
 const BRF = { k:null, phase:'plan', sel:[], dec:{}, then:null, video:false, armed:null, wArm:null };
@@ -169,9 +169,13 @@ window.openBriefing = openBriefing;
 function accused(c){ try{ return typeof V12.accused === 'function' ? V12.accused(c) : null; }catch(e){ return null; } }
 const tundeHeld = () => { const r = accused('lagos'); return !!(r && r.suspect === 'tunde'); };
 const posHeld = () => { const r = accused('lagos'); return !!(r && r.settled && r.suspect === 'pos'); };
+const tobiAlive = () => (typeof intelTobiAlive === 'function' ? !!intelTobiAlive()
+  : (()=>{ const a = (S.game.moralChoices || {}).asaba; return a === 'rescue' || (a === 'chase' && !S.game._asabaHostageLost); })());
 function leadBlocked(l){
   if(l.tunde && tundeHeld()) return TUNDE_HELD;
   if(l.heatMax && heatNow() >= l.heatMax) return l.heatBlocked;
+  if(l.tailBlocked && (S.game.moralChoices || {}).checkpoint === 'tail_driver') return l.tailBlocked;
+  if(l.tobiAlive && !tobiAlive()) return l.blocked || 'Not available';
   if(l.needsAny && !l.needsAny.some(x => intelHas(x))) return l.blocked || 'Not available';
   if(l.needsMission && !done(l.needsMission)) return 'Not available';
   return null;
@@ -203,7 +207,7 @@ function adPortrait(){ return (typeof PORTRAIT_ART !== 'undefined' && PORTRAIT_A
 function barHTML(b){
   const where = BRF.video
     ? `<span class="brf-live">${ico('dot', 'fill')}<span>VIDEO CALL · LAGOS HQ</span></span>`
-    : `<span class="brf-live">${ico('pin')}<span>NACECA HQ · LAGOS</span></span>`;
+    : `<span class="brf-live">${ico('pin')}<span>NACECA HQ · LAGOS${b.sub ? ' · ' + esc(b.sub) : ''}</span></span>`;
   return `${where}<span class="brf-kick v13-mono">${esc(b.title)}</span>`;
 }
 function optHTML(key, val, label, sub){
@@ -224,7 +228,7 @@ function renderPlan(){
   }
   if(n.includes('order')){
     h += `<section class="v13-sheet brf-dec"><div class="v13-sheet-h">AN INSTRUCTION</div><p class="brf-q">"${esc(b.order.text)}"</p>
-      <div class="brf-opts">${optHTML('order', 'comply', 'Comply')}${optHTML('order', 'quiet', 'Look into him quietly', 'Uses one of your two leads')}${optHTML('order', 'confront', 'Ask her about it, to her face')}${optHTML('order', 'leak', 'Pass it to a crime reporter')}</div></section>`;
+      <div class="brf-opts">${optHTML('order', 'comply', 'Comply')}${optHTML('order', 'quiet', 'Look into him quietly', 'Uses one of your two leads')}${optHTML('order', 'confront', 'Ask her about it, on the call')}${optHTML('order', 'leak', 'Pass it to a crime reporter')}</div></section>`;
   }
   if(n.includes('press')){
     const st = typeof RADIO_STATION === 'string' ? RADIO_STATION : 'RADIO';
@@ -241,7 +245,9 @@ function renderPlan(){
     return `<button class="v13-sheet brf-lead${on ? ' on' : ''}${bl ? ' locked' : ''}" data-b="lead" data-id="${l.id}" aria-pressed="${on}"${bl ? ' disabled' : ''}>
       <span class="brf-box">${ico(bl ? 'lock' : 'check')}</span><span class="brf-ot"><b>${esc(l.name)}</b><span>${esc(bl || l.desc)}</span></span></button>`;
   }).join('');
-  h += `<div class="brf-advice"><span class="brf-who">COMMANDER ADAEZE</span><p>"${esc(b.advice.text)}"</p></div>`;
+  // her advice never sends you to a lead you can't work (Tunde won't talk to you)
+  const tipLead = b.leads.find(l => l.tip), advice = (b.advice.alt && tipLead && leadBlocked(tipLead)) ? b.advice.alt : b.advice.text;
+  h += `<div class="brf-advice"><span class="brf-who">COMMANDER ADAEZE</span><p>"${esc(advice)}"</p></div>`;
   h += certHTML();
   if(d.money && d.money.open) h += `<p class="brf-small">NFIU: <span class="v13-mono">${d.money.req}</span> financial-intelligence request${d.money.req === 1 ? '' : 's'} available.</p>`;
   return h;
@@ -380,9 +386,10 @@ function applyDecisions(r){
     d.order = dec.order;
     if(dec.order === 'comply'){ applyEffect({ agencyFavour:+4 }); out.push({ h:'THE ENGINEER', t:'You leave him alone. She notices, and thanks you for it.' }); }
     if(dec.order === 'quiet'){ knowAdd('engineer', 'You'); intelSet('engineer_log'); applyEffect({ intel:+8 }); addInvEvidence('inv_engineer');
-      out.push({ h:'THE ENGINEER', t:"Off the books, you pull his line. Last month it called a number saved nowhere — the same number KC knows as CONTROL — 41 times, always after midnight. Nobody else knows you looked." }); }
-    if(dec.order === 'confront'){ applyEffect({ agencyFavour:-3 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer', 'Cdr. Adaeze');
-      out.push({ h:'THE ENGINEER', t:'"He is how we found Lekki. You will have to trust me on this one, Kelechi." She holds your eye. Some of it is true.' }); }
+      out.push({ h:'THE ENGINEER', t:'Off the books, you pull his line. Last month it called one number 41 times, always after midnight — the same number KC has saved as "C.". Nobody else knows you looked.' }); }
+    // asking her gives you her answer and nothing else: the Engineer's calls are found only by pulling his line ('quiet')
+    if(dec.order === 'confront'){ applyEffect({ agencyFavour:-3 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer_asked', 'Cdr. Adaeze');
+      out.push({ h:'THE ENGINEER', t:'"He is how we found Lekki. You will have to trust me on this one, Kelechi."' }); }
     if(dec.order === 'leak'){ applyEffect({ publicTrust:+3, agencyFavour:-6 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer', 'The press'); intelSet('engineer_fled');
       out.push({ h:'THE ENGINEER', t:'The story runs that evening: "NACECA informant linked to kidnap ring." By morning the Engineer has vanished, and the Commander has stopped saying good morning.' }); }
   }
@@ -418,9 +425,11 @@ function runTip(l){
   return `"${TIP_TRUE}"` + (intelHas('tower_fix') ? ' It matches the tower fix.' : '');
 }
 
+// a lead that could not be worked (Tobi dead, Tunde not talking, nothing to decrypt…) leaves no "while you were
+// busy" line: its dropped text would contradict the reason it was blocked
 function dropUnworked(k){
   const b = BRIEFINGS[k], d = I();
-  b.leads.forEach(l => { if(!d.leads[l.id]){ d.leads[l.id] = 'dropped'; if(l.dropped) d.dropLog.push({ week:b.week, lead:l.id, text:l.dropped, buried:b.advice.drop === l.id && b.advice.buries }); } });
+  b.leads.forEach(l => { if(!d.leads[l.id]){ const bl = leadBlocked(l); d.leads[l.id] = 'dropped'; if(l.dropped && !bl) d.dropLog.push({ week:b.week, lead:l.id, text:l.dropped, buried:b.advice.drop === l.id && b.advice.buries }); } });
 }
 function finishBriefing(){
   const k = BRF.k; if(!k) return;
@@ -538,7 +547,7 @@ function warrantResultLine(id){
   const s = wState(id), eko = id === 'w_eko';
   const h = eko ? 'THE WARRANT' : 'THE PRODUCTION ORDER';
   if(s.status === 'signed') return { h, t: !eko ? 'Signed. Whatever comes off that cabinet, you can put in front of a judge.'
-    : s.route === 'zonal' ? "Signed by Zonal's magistrate at 22:40. Benin Zonal is not pleased you went round your own Commander." : 'Signed. It went through the Commander\'s office, the usual way.' };
+    : s.route === 'zonal' ? "Signed by Zonal's duty magistrate at 19:10. Benin Zonal is not pleased you went round your own Commander." : 'Signed. It went through the Commander\'s office, the usual way.' };
   if(s.status === 'exigent') return { h, t:"No warrant. If it comes to it, you'll tell the judge a student's life was at stake." };
   if(s.status === 'none') return { h, t:'No order. If you pull data at that mast, the defence will ask on whose authority.' };
   return { h, t:'Never put to a magistrate.' };
@@ -634,7 +643,7 @@ const SO_EVENTS = [
   { t:'15:20', sil:'bags',   txt:'A man in a cap carries two Ghana-must-go bags into Zuma Court. He knows the guard by name.', acts:['photo'], rel:'so_courier' },
   { t:'17:30', sil:'walker', txt:'A young woman locks the Apex glass door and waves at the guard on her way out.', acts:['photo'] },
   { t:'17:55', sil:'car',    txt:'A black Lexus, Lagos plates. A man in agbada uses the ATM next door and drives off.', acts:['photo', 'plate'], plate:'LAG 771 XC' },
-  { t:'18:15', sil:'car',    txt:'A Toyota Corolla stops at the gate. Government plates. Nobody gets out. The man in the cap comes back out and passes an envelope through the rear window.', acts:['photo', 'plate'], plate:'LND-412-KJ', rel:'so_poolcar', relPlate:'so_plate' },
+  { t:'18:15', sil:'car',    txt:'A grey Toyota Corolla stops at the gate. Government plates. Nobody gets out. The man in the cap comes back out and passes an envelope through the rear window.', acts:['photo', 'plate'], plate:'LND-412-KJ', rel:'so_poolcar', relPlate:'so_plate' },
   { t:'18:24', sil:'car',    txt:'The Corolla pulls away toward the Airport Road.', acts:['follow'] },
   { t:'18:40', sil:null,     txt:'Nothing. The street is empty. The suya seller packs up.', acts:['wait', 'back'], empty:true },
 ];
@@ -745,14 +754,14 @@ window.openStakeout = openStakeout;
    Same in both difficulties (A8): the meter, the pause and the one-shot cover card are
    consequences, not hints. State persists in I().uc after every answer. */
 const UC_STEPS = [
-  { who:'RECEPTIONIST', q:'Good morning. Your name, sir?', opts:[['Chidi Anyanwu.', 0], ['Kelechi— sorry. Chidi. Chidi Okafor.', 35], ['Why do you need my name?', 15]] },
-  { who:'RECEPTIONIST', q:'And who referred you to us?', opts:[['Alhaji Sanni, at Bluewater.', 0], ['A friend at NACECA.', 75], ['I found you on Google.', 20]] },
+  { who:'RECEPTIONIST', q:'Good afternoon. Your name, sir?', opts:[['Obinna Anyanwu.', 0], ['Kelechi— sorry. Obinna. Obinna Okafor.', 35], ['Why do you need my name?', 15]] },
+  { who:'RECEPTIONIST', q:'And who referred you to us?', opts:[['Alhaji Danjuma, at Bluewater.', 0], ['A friend at NACECA.', 75], ['I found you online.', 20]] },
   { probe:true, txt:'She turns to photocopy his ID. The visitor book lies open on the desk.', act:'Tell him to read the visitor book', sus:15, got:'uc_book', res:'Two lines repeat every month: "C.A. — 1st, 10:00" and "Bluewater — Kunle".' },
   { who:'BARR. TAMUNO BRIGGS', q:'So. What will this company do?', opts:[['Generator parts. I import through Onitsha.', 0], ['Logistics. Haulage.', 20], ['Consulting, mostly.', 25]] },
   { who:'BARR. TAMUNO BRIGGS', q:'Ten days is fast. What were you told it costs?', opts:[['₦450,000. Ten days.', 0], ['Whatever it costs.', 15], ['₦200,000.', 10]] },
-  { probe:true, txt:'Briggs mentions they can provide "a director, if you\'d rather not be on paper".', act:'Have him ask if it works like it does for C.A. Consulting', sus:30, got:'uc_nominee', res:'He smiles. "Grace handles our nominees. Our C.A. client has never once set foot in this office. That is the service."' },
+  { probe:true, txt:'Briggs mentions they can provide "a director, if you\'d rather not be on paper".', act:'Have him ask if it works like it does for C.A. Consulting', sus:30, got:'uc_nominee', res:'He smiles. "Bimpe handles our nominees. Our C.A. client has never once set foot in this office. That is the service."' },
   { who:'BARR. TAMUNO BRIGGS', q:'Leave a number. We will call you when the name is reserved.', opts:[['Give the cover SIM.', 0], ['Give your own number.', 50], ["Say you'll call back.", 10]] },
-  { probe:true, txt:'On the way out he passes the out-tray. A stack of invoices, the top one face up.', act:'Tell him to pocket the top invoice', sus:25, got:'uc_invoice', res:'Invoice from C.A. Consulting Services Ltd to the Ugbowo Relief Foundation. "Retainer, monthly." ₦9.2M.' },
+  { probe:true, txt:'On the way out he passes the out-tray. A stack of invoices, the top one face up.', act:'Tell him to pocket the top invoice', sus:25, got:'uc_invoice', res:'Invoice from C.A. Consulting Services Ltd to the Ugbowo Relief Foundation. "Retainer, monthly." ₦10M.' },
 ];
 const UC = { done:null };
 function ensureUC(){
@@ -794,8 +803,8 @@ function renderUC(){
   document.getElementById('uc-val').textContent = String(sus);
   if(s.i < 0){
     body.innerHTML = `<section class="v13-sheet uc-cover"><div class="v13-sheet-h">THE COVER</div>
-      <dl><div><dt>NAME</dt><dd>Chidi Anyanwu</dd></div><div><dt>BUSINESS</dt><dd>Generator-parts importer, Onitsha</dd></div>
-      <div><dt>WANTS</dt><dd>A company registered in ten days</dd></div><div><dt>REFERRED BY</dt><dd>Alhaji Sanni at Bluewater</dd></div>
+      <dl><div><dt>NAME</dt><dd>Obinna Anyanwu</dd></div><div><dt>BUSINESS</dt><dd>Generator-parts importer, Onitsha</dd></div>
+      <div><dt>WANTS</dt><dd>A company registered in ten days</dd></div><div><dt>REFERRED BY</dt><dd>Alhaji Danjuma at Bluewater</dd></div>
       <div><dt>BUDGET</dt><dd class="v13-mono">₦450,000</dd></div><div><dt>PHONE</dt><dd>The cover SIM. Never his own.</dd></div></dl></section>
       <p class="uc-note">Learn it. Once he is through that door, neither of you can look at this card again. Every answer he gives is the one you feed him.</p>
       <div class="uc-acts"><button class="v13-btn primary" data-uc="go">KNOCK ON SUITE 4B${ico('next')}</button></div>`;
@@ -836,7 +845,7 @@ function ucFinalize(){
   s.done = true;
   if(s.blown){
     d.alert = (d.alert || 0) + 1; knowAdd('cover', 'Apex Corporate Services'); intelSet('apex_blown');
-    s.txt = 'Your cover is blown. They are polite, too polite. By Monday Suite 4B has new locks and a "To Let" sign — and somebody has made a phone call about you.' + (s.got.length ? ` You still walked out with ${s.got.length} thing${s.got.length > 1 ? 's' : ''} you can use.` : '');
+    s.txt = 'The cover is blown. They are polite, too polite. By morning Suite 4B has new locks and a "To Let" sign — and somebody has made a phone call about you.' + (s.got.length ? ` You still walked out with ${s.got.length} thing${s.got.length > 1 ? 's' : ''} you can use.` : '');
   } else {
     if(s.got.includes('uc_invoice')){ applyEffect({ intel:+12 }); addInvEvidence('inv_invoice'); }
     if(s.got.includes('uc_book')) applyEffect({ intel:+6 });

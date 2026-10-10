@@ -293,7 +293,9 @@ function renderLocker(){
   if(pending.length) o += `<p class="dk-intro v13-warn">${pending.length} electronic item${pending.length > 1 ? 's' : ''} still need${pending.length > 1 ? '' : 's'} an s.84 certificate before the next operation.</p>`;
   const facts = Object.keys(d.known || {});
   if(facts.length){
-    o += `<h3 class="dk-group">WHO KNOWS WHAT</h3><div class="dk-known">` + facts.map(f => `<div><b>${t((typeof FACTS !== 'undefined' && FACTS[f]) || f)}</b><span>${t((d.known[f] || []).join(', '))}</span></div>`).join('') + `</div>`;
+    // before the reveal her name is never listed: she is her unit, like every other office on the file
+    const who = w => (w === 'Cdr. Adaeze' && !(S.game.moralChoices || {}).finale) ? 'Lagos HQ' : w;
+    o += `<h3 class="dk-group">WHO KNOWS WHAT</h3><div class="dk-known">` + facts.map(f => `<div><b>${t((typeof FACTS !== 'undefined' && FACTS[f]) || f)}</b><span>${t((d.known[f] || []).map(who).join(', '))}</span></div>`).join('') + `</div>`;
   }
   let lastM = null;
   items.forEach(it => {
@@ -383,6 +385,10 @@ function renderMoney(){
       <dl class="dk-facts"><div><dt>REQUESTS IN HAND</dt><dd class="v13-mono">${m.req | 0}</dd></div><div><dt>TRACED SO FAR</dt><dd class="v13-mono">${naira$(tot)}</dd></div></dl>
       ${coach && grand > 0 ? `<div class="dk-adm dk-money-meter"><span class="dk-lbl">OF THE NETWORK</span><div class="v13-meter"><i style="width:${Math.min(100, tot / grand * 100)}%"></i></div><b class="v13-mono">${Math.round(Math.min(100, tot / grand * 100))}%</b></div>` : ''}
       ${!(m.req > 0) ? `<p class="dk-src">No requests left. More come with the next briefing.</p>` : ''}`;
+  // a line the NFIU won't open yet (the model's per-node gate): said plainly, with no hint of what it holds
+  const gateOpen = k => (typeof intelMoneyGate === 'function' ? !!safe(() => intelMoneyGate(k), true) : true);
+  const gateNote = k => (MONEY_NODES[k].gate === 'ca' && safe(() => { const r = typeof V().accused === 'function' ? V().accused('route') : null; return !!r || (S.game.completedMissions || []).includes('m6'); }, false))
+    ? 'The NFIU will take this line at the next briefing.' : "The NFIU won't open this line until your route charge sheet is on the file.";
   ids.forEach(k => {
     const n = MONEY_NODES[k], tr = !!(m.traced && m.traced[k]);
     const from = Object.keys(MONEY_NODES).filter(x => (MONEY_NODES[x].next || []).includes(k) && m.traced && m.traced[x]).map(x => MONEY_NODES[x].name);
@@ -391,6 +397,7 @@ function renderMoney(){
       <div class="dk-row1"><span class="dk-name">${t(n.name)}</span><span class="v13-tier">${t(n.kind)}</span>${key ? '<span class="v13-stamp dk-keytag">KEY</span>' : ''}</div>
       ${from.length ? `<div class="dk-src">${ico('link')}<span>via ${t(from.join(', '))}</span></div>` : ''}
       ${tr ? `<div class="dk-mn-desc">${t(n.desc)}</div><div class="dk-mn-amt v13-mono">${n.amt ? naira$(n.amt) : 'NO FIGURE'}${dead ? ' · DEAD END' : ''}</div>`
+           : !gateOpen(k) ? `<div class="dk-src dk-mn-wait">${ico('clock')}<span>${t(gateNote(k))}</span></div>`
            : `<button type="button" class="v13-btn" data-act="trace" data-id="${h(k)}" ${m.req > 0 ? '' : 'disabled'}>${ico('search')}TRACE · 1 REQUEST</button>`}
     </div>`;
   });
