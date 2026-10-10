@@ -589,3 +589,20 @@ body.v12-car #eye-ind{top:calc(10px + env(safe-area-inset-top,0px))!important}
   .car-mirror{display:none}
   .car-tip{top:calc(78px + env(safe-area-inset-top,0px))}
 }
+
+/* playtest: the two post-slice questions (a manila sheet over the aftermath) */
+#screen-pt-survey{z-index:120;padding:16px;box-sizing:border-box}
+#screen-pt-survey .pt-sheet{position:relative;z-index:1;width:min(560px,100%);max-height:100%;overflow:auto;margin:auto;padding:18px 20px;box-sizing:border-box}
+#screen-pt-survey .pt-lead{font-size:13px;line-height:1.45;margin:6px 0 0;color:var(--ink-soft,#4F4C44)}
+#screen-pt-survey .pt-q{display:block;margin:14px 0 6px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:15px;letter-spacing:.04em;color:var(--ink,#1C1C1A)}
+#screen-pt-survey textarea{width:100%;box-sizing:border-box;min-height:76px;padding:10px 12px;border:1px solid var(--ink,#1C1C1A);border-radius:2px;background:var(--paper-2,#DCCDAB);color:var(--ink,#1C1C1A);font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:14px;line-height:1.45;resize:vertical}
+#screen-pt-survey textarea:focus{outline:2px solid var(--ink,#1C1C1A);outline-offset:1px}
+#screen-pt-survey .pt-acts{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+@media (max-height:480px){
+  #screen-pt-survey .pt-sheet{padding:12px 16px}
+  #screen-pt-survey .cw-title{font-size:20px}
+  #screen-pt-survey .pt-lead{display:none}
+  #screen-pt-survey .pt-q{margin:8px 0 4px;font-size:14px}
+  #screen-pt-survey textarea{min-height:52px}
+  #screen-pt-survey .pt-acts{margin-top:10px}
+}
