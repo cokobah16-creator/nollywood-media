@@ -647,6 +647,16 @@ if(window.V12 && typeof V12.wrap === 'function'){
     }catch(e){ console.warn('[v13] pause', e); }
     return orig.apply(this, arguments);
   });
+  // pause.js binds #btn-resume to the ORIGINAL togglePause at start-up, so this wrap never sees a Resume click:
+  // catch it first, and go back to the v13 flow the pause menu covered
+  document.addEventListener('click', e => { try{
+    if(!(e.target && e.target.closest && e.target.closest('#btn-resume')) || !V13NAV.under || !v13Shown('screen-pause')) return;
+    const under = V13NAV.under; V13NAV.under = null;
+    e.stopImmediatePropagation(); e.preventDefault();
+    const m = V13NAV.modals.find(x => x.id === under);
+    showOverlay(under);
+    if(m && m.resume) m.resume();
+  }catch(err){ console.warn('[v13] resume', err); } }, true);
   // a quit, a load or an erase ends any v13 flow that was open
   document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-load, #btn-erase')) v13NavReset(); }catch(err){} }, true);
   // evidence logged outside collectEvidence (v12.2 street talk) gets a record too
@@ -661,13 +671,7 @@ if(window.V12 && typeof V12.wrap === 'function'){
     };
   }
 }
-// the briefing (v13_briefing.js, loaded later): Senior's flagged money clues join the trail as it opens
-window.addEventListener('load', ()=>{
-  try{
-    const ob = window.openBriefing;
-    if(typeof ob === 'function' && !ob._v13a){
-      const f = function(){ try{ intelBriefingOpened(); }catch(e){ console.warn('[v13] briefing money', e); } return ob.apply(this, arguments); };
-      f._v13a = true; f._v12orig = ob; window.openBriefing = f;
-    }
-  }catch(e){ console.warn('[v13] briefing hook', e); }
-});
+// the briefing (v13_briefing.js) calls this once per briefing as it opens, on every path (Night Shift and the
+// hub calls): Senior's flagged money clues join the trail then. (Its own calls to openBriefing are internal
+// to its module, so wrapping window.openBriefing would miss the hub briefings.)
+window.intelOnBriefingOpen = function(){ try{ return intelBriefingOpened(); }catch(e){ console.warn('[v13] briefing money', e); return []; } };

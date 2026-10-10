@@ -82,6 +82,7 @@ V12.wrap('startDialogue', orig => function(key){
       if(!line._musa) line._musa = line.text;
       line.text = (MC().checkpoint === 'flip_driver' || FL().musa_tip) ? line._musa
         : FL().backgate_src === 'car' ? 'That boy with the jerrycan — nine o\'clock fuel run, and he leaves the chain hanging… There.'
+        : FL().backgate_src === 'caretaker' ? 'The caretaker said the generator man leaves this back way open at nine… He was right.'
         : 'Mama Blessing said the generator boy takes this chain off at nine to buy fuel… She was right.';
     }
   }catch(e){}
