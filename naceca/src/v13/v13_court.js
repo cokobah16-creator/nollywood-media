@@ -23,7 +23,7 @@
 ACHIEVEMENTS.push(
   { id:'one_office',   name:'One Office',          desc:'Find the entities sharing one desk in Wuse II.' },
   { id:'four_billion', name:'Follow the Money',    desc:'Trace the whole ₦5bn network from a ₦150,000 alert.' },
-  { id:'cover_held',   name:'Obinna Anyanwu',      desc:'Walk out of Apex with your cover intact.' },
+  { id:'cover_held',   name:'Obinna Anyanwu',      desc:'Get your officer out of Apex with his cover intact.' },
   { id:'clean_chain',  name:'Clean Chain',         desc:'Every exhibit you tendered was admitted.' },
 );
 
@@ -733,7 +733,7 @@ function renderReviewHTML(inDesk){
     [ctHas('so_plate_match'), 'The car at the Zuma Court handover was the same pool car that visited Lekki before the raid.'],
     [ctHas('reg_ca'), 'C.A. Consulting was incorporated on 14 March 2019. "C.A." was the Commander.'],
     [!!flagged.kc_call_control, '"C." always called at seven. So did the Voice.'],
-    [!!flagged.musa_ph_hotel, "Musa's own camera put him in Asaba."],
+    [!!(flagged.musa_ph_hotel || flagged.musa_ride_asaba), "Musa's own phone put him in Asaba."],
     [!!flagged.bu_ph_gate, 'The burner held a photo of the gate on Akintola Close, its number painted over, two nights before the tower trace.'],
     [ctHas('reg_silverline'), 'The fake Asaba assault story came out of the same office.'],
   ];
@@ -744,7 +744,7 @@ function renderReviewHTML(inDesk){
   h += `<div class="v13-sheet-h">DECISIONS THAT CHANGED THE STORY</div>`;
   const dec = [];
   if(d.custodyAsk) dec.push(d.custodyAsk === 'gave' ? 'You sent her the ledger. Page 14 never came back.' : 'You kept the ledger in the exhibit room.');
-  if(d.order) dec.push({ comply:'You left the Engineer alone when she asked.', quiet:'You investigated her source behind her back.', confront:'You asked her about the Engineer on an open call. She changed every phone that night.', leak:'You leaked the Engineer to the press. He vanished.' }[d.order]);
+  if(d.order) dec.push({ comply:'You left the Engineer alone when she asked.', quiet:'You investigated her source behind her back.', confront:'You asked her about the Engineer on an open call. She cut him off that night.', leak:'You leaked the Engineer to the press.' }[d.order]);
   if(d.press) dec.push({ bodycam:'You released the Asaba body-cam.', quiet:'You stayed silent about the Asaba story.', trace:'You traced the Asaba story to its source.' }[d.press]);
   if(d.court){
     const n = (d.court.proven || []).length;

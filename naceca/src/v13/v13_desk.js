@@ -467,7 +467,7 @@ function renderRegistry(){
   const known = Object.keys(r.found || {}).filter(k => REGISTRY[k]);
   let o = `<p class="dk-intro">Search the register by company, number or name. Directors change. Addresses rarely do.</p>
     <div class="dk-search"><label class="dk-lbl" for="reg-q">COMPANY, NUMBER OR NAME</label>
-      <div class="dk-search-row"><input id="reg-q" type="text" inputmode="search" enterkeyhint="search" placeholder="e.g. Bluewater" value="${h(DESK.regQ || '')}" autocomplete="off" spellcheck="false"><button type="button" class="v13-btn" data-act="reg-search">${ico('search')}SEARCH</button></div></div>`;
+      <div class="dk-search-row"><input id="reg-q" type="text" inputmode="search" enterkeyhint="search" placeholder="Company name or RC number" value="${h(DESK.regQ || '')}" autocomplete="off" spellcheck="false"><button type="button" class="v13-btn" data-act="reg-search">${ico('search')}SEARCH</button></div></div>`;
   if(DESK.regMsg) o += `<p class="dk-src dk-regmsg" role="status">${h(DESK.regMsg)}</p>`;
   if(DESK.regAddr && DESK.regAddrHits){ o += `<h3 class="dk-group">AT ${t(String(DESK.regAddr).toUpperCase())} · <span class="v13-mono">${DESK.regAddrHits.length}</span></h3>` + DESK.regAddrHits.filter(k => REGISTRY[k]).map(k => regSlip(k, `${REGISTRY[k].no} · ${(REGISTRY[k].people || [])[0] || ''}`)).join(''); }
   else if(DESK.regHits && DESK.regHits.length){ o += `<h3 class="dk-group">RESULTS</h3>` + DESK.regHits.filter(k => REGISTRY[k]).map(k => regSlip(k, `${REGISTRY[k].no} · ${REGISTRY[k].addr}`)).join(''); }

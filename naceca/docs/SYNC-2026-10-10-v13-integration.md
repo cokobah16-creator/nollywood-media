@@ -49,6 +49,25 @@ are kept as docs/SYNC-2026-10-07-v13.md.
 - **Case Desk entry points:** HUD EVIDENCE → Locker; CASE DESK on the operations table, pause menu and mission
   select; J on desktop. Esc closes to where you came from; pause over any v13 screen resumes into it.
 
+## Review fixes (same session)
+An adversarial review of the integrated build confirmed 33 findings; all are fixed, each with a scenario that
+fails on the pre-fix build. The ones a player would notice:
+- **Navigation:** Esc on CAPABILITIES reached from the Desk's operations table no longer freezes the field;
+  a second Case Desk opened from that pause menu unwinds back through the first; a dialogue that takes the
+  screen while the Desk is open closes the Desk and gives back movement and the HUD; a briefing reopened
+  after Quit → Continue or Load is registered again (Esc and pause behave).
+- **Court:** the "your own officer's file says this witness lied" line appears only for a CONTRADICTED
+  filing (honest mistake, vouched-without-proof and never-settled each get their own line); the trial saves
+  after every step and a reload mid-trial reopens it; the pre-trial promise counts only exhibits that really
+  get a SIGN button; no regex lookbehind (iOS Safari before 16.4 couldn't parse the court file).
+- **Model and content:** replaying an earlier operation never reopens its s.84 window; Obi's money node waits
+  until Lekki; Bluewater/Apex/Serpentine can't be found before Case 04; Musa's "already there" statement is
+  disproved by the Sapele Haulage registration or the welder's receipt; the Engineer no longer "vanishes"
+  after a leak (he's still in play at h7 and the tail); Senior's stakeout result is a neutral record; the
+  route arrows read as words in the Locker.
+- **Playtest log:** see below.
+Full list with repro and evidence: the session's review notes (R01–R33).
+
 ## Playtest log (same session)
 src/v12/v12_pt.js now records interaction outcomes (progress / opened / refused / noop), misses, refusals,
 per-objective time (play time), walking efficiency and arrow use, stuck/away, hints, chase and wipe endings,
@@ -64,7 +83,7 @@ Harness: `node tools/harness/run.cjs tools/harness/scenarios/<name>.cjs [--html 
 New: v13_a_* (model, warrants, flaws, saves, radio, nav), v13_b_* (order, resume, warrants, rules, esc),
 v13_c_* (trials, review, esc/replay, rules), v13_d_* (desk nav, Senior, money gate, warrants tab, rules,
 contract), v13_e_spoilers (first-time Senior playthrough through h7), v13_port_flow / _playthrough / _finale
-(the drop's Python tests, ported with the integrated rules), pt_logger. The drop's tools/*.py are kept for
+(the drop's Python tests, ported with the integrated rules), v13_fix_* (one per review fix group), pt_logger. The drop's tools/*.py are kept for
 reference (they need Python Playwright and real three.js; header notes say they're superseded).
 
 ## Needs a human check

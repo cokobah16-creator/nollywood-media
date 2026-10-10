@@ -14748,7 +14748,7 @@ function hqFixCaseBoard(){
 
 
 </script>
-<script>window.NACECA_BUILD = { src:'410325dc16' };</script>
+<script>window.NACECA_BUILD = { src:'349c21fbac' };</script>
 <style id="v12">
 /* =========================================================================
    NACECA · v12 styles — operations table, documents, raid plan, accusation,
@@ -15347,7 +15347,7 @@ body.v12-car #eye-ind{top:calc(10px + env(safe-area-inset-top,0px))!important}
 #screen-pt-survey .pt-sheet{position:relative;z-index:1;width:min(560px,100%);max-height:100%;overflow:auto;margin:auto;padding:18px 20px;box-sizing:border-box}
 #screen-pt-survey .pt-lead{font-size:13px;line-height:1.45;margin:6px 0 0;color:var(--ink-soft,#4F4C44)}
 #screen-pt-survey .pt-q{display:block;margin:14px 0 6px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:15px;letter-spacing:.04em;color:var(--ink,#1C1C1A)}
-#screen-pt-survey textarea{width:100%;box-sizing:border-box;min-height:76px;padding:10px 12px;border:1px solid var(--ink,#1C1C1A);border-radius:2px;background:var(--paper-2,#DCCDAB);color:var(--ink,#1C1C1A);font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:14px;line-height:1.45;resize:vertical}
+#screen-pt-survey textarea{width:100%;box-sizing:border-box;min-height:76px;padding:10px 12px;border:1px solid var(--ink,#1C1C1A);border-radius:2px;background:var(--paper-2,#DCCDAB);color:var(--ink,#1C1C1A);font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:16px;-webkit-user-select:text;user-select:text;line-height:1.45;resize:vertical}
 #screen-pt-survey textarea:focus{outline:2px solid var(--ink,#1C1C1A);outline-offset:1px}
 #screen-pt-survey .pt-acts{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
 @media (max-height:480px){
@@ -20696,9 +20696,12 @@ const quit = ()=>{
 };
 window.addEventListener('pagehide', quit);
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden'){ write(); flush(); } });
-V12.log('session', { ua:navigator.userAgent.slice(0, 120), w:innerWidth, h:innerHeight, dpr:window.devicePixelRatio || 1, touch:('ontouchstart' in window),
-  build:{ ver:V12.version || null, src:(window.NACECA_BUILD || {}).src || null },
-  settings:(()=>{ try{ return { marker:SETTINGS.marker, hints:SETTINGS.hints, difficulty:SETTINGS.difficulty, timed:SETTINGS.timed }; }catch(e){ return null; } })() });
+// after boot's load handler (loadSettings) and after later layers set V12.version
+window.addEventListener('load', ()=>setTimeout(()=>{ try{
+  V12.log('session', { ua:navigator.userAgent.slice(0, 120), w:innerWidth, h:innerHeight, dpr:window.devicePixelRatio || 1, touch:('ontouchstart' in window),
+    build:{ ver:V12.version || null, src:(window.NACECA_BUILD || {}).src || null },
+    settings:(()=>{ try{ return { marker:SETTINGS.marker, hints:SETTINGS.hints, difficulty:SETTINGS.difficulty, timed:SETTINGS.timed, casework:(typeof gameDifficulty === 'function' ? gameDifficulty() : null) }; }catch(e){ return null; } })() });
+}catch(e){} }, 0));
 
 V12.ptExport = async ()=>{
   write();
@@ -20793,7 +20796,7 @@ V12.wrap('tryInteract', orig => function(){
   const classify = (tries)=>{
     if(typeof ENGINE !== 'undefined' && ENGINE.seq && tries < 12){ setTimeout(()=>classify(tries + 1), 250); return; }   // a staged action is still playing
     try{
-      const moved = sigNow() !== rec.sig0, ov = shownOverlays(), opened = ov !== rec.ov0 && /screen-(dialogue|puzzle|minigame|doc|ops|plan|phone|news|desk|briefing)/.test(ov);
+      const moved = sigNow() !== rec.sig0, ov = shownOverlays(), before = rec.ov0.split(','), opened = ov.split(',').some(id => id && !before.includes(id));
       const outcome = moved ? 'progress' : opened ? 'opened' : rec.toasts.length ? 'refused' : 'noop';
       if(outcome === 'refused'){ PT.totals.refusals++; if(PT.o) PT.o.refusals++; }
       V12.log('interact_result', { label:rec.label, verb:rec.verb, outcome, toast:rec.toasts[0] || null, alt:rec.alt || [], dist:rec.dist, obj:rec.obj, want:rec.want });
@@ -20802,13 +20805,13 @@ V12.wrap('tryInteract', orig => function(){
   setTimeout(()=>classify(0), 300);
   return r;
 });
-const BLOCKED = /NOT YET|FIRST|LOCKED|CAN'T|CANNOT|TOO FAR|NOT NOW|NO WAY|BLOCKED|WAIT|NEED |NO EVIDENCE|PENDING|ALREADY/i;
+const BLOCKED = /\b(NOT YET|LOCKED|CAN'T|CANNOT|TOO FAR|NOT NOW|NO WAY|BLOCKED|PENDING|ALREADY|REQUIRED|NO EVIDENCE|NEED INTEL|NO POWER|NO GROUNDS|FIRST|PLAN FIRST|OBJECTIVES PENDING)\b/;
 V12.wrap('toast', orig => function(big, small){
   try{
     const b = String(big || ''), sm = String(small || '').replace(/<[^>]+>/g, '');
     if(PT.inInteract) PT.inInteract.toasts.push({ big:b.slice(0, 40), small:sm.slice(0, 80) });
     else if(b === 'HINT'){ PT.totals.hints++; if(PT.o) PT.o.hints++; const me = ppos(), t = target(); V12.log('hint', { obj:curObj(), what:sm.slice(0, 80), dist:(me && t) ? r1(Math.hypot(t.x - me.x, t.z - me.z)) : null }); }
-    else if(BLOCKED.test(b + ' ' + sm)) V12.log('blocked', { big:b.slice(0, 40), small:sm.slice(0, 80), obj:curObj() });
+    else if(BLOCKED.test(b.toUpperCase()) || /\bfirst\.?$/i.test(sm.trim())) V12.log('blocked', { big:b.slice(0, 40), small:sm.slice(0, 80), obj:curObj() });
   }catch(e){}
   return orig.apply(this, arguments);
 });
@@ -20828,9 +20831,10 @@ V12.wrap('completeObjective', orig => function(id){
   progress();
   return r;
 });
-V12.wrap('beginMission', orig => function(){ progress(); PT.o = null; return orig.apply(this, arguments); });
+V12.wrap('beginMission', orig => function(){ progress(); PT.o = null; PT.prev = null; return orig.apply(this, arguments); });
 V12.wrap('completeMission', orig => function(id, opts){
-  try{ if(opts && opts.silent) V12.log('mission_end', { m:id, silent:true }); }catch(e){}
+  try{ if(opts && opts.silent && id !== 'm3n' && id !== 't7') V12.log('mission_end', { m:id, silent:true }); }catch(e){}   // m3n and t7 log their own
+  try{ if(opts && opts.silent && id === V12.PT_SLICE_END) PT.pendingSurvey = 'slice:' + id; }catch(e){}
   return orig.apply(this, arguments);
 });
 V12.wrap('startChase', orig => function(cfg){
@@ -20873,14 +20877,15 @@ setInterval(()=>{
     if(typeof S === 'undefined' || !S.game || !S.game.currentMission) return;
     // the mansion wipe ends either way
     const g = S.game;
-    if(g._wipeTotal && !PT.wipe) PT.wipe = { m:g.currentMission };
+    if(g.currentMission === 'm3' && g._wipeTotal && !g._wipeDone && !g._wipeLost && !PT.wipe) PT.wipe = { m:'m3' };
     if(PT.wipe && (g._wipeDone || g._wipeLost) && !PT.wipe.logged){ PT.wipe.logged = true;
       V12.log('wipe_end', { lost:!!g._wipeLost, pct:g._wipeTotal ? Math.round(Math.min(1, (g._wipeT || 0) / g._wipeTotal) * 100) : null, total:g._wipeTotal || null }); }
-    if(!g._wipeTotal && PT.wipe) PT.wipe = null;
+    if(PT.wipe && g.currentMission !== 'm3') PT.wipe = null;
     if(typeof ENGINE === 'undefined' || !ENGINE.movementEnabled || document.querySelector('.overlay.show')) return;
     const me = ppos(); if(!me) return;
     const id = curObj(); if(!PT.o || PT.o.id !== id) objStart(id);
-    const step = PT.prev ? Math.hypot(me.x - PT.prev.x, me.z - PT.prev.z) : 0;
+    let step = PT.prev ? Math.hypot(me.x - PT.prev.x, me.z - PT.prev.z) : 0;
+    if(step > 8) step = 0;   // a scene change or a scripted move, not walking
     const t = target(), dist = t ? Math.hypot(t.x - me.x, t.z - me.z) : null;
     const o = PT.o; o.n++; o.walked += step;
     if(window.WAY && WAY._guideState === 'arrow') o.arrow++;
@@ -20918,12 +20923,14 @@ V12.ptSurvey = function(where){
   const prev = [...document.querySelectorAll('.overlay.show')].map(e => e.id).filter(id => id !== 'screen-pt-survey');
   const close = ()=>{ ov.classList.remove('show'); if(prev.length && typeof showOverlay === 'function') showOverlay(prev[prev.length - 1]); };
   ov.querySelector('#pt-a1').value = ''; ov.querySelector('#pt-a2').value = '';
-  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); write(); close(); };
+  const done = ()=>{ try{ const k = String(where || '').replace(/^slice:/, ''); S.game._ptAsked = S.game._ptAsked || {}; S.game._ptAsked[k] = Date.now(); }catch(e){} PT.pendingSurvey = null; };
+  PT.surveyOpen = where;
+  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); done(); write(); close(); };
   ov.querySelector('#pt-save').onclick = ()=>{
     const a1 = ov.querySelector('#pt-a1').value.trim(), a2 = ov.querySelector('#pt-a2').value.trim();
     V12.log('survey', { where, satisfying:a1, unfair:a2, diff:(typeof gameDifficulty === 'function' ? gameDifficulty() : null),
       secsPlayed:Math.round(PT.play / 1000), missions:((S.game && S.game.completedMissions) || []).slice(), misses:PT.totals.misses, refusals:PT.totals.refusals, hints:PT.totals.hints, build:(window.NACECA_BUILD || {}).src || null });
-    write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close();
+    done(); write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close();
   };
   ov.classList.add('show');
   try{ const t = document.getElementById('toast'); if(t) t.classList.remove('show'); }catch(e){}   // a save toast would sit on the first answer
@@ -20941,10 +20948,18 @@ V12.wrap('showAftermath', orig => function(){
   try{
     const m = S.game.currentMission;
     S.game._ptAsked = S.game._ptAsked || {};
-    if(m === V12.PT_SLICE_END && !S.game._ptAsked[m]){ S.game._ptAsked[m] = Date.now(); setTimeout(()=>V12.ptSurvey('slice:' + m), 1800); }
+    if(m === V12.PT_SLICE_END && !S.game._ptAsked[m]){ PT.pendingSurvey = 'slice:' + m; V12.ptSurvey('slice:' + m); }   // over the aftermath, at once
   }catch(e){}
   return r;
 });
+// a slice that ends silently (the market van), or a sheet another screen hid before it was answered:
+// ask at the next calm moment (the world is live and no other screen is up)
+setInterval(()=>{ try{
+  const ov = document.getElementById('screen-pt-survey');
+  if(!PT.pendingSurvey || (ov && ov.classList.contains('show'))) return;
+  if(typeof ENGINE === 'undefined' || !ENGINE.movementEnabled || document.querySelector('.overlay.show')) return;
+  V12.ptSurvey(PT.pendingSurvey);
+}catch(e){} }, 1500);
 
 })();
 
@@ -21617,7 +21632,7 @@ const INTEL_ITEMS = {
   tower_fibre:       { m:'m7', kind:'PHYSICAL',  tier:'confirmed',          src:'Fibre backhaul, Ugbowo mast' },
   tower_cdr:         { m:'m7', kind:'TELECOM',   tier:'confirmed', e:true,  src:'BTS cabinet, Ugbowo mast' },
   tower_fix:         { m:'m7', kind:'TELECOM',   tier:'probable',  e:true,  src:'Live sector timing, Ugbowo mast' },
-  fin_drive:         { m:'m8', kind:'DEVICE',    tier:'confirmed', e:true,  src:"Osas's pocket, Akintola Close" },
+  fin_drive:         { m:'m8', kind:'DEVICE',    tier:'confirmed', e:true,  src:"Osas's shoe, Akintola Close" },
   fin_courier_phone: { m:'m8', kind:'DEVICE',    tier:'confirmed', e:true,  src:'Taken from the courier, Ekosodin' },
   fin_recording:     { m:'m8', kind:'TELECOM',   tier:'confirmed', e:true,  src:'Field-office recording of the evening call' },
   // v12 evidence
@@ -21625,7 +21640,7 @@ const INTEL_ITEMS = {
   // KC's SIM batch comes from his statement (a fair arrest) or from the sleeve sweep: the source says which
   kc_sims:           { m:'m2', get kind(){ return kcSimsByStatement() ? 'TESTIMONY' : 'PHYSICAL'; }, get tier(){ return kcSimsByStatement() ? 'probable' : 'confirmed'; },
                        get src(){ return kcSimsByStatement() ? "KC's statement after his arrest, Ikeja market" : 'SIM sleeves behind the Ikeja stalls'; } },
-  obi_notebook:      { m:'m3', kind:'DOCUMENT',  tier:'confirmed',          src:"Chief Obi's study, beside the cash" },
+  obi_notebook:      { m:'m3', kind:'DOCUMENT',  tier:'confirmed',          src:'Coffee table, Lekki living room, beside the cash' },
   osas_voicemail:    { m:'m3n',kind:'TELECOM',   tier:'probable',  e:true,  src:'Your desk phone, Lagos HQ — left 14:02, heard 23:40' },
   // v12.2 evidence
   musa_record:       { m:'m4', kind:'TESTIMONY', tier:'probable',           src:'Musa, wired at the Benin Bypass after he turned' },
@@ -21650,6 +21665,15 @@ const TIER_WEIGHT = { confirmed:3, probable:2, allegation:1, rumour:0 };
 
 /* ---- 2. Phones: recovered handsets as investigative objects ----
    Flag what matters. rel:true items are real leads; the rest is someone's life. */
+/* Musa's phone is only ever read at the h4 sit-down. When that can no longer happen — he drove on with a
+   tail (the h4 lead is blocked), the lead was dropped (the phone went back to his family) or the save
+   missed the h4 briefing — the handset is out of reach: no locked "until you sit down with him" card. */
+function musaPhoneInReach(){
+  const g = (typeof S !== 'undefined' && S && S.game) || {}, d = g.intel || {}, lead = (d.leads || {}).musa;
+  if(lead === 'done') return true;
+  if((g.moralChoices || {}).checkpoint === 'tail_driver') return false;
+  return lead !== 'dropped' && (d.briefed || {}).m4 !== 'missed';
+}
 const PHONES = [
   { id:'kc', name:"KC's phone", model:'Cheap Android · cracked screen', needs:'phishing_template', items:[
     { id:'kc_msg_engineer', sec:'MESSAGES', from:'Engineer', text:'New batch. 400 numbers. Same BVN script. Dont use your own line.', rel:true, why:'KC runs the template; the Engineer supplies the numbers.' },
@@ -21664,7 +21688,8 @@ const PHONES = [
     { id:'kc_bank_airtime', sec:'BANK ALERTS', from:'Bank', text:'Debit ₦2,500.00 · Airtime recharge', rel:false },
     { id:'kc_del_control', sec:'DELETED', from:'(recovered fragment)', text:"…dont ever call C. from this line. if they pick you, you dont know me…", rel:true, why:'KC was told to protect "C." above everyone.' },
   ]},
-  { id:'musa', name:"Musa's phone", model:'Button phone + an old smartphone', needs:'ransom_ledger', items:[
+  // out of reach (above): no requirement can be met (intelHas(null) is false), so the desk lists no card for it
+  { id:'musa', name:"Musa's phone", model:'Button phone + an old smartphone', get needs(){ return musaPhoneInReach() ? 'ransom_ledger' : null; }, items:[
     { id:'musa_ride_asaba', sec:'RIDE HISTORY', from:'Ride app', text:'Benin Bypass to Riverview Suites, Asaba · 2 weeks ago, 23:40', rel:true, why:'Musa was in Asaba recently.' },
     { id:'musa_ph_hotel', sec:'PHOTOS', from:'Camera', text:'Musa outside Riverview Suites, Asaba. The Niger Bridge lights behind him.', rel:true, why:'He says he has never been to Asaba. His own camera disagrees.' },
     { id:'musa_call_engineer', sec:'CALLS', from:'Engineer', text:'02:10 · 02:14 · 02:31 — every pickup night', rel:true, why:'The Engineer calls before each pickup.' },
@@ -21690,15 +21715,17 @@ const PHONES = [
    "C.A. — 2,500,000" goes to the Ugbowo Relief Foundation as a "donation", and the Foundation pays C.A.
    Consulting a retainer on the first of every month (four of Obi's Fridays). The route's money (shrine →
    Asaba, the beta's answer) is banked afterwards through Bluewater; nothing here sends it to Obi or Lagos.
-   gate: 'lagos' — traceable once MONEY opens (intelMoneyOpen); 'route' — once the route charge sheet is on
-   the file (or Asaba is behind you); 'ca' — the route gate AND the h5 briefing reached (intelMoneyGate). */
+   gate: 'lagos' — traceable once MONEY opens (intelMoneyOpen); 'lekki' — not even listed until Lekki is
+   behind you or Obi's notebook is in hand (Obi's account quotes the notebook and names the Foundation);
+   'route' — once the route charge sheet is on the file (or Asaba is behind you); 'ca' — the route gate AND
+   the h5 briefing reached (intelMoneyGate). */
 const MONEY_NODES = {
   n_kc:        { name:'KC — personal wallet', kind:'PERSON', amt:150000, desc:'One credit from a POS agent, narration "SIM LOGISTICS".', next:['n_odogwu'], gate:'lagos' },
   n_odogwu:    { name:'Odogwu Ventures', kind:'POS AGENT', amt:38000000, desc:'Computer Village POS. ₦38M cashed out in three days, starting the day after a crypto wallet emptied through three OTC desks. The cash leaves for Lekki on Fridays in a dark-blue Sienna.', next:['n_otc','n_sister','n_obi'], reg:'odogwu', gate:'lagos' },
-  n_sister:    { name:"Owner's sister — school fees", kind:'RELATIVE', amt:420000, desc:"Three transfers to a secondary school in Nnewi. It's school fees. Dead end.", next:[], dead:true, gate:'lagos' },
+  n_sister:    { name:"Owner's sister — three transfers", kind:'RELATIVE', amt:420000, desc:"Three transfers to a secondary school in Nnewi. It's school fees.", next:[], dead:true, gate:'lagos' },
   n_otc:       { name:'Three OTC desks', kind:'CRYPTO', amt:0, desc:'Three over-the-counter desks bought the 0.62 BTC and paid the naira into the Ikeja POS floats. One desk is registered abroad and will not answer an NFIU request.', next:['n_wallet'], gate:'lagos' },
   n_wallet:    { name:'Wallet 0xE7…91A', kind:'CRYPTO', amt:100000000, desc:'Registered to a Lekki address. 0.62 BTC — about ₦100M — out to the OTC desks the night before the Ikeja cash-outs.', next:[], gate:'lagos' },
-  n_obi:       { name:'Chief Obi — Lekki account', kind:'PERSON', amt:10000000, desc:'Where the cash went home. Every Friday ₦2.5M leaves by transfer — the "C.A." line in his notebook — to the Ugbowo Relief Foundation, narration "DONATION". Four Fridays on file: ₦10M.', next:['n_charity'], gate:'lagos' },
+  n_obi:       { name:'Chief Obi — Lekki account', kind:'PERSON', amt:10000000, desc:'Where the cash went home. Every Friday ₦2.5M leaves by transfer — the "C.A." line in his notebook — to the Ugbowo Relief Foundation, narration "DONATION". Four Fridays on file: ₦10M.', next:['n_charity'], gate:'lekki' },
   n_bluewater: { name:'Bluewater Logistics Ltd', kind:'COMPANY', amt:640000000, desc:'A "haulage" company with no lorries of its own. Banks the route\'s cash as haulage income, hires its lorries from Sapele Haulage, and pays the drivers (₦85,000 to Musa).', next:['n_sapele','n_serpentine','n_charity'], reg:'bluewater', gate:'route' },
   n_sapele:    { name:'Sapele Haulage Nig. Ltd', kind:'COMPANY', amt:46000000, desc:'Owns the cattle lorry Musa drives. Bluewater pays its lorry hire by the trip, and it paid a Sapele welder for a "chassis repair".', next:[], reg:'sapele', gate:'route' },
   n_serpentine:{ name:'Serpentine Homes Ltd', kind:'PROPERTY', amt:900000000, desc:'Four houses in Benin GRA bought for cash in a single week.', next:[], reg:'serpentine', gate:'route' },
@@ -21709,18 +21736,21 @@ const MONEY_NODES = {
 const MONEY_START_REQUESTS = 4;   // NFIU requests in hand when the trail opens
 const MONEY_PER_WEEK = 2;         // more arrive with each briefing (the name is the drop's; the timeline is day-scale)
 
-/* ---- 4. Corporate Affairs Commission search ---- */
+/* ---- 4. Corporate Affairs Commission search ----
+   from: a name search can't find the entry before that operation is done (Bluewater, Apex and Serpentine are
+   first named at the h4 call, the Foundation in Obi's account after Lekki), so no search in Case 02 or 03
+   builds the Zuma Court cluster. An entry the case has already found stays findable. */
 const REGISTRY = {
   odogwu:    { name:'Odogwu Ventures', no:'BN 2841177', type:'Business Name', inc:'02 Feb 2021', people:['Emeka Odogwu (proprietor)'], sec:'—', addr:'Shop 14, Computer Village, Ikeja', status:'ACTIVE' },
-  bluewater: { name:'Bluewater Logistics Ltd', no:'RC 1520443', type:'Private company', inc:'11 Jun 2018', people:['Kunle Bamidele (director)','Nkechi Eke (director)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  bluewater: { name:'Bluewater Logistics Ltd', no:'RC 1520443', type:'Private company', inc:'11 Jun 2018', people:['Kunle Bamidele (director)','Nkechi Eke (director)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', from:'m4' },
   // the lorry's owner (the beta's welder's receipt and Musa's dossier): Bluewater's director, not at Zuma Court
   sapele:    { name:'Sapele Haulage Nig. Ltd', no:'RC 1611930', type:'Private company', inc:'04 Feb 2020', people:['Kunle Bamidele (director)'], sec:'Apex Corporate Services', addr:'Plot 9, Ajogodo Road, Sapele', status:'ACTIVE' },
-  serpentine:{ name:'Serpentine Homes Ltd', no:'RC 1588102', type:'Private company', inc:'23 Aug 2019', people:['Bassey Okon (director)','Apex Nominees Ltd (shareholder)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
-  urf:       { name:'Ugbowo Relief Foundation', no:'IT 140226', type:'Incorporated Trustees (CAMA 2020, Part F)', inc:'30 Jan 2018', people:['Rev. Peter Osagie (trustee)','Mrs. Ivie Imade (trustee)','Mrs. C. Amadi (trustee)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  serpentine:{ name:'Serpentine Homes Ltd', no:'RC 1588102', type:'Private company', inc:'23 Aug 2019', people:['Bassey Okon (director)','Apex Nominees Ltd (shareholder)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', from:'m4' },
+  urf:       { name:'Ugbowo Relief Foundation', no:'IT 140226', type:'Incorporated Trustees (CAMA 2020, Part F)', inc:'30 Jan 2018', people:['Rev. Peter Osagie (trustee)','Mrs. Ivie Imade (trustee)','Mrs. C. Amadi (trustee)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', from:'m3' },
   // not findable by name before the money trail reaches it (n_ca); the Zuma Court address search lists it once the
   // case has reached the Bypass (byAddress: 'm4' — never from Case 02 or 03)
   ca:        { name:'C.A. Consulting Services Ltd', no:'RC 1544870', type:'Private company', inc:'14 Mar 2019', people:['Bimpe Oke (director — nominee)','Apex Nominees Ltd (100% shareholder)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', hidden:true, byAddress:'m4' },
-  apex:      { name:'Apex Corporate Services', no:'BN 2290315', type:'Business Name (company secretarial)', inc:'09 May 2017', people:['Barr. Tamuno Briggs (proprietor)'], sec:'—', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  apex:      { name:'Apex Corporate Services', no:'BN 2290315', type:'Business Name (company secretarial)', inc:'09 May 2017', people:['Barr. Tamuno Briggs (proprietor)'], sec:'—', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', from:'m4' },
   silverline:{ name:'Silverline Media Ltd', no:'RC 1702219', type:'Private company', inc:'18 Oct 2020', people:['Tari Ebi (director)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', hidden:true },
   amadi:     { name:'Mrs. C. Amadi', no:'—', type:'Person search', inc:'—', people:['Retired primary-school teacher, Uselu. Trustee of one foundation.'], sec:'—', addr:'Uselu, Benin City', status:'—', person:true, hidden:true },
 };
@@ -21733,14 +21763,17 @@ const ZUMA = 'Suite 4B, Zuma Court, Wuse II, Abuja';
 const STATEMENTS = [
   { id:'st_tunde', who:'TUNDE', art:'tunde_neutral', role:'Paid informant, Ikeja market', needs:'m2', claims:[
     { id:'t1', text:'"Every Friday a black Sienna drops the SIMs for the boy."', truth:'mistaken', proof:'kc_ph_van', why:"KC's own photo shows a dark-blue Sienna under sodium light. Right car, right day, wrong colour." },
-    { id:'t2', text:'"Those ransom calls come from Warri. Everybody for market knows."', truth:'mistaken', proof:'tower_fix', why:'The handset fix puts the caller in Ekosodin, Benin. Tunde repeated market talk.' },
+    // the Ugbowo call records (every M7 route logs them) settle it as surely as the live handset fix
+    { id:'t2', text:'"Those ransom calls come from Warri. Everybody for market knows."', truth:'mistaken', proof:['tower_fix', 'tower_cdr'], why:'The Ugbowo tower data puts the caller in Ekosodin, Benin. Tunde repeated market talk.' },
     { id:'t3', text:'"KC runs the whole thing. That boy is the oga."', truth:'contradicted', proof:'kc_msg_engineer', why:'KC takes his batches and his orders from others. Tunde knew the boy was a runner — he inflated the tip to raise his fee.' },
   ]},
   { id:'st_musa', who:'MUSA', art:'musa_evasive', role:'Lorry driver, Benin Bypass', needs:'m4', claims:[
-    { id:'u1', text:'"I have never been to Asaba in my life."', truth:'contradicted', proof:'musa_ph_hotel', why:'A photo on his own phone, outside an Asaba hotel, two weeks ago.' },
+    { id:'u1', text:'"I have never been to Asaba in my life."', truth:'contradicted', proof:['musa_ph_hotel', 'musa_ride_asaba'], why:'His own phone puts him at Riverview Suites, Asaba, two weeks ago.' },
     { id:'u2', text:'"The man who loads the truck — I only know him as the Engineer."', truth:'corroborated', proof:'musa_call_engineer', why:'His call log has "Engineer" before every pickup. He never had a name for him.' },
-    // the beta's welder's receipt (S.game.flags.weld_receipt): the lorry is Sapele Haulage's, and the welds are new
-    { id:'u3', text:'"The compartment was already there when I bought the truck."', truth:'contradicted', proof:'flag:weld_receipt', why:"He never bought that lorry. The welder's receipt for the fresh welds on the chassis rail is made out to Sapele Haulage Nig. Ltd, the company it is registered to." },
+    // he never bought the lorry: the checkpoint papers register it to Sapele Haulage (doc:checkpoint_lie; whoever holds
+    // musa_statement has read them, it is that document's reward), and the beta's welder's receipt
+    // (S.game.flags.weld_receipt) for the fresh welds is made out to the same company
+    { id:'u3', text:'"The compartment was already there when I bought the truck."', truth:'contradicted', proof:['flag:weld_receipt', 'doc:checkpoint_lie'], why:'He never bought that lorry. It is registered to Sapele Haulage Nig. Ltd, the company that paid for the fresh welds on the chassis rail.' },
     { id:'u4', text:'"Nobody pays me except the cattle traders."', truth:'contradicted', proof:'musa_bank_bw', why:'Bluewater Logistics paid him ₦85,000 for "haulage".' },
   ]},
   { id:'st_tobi', who:'TOBI ONUOHA', art:'tobi_neutral', role:'Accountant, recovered in Asaba', needs:'asaba_hostage', claims:[
@@ -21805,7 +21838,7 @@ const BRIEFINGS = {
         dropped:'Bluewater files a change of address. The old one will still be on record.' },
       { id:'initial', name:"Chase the ledger's 'E.' entries", desc:'Seven pickups initialled E.',
         res:'E. is the Engineer. Seven pickups, all between 02:00 and 03:00. He usually reaches a pickup by 23:00 the night before.', flag:'lead_e', intel:4,
-        dropped:'The E. entries stay a pattern without a face. You lose nothing you need.' },
+        dropped:'The E. entries stay a pattern without a face.' },
     ]},
   // h5: after the charge sheet, "Go tonight" — NACECA Abuja does the Abuja work, you direct it from Benin
   m5: { week:3, before:'m6', hub:'h5', title:'BRIEFING · AFTER OZALLA', intro:"Before you cross the bridge — one instruction from me. Then Abuja is yours for the afternoon: our people there can work two of these, and you direct them from Benin.",
@@ -22074,9 +22107,10 @@ function intelTobiAlive(){ const a = (S.game.moralChoices || {}).asaba; return a
 
 /* ---------- who knows what ---------- */
 // the Locker shows this panel; before the reveal the Commander's entry reads as her unit (v13_desk.js)
+// engineer: only pulling his line ('quiet') finds his calls to "C."; 'confront' and 'leak' record only what was said or printed
 const FACTS = {
   eko_house:'The Ekosodin warrant', engineer:'The Engineer\'s calls to "C."', engineer_asked:'You asked about the Engineer', zuma:'Suite 4B, Zuma Court',
-  ledger:'The ransom ledger', poolcar:'The government car at Lekki', cover:'Your Apex cover name',
+  engineer_leak:'A NACECA informant inside the kidnap ring', ledger:'The ransom ledger', poolcar:'The government car at Lekki', cover:'The Apex cover name',
 };
 function knowAdd(fact, who){ const k = I().known; k[fact] = k[fact] || ['You']; if(!k[fact].includes(who)) k[fact].push(who); }
 
@@ -22094,6 +22128,7 @@ function intelOnEvidence(ev){
       { t:`Sealed and tagged — exhibit NAC/EX/0034/${String(n).padStart(2,'0')}` } ] };
     if(midx(meta.m) >= 3 && !meta.inv) d.items[ev.id].custody.push({ t:'Witnessed: Sgt. Uche' });
   }
+  if(ev.id === 'obi_notebook') moneySync();                             // Obi's account can be listed now
 }
 /* findings from the desk and the briefings become exhibits you can put to her */
 function addInvEvidence(id, quiet){
@@ -22249,9 +22284,13 @@ function intelIntegrity(id){ return intelAdmissibility(id).score; }
 const CERT_SLOTS = 2;
 function certWindowOpen(id){
   const d = I(), it = d.items[id]; if(!it) return false;
-  if(d.court || S.game.seasonOneComplete) return false;                 // the trial has been and gone
+  if(d.court) return false;                                           // the trial has been and gone
+  // after the season only M8 replayed (begun after the season, intelOnMissionStart) reopens a window: a new night
+  // and a new trial (courtResetForReplay clears d.court), so its pre-trial file can certify the Ekosodin material
+  if(S.game.seasonOneComplete && !(d.m8Replay && opNow() === 'm8')) return false;
   const closeAt = BRIEF_BEFORE.find(b => midx(b) > midx(it.m));
   if(!closeAt) return true;                                           // the finale's exhibits: until the trial
+  if(d.started[closeAt]) return false;                                // closed for good once that operation started: a replay never reopens it
   const raw = S.game.currentMission || 'm1', cur = opNow(raw), between = raw !== cur;   // a hub or the car
   return midx(cur) < midx(closeAt) || (cur === closeAt && !between && !d.started[closeAt]);
 }
@@ -22301,6 +22340,7 @@ function flagClue(cid, on){
 }
 /* a briefing opens: Senior's flagged money clues join the trail now, without saying which flag did it */
 function intelBriefingOpened(){
+  moneySync();
   if(!intelSenior()) return [];
   const d = I(), m = d.money, ids = [];
   PHONES.forEach(p => p.items.forEach(c => { if(c.rel && c.money && d.flagged[c.id] === true && !m.unlocked[c.money]) ids.push(c.money); }));
@@ -22309,10 +22349,25 @@ function intelBriefingOpened(){
 }
 
 /* ---------- money ---------- */
+/* gate 'lekki' (Obi's account): not listed at all until Lekki is behind you or his notebook is in hand — its
+   line quotes the notebook. A trace or lead that reaches it earlier leaves it waiting (I().money.waiting);
+   moneySync lists it once the gate opens (on evidence, at every operation's start and end, at a briefing). */
+const lekkiBehind = () => (S.game.completedMissions || []).includes('m3') || intelHas('obi_notebook');
+const moneyListable = id => { const n = MONEY_NODES[id]; return !n || n.gate !== 'lekki' || lekkiBehind(); };
+function moneyWait(m, id){ (m.waiting = m.waiting || {})[id] = true; }
+function moneySync(){
+  const m = I().money;
+  // a save from before the gate may list the account early: it goes back to waiting until Lekki
+  Object.keys(m.unlocked || {}).forEach(id => { if(m.unlocked[id] && !m.traced[id] && !moneyListable(id)){ delete m.unlocked[id]; moneyWait(m, id); } });
+  const ready = Object.keys(m.waiting || {}).filter(moneyListable);
+  ready.forEach(id => { delete m.waiting[id]; });
+  if(ready.length) moneyUnlock(ready, false);
+}
 function moneyUnlock(ids, announce){
   const m = I().money;
   ids.forEach(id=>{
     if(!MONEY_NODES[id] || m.unlocked[id]) return;
+    if(!moneyListable(id)){ moneyWait(m, id); return; }
     m.unlocked[id] = true;
     if(!m.open){ m.open = true; m.req += MONEY_START_REQUESTS; }
     if(announce && !intelSenior()) toast('MONEY TRAIL', MONEY_NODES[id].name + ' — follow it in the Case Desk', 2200);
@@ -22327,6 +22382,7 @@ function intelMoneyGate(id){
   const n = MONEY_NODES[id]; if(!n || !intelMoneyOpen()) return false;
   const g = n.gate || 'lagos', done = S.game.completedMissions || [];
   if(g === 'lagos') return true;
+  if(g === 'lekki') return lekkiBehind();
   const r = (window.V12 && typeof V12.accused === 'function') ? V12.accused('route') : null;
   const route = !!r || done.includes('m6');
   if(g === 'route') return route;
@@ -22339,7 +22395,7 @@ function moneyTrace(id){
   if(!n || !m.unlocked[id] || m.traced[id]) return false;
   if(m.req <= 0){ toast('NO NFIU REQUESTS LEFT', 'More come with the next briefing'); if(typeof sfxFail==='function') sfxFail(); return false; }
   m.req--; m.traced[id] = true;
-  n.next.forEach(x=>{ m.unlocked[x] = true; });
+  n.next.forEach(x=>{ if(moneyListable(x)) m.unlocked[x] = true; else moneyWait(m, x); });
   if(n.reg) regFind([n.reg]);
   // Senior: every trace is worth the same, so neither a toast nor the intel count marks the key node
   if(intelSenior()) applyEffect({ intel:+2 });
@@ -22359,9 +22415,10 @@ function naira(v){
 function regFind(keys){ const r = I().reg; keys.forEach(k=>{ if(REGISTRY[k]) r.found[k] = true; }); checkInvEvidence(); }
 function regSearch(q){
   q = (q||'').trim().toLowerCase(); if(q.length < 3) return [];
-  const r = I().reg;
+  const r = I().reg, done = S.game.completedMissions || [];
   const hits = Object.keys(REGISTRY).filter(k=>{
     const e = REGISTRY[k]; if(e.hidden && !r.found[k]) return false;
+    if(e.from && !done.includes(e.from) && !r.found[k]) return false;   // not before the case reaches it (REGISTRY `from`)
     return (e.name + ' ' + e.no + ' ' + e.people.join(' ')).toLowerCase().includes(q);
   });
   regFind(hits);
@@ -22465,8 +22522,10 @@ function stJudge(stId, cid, v){
 function intelOnMissionStart(id){
   const d = I();
   d.started[id] = true;
+  d.m8Replay = id === 'm8' && !!S.game.seasonOneComplete;             // the finale replayed after the season (certWindowOpen)
   v13NavReset();                                                      // a new operation: no v13 flow resumes into it
   bookIn();
+  moneySync();
   if(id === 'm8'){
     const st = intelStyle();
     d.styleAtFinale = st.key;
@@ -22483,6 +22542,7 @@ function intelOnMissionEnd(mid){
   const d = I(), o = S.game._opStart || {};
   d.opLog[mid] = { force: Math.max(0, (S.game.forceUsed||0) - (o.force||0)), bumps: S.game._opBumps || 0 };
   bookIn(mid);
+  moneySync();
   if(mid === 'm8'){
     if(S.game.flags && S.game.flags.fin_bodycam) addPseudoItem('bodycam_eko', 'm8', 'VIDEO', "Agt. Kelechi's body-camera, the yard on Akintola Close");
     ledgerCustody();
@@ -22517,7 +22577,8 @@ function intelRevealExtras(){
   };
   const after = [{ speaker:'COMMANDER ADAEZE', mood:'evasive', text: STYLE_LINE[st] || STYLE_LINE.proc }];
   if(d.order === 'comply') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You left the Engineer alone when I asked you to. You have no idea how much I wanted you to say no.' });
-  if(d.order === 'confront') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You asked me on an open call, with Uche in the room. I respected that. Then I changed every phone that night.' });
+  // she cut off the Engineer, not her own number: "C." still calls the ransom phone in the M7 tower data (h7 'pattern')
+  if(d.order === 'confront') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You asked me on an open call, with Uche in the room. I respected that. Then I made sure the Engineer never called me again.' });
   return { before, after };
 }
 
@@ -22555,11 +22616,31 @@ function radioPlay(mid){
    Navigation (design A2): one Esc / pause rule for v13 overlays, and one
    return stack for the operations table. Nobody else assigns V12._onOpsClose.
    ========================================================================= */
-const V13NAV = { stack:[], modals:[], under:null };
+const V13NAV = { stack:[], modals:[], under:null, dormant:[] };
+// the base game's dialogue box: a gatekeeper call borrows it, but every base dialogue uses it too, so a
+// registration on it is never brought back after a reset
+const V13_BORROWED = ['screen-dialogue'];
 function v13Shown(id){ const el = id && document.getElementById(id); return !!(el && el.classList.contains('show')); }
+/* A quit, a load, an erase or a new operation ends every v13 flow that was open: the return stack goes, and
+   each registration goes dormant. Its owner still counts it as registered (the briefing keeps its own record
+   until the briefing finishes), so when the owner shows that overlay again (the same briefing, reopened after
+   Quit, then Continue) it is live again; until then it changes nothing. Listeners on 'v13:navreset' (the desk)
+   drop whatever was waiting down the old chain. */
 function v13NavReset(){
+  V13NAV.modals.forEach(m => { if(!V13_BORROWED.includes(m.id)){ v13Undorm(m.id); V13NAV.dormant.push(m); } });
   V13NAV.stack.length = 0; V13NAV.modals.length = 0; V13NAV.under = null;
   if(window.V12 && V12._onOpsClose === v13NavPop) V12._onOpsClose = null;
+  try{ document.dispatchEvent(new CustomEvent('v13:navreset')); }catch(e){}
+}
+function v13Undorm(id){ const i = V13NAV.dormant.findIndex(m => m.id === id); if(i >= 0) V13NAV.dormant.splice(i, 1); }
+// a dormant registration whose overlay is on screen again (or the one just shown) is live again
+function v13Wake(id){
+  for(let i = V13NAV.dormant.length - 1; i >= 0; i--){
+    const m = V13NAV.dormant[i];
+    if(id ? m.id !== id : !v13Shown(m.id)) continue;
+    V13NAV.dormant.splice(i, 1);
+    if(!V13NAV.modals.some(x => x.id === m.id)) V13NAV.modals.push(m);
+  }
 }
 /* v13OpenOps(group, back): open the operations table; closing it runs back() (the entry pushed last first) */
 function v13OpenOps(group, back){
@@ -22592,11 +22673,13 @@ function v13Modal(id, o){
 function v13ModalEnd(id){
   const i = V13NAV.modals.findIndex(m => m.id === id);
   if(i >= 0) V13NAV.modals.splice(i, 1);
+  v13Undorm(id);
 }
 function v13TopShownModal(){ for(let i = V13NAV.modals.length - 1; i >= 0; i--) if(v13Shown(V13NAV.modals[i].id)) return V13NAV.modals[i]; return null; }
 if(window.V12 && typeof V12.wrap === 'function'){
   V12.wrap('togglePause', orig => function(){
     try{
+      if(V13NAV.dormant.length) v13Wake();
       const ev = window.event, esc = !!(ev && ev.type === 'keydown' && (ev.code === 'Escape' || ev.key === 'Escape'));
       if(!v13Shown('screen-pause')){
         if(esc && v13Shown('screen-ops') && V13NAV.stack.length && typeof V12.closeOps === 'function'){ V12.closeOps(); return; }
@@ -22622,12 +22705,15 @@ if(window.V12 && typeof V12.wrap === 'function'){
   // however the pause menu opens (Esc, the HUD button, or showOverlay directly), remember the v13 flow it covers
   V12.wrap('showOverlay', orig => function(id){
     try{
+      if(V13NAV.dormant.length) v13Wake();
       if(id === 'screen-pause' && !v13Shown('screen-pause') && !V13NAV.under && V13NAV.modals.length){
         const cover = [...document.querySelectorAll('.overlay.show')].map(o => o.id).find(x => x && x !== 'screen-pause');
         if(cover) V13NAV.under = cover;
       }
     }catch(e){}
-    return orig.apply(this, arguments);
+    const r = orig.apply(this, arguments);
+    try{ if(id && V13NAV.dormant.length) v13Wake(id); }catch(e){}
+    return r;
   });
   // a quit, a load or an erase ends any v13 flow that was open
   document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-load, #btn-erase')) v13NavReset(); }catch(err){} }, true);
@@ -22675,7 +22761,7 @@ window.intelOnBriefingOpen = function(){ try{ return intelBriefingOpened(); }cat
 'use strict';
 
 const DESK = window.DESK = Object.assign(window.DESK || {}, {
-  tab:'locker', open:false, susp:false, ret:null, back:null, prev:null, opsCap:null,
+  tab:'locker', open:false, susp:false, ret:null, back:null, prev:null, opsCap:null, frames:[],
   phone:null, sec:null, reg:null, st:null, regQ:'', regHits:null, regMsg:'', regAddr:null, regAddrHits:null,
   arm:null, stMsg:null, note:null,
 });
@@ -22685,8 +22771,10 @@ const ico = (n, c) => (typeof icon === 'function' ? icon(n, c) : '');
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 // the briefing and the court print through the desk's escaper; keep it global unless someone else already has one
 if(typeof esc === 'undefined') window.esc = h;
-// canon in anything the desk prints from data: the squad is always spelled out
-const canon = s => String(s == null ? '' : s).replace(/\bwith AKS\b/g, 'with the Anti-Kidnapping Squad').replace(/\bAKS\b/g, 'the Anti-Kidnapping Squad');
+// canon in anything the desk prints from data: the squad is always spelled out, and a route written with
+// arrow glyphs (the car tail's region, the route theory, some exhibit names) reads as words (design §0)
+const canon = s => String(s == null ? '' : s).replace(/\bwith AKS\b/g, 'with the Anti-Kidnapping Squad').replace(/\bAKS\b/g, 'the Anti-Kidnapping Squad')
+  .replace(/\s*[\u2190-\u21FF]\s*/g, ' to ');
 const t = s => h(canon(s));
 const V = () => window.V12 || {};
 const shown = id => { const el = document.getElementById(id); return !!(el && el.classList.contains('show')); };
@@ -22744,10 +22832,11 @@ function ensureDesk(){
   (document.getElementById('game-root') || document.body).appendChild(ov);
   // something else took the screen (a cutscene, a title card, the game's own flow): the desk is no longer open.
   // The pause menu over the desk is the exception: its Resume (the model's v13Modal resume) brings the desk back.
+  // A scripted beat over the field (a dialogue, a puzzle) is normally caught by the showOverlay wrap below.
   new MutationObserver(() => {
     if(!DESK.open || DESK.susp || ov.classList.contains('show')) return;
     if(shown('screen-pause')){ if(typeof ENGINE !== 'undefined' && DESK.prev) ENGINE.movementEnabled = DESK.prev.move; return; }
-    DESK.open = false; DESK.back = null; DESK.arm = null; DESK.note = null; modalOff();
+    dropDesk(FIELD.some(shown));
   }).observe(ov, { attributes:true, attributeFilter:['class'] });
   document.getElementById('btn-desk-close').addEventListener('click', closeDesk);
   document.getElementById('desk-tabs').addEventListener('click', e => {
@@ -22771,6 +22860,32 @@ const modalOn = () => { if(typeof v13Modal === 'function') safe(() => v13Modal('
 const modalOff = () => { if(typeof v13ModalEnd === 'function') safe(() => v13ModalEnd('screen-desk')); };
 const freeze = () => { if(typeof ENGINE !== 'undefined') ENGINE.movementEnabled = false; if(typeof showHUD === 'function') showHUD(false); };
 
+/* ---------- when the desk ends without a way back ----------
+   The beats the game opens over the live field and closes straight back to it (startDialogue's own busy list).
+   One of them can land while the desk is open, or waiting under a table it opened: a timed line after a
+   puzzle (M4's Musa flip 0.7 s after the lie puzzle), a queued dialogue. It takes the screen, and when it ends
+   the game goes back to the field, so the desk hands back what it took away (movement, and the HUD in an
+   operation) as it goes: the beat then plays over the live game, as it would have without the desk. */
+const FIELD = ['screen-dialogue', 'screen-puzzle', 'screen-minigame'];
+function dropDesk(handBack){
+  const first = DESK.frames.length ? DESK.frames[0].prev : DESK.prev;   // what the first desk of a nested pair took away
+  DESK.open = false; DESK.susp = false; DESK.frames = []; DESK.back = null; DESK.arm = null; DESK.note = null; DESK.opsCap = null;
+  modalOff();
+  if(!handBack || !first) return;
+  if(typeof ENGINE !== 'undefined') ENGINE.movementEnabled = first.move;
+  if(S.game.currentMission && first.move !== false && typeof showHUD === 'function') showHUD(true);
+}
+if(V().wrap && typeof window.showOverlay === 'function' && !window.showOverlay._v13desk){
+  V().wrap('showOverlay', orig => {
+    const f = function(id){ const r = orig.apply(this, arguments); if(DESK.open && FIELD.includes(id)) safe(() => dropDesk(true)); return r; };
+    f._v13desk = true; return f;
+  });
+}
+// a quit, a load, an erase or a new operation reset the model's return stack: a desk still waiting down that
+// chain (under its table, or a screen the table opened) has nowhere to come back to. The flow that reset it
+// owns movement and the HUD from here.
+document.addEventListener('v13:navreset', () => { if(DESK.open && !shown('screen-desk')) safe(() => dropDesk(false)); });
+
 function openDesk(tab, opts){
   opts = opts || {};
   ensureDesk();
@@ -22778,6 +22893,10 @@ function openDesk(tab, opts){
   // the desk is waiting under an operations table it opened: closing that table brings it back
   if(DESK.open && DESK.susp){
     if(shown('screen-ops') && typeof V().closeOps === 'function'){ V().closeOps(); if(DESK.open && !DESK.susp){ renderDesk(); return; } }
+    // still waiting further down that chain (the table's CAPABILITIES, then the pause menu's CASE DESK): open a
+    // second desk on top. The first keeps its way back and what it took away; closing the second hands back to
+    // it, so the chain still unwinds through it (never to a frozen field).
+    if(DESK.open && DESK.susp){ DESK.frames.push({ ret:DESK.ret, back:DESK.back, prev:DESK.prev, opsCap:DESK.opsCap }); DESK.open = false; }
     DESK.susp = false;
   }
   if(DESK.open && shown('screen-desk')){ DESK.arm = null; renderDesk(); return; }
@@ -22812,6 +22931,9 @@ function closeDesk(){
   modalOff();
   if(ov) ov.classList.remove('show');
   if(typeof ENGINE !== 'undefined') ENGINE.movementEnabled = prev.move;
+  // the second desk of a nested pair: the first is waiting again, down the chain it started
+  const outer = DESK.frames.pop();
+  if(outer){ Object.assign(DESK, outer, { open:true, susp:true }); modalOn(); }
   if(back){ safe(back); }
   else if(ret === 'screen-ops' && typeof V().openOps === 'function'){
     // back to the table it was opened from, keeping whatever that table was going to return to
@@ -22842,7 +22964,9 @@ function deskOpsTable(){
   if(typeof V().openOps !== 'function') return;
   if(!DESK.open){ opsOpen(undefined, () => openDesk()); return; }
   DESK.susp = true; DESK.arm = null;
-  modalOff();
+  // the desk stays registered while it waits (the model's Esc skips an overlay that is not on screen): a pause
+  // menu opened further down this chain (Esc on the table's CAPABILITIES) then knows it covers a v13 flow and
+  // RESUME goes back into the chain, not to a field the desk has frozen
   const ov = document.getElementById('screen-desk'); if(ov) ov.classList.remove('show');
   opsOpen(undefined, reshowDesk);
 }
@@ -23081,7 +23205,7 @@ function renderRegistry(){
   const known = Object.keys(r.found || {}).filter(k => REGISTRY[k]);
   let o = `<p class="dk-intro">Search the register by company, number or name. Directors change. Addresses rarely do.</p>
     <div class="dk-search"><label class="dk-lbl" for="reg-q">COMPANY, NUMBER OR NAME</label>
-      <div class="dk-search-row"><input id="reg-q" type="text" inputmode="search" enterkeyhint="search" placeholder="e.g. Bluewater" value="${h(DESK.regQ || '')}" autocomplete="off" spellcheck="false"><button type="button" class="v13-btn" data-act="reg-search">${ico('search')}SEARCH</button></div></div>`;
+      <div class="dk-search-row"><input id="reg-q" type="text" inputmode="search" enterkeyhint="search" placeholder="Company name or RC number" value="${h(DESK.regQ || '')}" autocomplete="off" spellcheck="false"><button type="button" class="v13-btn" data-act="reg-search">${ico('search')}SEARCH</button></div></div>`;
   if(DESK.regMsg) o += `<p class="dk-src dk-regmsg" role="status">${h(DESK.regMsg)}</p>`;
   if(DESK.regAddr && DESK.regAddrHits){ o += `<h3 class="dk-group">AT ${t(String(DESK.regAddr).toUpperCase())} · <span class="v13-mono">${DESK.regAddrHits.length}</span></h3>` + DESK.regAddrHits.filter(k => REGISTRY[k]).map(k => regSlip(k, `${REGISTRY[k].no} · ${(REGISTRY[k].people || [])[0] || ''}`)).join(''); }
   else if(DESK.regHits && DESK.regHits.length){ o += `<h3 class="dk-group">RESULTS</h3>` + DESK.regHits.filter(k => REGISTRY[k]).map(k => regSlip(k, `${REGISTRY[k].no} · ${REGISTRY[k].addr}`)).join(''); }
@@ -23407,12 +23531,13 @@ function openBriefing(k, then, opts){
   const d = I();
   closeStale(k);
   Object.assign(BRF, { k, phase:'plan', sel:[], dec:{}, then:typeof then === 'function' ? then : null, video:!!(opts && opts.video), armed:null, wArm:null, _top:true });
+  // the model's own work at a briefing (e.g. money nodes from flags since the last one), once. It runs before the
+  // top-up below, so a trail it opens (Senior's flagged clues) gets this briefing's requests too, as Recruit's does
+  if(typeof window.intelOnBriefingOpen === 'function'){ d.brfHook = d.brfHook || {}; if(!d.brfHook[k]){ d.brfHook[k] = true; safe(()=>window.intelOnBriefingOpen(k), 'brief hook'); } }
   // more NFIU requests with each briefing, once
   // (decided once, at the first opening: a reload never tops them up again)
   d.briefedReq = d.briefedReq || {};
   if(!d.briefedReq[k]){ d.briefedReq[k] = true; if(d.money && d.money.open) d.money.req += (typeof MONEY_PER_WEEK === 'number' ? MONEY_PER_WEEK : 2); }
-  // the model's own work at a briefing (e.g. money nodes from flags since the last one), once
-  if(typeof window.intelOnBriefingOpen === 'function'){ d.brfHook = d.brfHook || {}; if(!d.brfHook[k]){ d.brfHook[k] = true; safe(()=>window.intelOnBriefingOpen(k), 'brief hook'); } }
   if(k === 'm3' && d.brfOpen !== 'm3'){ d.brfOpen = 'm3'; save(); }       // Week 1 survives a quit
   if(typeof musicForScene === 'function') safe(()=>musicForScene('investigation'), 'music');
   const r = d.brf && d.brf.k === k ? d.brf : null;
@@ -23648,8 +23773,9 @@ function applyDecisions(r){
     // asking her gives you her answer and nothing else: the Engineer's calls are found only by pulling his line ('quiet')
     if(dec.order === 'confront'){ applyEffect({ agencyFavour:-3 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer_asked', 'Cdr. Adaeze');
       out.push({ h:'THE ENGINEER', t:'"He is how we found Lekki. You will have to trust me on this one, Kelechi."' }); }
-    if(dec.order === 'leak'){ applyEffect({ publicTrust:+3, agencyFavour:-6 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer', 'The press'); intelSet('engineer_fled');
-      out.push({ h:'THE ENGINEER', t:'The story runs that evening: "NACECA informant linked to kidnap ring." By morning the Engineer has vanished, and the Commander has stopped saying good morning.' }); }
+    // the press gets the story, not his calls (only 'quiet' finds those), and he stays in play: h7 and the tail (t7) follow him
+    if(dec.order === 'leak'){ applyEffect({ publicTrust:+3, agencyFavour:-6 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer_leak', 'The press');
+      out.push({ h:'THE ENGINEER', t:'The story runs that evening: "NACECA informant linked to kidnap ring." It doesn\'t print his name, but the Commander has stopped saying good morning.' }); }
   }
   if(dec.press){
     const o = (d.opLog || {}).m6 || {}, clean = !(o.force > 0) && !(o.bumps > 0);
@@ -23988,18 +24114,34 @@ function soAct(a){
   save();
   renderSO(false);
 }
+/* Recruit: what the feed is worth (the drop's reading, from the hidden relevance flags) */
+function soReading(){
+  const parts = [];
+  if(intelHas('so_courier')) parts.push('a courier carrying cash bags into Zuma Court');
+  if(intelHas('so_poolcar')) parts.push('an envelope passed into a government car');
+  if(intelHas('so_plate')) parts.push("the Corolla's plate, LND 590 XA" + (intelHas('so_plate_match') ? ' — the car from the Lekki gatehouse log' : ''));
+  if(intelHas('so_back')) parts.push('a back entrance nobody mentioned');
+  return parts.length ? 'From the feed you logged ' + parts.join(', ') + '.' : 'A long afternoon on a grainy feed, and nothing you can use. That happens too.';
+}
+/* Senior: what the team logged, every frame and plate alike, with no word on which of them matters (A8) */
+function soRecord(s){
+  const log = s.log || [], photos = log.filter(x => x.k === 'photo').map(x => x.t), plates = log.filter(x => x.k === 'plate').map(x => x.plate);
+  const n = photos.length, parts = [];
+  if(n) parts.push(`${n} photograph${n > 1 ? 's' : ''} (${photos.join(', ')})`);
+  if(plates.length) parts.push(`the plate${plates.length > 1 ? 's' : ''} ${plates.join(' and ')}`);
+  let t = parts.length ? `From the feed you logged ${parts.join(' and ')}.` : 'The feed ends with nothing in the log.';
+  if(intelHas('so_followed')) t += ' The team tried to follow the Corolla and lost it at Lugbe.';
+  if(intelHas('so_back')) t += ' Round the back of Zuma Court: a motorbike, engine still warm.';
+  return t;
+}
 function finishSO(){
   const s = soState(); if(!s) return;
   if(!s.done){
     const got = ['so_courier', 'so_poolcar', 'so_plate', 'so_plate_match', 'so_back', 'so_followed'].filter(intelHas);
-    const parts = [];
-    if(intelHas('so_courier')) parts.push('a courier carrying cash bags into Zuma Court');
-    if(intelHas('so_poolcar')) parts.push('an envelope passed into a government car');
-    if(intelHas('so_plate')) parts.push('its plate, LND 590 XA' + (recruit() && intelHas('so_plate_match') ? ' — the car from the Lekki gatehouse log' : ''));
-    if(intelHas('so_back')) parts.push('a back entrance nobody mentioned');
     s.got = got; s.done = true;
-    s.txt = parts.length ? 'From the feed you logged ' + parts.join(', ') + '.' : 'A long afternoon on a grainy feed, and nothing you can use. That happens too.';
-    if(intelHas('so_poolcar')) addInvEvidence('inv_stakeout');
+    s.txt = recruit() ? soReading() : soRecord(s);
+    // Senior: the exhibit lands in the Locker without a toast (a toast only for the 18:15 photo would mark it as the one)
+    if(intelHas('so_poolcar')) addInvEvidence('inv_stakeout', !recruit());
     save();
   }
   modalOff('screen-so');
@@ -24012,7 +24154,8 @@ window.openStakeout = openStakeout;
    Same in both difficulties (A8): the meter, the pause and the one-shot cover card are
    consequences, not hints. State persists in I().uc after every answer. */
 const UC_STEPS = [
-  { who:'RECEPTIONIST', q:'Good afternoon. Your name, sir?', opts:[['Obinna Anyanwu.', 0], ['Kelechi— sorry. Obinna. Obinna Okafor.', 35], ['Why do you need my name?', 15]] },
+  // the Abuja officer speaks under the cover (A10): his slip is a wrong surname, never Kelechi's name
+  { who:'RECEPTIONIST', q:'Good afternoon. Your name, sir?', opts:[['Obinna Anyanwu.', 0], ['Obinna— sorry. Obinna Okafor.', 35], ['Why do you need my name?', 15]] },
   { who:'RECEPTIONIST', q:'And who referred you to us?', opts:[['Alhaji Danjuma, at Bluewater.', 0], ['A friend at NACECA.', 75], ['I found you online.', 20]] },
   { probe:true, txt:'She turns to photocopy his ID. The visitor book lies open on the desk.', act:'Tell him to read the visitor book', sus:15, got:'uc_book', res:'Two lines repeat every month: "C.A. — 1st, 10:00" and "Bluewater — Kunle".' },
   { who:'BARR. TAMUNO BRIGGS', q:'So. What will this company do?', opts:[['Generator parts. I import through Onitsha.', 0], ['Logistics. Haulage.', 20], ['Consulting, mostly.', 25]] },
@@ -24088,7 +24231,7 @@ function ucAct(a, ds){
   if(s.done) return;
   if(a === 'go'){ if(s.i < 0){ s.i = 0; save(); renderUC(); } return; }
   const st = UC_STEPS[s.i]; if(!st || s.blown) return;
-  if(a === 'ans' && !st.probe){ const o = st.opts[+ds.k]; if(!o) return; s.sus += o[1]; s.log.push({ t:`${st.who}: "${st.q}" — You: "${o[0]}"${o[1] >= 30 ? ' (a pause. Too long.)' : ''}` }); if(o[1]) sfx('sfxFail'); }
+  if(a === 'ans' && !st.probe){ const o = st.opts[+ds.k]; if(!o) return; s.sus += o[1]; s.log.push({ t:`${st.who}: "${st.q}" — He says: "${o[0]}"${o[1] >= 30 ? ' (a pause. Too long.)' : ''}` }); if(o[1]) sfx('sfxFail'); }
   else if(a === 'probe' && st.probe){ s.sus += st.sus; s.got.push(st.got); s.log.push({ t:st.res, got:true }); sfx('sfxBlip'); }
   else if(a === 'skip' && st.probe){ s.log.push({ t:'You let it go.' }); }
   else return;
@@ -24103,13 +24246,13 @@ function ucFinalize(){
   s.done = true;
   if(s.blown){
     d.alert = (d.alert || 0) + 1; knowAdd('cover', 'Apex Corporate Services'); intelSet('apex_blown');
-    s.txt = 'The cover is blown. They are polite, too polite. By morning Suite 4B has new locks and a "To Let" sign — and somebody has made a phone call about you.' + (s.got.length ? ` You still walked out with ${s.got.length} thing${s.got.length > 1 ? 's' : ''} you can use.` : '');
+    s.txt = 'The cover is blown. They are polite, too polite. By morning Suite 4B has new locks and a "To Let" sign — and somebody has made a phone call about you.' + (s.got.length ? ` He still walked out with ${s.got.length} thing${s.got.length > 1 ? 's' : ''} you can use.` : '');
   } else {
     if(s.got.includes('uc_invoice')){ applyEffect({ intel:+12 }); addInvEvidence('inv_invoice'); }
     if(s.got.includes('uc_book')) applyEffect({ intel:+6 });
     if(s.got.includes('uc_nominee')) applyEffect({ intel:+6 });
     if(typeof unlock === 'function' && s.sus < 40) safe(()=>unlock('cover_held'), 'ach');
-    s.txt = s.got.length ? `Your cover held. You walked out with: ${s.got.map(g => ({ uc_book:'the visitor book pattern', uc_nominee:"Briggs's admission about C.A.'s nominee", uc_invoice:'a C.A. Consulting invoice to the Foundation' }[g])).join('; ')}.` : 'Your cover held, and you took nothing. Clean — and empty.';
+    s.txt = s.got.length ? `His cover held. He walked out with: ${s.got.map(g => ({ uc_book:'the visitor book pattern', uc_nominee:"Briggs's admission about C.A.'s nominee", uc_invoice:'a C.A. Consulting invoice to the Foundation' }[g])).join('; ')}.` : 'His cover held, and he took nothing. Clean — and empty.';
   }
   save();
 }
@@ -24136,14 +24279,15 @@ window.openUndercover = openUndercover;
    - Senior Agent (default): every answer is open; reaching for something you
      don't hold costs patience. Recruit: as delivered ('not in your file').
    - the review reads filed records only (charge sheets, warrants, branches).
-   - Esc never drops the trial (v13Modal); a replayed M8 gets a fresh trial.
+   - Esc never drops the trial (v13Modal); a closed tab resumes it at the same step (I().courtRun, saved after
+     every step, like a committed briefing: A4); a replayed M8 gets a fresh trial.
    Everything here is scoped to #screen-court / #screen-review / .v13-review.
    ========================================================================= */
 
 ACHIEVEMENTS.push(
   { id:'one_office',   name:'One Office',          desc:'Find the entities sharing one desk in Wuse II.' },
   { id:'four_billion', name:'Follow the Money',    desc:'Trace the whole ₦5bn network from a ₦150,000 alert.' },
-  { id:'cover_held',   name:'Obinna Anyanwu',      desc:'Walk out of Apex with your cover intact.' },
+  { id:'cover_held',   name:'Obinna Anyanwu',      desc:'Get your officer out of Apex with his cover intact.' },
   { id:'clean_chain',  name:'Clean Chain',         desc:'Every exhibit you tendered was admitted.' },
 );
 
@@ -24160,6 +24304,9 @@ const ctVal = (v, ...a) => typeof v === 'function' ? v(...a) : v;
 const ctItems = () => (typeof INTEL_ITEMS !== 'undefined' ? INTEL_ITEMS : {});
 const ctHas = id => { try{ return typeof intelHas === 'function' ? intelHas(id) : (S.game.evidence || []).some(e => e.id === id); }catch(e){ return false; } };
 const ctTobiAlive = () => { const a = (S.game.moralChoices || {}).asaba; return a === 'rescue' || (a === 'chase' && !S.game._asabaHostageLost); };
+// the first sentence of a line, an honorific's dot ("Sgt. Uche") not ending it. No regex lookbehind: Safari before
+// 16.4 (every iPhone 6s/7 and SE 1) rejects one while parsing, and this whole file would never run there.
+const ctFirstSentence = s => String(s).replace(/\b(Sgt|Engr|Insp|Cdr|Dr|Mr|Mrs|Barr)\./g, '$1\u0001').split(/\.\s+/)[0].replace(/\u0001/g, '.');
 
 /* the warrant record the court and the review read (design §1/A5; V12.warrantState when the model has it) */
 const CT_WARRANT_LABEL = { w_lekki:'Search warrant — Lekki, Old GRA', w_asaba:'Search warrant — Asaba riverside',
@@ -24289,9 +24436,26 @@ function ctVerdictScore(stId, c){
   if(!v) return null;
   return typeof stExpected === 'function' ? v === stExpected(c) : null;
 }
-function ctWitnessLied(stId){
+function ctFiledVerdict(stId, c){
+  if(typeof intelVerdictOf === 'function'){ try{ const r = intelVerdictOf(stId, c.id); return r ? r.verdict : null; }catch(e){ return null; } }
+  const r = (((typeof I === 'function' ? I().st : null) || {})[stId] || {})[c.id];
+  return r == null ? null : (typeof r === 'object' ? r.verdict : r) || null;
+}
+/* what your own file says about a witness the defence can use (A8): null when every filed claim scores right.
+   The trigger is any claim scoring false; the words follow what the file actually says about that claim —
+   "lied" only where the officer filed CONTRADICTED (a claim filed CORROBORATED without its proof is not that). */
+const CT_FILE_SAYS = {
+  contradicted:"Your own officer's file says this witness lied to you.",
+  mistaken:"Your own officer's file says this witness got it wrong.",
+  corroborated:'Your own officer vouched for this witness without the proof to back it.',
+  unverified:"Your own officer's file never settles what this witness told you.",
+};
+function ctWitnessFile(stId){
   const st = (typeof STATEMENTS !== 'undefined' ? STATEMENTS : []).find(s => s.id === stId);
-  return !!(st && st.claims.some(c => ctVerdictScore(stId, c) === false));
+  if(!st) return null;
+  const said = st.claims.filter(c => ctVerdictScore(stId, c) === false).map(c => ctFiledVerdict(stId, c));
+  if(!said.length) return null;
+  return ['contradicted', 'mistaken', 'corroborated', 'unverified'].find(v => said.includes(v)) || 'corroborated';
 }
 
 function courtExhibits(){
@@ -24302,7 +24466,8 @@ function courtExhibits(){
     const x = { id, name, sup:Object.assign({}, sup), k, cap:1, raid:ctRaidOf(id) };
     if(k === 'contested') x.why = ctContestReason(id);
     if(wrong && picks.includes(id)){ x.cap = 0.5; x.wrongPick = true; }       // "FAILS: built against the wrong person"
-    if(CT_WITNESS_ST[id] && ctWitnessLied(CT_WITNESS_ST[id])) x.lied = true;
+    const file = CT_WITNESS_ST[id] ? ctWitnessFile(CT_WITNESS_ST[id]) : null;
+    if(file){ x.lied = true; x.fileSays = file; }                           // x.lied: a claim on your file scores false (A8)
     if((id === 'tobi' && routeWrong === 'tobi') || (id === 'musa_statement' && routeWrong === 'musa')) x.namedOnSheet = true;
     X.push(x);
   };
@@ -24440,16 +24605,50 @@ window.addEventListener('keydown', e=>{
 function courtResume(){ ensureCourt(); if(typeof showHUD === 'function') showHUD(false); showOverlay('screen-court'); renderCourt(); }
 function openCourt(then){
   ensureCourt();
-  const rec = ctAcc('voice'), creds = [];
-  if(rec && rec.ok && rec.ok.suspect === false) creds.push('wrong');
-  if((S.game.moralChoices || {}).arrest === 'bribe') creds.push('bribe');
-  Object.assign(COURT, { ex:courtExhibits(), i:0, patience:COURT_PATIENCE, phase:'pre', then, half:false, admitted:[], struck:[], cred:{}, creds, ci:0, n:1, note:null, patienceNoted:false, lastRuling:null });
+  const run = ctRunFor((S.game.moralChoices || {}).finale);
+  if(run) ctRestore(run, then);                     // a trial cut off by a closed tab goes on where it was left
+  else {
+    const rec = ctAcc('voice'), creds = [];
+    if(rec && rec.ok && rec.ok.suspect === false) creds.push('wrong');
+    if((S.game.moralChoices || {}).arrest === 'bribe') creds.push('bribe');
+    Object.assign(COURT, { ex:courtExhibits(), i:0, patience:COURT_PATIENCE, phase:'pre', then, half:false, admitted:[], struck:[], cred:{}, creds, ci:0, n:1, note:null, patienceNoted:false, lastRuling:null });
+  }
   if(typeof showHUD === 'function') showHUD(false);
   if(typeof musicForScene === 'function') musicForScene('investigation');
   ctClearToast();
   showOverlay('screen-court');
   ctModal('screen-court', courtResume);
   renderCourt();
+  ctPersist();
+}
+/* The trial is transactional, like a briefing (A4): every step is written to I().courtRun and saved, so a tab
+   closed mid-trial (a phone discarding it) comes back to the same step — never to a fresh trial with every answer
+   open again, and never to a lost epilogue (the resumeCampaign wrap below). RISE clears it. */
+const CT_RUN_KEYS = ['i', 'patience', 'phase', 'half', 'cred', 'creds', 'ci', 'n', 'note', 'patienceNoted', 'lastRuling'];
+function ctRunFor(o){
+  const r = I().courtRun;
+  return (r && (o === 'proven' || o === 'contested') && r.finale === o && Array.isArray(r.ex)) ? r : null;
+}
+function ctPersist(){
+  if(!COURT.then) return;                           // no trial in progress (ended, or reset for a replay)
+  const ix = x => COURT.ex.indexOf(x), run = { finale:(S.game.moralChoices || {}).finale || null, ex:COURT.ex.map(x => Object.assign({}, x)),
+    admitted:COURT.admitted.map(ix), struck:COURT.struck.map(ix) };
+  CT_RUN_KEYS.forEach(k => { run[k] = COURT[k] == null ? null : JSON.parse(JSON.stringify(COURT[k])); });
+  I().courtRun = run;
+  if(typeof saveGame === 'function') saveGame(true);
+}
+function ctRestore(run, then){
+  const ex = run.ex.map(x => Object.assign({}, x));
+  Object.assign(COURT, { ex, then, admitted:(run.admitted || []).map(i => ex[i]).filter(Boolean), struck:(run.struck || []).map(i => ex[i]).filter(Boolean) });
+  CT_RUN_KEYS.forEach(k => { COURT[k] = run[k]; });
+  COURT.cred = COURT.cred || {}; COURT.creds = COURT.creds || [];
+}
+/* a closed tab on the M8 aftermath or mid-trial left the season open (the epilogue sets seasonOneComplete) */
+function ctFinalePending(){
+  const g = S.game, o = (g.moralChoices || {}).finale;
+  if(!o || !(g.completedMissions || []).includes('m8') || typeof startEpilogue !== 'function') return false;
+  if(typeof nextPlayableMission === 'function' && nextPlayableMission()) return false;
+  return !g.seasonOneComplete || !!ctRunFor(o);   // ...or a replayed M8's trial was cut off after it opened
 }
 // a toast left over from the aftermath would sit on the court record (later ones go to the top: v13_court.css)
 function ctClearToast(){ const t = document.getElementById('toast'); if(t) t.classList.remove('show'); }
@@ -24459,6 +24658,9 @@ function courtHead(){
     <h2 class="ct-title" id="court-title">FRN v. CDR. ADAEZE &amp; 2 ORS</h2>
     <div class="ct-meta"><span class="v13-mono">CHARGE NO. FHC/B/41C/2026</span><span class="ct-pat" aria-label="Judge's patience ${ctPat()} of ${COURT_PATIENCE}">PATIENCE <b class="v13-mono">${ctPat()}/${COURT_PATIENCE}</b></span></div>`;
 }
+// an exhibit that gets a SIGN s.84 button at the pre-trial file
+const ctCanSign = (id, it) => { const meta = ctItems()[id];
+  return !!(meta && meta.e && it && !it.cert && typeof certWindowOpen === 'function' && certWindowOpen(id) && typeof certSlotsLeft === 'function' && certSlotsLeft(it.m) > 0); };
 const ctFoot = (act, label) => `<button class="v13-btn primary ct-go" data-ct="${act}">${ctEsc(label)}${ctIco('next')}</button>`;
 const CT_DEF = 'CHIEF ABIODUN FADEYI, SAN · FOR THE DEFENCE';
 function ctSheetSummary(){
@@ -24477,7 +24679,9 @@ function renderCourt(){
   head.innerHTML = courtHead();
   if(COURT.phase === 'pre'){
     const d = I();
-    const slots = typeof certSlotsLeft === 'function' ? certSlotsLeft('m8') : 0;
+    // the promise follows the SIGN buttons below: Ekosodin exhibits that can still be signed, up to the slots left
+    const signable = COURT.ex.filter(x => { const it = (d.items || {})[x.id]; return it && it.m === 'm8' && ctCanSign(x.id, it); }).length;
+    const slots = signable && typeof certSlotsLeft === 'function' ? Math.min(signable, certSlotsLeft('m8')) : 0;
     body.innerHTML = `<div class="ct-sec-h">PRE-TRIAL · THE PROOF OF EVIDENCE</div>
       <p class="ct-lead">NACECA Legal files tomorrow. <span class="v13-mono">${COURT.ex.length}</span> exhibit${COURT.ex.length===1?'':'s'} to tender.${slots > 0 ? ` Digital Forensics can still certify the Ekosodin material — <span class="v13-mono">${slots}</span> item${slots===1?'':'s'}.` : ''}</p>` +
       ctSheetSummary() +
@@ -24486,7 +24690,7 @@ function renderCourt(){
         let cert = '';
         if(meta && meta.e){
           if(it && it.cert) cert = `<span class="v13-mark-ok">${ctIco('check')}S.84 CERTIFICATE ON FILE</span>`;
-          else if(it && typeof certWindowOpen === 'function' && certWindowOpen(x.id) && typeof certSlotsLeft === 'function' && certSlotsLeft(it.m) > 0) cert = `<button class="v13-btn" data-ct="cert" data-id="${ctEsc(x.id)}">${ctIco('stamp')}SIGN s.84 · <span class="v13-mono">${certSlotsLeft(it.m)}</span> LEFT</button>`;
+          else if(it && ctCanSign(x.id, it)) cert = `<button class="v13-btn" data-ct="cert" data-id="${ctEsc(x.id)}">${ctIco('stamp')}SIGN s.84 · <span class="v13-mono">${certSlotsLeft(it.m)}</span> LEFT</button>`;
           else cert = `<span class="v13-mark-bad">${ctIco('cross')}NO S.84 CERTIFICATE</span>`;
         }
         const weak = [courtWeak(x), x.wrongPick ? 'Filed against the wrong person on your charge sheet' : null].filter(Boolean);
@@ -24502,7 +24706,7 @@ function renderCourt(){
     const nm = rec ? ctOptName('voice', 'suspect', rec.suspect) : 'someone else';
     const held = rec && C && C.held ? ctVal(C.held[rec.suspect]) : '';
     // the beta's own line for that arrest ("On your word, Sgt. Uche was arrested at HQ…"), in the defence's mouth
-    let arrest = held && /^On your word, /.test(held) ? held.split(/(?<!\b(?:Sgt|Engr|Insp|Cdr|Dr|Mr|Mrs|Barr))\.\s+/)[0].replace(/\.?$/, '.').replace(/^On your word, /, "on this officer's word, ") : `on this officer's word, ${nm} was arrested.`;
+    let arrest = held && /^On your word, /.test(held) ? ctFirstSentence(held).replace(/\.?$/, '.').replace(/^On your word, /, "on this officer's word, ") : `on this officer's word, ${nm} was arrested.`;
     if(!/as the Voice/.test(arrest)) arrest = arrest.replace(/\.$/, '') + ', as the Voice.';
     const say = kind === 'wrong'
       ? `Before the prosecution begins, My Lord: ${arrest} Now the same officer says it was the defendant. Which night was he right?`
@@ -24519,11 +24723,11 @@ function renderCourt(){
   if(COURT.phase === 'ex'){
     const x = COURT.ex[COURT.i];
     if(!x){ COURT.phase = 'judgment'; renderCourt(); return; }
-    // a witness your own file has down as lying: the defence starts there (A8), once
+    // a witness your own file got wrong: the defence starts there, with what the file says (A8), once
     let first = '';
     if(x.lied){
       if(!x.liedDone){ x.liedDone = true; COURT.patience = Math.max(0, COURT.patience - 1); head.innerHTML = courtHead(); }
-      first = `<blockquote class="ct-say">"Your own officer's file says this witness lied to you."</blockquote><p class="ct-aside v13-dim">The judge makes a note.</p>`;
+      first = `<blockquote class="ct-say">"${ctEsc(CT_FILE_SAYS[x.fileSays] || CT_FILE_SAYS.contradicted)}"</blockquote><p class="ct-aside v13-dim">The judge makes a note.</p>`;
     }
     const o = courtObjection(x), rec = ctRecruit();
     const note = COURT.note ? `<p class="ct-note ${COURT.note.bad ? 'v13-warn' : ''}">${ctEsc(COURT.note.t)}</p>` : '';
@@ -24561,7 +24765,8 @@ function renderCourt(){
     foot.innerHTML = ctFoot('end', 'RISE');
   }
 }
-function courtAct(a, ds){
+function courtAct(a, ds){ courtStep(a, ds); if(a !== 'end') ctPersist(); }
+function courtStep(a, ds){
   if(a === 'cert'){ if(typeof certify === 'function') certify(ds.id); renderCourt(); return; }
   if(a === 'ctc'){ const d = I(); d.reg = d.reg || { found:{}, ctc:{} }; d.reg.ctc = d.reg.ctc || {}; d.reg.ctc.ca = true; renderCourt(); return; }
   if(a === 'begin'){ COURT.phase = COURT.creds.length ? 'cred' : 'ex'; renderCourt(); return; }
@@ -24601,6 +24806,7 @@ function courtAct(a, ds){
   if(a === 'end'){
     const cb = COURT.then; COURT.then = null;
     if(!I().court) courtJudgment();
+    delete I().courtRun;                                                       // the court has risen: nothing to resume
     if(COURT.struck.length === 0 && COURT.admitted.length > 0 && typeof unlock === 'function') unlock('clean_chain');
     ctModalEnd('screen-court');
     if(typeof saveGame === 'function') saveGame(true);
@@ -24625,7 +24831,10 @@ function courtVerdictText(n){
   return 'The defence makes a no-case submission. It succeeds. She is discharged — and dismissed from service the same week.';
 }
 /* the court has sat for this finale (a replayed M8 clears it, below) */
-function courtDoneFor(outcome){ const c = I().court; return !!c && (!c.finale || c.finale === outcome); }
+function courtDoneFor(outcome){
+  if(ctRunFor(outcome)) return false;               // still sitting: a trial cut off before RISE (its judgment may be written)
+  const c = I().court; return !!c && (!c.finale || c.finale === outcome);
+}
 /* the epilogue line for Adaeze, once a court has spoken on THIS finale */
 function courtEpilogueText(){
   const c = I().court, fin = (S.game.moralChoices || {}).finale;
@@ -24640,11 +24849,25 @@ function courtEpilogueText(){
 function courtResetForReplay(){
   const d = I();
   if(d.court){ d.courtLog = (d.courtLog || []).concat([d.court]).slice(-5); d.court = null; }
+  delete d.courtRun;
   d.reviewShown = false;
   if(COURT.then){ COURT.then = null; ctModalEnd('screen-court'); }
 }
 if(window.V12 && typeof V12.wrap === 'function'){
   V12.wrap('finResetFlags', orig => function(){ const r = orig.apply(this, arguments); try{ courtResetForReplay(); }catch(e){ console.warn('[v13] court reset', e); } return r; });
+  // Continue (and the pause menu's Load) after a tab closed on the M8 aftermath or mid-trial: back to the trial,
+  // where it was left, then the epilogue that closes the season — not "CAMPAIGN UP TO DATE" with both lost
+  V12.wrap('resumeCampaign', orig => function(){
+    try{
+      if(ctFinalePending()){
+        S.game.currentMission = 'm8';
+        if(typeof ENGINE !== 'undefined' && ENGINE) ENGINE.movementEnabled = false;
+        if(typeof stopAmbient === 'function') try{ stopAmbient(); }catch(e){}   // as the finale left it: no title ambience under the court
+        showOverlay(null); startEpilogue(); return;
+      }
+    }catch(e){ console.warn('[v13] resume the finale', e); }
+    return orig.apply(this, arguments);
+  });
   // the m8 aftermath: the trial comes before the epilogue
   V12.wrap('nextMissionPreview', orig => function(){
     let h = orig.apply(this, arguments);
@@ -24710,6 +24933,13 @@ function rvWarrantLine(id){
   if(s === 'none') return [`${lbl}: never put to a magistrate — no charge sheet was filed.`, null];
   return [`${lbl}: never put to a magistrate.`, null];
 }
+/* a wrongly named Voice, the beta's way (casework.js held lines; SYNC-2026-10-08-beta "Obi is still arrested at
+   Lekki"): the officers and the engineer were arrested in front of their own people; Obi has been in custody since
+   Lekki and was charged again from his cell; Ifeanyi was charged as the Voice. Neither was "arrested in public". */
+const CT_VOICE_WRONG = {
+  obi:'"Chief" Obi, in custody since Lekki, was charged as the Voice on your word.',
+  ifeanyi:'Ifeanyi was charged as the Voice on your word.',
+};
 function renderReviewHTML(inDesk){
   if(!S.game.seasonOneComplete && inDesk) return '<div class="v13-review v13-sheet"><p class="rv-line"><span class="rv-m"></span><span>The case review opens when the season is closed.</span></p></div>';
   const { d, mc, fl, parts, pct, relClues } = reviewData();
@@ -24742,7 +24972,7 @@ function renderReviewHTML(inDesk){
   if(wrongOn(route, 'tobi')) prot.push([alive ? 'Then your route charge sheet named Tobi the principal. He was held until noon.' : 'Your route charge sheet named Tobi the principal. His family read it in the papers.', false]);
   if(wrongOn(route, 'musa')) prot.push(['Musa was charged as "the route\'s principal" on your charge sheet.', false]);
   if(wrongOn(route, 'agent')) prot.push(['A SIM agent was taken from a stall at Asaba Main Market on your charge sheet.', false]);
-  if(voice && voice.ok && voice.ok.suspect === false) prot.push([`${nm(voice.suspect)} was arrested in public as the Voice, on your word.`, false]);
+  if(voice && voice.ok && voice.ok.suspect === false) prot.push([CT_VOICE_WRONG[voice.suspect] || `${nm(voice.suspect)} was arrested in public as the Voice, on your word.`, false]);
   prot.push(mc.shrine === 'negotiate' ? ["Pa Eze's shrine was entered with his blessing.", true] : mc.shrine === 'force' ? ['The shrine was entered by force.', false] : ['You left the shrine alone.', true]);
   prot.push(fl.child_gentle ? ['The girl from Lekki was carried out gently.', true] : ['The girl from Lekki was frightened by the raid.', false]);
   prot.push(fl.fin_osas === 'hurt' ? ['Osas came home with a broken wrist.', false] : ['Osas walked out on his own feet.', true]);
@@ -24767,7 +24997,7 @@ function renderReviewHTML(inDesk){
     [ctHas('so_plate_match'), 'The car at the Zuma Court handover was the same pool car that visited Lekki before the raid.'],
     [ctHas('reg_ca'), 'C.A. Consulting was incorporated on 14 March 2019. "C.A." was the Commander.'],
     [!!flagged.kc_call_control, '"C." always called at seven. So did the Voice.'],
-    [!!flagged.musa_ph_hotel, "Musa's own camera put him in Asaba."],
+    [!!(flagged.musa_ph_hotel || flagged.musa_ride_asaba), "Musa's own phone put him in Asaba."],
     [!!flagged.bu_ph_gate, 'The burner held a photo of the gate on Akintola Close, its number painted over, two nights before the tower trace.'],
     [ctHas('reg_silverline'), 'The fake Asaba assault story came out of the same office.'],
   ];
@@ -24778,7 +25008,7 @@ function renderReviewHTML(inDesk){
   h += `<div class="v13-sheet-h">DECISIONS THAT CHANGED THE STORY</div>`;
   const dec = [];
   if(d.custodyAsk) dec.push(d.custodyAsk === 'gave' ? 'You sent her the ledger. Page 14 never came back.' : 'You kept the ledger in the exhibit room.');
-  if(d.order) dec.push({ comply:'You left the Engineer alone when she asked.', quiet:'You investigated her source behind her back.', confront:'You asked her about the Engineer on an open call. She changed every phone that night.', leak:'You leaked the Engineer to the press. He vanished.' }[d.order]);
+  if(d.order) dec.push({ comply:'You left the Engineer alone when she asked.', quiet:'You investigated her source behind her back.', confront:'You asked her about the Engineer on an open call. She cut him off that night.', leak:'You leaked the Engineer to the press.' }[d.order]);
   if(d.press) dec.push({ bodycam:'You released the Asaba body-cam.', quiet:'You stayed silent about the Asaba story.', trace:'You traced the Asaba story to its source.' }[d.press]);
   if(d.court){
     const n = (d.court.proven || []).length;
