@@ -643,7 +643,7 @@ const SO_EVENTS = [
   { t:'15:20', sil:'bags',   txt:'A man in a cap carries two Ghana-must-go bags into Zuma Court. He knows the guard by name.', acts:['photo'], rel:'so_courier' },
   { t:'17:30', sil:'walker', txt:'A young woman locks the Apex glass door and waves at the guard on her way out.', acts:['photo'] },
   { t:'17:55', sil:'car',    txt:'A black Lexus, Lagos plates. A man in agbada uses the ATM next door and drives off.', acts:['photo', 'plate'], plate:'LAG 771 XC' },
-  { t:'18:15', sil:'car',    txt:'A grey Toyota Corolla stops at the gate. Government plates. Nobody gets out. The man in the cap comes back out and passes an envelope through the rear window.', acts:['photo', 'plate'], plate:'LND-412-KJ', rel:'so_poolcar', relPlate:'so_plate' },
+  { t:'18:15', sil:'car',    txt:'A grey Toyota Corolla stops at the gate. Government plates. Nobody gets out. The man in the cap comes back out and passes an envelope through the rear window.', acts:['photo', 'plate'], plate:'LND 590 XA', rel:'so_poolcar', relPlate:'so_plate' },
   { t:'18:24', sil:'car',    txt:'The Corolla pulls away toward the Airport Road.', acts:['follow'] },
   { t:'18:40', sil:null,     txt:'Nothing. The street is empty. The suya seller packs up.', acts:['wait', 'back'], empty:true },
 ];
@@ -720,7 +720,7 @@ function soAct(a){
       if(intelHas('lead_gatehouse')){
         // the match exists either way (the finale and court can use it); only Recruit is told
         intelSet('so_plate_match'); knowAdd('poolcar', 'You');
-        if(recruit() && !s.matchTold){ s.matchTold = true; applyEffect({ intel:+10 }); if(typeof toast === 'function') toast('PLATE MATCH', 'LND-412-KJ — the same car as the Lekki gatehouse log', 3200); s.log.push({ k:'match' }); }
+        if(recruit() && !s.matchTold){ s.matchTold = true; applyEffect({ intel:+10 }); if(typeof toast === 'function') toast('PLATE MATCH', 'LND 590 XA — the same car as the Lekki gatehouse log', 3200); s.log.push({ k:'match' }); }
       }
     }
   }
@@ -737,7 +737,7 @@ function finishSO(){
     const parts = [];
     if(intelHas('so_courier')) parts.push('a courier carrying cash bags into Zuma Court');
     if(intelHas('so_poolcar')) parts.push('an envelope passed into a government car');
-    if(intelHas('so_plate')) parts.push('its plate, LND-412-KJ' + (recruit() && intelHas('so_plate_match') ? ' — the car from the Lekki gatehouse log' : ''));
+    if(intelHas('so_plate')) parts.push('its plate, LND 590 XA' + (recruit() && intelHas('so_plate_match') ? ' — the car from the Lekki gatehouse log' : ''));
     if(intelHas('so_back')) parts.push('a back entrance nobody mentioned');
     s.got = got; s.done = true;
     s.txt = parts.length ? 'From the feed you logged ' + parts.join(', ') + '.' : 'A long afternoon on a grainy feed, and nothing you can use. That happens too.';

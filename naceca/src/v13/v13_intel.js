@@ -557,7 +557,7 @@ function intelStrongExtras(){
   const out = {};
   if(intelHas('inv_ca') && intelHas('reg_ca')) out.inv_ca = 'C.A. Consulting: ₦10M from the Foundation on the first of every month — four of Obi\'s Fridays.';
   if(intelHas('inv_gatehouse') && intelHas('so_plate_match')) out.inv_gatehouse = 'Her office\'s pool car: at Lekki before the raid, and at the Zuma Court cash handover.';
-  if(intelHas('inv_stakeout') && intelHas('so_plate_match')) out.inv_stakeout = 'The envelope went into LND-412-KJ — the car signed out to her office.';
+  if(intelHas('inv_stakeout') && intelHas('so_plate_match')) out.inv_stakeout = 'The envelope went into LND 590 XA — the car signed out to her office.';
   return out;
 }
 function intelRevealExtras(){

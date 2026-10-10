@@ -83,7 +83,7 @@ player chose to send the ledger to her office (stated only after the reveal); th
 - **Suite 4B, Zuma Court, Wuse II, Abuja** — one office behind Bluewater, Serpentine, the Foundation,
   C.A. Consulting, Apex Corporate Services (company secretary, Barr. Tamuno Briggs) and Silverline Media.
 - **Mrs. C. Amadi** — a retired teacher in Uselu on the Foundation's trustee list. A decoy "C.A.", never her.
-- **LND-412-KJ** — a grey saloon with government plates: in the Lekki gatehouse log two nights before the
+- **LND 590 XA** — a grey saloon with government plates: in the Lekki gatehouse log two nights before the
   raid, and at the Zuma Court handover (h5). That it is her office's pool car is said only at the trial (the
   motor-pool register) and after the reveal; before that, matching the two plates is the player's call.
 - **The ledger** — at h4 the player may send it to her office by courier. Its custody gap ("Returned — page

@@ -6121,7 +6121,7 @@ function finaleRevealScript(){
 function finaleHeadline(){
   const o = S.game.moralChoices.finale, hurt = S.game.flags.fin_osas === 'hurt';
   let h;
-  if(o === 'proven')    h = { pub:'THE DAILY GONG', head:'NACECA Commander Arrested in Ekosodin Kidnap Plot — Student Freed', ded:`The ransom calls came from inside the agency, investigators say. A flash drive and an accountant's testimony sealed the case.${hurt?' The student was treated for a broken wrist.':''}` };
+  if(o === 'proven')    h = { pub:'THE DAILY GONG', head:'NACECA Commander Arrested in Ekosodin Kidnap Plot — Student Freed', ded:`The ransom calls came from inside the agency, investigators say. ${S.game.moralChoices.asaba === 'rescue' ? 'A flash drive and an accountant\'s testimony sealed the case.' : 'A flash drive and the payroll it held sealed the case.'}${hurt?' The student was treated for a broken wrist.':''}` };
   else if(o === 'contested') h = { pub:'THE LAGOS LEDGER', head:'Senior NACECA Officer Detained After UNIBEN Student Rescue', ded:'Prosecutors face a fight: one piece of hard evidence, a powerful defence, and an agency in shock.' };
   else h = { pub:'NATIONAL DISPATCH', head:'Kidnapped UNIBEN Student Freed; NACECA Commander Suspended Pending Inquiry', ded:'Questions mount over why Cdr. Adaeze reached the compound before backup did.' };
   // the wrong name went first, in public
@@ -6145,7 +6145,11 @@ function epilogueSlides(){
     text: o==='proven' ? 'Convicted on four counts. She has never said who she answered to.'
         : o==='contested' ? 'On remand in Kirikiri, awaiting trial. Her lawyers file a new motion every week.'
         : 'Relieved of command. The inquiry has sat twice. No charges — yet.' });
+  // alive: rescued, or the chase with the hostage not lost (Uche carried him out — asaba_resolve_chase).
+  // Only the deliberate rescue takes the stand (canon: "Tobi (if rescued in M6) gives the testimony").
+  const tobiAlive = m.asaba === 'rescue' || (m.asaba === 'chase' && !S.game._asabaHostageLost);
   if(m.asaba === 'rescue') S_.push({ art:'tobi_neutral', name:'TOBI ONUOHA', text:'Tobi read the drive line by line for the prosecution. It took him eleven days. He asked for nothing.' });
+  else if(tobiAlive) S_.push({ art:'tobi_neutral', name:'TOBI ONUOHA', text:'Sgt. Uche carried Tobi out of the Asaba smoke. Tobi read the drive line by line for the prosecution from a hospital bed; his doctors kept him out of the witness box. He asked for nothing.' });
   else S_.push({ art:'tobi_afraid', name:'TOBI ONUOHA', text:'Tobi did not live to read the drive. The ledger he was taken for is evidence item fourteen.' });
   if(m.market_runner === 'escaped') S_.push({ art:'kc_evasive', name:'KC', text:'KC was never found. A boy who looked like him was seen in Computer Village, selling data cards.' });
   else if(kcFair) S_.push({ art:'kc_neutral', name:'KC', text:'KC sells data cards in Ikeja again — legally this time. He still won\'t look at a burgundy jacket.' });
@@ -6167,7 +6171,9 @@ function epilogueSlides(){
     if(wl === 'kc') swap('KC', m.market_runner === 'escaped' ? 'KC was never found. Your charge sheet called him "the kingpin", and his face is still on a NACECA wanted notice in Computer Village.' : 'KC was held as "the kingpin" on a NACECA charge sheet before Lekki. The charge collapsed in a week. In Ikeja they still call him "the boss", and he hates it.');
     if(wl === 'tunde') S_.push({ art:'', name:'TUNDE', text:'Your informant spent a night in a NACECA cell on your own charge sheet. He is back at the Ikeja market. He does not answer unknown numbers, or NACECA\'s.' });
     if(wl === 'pos') S_.push({ art:'', name:'THE IKEJA POS AGENT', text:'Held overnight as "the ringleader" on your charge sheet. The agent\'s licence was suspended for a year. Nobody apologised.' });
-    if(wr === 'tobi') swap('TOBI ONUOHA', m.asaba === 'rescue' ? 'Tobi read the drive line by line for the prosecution — after a morning cuffed to a hospital bed on your charge sheet. He asked for nothing, not even an apology.' : 'Tobi did not live to read the drive. For a week the papers called him the cartel\'s accountant, because of your charge sheet.');
+    if(wr === 'tobi') swap('TOBI ONUOHA', m.asaba === 'rescue' ? 'Tobi read the drive line by line for the prosecution — after a morning cuffed to a hospital bed on your charge sheet. He asked for nothing, not even an apology.'
+      : tobiAlive ? 'Sgt. Uche carried Tobi out of the Asaba smoke, and your charge sheet held him until noon. He read the drive for the prosecution from a hospital bed anyway; his doctors kept him out of the witness box.'
+      : 'Tobi did not live to read the drive. For a week the papers called him the cartel\'s accountant, because of your charge sheet.');
     if(wr === 'agent') S_.push({ art:'', name:'THE ASABA SIM AGENT', text:'Taken from a stall at Asaba Main Market on your charge sheet and released without charge. The stall is still shut.' });
     if(wr === 'musa'){ const mu = S_.find(x => x.name === 'MUSA'); if(mu) mu.text += ' Your charge sheet also named him "the route\'s principal"; it took a month to get that charge dropped.'; }
     if(wv && CC.voice && CC.voice.epilogue && CC.voice.epilogue[wv]){
@@ -14742,7 +14748,7 @@ function hqFixCaseBoard(){
 
 
 </script>
-<script>window.NACECA_BUILD = { src:'a45fa2002d' };</script>
+<script>window.NACECA_BUILD = { src:'410325dc16' };</script>
 <style id="v12">
 /* =========================================================================
    NACECA · v12 styles — operations table, documents, raid plan, accusation,
@@ -21584,7 +21590,8 @@ body.reduce-motion #screen-so .so-subj.in{animation:none;opacity:1}
    NACECA · v13 data — content for the investigation layer ("The Case File")
    Everything here is data: v13_intel.js, v13_desk.js, v13_briefing.js and
    v13_court.js read it. Canon: the Voice is Commander Adaeze. Clues may point
-   at her ("Madam", "CONTROL", "C.A."); none may name her before the reveal.
+   at her ("Madam", "C.", "C.A."); none may name her before the reveal, and the
+   player makes every link (docs/STORY-CANON.md, "v13 additions").
    ========================================================================= */
 
 /* ---- 1. Evidence model: what each logged item IS ----
@@ -21628,13 +21635,13 @@ const INTEL_ITEMS = {
   inv_gatehouse:     { m:'m3', kind:'DOCUMENT',  tier:'probable',           src:'Lekki estate gatehouse logbook', inv:true },
   inv_ca:            { m:'m6', kind:'DOCUMENT',  tier:'confirmed',          src:'CAC records and NFIU returns', inv:true },
   inv_engineer:      { m:'m5', kind:'TELECOM',   tier:'confirmed', e:true,  src:"The Engineer's call records, pulled off the books", inv:true },
-  inv_stakeout:      { m:'m5', kind:'PHOTO',     tier:'probable',  e:true,  src:'Surveillance van, Zuma Court, Wuse II', inv:true },
+  inv_stakeout:      { m:'m5', kind:'PHOTO',     tier:'probable',  e:true,  src:'NACECA Abuja surveillance van, Zuma Court, Wuse II', inv:true },
   inv_invoice:       { m:'m5', kind:'DOCUMENT',  tier:'confirmed',          src:"Apex Corporate Services' out-tray", inv:true },
 };
 const INV_NAMES = {
-  inv_gatehouse:'Lekki Gatehouse Log — Pool Car LND-412-KJ',
+  inv_gatehouse:'Lekki Gatehouse Log — LND 590 XA',
   inv_ca:'C.A. Consulting — CAC Record and Money Trail',
-  inv_engineer:"The Engineer's Call Log — 41 Calls to CONTROL",
+  inv_engineer:'The Engineer\'s Call Log — 41 Calls to "C."',
   inv_stakeout:'Zuma Court Stakeout Photographs',
   inv_invoice:'Apex Invoice — C.A. Consulting to the Foundation',
 };
@@ -21644,61 +21651,75 @@ const TIER_WEIGHT = { confirmed:3, probable:2, allegation:1, rumour:0 };
 /* ---- 2. Phones: recovered handsets as investigative objects ----
    Flag what matters. rel:true items are real leads; the rest is someone's life. */
 const PHONES = [
-  { id:'kc', name:"KC's phone", model:'Tecno Spark · cracked screen', needs:'phishing_template', items:[
+  { id:'kc', name:"KC's phone", model:'Cheap Android · cracked screen', needs:'phishing_template', items:[
     { id:'kc_msg_engineer', sec:'MESSAGES', from:'Engineer', text:'New batch. 400 numbers. Same BVN script. Dont use your own line.', rel:true, why:'KC runs the template; the Engineer supplies the numbers.' },
     { id:'kc_msg_mama', sec:'MESSAGES', from:'Mama', text:'Did you eat? Bring bread when you are coming.', rel:false },
-    { id:'kc_msg_control', sec:'MESSAGES', from:'CONTROL', text:'Hold the new SIMs till Friday. No calls from the market.', rel:true, why:'Someone saved only as CONTROL gives KC orders.', card:'a_control' },
-    { id:'kc_call_control', sec:'CALLS', from:'CONTROL', text:'3 calls this week · 19:00 · 19:02 · 19:04', rel:true, why:"CONTROL calls at seven — the same hour the ransom calls reach Mrs. Ehigie." },
-    { id:'kc_call_data', sec:'CALLS', from:'Chinedu Data', text:'12 calls · various times', rel:false },
-    { id:'kc_ph_gate', sec:'PHOTOS', from:'Camera', text:'Selfie at a black gate, Lekki Phase 1. A brass plate on the pillar: OBI.', rel:true, why:"KC has stood at Chief Obi's gate.", link:['s_kc','l_lekki'] },
+    { id:'kc_msg_control', sec:'MESSAGES', from:'C.', text:'Hold the new SIMs till Friday. No calls from the market.', rel:true, why:'Someone saved only as "C." gives KC orders.' },
+    { id:'kc_call_control', sec:'CALLS', from:'C.', text:'3 calls this week · 19:00 · 19:02 · 19:04', rel:true, why:'"C." calls at seven, on the dot.' },
+    { id:'kc_call_data', sec:'CALLS', from:'Ebuka Data', text:'12 calls · various times', rel:false },
+    { id:'kc_ph_gate', sec:'PHOTOS', from:'Camera', text:'Selfie at a black gate, Lekki, Old GRA. A brass plate on the pillar: OBI.', rel:true, why:"KC has stood at Chief Obi's gate.", link:['s_kc','l_lekki'] },
     { id:'kc_ph_van', sec:'PHOTOS', from:'Camera', text:'Blurry shot of a dark-blue Toyota Sienna at the charging stand. Friday, 18:50.', rel:true, why:'The SIM drop vehicle, photographed by the courier himself.' },
     { id:'kc_ph_match', sec:'PHOTOS', from:'Camera', text:'Teslim Balogun Stadium, terraces. Thumbs up.', rel:false },
-    { id:'kc_bank_150k', sec:'BANK ALERTS', from:'Moniepoint', text:"Credit ₦150,000.00 · From ODOGWU VENTURES · Narr: SIM LOGISTICS", rel:true, why:'A payment you can follow.', money:'n_kc' },
+    { id:'kc_bank_150k', sec:'BANK ALERTS', from:'Crestline Bank', text:"Credit ₦150,000.00 · From ODOGWU VENTURES · Narr: SIM LOGISTICS", rel:true, why:'A payment you can follow.', money:'n_kc' },
     { id:'kc_bank_airtime', sec:'BANK ALERTS', from:'Bank', text:'Debit ₦2,500.00 · Airtime recharge', rel:false },
-    { id:'kc_del_control', sec:'DELETED', from:'(recovered fragment)', text:"…dont ever call CONTROL from this line. if they pick you, you dont know me…", rel:true, why:'KC was told to protect CONTROL above everyone.' },
+    { id:'kc_del_control', sec:'DELETED', from:'(recovered fragment)', text:"…dont ever call C. from this line. if they pick you, you dont know me…", rel:true, why:'KC was told to protect "C." above everyone.' },
   ]},
-  { id:'musa', name:"Musa's phone", model:'Itel button phone + old Samsung', needs:'ransom_ledger', items:[
-    { id:'musa_ride_asaba', sec:'RIDE HISTORY', from:'Bolt', text:'Benin Bypass to Riverview Suites, Asaba · 2 weeks ago, 23:40', rel:true, why:'Musa was in Asaba recently.' },
+  { id:'musa', name:"Musa's phone", model:'Button phone + an old smartphone', needs:'ransom_ledger', items:[
+    { id:'musa_ride_asaba', sec:'RIDE HISTORY', from:'Ride app', text:'Benin Bypass to Riverview Suites, Asaba · 2 weeks ago, 23:40', rel:true, why:'Musa was in Asaba recently.' },
     { id:'musa_ph_hotel', sec:'PHOTOS', from:'Camera', text:'Musa outside Riverview Suites, Asaba. The Niger Bridge lights behind him.', rel:true, why:'He says he has never been to Asaba. His own camera disagrees.' },
     { id:'musa_call_engineer', sec:'CALLS', from:'Engineer', text:'02:10 · 02:14 · 02:31 — every pickup night', rel:true, why:'The Engineer calls before each pickup.' },
     { id:'musa_msg_home', sec:'MESSAGES', from:'Home', text:'The children ask when you are coming back. Aisha has fever small.', rel:false },
-    { id:'musa_bank_bw', sec:'BANK ALERTS', from:'Bank', text:'Credit ₦85,000.00 · From BLUEWATER LOGISTICS LTD · Narr: haulage', rel:true, why:'Bluewater pays the driver of a ransom truck.', money:'n_bluewater' },
-    { id:'musa_msg_cattle', sec:'MESSAGES', from:'Alhaji Garba', text:'Cattle price don rise for Kano market. Call me.', rel:false },
+    { id:'musa_bank_bw', sec:'BANK ALERTS', from:'Bank', text:'Credit ₦85,000.00 · From BLUEWATER LOGISTICS LTD · Narr: haulage', rel:true, why:"Bluewater pays the driver of the route's lorry.", money:'n_bluewater' },
+    { id:'musa_msg_cattle', sec:'MESSAGES', from:'Alh. Rabiu', text:'Cattle price don rise for Kano market. Call me.', rel:false },
   ]},
   { id:'burner', name:'Warehouse burner', model:'Unbranded · found with the SIM packs', needs:'asaba_sims', items:[
-    { id:'bu_contacts', sec:'CONTACTS', from:'Phonebook', text:'Two entries only: "E." and "CONTROL".', rel:true, why:'This handset existed to talk to two people.' },
-    { id:'bu_msg_accountant', sec:'MESSAGES', from:'Sent to CONTROL', text:'The accountant keeps asking about the drive. What do we do.', rel:true, why:'Tobi was taken because of what he knew.' },
-    { id:'bu_msg_student', sec:'MESSAGES', from:'CONTROL', text:"Move him tonight. The student's file stays with me.", rel:true, why:'The kidnapping is about a file a student found.' },
-    { id:'bu_ping_ugbowo', sec:'LOCATION', from:'Network', text:'Last registered cell: Ugbowo, Benin City — three nights running.', rel:true, why:'CONTROL works near the Ugbowo mast.' },
-    { id:'bu_ph_gate', sec:'PHOTOS', from:'Camera', text:'A blue gate. The house number has been painted over.', rel:true, why:'A house someone wanted remembered — and hidden.' },
+    { id:'bu_contacts', sec:'CONTACTS', from:'Phonebook', text:'Two entries only: "E." and "C.".', rel:true, why:'This handset existed to talk to two people.' },
+    { id:'bu_msg_accountant', sec:'MESSAGES', from:'Sent to C.', text:'The accountant keeps asking about the drive. What do we do.', rel:true, why:'Tobi was taken because of what he knew.' },
+    { id:'bu_msg_student', sec:'MESSAGES', from:'C.', text:"Move him tonight. The student's file stays with me.", rel:true, why:'The kidnapping is about a file a student found.' },
+    { id:'bu_ping_ugbowo', sec:'LOCATION', from:'Network', text:'Last registered cell: Ugbowo, Benin City — three nights running.', rel:true, why:'Whoever carried this handset spent those nights near the Ugbowo mast.' },
+    // no gate colour before the tail (t7): the photo is a night shot under a security light
+    { id:'bu_ph_gate', sec:'PHOTOS', from:'Camera', text:'A gate at night, shot under a security light. The house number has been painted over.', rel:true, why:'A house someone wanted remembered — and hidden.' },
     { id:'bu_del_foundation', sec:'DELETED', from:'(recovered fragment)', text:'…move the 2.1 to the Foundation before audit…', rel:true, why:'₦2.1bn passed through a charity.', money:'n_charity' },
-    { id:'bu_glo', sec:'MESSAGES', from:'Glo', text:'Congratulations! You have received 2GB bonus data.', rel:false },
+    { id:'bu_glo', sec:'MESSAGES', from:'Network promo', text:'Congratulations! You have received 2GB bonus data.', rel:false },
   ]},
 ];
 
-/* ---- 3. Money trail: a ₦150,000 alert that becomes a ₦4bn network ---- */
+/* ---- 3. Money trail: a ₦150,000 alert that becomes a ₦5bn network ----
+   One direction, the beta's (casework.js, the Lagos MONEY line): the wallet emptied through three OTC desks
+   into the Ikeja POS floats, and the cash went home to Obi in Lekki. v13 carries on FROM Obi: his Friday
+   "C.A. — 2,500,000" goes to the Ugbowo Relief Foundation as a "donation", and the Foundation pays C.A.
+   Consulting a retainer on the first of every month (four of Obi's Fridays). The route's money (shrine →
+   Asaba, the beta's answer) is banked afterwards through Bluewater; nothing here sends it to Obi or Lagos.
+   gate: 'lagos' — traceable once MONEY opens (intelMoneyOpen); 'route' — once the route charge sheet is on
+   the file (or Asaba is behind you); 'ca' — the route gate AND the h5 briefing reached (intelMoneyGate). */
 const MONEY_NODES = {
-  n_kc:        { name:'KC — personal wallet', kind:'PERSON', amt:150000, desc:'One credit from a POS agent, narration "SIM LOGISTICS".', next:['n_odogwu'] },
-  n_odogwu:    { name:'Odogwu Ventures', kind:'POS AGENT', amt:38000000, desc:'Computer Village POS. ₦38M cashed out in three days, matched to two ransom payouts.', next:['n_bluewater','n_sister'], reg:'odogwu' },
-  n_sister:    { name:"Owner's sister — school fees", kind:'RELATIVE', amt:420000, desc:"Three transfers to a secondary school in Nnewi. It's school fees. Dead end.", next:[], dead:true },
-  n_bluewater: { name:'Bluewater Logistics Ltd', kind:'COMPANY', amt:640000000, desc:'"Haulage" company with no trucks registered to it. Pays drivers, couriers and POS agents.', next:['n_wallet','n_charity','n_contract'], reg:'bluewater' },
-  n_wallet:    { name:'Wallet 0xE7…91A', kind:'CRYPTO', amt:1200000000, desc:'0.62 BTC through three OTC desks, then stablecoins out to a property developer.', next:['n_serpentine','n_otc'] },
-  n_otc:       { name:'Offshore OTC desk', kind:'CRYPTO', amt:0, desc:'The desk is registered abroad and will not answer an NFIU request. Dead end for now.', next:[], dead:true },
-  n_serpentine:{ name:'Serpentine Homes Ltd', kind:'PROPERTY', amt:900000000, desc:'Four units in Lekki bought for cash in a single week.', next:[], reg:'serpentine' },
-  n_charity:   { name:'Ugbowo Relief Foundation', kind:'CHARITY', amt:2100000000, desc:'Incorporated trustees. ₦2.1bn in, almost nothing spent on relief.', next:['n_ca','n_contract'], reg:'urf' },
-  n_contract:  { name:'Edo borehole contract', kind:'CONTRACT', amt:310000000, desc:'A ₦310M borehole contract paid in full. Two of the six boreholes exist.', next:[] },
-  n_ca:        { name:'C.A. Consulting Services Ltd', kind:'COMPANY', amt:410000000, desc:'A monthly "retainer" from the charity — same amount, first of every month, since March 2019. Then cash withdrawals in Ikoyi.', next:[], reg:'ca', card:'a_ca', key:true },
+  n_kc:        { name:'KC — personal wallet', kind:'PERSON', amt:150000, desc:'One credit from a POS agent, narration "SIM LOGISTICS".', next:['n_odogwu'], gate:'lagos' },
+  n_odogwu:    { name:'Odogwu Ventures', kind:'POS AGENT', amt:38000000, desc:'Computer Village POS. ₦38M cashed out in three days, starting the day after a crypto wallet emptied through three OTC desks. The cash leaves for Lekki on Fridays in a dark-blue Sienna.', next:['n_otc','n_sister','n_obi'], reg:'odogwu', gate:'lagos' },
+  n_sister:    { name:"Owner's sister — school fees", kind:'RELATIVE', amt:420000, desc:"Three transfers to a secondary school in Nnewi. It's school fees. Dead end.", next:[], dead:true, gate:'lagos' },
+  n_otc:       { name:'Three OTC desks', kind:'CRYPTO', amt:0, desc:'Three over-the-counter desks bought the 0.62 BTC and paid the naira into the Ikeja POS floats. One desk is registered abroad and will not answer an NFIU request.', next:['n_wallet'], gate:'lagos' },
+  n_wallet:    { name:'Wallet 0xE7…91A', kind:'CRYPTO', amt:100000000, desc:'Registered to a Lekki address. 0.62 BTC — about ₦100M — out to the OTC desks the night before the Ikeja cash-outs.', next:[], gate:'lagos' },
+  n_obi:       { name:'Chief Obi — Lekki account', kind:'PERSON', amt:10000000, desc:'Where the cash went home. Every Friday ₦2.5M leaves by transfer — the "C.A." line in his notebook — to the Ugbowo Relief Foundation, narration "DONATION". Four Fridays on file: ₦10M.', next:['n_charity'], gate:'lagos' },
+  n_bluewater: { name:'Bluewater Logistics Ltd', kind:'COMPANY', amt:640000000, desc:'A "haulage" company with no lorries of its own. Banks the route\'s cash as haulage income, hires its lorries from Sapele Haulage, and pays the drivers (₦85,000 to Musa).', next:['n_sapele','n_serpentine','n_charity'], reg:'bluewater', gate:'route' },
+  n_sapele:    { name:'Sapele Haulage Nig. Ltd', kind:'COMPANY', amt:46000000, desc:'Owns the cattle lorry Musa drives. Bluewater pays its lorry hire by the trip, and it paid a Sapele welder for a "chassis repair".', next:[], reg:'sapele', gate:'route' },
+  n_serpentine:{ name:'Serpentine Homes Ltd', kind:'PROPERTY', amt:900000000, desc:'Four houses in Benin GRA bought for cash in a single week.', next:[], reg:'serpentine', gate:'route' },
+  n_charity:   { name:'Ugbowo Relief Foundation', kind:'CHARITY', amt:2100000000, desc:'Incorporated trustees, Benin. ₦2.1bn in — haulage "donations" from Bluewater, ₦2.5M every Friday from a Lekki account, and donors nobody can find. Almost nothing spent on relief. Its "staff" are paid through Crestfield Payroll Services, Sapele Road.', next:['n_ca','n_contract'], reg:'urf', gate:'route' },
+  n_contract:  { name:'Edo borehole contract', kind:'CONTRACT', amt:310000000, desc:'A ₦310M borehole contract paid in full. Two of the six boreholes exist.', next:[], gate:'route' },
+  n_ca:        { name:'C.A. Consulting Services Ltd', kind:'COMPANY', amt:910000000, desc:'A "retainer" from the Foundation: ₦10M on the first of every month since April 2019 — four of Obi\'s Fridays. Then cash withdrawals in Ikoyi.', next:[], reg:'ca', key:true, gate:'ca' },
 };
 const MONEY_START_REQUESTS = 4;   // NFIU requests in hand when the trail opens
-const MONEY_PER_WEEK = 2;         // more arrive with each weekly briefing
+const MONEY_PER_WEEK = 2;         // more arrive with each briefing (the name is the drop's; the timeline is day-scale)
 
 /* ---- 4. Corporate Affairs Commission search ---- */
 const REGISTRY = {
   odogwu:    { name:'Odogwu Ventures', no:'BN 2841177', type:'Business Name', inc:'02 Feb 2021', people:['Emeka Odogwu (proprietor)'], sec:'—', addr:'Shop 14, Computer Village, Ikeja', status:'ACTIVE' },
-  bluewater: { name:'Bluewater Logistics Ltd', no:'RC 1520443', type:'Private company', inc:'11 Jun 2018', people:['Kunle Bamidele (director)','Ngozi Eke (director)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  bluewater: { name:'Bluewater Logistics Ltd', no:'RC 1520443', type:'Private company', inc:'11 Jun 2018', people:['Kunle Bamidele (director)','Nkechi Eke (director)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  // the lorry's owner (the beta's welder's receipt and Musa's dossier): Bluewater's director, not at Zuma Court
+  sapele:    { name:'Sapele Haulage Nig. Ltd', no:'RC 1611930', type:'Private company', inc:'04 Feb 2020', people:['Kunle Bamidele (director)'], sec:'Apex Corporate Services', addr:'Plot 9, Ajogodo Road, Sapele', status:'ACTIVE' },
   serpentine:{ name:'Serpentine Homes Ltd', no:'RC 1588102', type:'Private company', inc:'23 Aug 2019', people:['Bassey Okon (director)','Apex Nominees Ltd (shareholder)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
-  urf:       { name:'Ugbowo Relief Foundation', no:'IT 140226', type:'Incorporated Trustees (CAMA 2020, Part F)', inc:'30 Jan 2018', people:['Rev. Peter Osagie (trustee)','Mrs. Efe Imade (trustee)','Mrs. C. Amadi (trustee)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
-  ca:        { name:'C.A. Consulting Services Ltd', no:'RC 1544870', type:'Private company', inc:'14 Mar 2019', people:['Grace Oke (director — nominee)','Apex Nominees Ltd (100% shareholder)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  urf:       { name:'Ugbowo Relief Foundation', no:'IT 140226', type:'Incorporated Trustees (CAMA 2020, Part F)', inc:'30 Jan 2018', people:['Rev. Peter Osagie (trustee)','Mrs. Ivie Imade (trustee)','Mrs. C. Amadi (trustee)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
+  // not findable by name before the money trail reaches it (n_ca); the Zuma Court address search lists it once the
+  // case has reached the Bypass (byAddress: 'm4' — never from Case 02 or 03)
+  ca:        { name:'C.A. Consulting Services Ltd', no:'RC 1544870', type:'Private company', inc:'14 Mar 2019', people:['Bimpe Oke (director — nominee)','Apex Nominees Ltd (100% shareholder)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', hidden:true, byAddress:'m4' },
   apex:      { name:'Apex Corporate Services', no:'BN 2290315', type:'Business Name (company secretarial)', inc:'09 May 2017', people:['Barr. Tamuno Briggs (proprietor)'], sec:'—', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE' },
   silverline:{ name:'Silverline Media Ltd', no:'RC 1702219', type:'Private company', inc:'18 Oct 2020', people:['Tari Ebi (director)'], sec:'Apex Corporate Services', addr:'Suite 4B, Zuma Court, Wuse II, Abuja', status:'ACTIVE', hidden:true },
   amadi:     { name:'Mrs. C. Amadi', no:'—', type:'Person search', inc:'—', people:['Retired primary-school teacher, Uselu. Trustee of one foundation.'], sec:'—', addr:'Uselu, Benin City', status:'—', person:true, hidden:true },
@@ -21707,17 +21728,19 @@ const ZUMA = 'Suite 4B, Zuma Court, Wuse II, Abuja';
 
 /* ---- 5. Statements: witness reliability, corroboration, tells ----
    truth: corroborated · contradicted (they must know better) · mistaken (honest error / hearsay)
-   proof: what you need in hand to establish it. Without it, the right call is UNVERIFIED. */
+   proof: what you need in hand to establish it (an id intelHas reads, 'flag:<key>' for S.game.flags,
+   'doc:<key>' for S.game.docSeen, or an array: any one is enough). Without it, the right call is UNVERIFIED. */
 const STATEMENTS = [
   { id:'st_tunde', who:'TUNDE', art:'tunde_neutral', role:'Paid informant, Ikeja market', needs:'m2', claims:[
     { id:'t1', text:'"Every Friday a black Sienna drops the SIMs for the boy."', truth:'mistaken', proof:'kc_ph_van', why:"KC's own photo shows a dark-blue Sienna under sodium light. Right car, right day, wrong colour." },
     { id:'t2', text:'"Those ransom calls come from Warri. Everybody for market knows."', truth:'mistaken', proof:'tower_fix', why:'The handset fix puts the caller in Ekosodin, Benin. Tunde repeated market talk.' },
-    { id:'t3', text:'"The boy works for Chief Obi himself. Direct."', truth:'contradicted', proof:'kc_msg_engineer', why:"KC takes orders from the Engineer and CONTROL. Tunde knew that — he inflated the tip to raise his fee." },
+    { id:'t3', text:'"KC runs the whole thing. That boy is the oga."', truth:'contradicted', proof:'kc_msg_engineer', why:'KC takes his batches and his orders from others. Tunde knew the boy was a runner — he inflated the tip to raise his fee.' },
   ]},
-  { id:'st_musa', who:'MUSA', art:'musa_evasive', role:'Truck driver, Benin Bypass', needs:'m4', claims:[
+  { id:'st_musa', who:'MUSA', art:'musa_evasive', role:'Lorry driver, Benin Bypass', needs:'m4', claims:[
     { id:'u1', text:'"I have never been to Asaba in my life."', truth:'contradicted', proof:'musa_ph_hotel', why:'A photo on his own phone, outside an Asaba hotel, two weeks ago.' },
-    { id:'u2', text:'"The man who loads the truck — I only know him as the Engineer."', truth:'corroborated', proof:'musa_call_engineer', why:'His call log has "Engineer" before every pickup. Nothing shows he knew more.' },
-    { id:'u3', text:'"The compartment was already there when I bought the truck."', truth:'unverifiable', why:'Nothing you can find proves or disproves it. Some claims stay open.' },
+    { id:'u2', text:'"The man who loads the truck — I only know him as the Engineer."', truth:'corroborated', proof:'musa_call_engineer', why:'His call log has "Engineer" before every pickup. He never had a name for him.' },
+    // the beta's welder's receipt (S.game.flags.weld_receipt): the lorry is Sapele Haulage's, and the welds are new
+    { id:'u3', text:'"The compartment was already there when I bought the truck."', truth:'contradicted', proof:'flag:weld_receipt', why:"He never bought that lorry. The welder's receipt for the fresh welds on the chassis rail is made out to Sapele Haulage Nig. Ltd, the company it is registered to." },
     { id:'u4', text:'"Nobody pays me except the cattle traders."', truth:'contradicted', proof:'musa_bank_bw', why:'Bluewater Logistics paid him ₦85,000 for "haulage".' },
   ]},
   { id:'st_tobi', who:'TOBI ONUOHA', art:'tobi_neutral', role:'Accountant, recovered in Asaba', needs:'asaba_hostage', claims:[
@@ -21726,8 +21749,9 @@ const STATEMENTS = [
     { id:'b3', text:'"C.A. is a consultant. A company. I never met a person."', truth:'corroborated', proof:'reg_ca', why:'C.A. Consulting Services Ltd exists on paper, with a nominee director.' },
   ]},
   { id:'st_ehigie', who:'MRS. EHIGIE', art:'ehigie_neutral', role:"Osas's mother", needs:'m7', claims:[
-    { id:'h1', text:'"They always call at seven. Never late."', truth:'corroborated', proof:'kc_call_control', why:"CONTROL's calls to KC land at 19:00 too. Same habit." },
-    { id:'h2', text:'"The voice was changed. I could not tell you man or woman."', truth:'corroborated', proof:'fin_recording', why:'The recording uses a pitch changer. She was right not to guess.' },
+    { id:'h1', text:'"They always call in the evening. Always the same words."', truth:'corroborated', proof:'kc_call_control', why:'"C." calls KC in the evening too, on the dot. Same habit.' },
+    // the proof is the M8 recording, so this why can only show after the reveal
+    { id:'h2', text:'"The voice was changed. I could not tell you man or woman."', truth:'corroborated', proof:'fin_recording', why:'The calls ran through a voice changer — until the last line of the evening call, which came in her own voice.' },
     { id:'h3', text:'"Osas was never in any trouble. He reads, he comes home."', truth:'mistaken', proof:'bu_msg_student', why:"Osas had found a file someone wanted back. He didn't tell his mother." },
   ]},
 ];
@@ -21739,50 +21763,44 @@ const VERDICTS = [
 /* ---- 7. Warrants: when you ask, what you ask with, and who hears about it ---- */
 /* Display data only (v13 model, design §1/A5): the board is the magistrate. V12.warrantState(id) reads
    w_lekki / w_asaba from the beta charge sheet (V12.accused(case).warrant) and w_cdr / w_eko from the
-   decision filed at the h6 / h7 briefing (V12.fileV13Warrant). basis/need/leak/without are no longer read. */
+   decision filed at the h6 / h7 briefing (V12.fileV13Warrant). (The drop's basis/need/leak/without
+   fields were never read after wave 1 and are gone: their copy named Osas and Ekosodin from Case 02.) */
 const WARRANTS = [
-  { id:'w_lekki', case:'lagos', short:'LAGOS · LEKKI', name:'Search warrant — Obi residence, Lekki', court:'Magistrate, Ikeja', before:'m3', need:7,
-    basis:['theory:t_money','theory:t_sims','phishing_template','kc_sims','kc_ph_gate','kc_bank_150k','kc_msg_control'], closeOnPlan:true,
-    leak:'Chief Obi hears from a court clerk. The wipe will start faster.',
-    without:'Lekki evidence is taken without a warrant. The defence will call it an unlawful search.' },
+  { id:'w_lekki', case:'lagos', short:'LAGOS · LEKKI', name:'Search warrant — Obi residence, Lekki', court:'Magistrate, Ikeja', before:'m3' },
   { id:'w_asaba', case:'route', short:'ROUTE · ASABA', name:'Search warrant — riverside warehouse, Asaba', court:'Magistrate, Asaba', before:'m6' },
-  { id:'w_cdr', case:'route', short:'UGBOWO ORDER', name:'Production order — Ugbowo cell records', court:'Federal High Court, Benin', before:'m7', need:7,
-    basis:['theory:t_route','ransom_ledger','musa_statement','asaba_sims','bu_ping_ugbowo','bu_contacts'],
-    leak:'The network rotates its handsets. Your trace window at the mast will be shorter.',
-    without:'Tower data is pulled without a court order. It will be challenged.' },
-  { id:'w_eko', case:'voice', short:'EKOSODIN', name:'Search & arrest warrant — the house in Ekosodin', court:'Magistrate, Benin', before:'m8', need:6, routed:true,
-    basis:['theory:t_voice','tower_fix','tower_cdr','bu_ph_gate','bu_msg_student','lead_caretaker'],
-    leak:'The application circulates. Whoever holds Osas may hear.',
-    without:"You'll go in on exigency — a hostage inside. Lawful, but the defence will test it." },
+  { id:'w_cdr', case:'route', short:'UGBOWO ORDER', name:'Production order — Ugbowo cell records', court:'Federal High Court, Benin', before:'m7' },
+  { id:'w_eko', case:'voice', short:'EKOSODIN', name:'Search & arrest warrant — Ekosodin', court:'Magistrate, Benin', before:'m8', routed:true },
 ];
 
-/* ---- 8. The weekly briefing with Commander Adaeze ----
-   Two of three leads per week. Her advice is sometimes honest and sometimes
-   the exact lead that would lead to her. buries:true marks the second kind. */
+/* ---- 8. The briefings with Commander Adaeze (keys m3–m7; `week` is the drop's ordinal, never shown) ----
+   Two of three leads per briefing. Her advice is sometimes honest and sometimes
+   the exact lead that would lead to her. buries:true marks the second kind.
+   Day-scale (v12.2): Week 1 is at Lagos HQ the next morning; m4–m7 are the hub's video call from Lagos. */
 const BRIEFINGS = {
   // Week 1: after Night Shift, in person at Lagos HQ, before the "BENIN BYPASS · TWO DAYS LATER" card
-  m3: { week:1, before:'m4', card:'BENIN BYPASS', title:'BRIEFING · AFTER LEKKI', intro:"Good work at the mansion. Three things on the table. We have the bodies for two.",
+  m3: { week:1, before:'m4', card:'BENIN BYPASS', title:'BRIEFING · AFTER LEKKI', sub:'THE NEXT MORNING', intro:"Morning, Agent. It's all still on the table. Three things; we have the bodies for two.",
     advice:{ drop:'gatehouse', text:"Leave the gatehouse log. That's days of reading visitors' handwriting. The drives are where the money is.", buries:true },
     leads:[
       { id:'drives', name:'Decrypt the Lekki drives', desc:"Forensics on Chief Obi's laptop and safe drives.", needsAny:['laptop','safe_drives'], blocked:'Nothing was recovered from Lekki to decrypt.',
-        res:"The spreadsheet calls it 'route protection': monthly transfers from Bluewater Logistics, initialled 'C.'. You now have a company to follow.", money:['n_bluewater'], intel:10,
+        res:"The spreadsheet repeats Obi's notebook: ₦2.5M every Friday, initialled 'C.A.', paid out by transfer. The NFIU can follow it.", money:['n_obi'], intel:10,
         dropped:"The drives sit in the forensics queue for days." },
       { id:'pos', name:'Profile the Ikeja POS cluster', desc:'Three agents cashing out ₦5M a day. Find who feeds them.', call:'gk_pos',
         res:'Odogwu Ventures is the hub. The attendant says the cash leaves in a dark-blue Sienna.', money:['n_odogwu'], reg:['odogwu'], intel:8,
         dropped:'Two of the three POS agents close their stands by morning.' },
-      { id:'gatehouse', name:"Pull the Lekki estate's gatehouse log", desc:'Who visited the mansion in the week before the raid.',
-        res:'Two nights before the raid: LND-412-KJ, government plates, 23:10–23:40. The estate manager says it is a NACECA motor-pool car. The driver\'s signature is illegible.', flag:'lead_gatehouse', intel:12,
-        dropped:"On Tuesday, \"officials\" collected the gatehouse logbook. The estate manager can't say which agency." },
+      // a plate and a government car, nothing more: whose car it is is the player's own match (the Zuma Court plate, h5)
+      { id:'gatehouse', name:"Pull the Lekki estate's gatehouse log", desc:'Who visited the mansion in the days before the raid.',
+        res:"Two nights before the raid: LND 590 XA, a grey saloon with government plates, 23:10–23:40. The driver's signature is illegible; the estate manager only saw the back seat.", flag:'lead_gatehouse', intel:12,
+        dropped:"That afternoon, \"officials\" collected the gatehouse logbook. The estate manager can't say which agency." },
     ]},
   // h4: the same video call as "Go at first light, with Uche"
   m4: { week:2, before:'m5', hub:'h4', title:'BRIEFING · AFTER THE BYPASS', intro:"Before first light — the Anti-Kidnapping Squad is pleased, and so am I. Three things on the table again. We have the bodies for two.",
     custody:{ item:'ransom_ledger', ask:"Send the ransom ledger to my office. I'll take it to the prosecutor myself. It's safer on my desk than in that exhibit room." },
     advice:{ drop:'initial', text:"Skip the 'E.' entries. We know E. is the Engineer. Spend the time on Musa and the registry.", buries:false },
     leads:[
-      { id:'musa', name:'Sit down with Musa properly', desc:'His phone, his statement, his story.', needsMission:'m4',
+      { id:'musa', name:'Sit down with Musa properly', desc:'His phone, his statement, his story.', needsMission:'m4', tailBlocked:'Musa is still on the road with a tail on him. Pull him in now and the tail is wasted.',
         res:"Musa's phone is now in the desk. Read it against what he told you.", phone:'musa', statement:'st_musa', intel:6,
         dropped:"Musa's phone goes back to his family with his property." },
-      { id:'cac', name:'Run Bluewater Logistics through the CAC', desc:'Directors, secretary, address.',
+      { id:'cac', name:'Run Bluewater Logistics through the CAC', desc:'The haulage firm that pays the Bypass drivers. Directors, secretary, address.',
         res:"Bluewater's company secretary is Apex Corporate Services, Suite 4B, Zuma Court, Wuse II. Remember that address.", reg:['bluewater','apex'], intel:8,
         dropped:'Bluewater files a change of address. The old one will still be on record.' },
       { id:'initial', name:"Chase the ledger's 'E.' entries", desc:'Seven pickups initialled E.',
@@ -21791,13 +21809,13 @@ const BRIEFINGS = {
     ]},
   // h5: after the charge sheet, "Go tonight" — NACECA Abuja does the Abuja work, you direct it from Benin
   m5: { week:3, before:'m6', hub:'h5', title:'BRIEFING · AFTER OZALLA', intro:"Before you cross the bridge — one instruction from me. Then Abuja is yours for the afternoon: our people there can work two of these, and you direct them from Benin.",
-    order:{ text:"Leave the Engineer alone. He is a registered source. My source. He's how we found Lekki, and he's worth more running than in a cell." },
-    advice:{ drop:'undercover', text:"Don't send anyone into Apex with a fake name. It's a lawyer's office. They'll have the badge by lunchtime.", buries:true },
+    order:{ text:"Leave the Engineer alone. He is a registered source, and he's how we found Lekki. He's worth more running than in a cell." },
+    advice:{ drop:'undercover', text:"Don't send anyone into Apex with a fake name. It's a lawyer's office. They'll have the badge before he sits down.", buries:true },
     leads:[
       { id:'stakeout', name:'The Abuja van: Zuma Court', desc:'An Abuja team parks outside Suite 4B this afternoon. You watch the live feed and call it.', needsAny:['reg_bluewater','reg_apex','zuma_cluster'], blocked:'You need an address worth watching first.', game:'stakeout',
         dropped:"Nobody watches Zuma Court that afternoon. Whatever arrived, arrived." },
       { id:'undercover', name:'Put an Abuja officer into Apex, on a wire', desc:'He poses as a client who needs a company, fast. You feed him every answer.', needsAny:['reg_bluewater','reg_apex','zuma_cluster'], blocked:'You need to know where the paperwork is done first.', game:'undercover',
-        dropped:"Apex files a new nominee director for C.A. Consulting the same afternoon. Nobody notices." },
+        dropped:"Apex files a new nominee director for one of its companies the same afternoon. Nobody notices." },
       { id:'tunde', name:'Re-interview Tunde', desc:'Read his old tips against what you know now.', statement:'st_tunde', tunde:true, heatMax:70, heatBlocked:"Tunde won't be seen with you. Your Underworld Heat is too high.",
         res:"Tunde's statement is in the desk. Check every claim against your exhibits.", intel:4,
         dropped:"Tunde calls twice. You don't pick up." },
@@ -21810,10 +21828,11 @@ const BRIEFINGS = {
       { id:'burner', name:'Dump the warehouse burner', desc:'The handset found with the SIM packs.', needsAny:['asaba_sims'], blocked:'No handset was recovered in Asaba.', phone:'burner',
         res:'The burner is in the desk. Two contacts. Read everything.', intel:6,
         dropped:'The burner\'s battery dies in an evidence bag. Forensics can still read it — later.' },
-      { id:'tobi', name:'Debrief Tobi Onuoha', desc:'The accountant you carried out of the smoke.', needsAny:['asaba_hostage'], blocked:'Tobi did not survive Asaba.', statement:'st_tobi',
+      // alive iff rescued, or the chase without the hostage lost (intelTobiAlive; canon: asaba_resolve_chase "he's breathing")
+      { id:'tobi', name:'Debrief Tobi Onuoha', desc:'The accountant pulled out of the smoke.', tobiAlive:true, blocked:'Tobi did not survive Asaba.', statement:'st_tobi',
         res:"Tobi's statement is in the desk. He says the money went through a charity in Benin.", money:['n_charity'], intel:8,
         dropped:'Tobi goes home to his family. His statement waits.' },
-      { id:'trustees', name:"Pull the Foundation's trustee file", desc:'Call the Ugbowo Relief Foundation office.', call:'gk_foundation',
+      { id:'trustees', name:"Pull the Foundation's trustee file", desc:"Call the Ugbowo Relief Foundation's line, late as it is.", call:'gk_foundation',
         res:"The trustees are a pastor, a market leader and a retired teacher who has never signed anything. The real signatory 'comes on the first of the month, in a government car'.", reg:['urf','amadi'], flag:'lead_trustees', intel:10,
         dropped:'The Foundation files its annual return late. Nobody asks why.' },
     ]},
@@ -21821,14 +21840,15 @@ const BRIEFINGS = {
   // never the close, the gate or the back way's street. The Ekosodin warrant is decided here (w_eko).
   m7: { week:5, before:'t7', hub:'h7', title:'BRIEFING · BEFORE EKOSODIN', intro:"You have the area. Before the Engineer moves tonight, we choose how you go in.",
     warrant:'w_eko',
-    advice:{ drop:'caretaker', text:"Don't waste a call on caretakers. Every caretaker in Ekosodin is somebody's cousin. Follow Tunde's tip.", buries:true },
+    // `alt`: her advice when Tunde won't talk to you (held on your charge sheet, or Heat too high)
+    advice:{ drop:'caretaker', text:"Don't waste a call on caretakers. Every caretaker in Ekosodin is somebody's cousin. Follow Tunde's tip.", alt:"Don't waste a call on caretakers. Every caretaker in Ekosodin is somebody's cousin.", buries:true },
     leads:[
-      { id:'tip', name:"Follow Tunde's tip", desc:'He says he has heard where the boy is.', tip:true, tunde:true },
+      { id:'tip', name:"Follow Tunde's tip", desc:'He says he has heard where the boy is.', tip:true, tunde:true, heatMax:70, heatBlocked:"Tunde won't be seen with you. Your Underworld Heat is too high." },
       { id:'caretaker', name:'Call the caretakers on the Ekosodin closes', desc:'Somebody is renting to a stranger who never turns the generator off.', call:'gk_caretaker',
         res:'A caretaker says a tenant on one of the closes off the UNIBEN fence road paid a year in cash, a government car comes after dark, and the generator man leaves the back way open at nine.', flag:'lead_caretaker', intel:10,
         dropped:'Nobody calls the caretakers. Whatever they know, they keep.' },
-      { id:'pattern', name:'Pull the Ekosodin call pattern', desc:'Which handset sleeps in that compound.', needsAny:['tower_cdr','tower_fix'], blocked:'You have no tower data to work from.',
-        res:"CONTROL's handset sleeps in the same 300 m as the ransom phone, every night. Same person, two phones.", flag:'lead_pattern', intel:10,
+      { id:'pattern', name:'Pull the Ekosodin call pattern', desc:'Who the ransom phone talks to, and when.', needsAny:['tower_cdr','tower_fix'], blocked:'You have no tower data to work from.',
+        res:'The ransom phone sleeps in Ekosodin every night. Minutes before each evening call it takes a call itself — from the number KC has saved as "C.".', flag:'lead_pattern', intel:10,
         dropped:'The pattern stays in the raw data.' },
     ]},
 };
@@ -21856,11 +21876,12 @@ const GATEKEEPER_DIALOGUE = {
   gk_pos_custom: [ { speaker:'POS ATTENDANT — COMPUTER VILLAGE', text:"Ehen. Since you be customer… Friday evening, one blue Sienna dey come carry the cash. Driver no dey ever come down.", textEn:"Okay. Since you're a customer… every Friday evening a blue Sienna comes for the cash. The driver never gets out." } ],
   gk_pos_polite: [ { speaker:'POS ATTENDANT — COMPUTER VILLAGE', text:"Na Odogwu own the stand. Big cash na Friday. Blue motor. That one na all I fit tell you.", textEn:"Odogwu owns the stand. The big cash comes on Fridays. A blue car. That's all I can tell you." } ],
 
+  // the h6 call is at 23:05: the secretary answers the Foundation's line on her own phone
   gk_foundation: [
-    { speaker:'FOUNDATION SECRETARY', text:'Ugbowo Relief Foundation, good morning. Who is calling, please?',
+    { speaker:'FOUNDATION SECRETARY', text:'Hello? Ugbowo Relief Foundation… Who is calling at this hour, please?',
       choices:[
-        { text:'"Good morning, ma. I\'m sorry to disturb you — I\'m helping the trustees tidy their annual return."', tag:'savvy', effect:{ flag:{ gk_found:'respect' } } },
-        { text:'"NACECA. I need your trustee file by noon."', tag:'harsh', effect:{ flag:{ gk_found:'badge' } }, rep:{ agencyFavour:+1 } },
+        { text:'"Good evening, ma. I\'m sorry to call so late — I\'m helping the trustees tidy their annual return."', tag:'savvy', effect:{ flag:{ gk_found:'respect' } } },
+        { text:'"NACECA. I need your trustee file by noon tomorrow."', tag:'harsh', effect:{ flag:{ gk_found:'badge' } }, rep:{ agencyFavour:+1 } },
         { text:'"I\'d like to donate. Who signs for the Foundation?"', tag:'lawful', effect:{ flag:{ gk_found:'donor' } } },
       ]},
   ],
@@ -21893,7 +21914,7 @@ const GATEKEEPER_DIALOGUE = {
 };
 
 /* ---- 10. Radio: the world reacting to what you did ---- */
-const RADIO_STATION = 'NAIJA PULSE 97.3 FM';
+const RADIO_STATION = 'WAVE24 RADIO 101.9 FM';     // the game's own news brand (WAVE24 NEWS); no real station's name or frequency
 const RADIO_FILLER = [
   'Fuel queues are back on Ikorodu Road this morning. Marketers blame the depot price.',
   'NEPA o! Parts of Surulere have had no light since Saturday. Residents are… patient.',
@@ -21906,7 +21927,7 @@ const RADIO_FILLER = [
 const RADIO_RUMOURS = [
   { needs:'m6', when:mc => mc.asaba === 'rescue' || (mc.asaba === 'chase' && !S.game._asabaHostageLost), text:'Asaba: a warehouse fire, a rescue, and a lot of questions about who owns that building.' },
   { needs:'m6', when:mc => !(mc.asaba === 'rescue' || (mc.asaba === 'chase' && !S.game._asabaHostageLost)), text:'Asaba: a warehouse fire on the riverside, and a lot of questions about who owns that building.' },
-  { needs:'m5', when:mc => mc.shrine === 'force', text:'A shrine in Ozalla, raided? The elders are not happy, and neither is the Oba\'s palace.' },
+  { needs:'m5', when:mc => mc.shrine === 'force', text:'A shrine in Ozalla, raided by armed officers? The elders are not happy, and they are saying so.' },
   { needs:'m3', text:'Sources say a Lekki chief\'s house was raided. The Chief\'s lawyers say it was "a misunderstanding".' },
   { needs:'m2', text:'Callers say the kidnap ransom calls are coming from Warri. Police have not confirmed.' },
 ];
@@ -22011,7 +22032,7 @@ const INTEL_NAMES = {
   fin_drive:"Osas's flash drive", fin_courier_phone:"Courier's phone", fin_recording:'Recorded ransom call', bodycam_eko:'Body-cam — Akintola Close',
   co_madam:'"Tell Madam it\'s clean" phone', kc_sims:"KC's SIM batch", obi_notebook:"Obi's notebook — initials and amounts", osas_voicemail:"Osas's voicemail",
   lead_gatehouse:'Gatehouse log (lead)', lead_caretaker:"Caretaker's account (lead)", lead_pattern:'Ekosodin call pattern (lead)', lead_tip:"Tunde's tip (lead)",
-  zuma_cluster:'Six entities, one office', so_plate:'Plate logged at Zuma Court', so_poolcar:'Photo: envelope into the agency car', so_courier:'Photo: courier with cash bags',
+  zuma_cluster:'Six entities, one office', so_plate:'Plate logged at Zuma Court', so_poolcar:'Photo: envelope into a government car', so_courier:'Photo: courier with cash bags',
   n_charity:'Money trail: Ugbowo Relief Foundation', n_ca:'Money trail: C.A. Consulting', reg_ca:'CAC record: C.A. Consulting',
   'theory:t_money':'Inked theory — the ransom money runs through Obi', 'theory:t_sims':"Inked theory — KC's SIMs reach the mansion",
   'theory:t_route':'Inked theory — one route: Bypass → Shrine → Asaba', 'theory:t_voice':'Inked theory — Madam is the Voice',
@@ -22030,6 +22051,9 @@ function intelLabel(id){
 /* ---------- possession: the one question every system asks ---------- */
 function intelHas(id){
   if(!id) return false;
+  if(Array.isArray(id)) return id.some(x => intelHas(x));               // a proof list: any one is enough
+  if(id.startsWith('flag:')) return !!(S.game.flags && S.game.flags[id.slice(5)]);
+  if(id.startsWith('doc:')) return !!(S.game.docSeen && S.game.docSeen[id.slice(4)]);
   const d = I();
   if(/^m\dn?$/.test(id)) return (S.game.completedMissions||[]).includes(id);
   if(id.startsWith('theory:')) return !!(window.V12 && V12.theory && V12.theory(id.slice(7)));
@@ -22043,11 +22067,16 @@ function intelHas(id){
 }
 function intelSet(flag, v=true){ I().flags[flag] = v; }
 function heatNow(){ return (window.V12 && V12.heat) ? V12.heat() : 0; }
+/* Tobi came out of Asaba alive: rescued, or the chase without the hostage lost (Uche carried him — canon
+   asaba_resolve_chase: "he's breathing"). One rule for the lead, the statement, the review and the epilogue.
+   Court testimony stays with the deliberate rescue (STORY-CANON: "Tobi (if rescued in M6)"). */
+function intelTobiAlive(){ const a = (S.game.moralChoices || {}).asaba; return a === 'rescue' || (a === 'chase' && !S.game._asabaHostageLost); }
 
 /* ---------- who knows what ---------- */
+// the Locker shows this panel; before the reveal the Commander's entry reads as her unit (v13_desk.js)
 const FACTS = {
-  eko_house:'The house in Ekosodin', engineer:"The Engineer's calls to CONTROL", zuma:'Suite 4B, Zuma Court',
-  ledger:'The ransom ledger', poolcar:'The pool car at Lekki', cover:'Your Apex cover name',
+  eko_house:'The Ekosodin warrant', engineer:'The Engineer\'s calls to "C."', engineer_asked:'You asked about the Engineer', zuma:'Suite 4B, Zuma Court',
+  ledger:'The ransom ledger', poolcar:'The government car at Lekki', cover:'Your Apex cover name',
 };
 function knowAdd(fact, who){ const k = I().known; k[fact] = k[fact] || ['You']; if(!k[fact].includes(who)) k[fact].push(who); }
 
@@ -22289,9 +22318,24 @@ function moneyUnlock(ids, announce){
     if(announce && !intelSenior()) toast('MONEY TRAIL', MONEY_NODES[id].name + ' — follow it in the Case Desk', 2200);
   });
 }
+/* when a node can be traced (MONEY_NODES[].gate):
+   'lagos' — MONEY is open (the Lagos charge sheet, or Lekki behind you);
+   'route' — the route charge sheet is on the file, or Asaba is behind you: the route's own money can't
+             feed (or contradict) the route sheet before it is filed;
+   'ca'    — the route gate, and the h5 briefing reached (C.A. Consulting never before Case 05). */
+function intelMoneyGate(id){
+  const n = MONEY_NODES[id]; if(!n || !intelMoneyOpen()) return false;
+  const g = n.gate || 'lagos', done = S.game.completedMissions || [];
+  if(g === 'lagos') return true;
+  const r = (window.V12 && typeof V12.accused === 'function') ? V12.accused('route') : null;
+  const route = !!r || done.includes('m6');
+  if(g === 'route') return route;
+  const d = I(), atH5 = !!(d.briefed && d.briefed.m5) || !!(d.brf && d.brf.k === 'm5') || !!(window.BRF && BRF.k === 'm5');
+  return route && (atH5 || done.includes('m6'));
+}
 function moneyTrace(id){
   const m = I().money, n = MONEY_NODES[id];
-  if(!intelMoneyOpen()) return false;
+  if(!intelMoneyOpen() || !intelMoneyGate(id)) return false;
   if(!n || !m.unlocked[id] || m.traced[id]) return false;
   if(m.req <= 0){ toast('NO NFIU REQUESTS LEFT', 'More come with the next briefing'); if(typeof sfxFail==='function') sfxFail(); return false; }
   m.req--; m.traced[id] = true;
@@ -22326,7 +22370,11 @@ function regSearch(q){
 /* the address search always lists what is there; only Recruit is told what it means */
 function regAtAddress(addr){
   const d = I(), r = d.reg;
-  const hits = Object.keys(REGISTRY).filter(k=>REGISTRY[k].addr === addr && (!REGISTRY[k].hidden || r.found[k]));
+  // byAddress: hidden from a name search, but the register lists it under its address (C.A. Consulting) —
+  // from the operation it names on (a string), so never from Case 02 / 03
+  const done = S.game.completedMissions || [];
+  const byAddr = e => !!e.byAddress && (typeof e.byAddress !== 'string' || done.includes(e.byAddress));
+  const hits = Object.keys(REGISTRY).filter(k=>REGISTRY[k].addr === addr && (!REGISTRY[k].hidden || byAddr(REGISTRY[k]) || r.found[k]));
   regFind(hits);
   if(addr === ZUMA && hits.length >= 4 && !intelHas('zuma_cluster')){
     intelSet('zuma_cluster'); knowAdd('zuma', 'You');
@@ -22452,9 +22500,9 @@ function intelBackGate(){
 /* ---------- the finale: what the investigation adds to v12's accusation ---------- */
 function intelStrongExtras(){
   const out = {};
-  if(intelHas('inv_ca') && intelHas('reg_ca')) out.inv_ca = 'C.A. Consulting was incorporated the month she took command, and paid on the first, every month.';
-  if(intelHas('inv_gatehouse') && intelHas('so_plate_match')) out.inv_gatehouse = 'Her motor-pool car: at Lekki before the raid, and at the Zuma Court cash handover.';
-  if(intelHas('inv_stakeout') && intelHas('so_plate_match')) out.inv_stakeout = 'The envelope went into LND-412-KJ — the car signed out to her office.';
+  if(intelHas('inv_ca') && intelHas('reg_ca')) out.inv_ca = 'C.A. Consulting: ₦10M from the Foundation on the first of every month — four of Obi\'s Fridays.';
+  if(intelHas('inv_gatehouse') && intelHas('so_plate_match')) out.inv_gatehouse = 'Her office\'s pool car: at Lekki before the raid, and at the Zuma Court cash handover.';
+  if(intelHas('inv_stakeout') && intelHas('so_plate_match')) out.inv_stakeout = 'The envelope went into LND 590 XA — the car signed out to her office.';
   return out;
 }
 function intelRevealExtras(){
@@ -22469,7 +22517,7 @@ function intelRevealExtras(){
   };
   const after = [{ speaker:'COMMANDER ADAEZE', mood:'evasive', text: STYLE_LINE[st] || STYLE_LINE.proc }];
   if(d.order === 'comply') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You left the Engineer alone when I asked you to. You have no idea how much I wanted you to say no.' });
-  if(d.order === 'confront') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You came into my office and asked me to my face. I respected that. Then I changed every phone that night.' });
+  if(d.order === 'confront') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You asked me on an open call, with Uche in the room. I respected that. Then I changed every phone that night.' });
   return { before, after };
 }
 
@@ -22897,7 +22945,9 @@ function renderLocker(){
   if(pending.length) o += `<p class="dk-intro v13-warn">${pending.length} electronic item${pending.length > 1 ? 's' : ''} still need${pending.length > 1 ? '' : 's'} an s.84 certificate before the next operation.</p>`;
   const facts = Object.keys(d.known || {});
   if(facts.length){
-    o += `<h3 class="dk-group">WHO KNOWS WHAT</h3><div class="dk-known">` + facts.map(f => `<div><b>${t((typeof FACTS !== 'undefined' && FACTS[f]) || f)}</b><span>${t((d.known[f] || []).join(', '))}</span></div>`).join('') + `</div>`;
+    // before the reveal her name is never listed: she is her unit, like every other office on the file
+    const who = w => (w === 'Cdr. Adaeze' && !(S.game.moralChoices || {}).finale) ? 'Lagos HQ' : w;
+    o += `<h3 class="dk-group">WHO KNOWS WHAT</h3><div class="dk-known">` + facts.map(f => `<div><b>${t((typeof FACTS !== 'undefined' && FACTS[f]) || f)}</b><span>${t((d.known[f] || []).map(who).join(', '))}</span></div>`).join('') + `</div>`;
   }
   let lastM = null;
   items.forEach(it => {
@@ -22987,6 +23037,10 @@ function renderMoney(){
       <dl class="dk-facts"><div><dt>REQUESTS IN HAND</dt><dd class="v13-mono">${m.req | 0}</dd></div><div><dt>TRACED SO FAR</dt><dd class="v13-mono">${naira$(tot)}</dd></div></dl>
       ${coach && grand > 0 ? `<div class="dk-adm dk-money-meter"><span class="dk-lbl">OF THE NETWORK</span><div class="v13-meter"><i style="width:${Math.min(100, tot / grand * 100)}%"></i></div><b class="v13-mono">${Math.round(Math.min(100, tot / grand * 100))}%</b></div>` : ''}
       ${!(m.req > 0) ? `<p class="dk-src">No requests left. More come with the next briefing.</p>` : ''}`;
+  // a line the NFIU won't open yet (the model's per-node gate): said plainly, with no hint of what it holds
+  const gateOpen = k => (typeof intelMoneyGate === 'function' ? !!safe(() => intelMoneyGate(k), true) : true);
+  const gateNote = k => (MONEY_NODES[k].gate === 'ca' && safe(() => { const r = typeof V().accused === 'function' ? V().accused('route') : null; return !!r || (S.game.completedMissions || []).includes('m6'); }, false))
+    ? 'The NFIU will take this line at the next briefing.' : "The NFIU won't open this line until your route charge sheet is on the file.";
   ids.forEach(k => {
     const n = MONEY_NODES[k], tr = !!(m.traced && m.traced[k]);
     const from = Object.keys(MONEY_NODES).filter(x => (MONEY_NODES[x].next || []).includes(k) && m.traced && m.traced[x]).map(x => MONEY_NODES[x].name);
@@ -22995,6 +23049,7 @@ function renderMoney(){
       <div class="dk-row1"><span class="dk-name">${t(n.name)}</span><span class="v13-tier">${t(n.kind)}</span>${key ? '<span class="v13-stamp dk-keytag">KEY</span>' : ''}</div>
       ${from.length ? `<div class="dk-src">${ico('link')}<span>via ${t(from.join(', '))}</span></div>` : ''}
       ${tr ? `<div class="dk-mn-desc">${t(n.desc)}</div><div class="dk-mn-amt v13-mono">${n.amt ? naira$(n.amt) : 'NO FIGURE'}${dead ? ' · DEAD END' : ''}</div>`
+           : !gateOpen(k) ? `<div class="dk-src dk-mn-wait">${ico('clock')}<span>${t(gateNote(k))}</span></div>`
            : `<button type="button" class="v13-btn" data-act="trace" data-id="${h(k)}" ${m.req > 0 ? '' : 'disabled'}>${ico('search')}TRACE · 1 REQUEST</button>`}
     </div>`;
   });
@@ -23233,7 +23288,7 @@ const AGENCY = 'NATIONAL ANTI-CORRUPTION &amp; ECONOMIC CRIMES AGENCY';
 
 const HUB_KEY = { h4:'m4', h5:'m5', h6:'m6', h7:'m7' };
 const WCASE = { w_cdr:'route', w_eko:'voice' };
-const TUNDE_HELD = "Tunde stopped taking NACECA's calls after the cell.";
+const TUNDE_HELD = "Tunde stopped taking your calls after your charge sheet put him in a cell.";
 
 /* runtime state of the briefing on screen (never saved: I().brf is the record) */
 const BRF = { k:null, phase:'plan', sel:[], dec:{}, then:null, video:false, armed:null, wArm:null };
@@ -23372,9 +23427,13 @@ window.openBriefing = openBriefing;
 function accused(c){ try{ return typeof V12.accused === 'function' ? V12.accused(c) : null; }catch(e){ return null; } }
 const tundeHeld = () => { const r = accused('lagos'); return !!(r && r.suspect === 'tunde'); };
 const posHeld = () => { const r = accused('lagos'); return !!(r && r.settled && r.suspect === 'pos'); };
+const tobiAlive = () => (typeof intelTobiAlive === 'function' ? !!intelTobiAlive()
+  : (()=>{ const a = (S.game.moralChoices || {}).asaba; return a === 'rescue' || (a === 'chase' && !S.game._asabaHostageLost); })());
 function leadBlocked(l){
   if(l.tunde && tundeHeld()) return TUNDE_HELD;
   if(l.heatMax && heatNow() >= l.heatMax) return l.heatBlocked;
+  if(l.tailBlocked && (S.game.moralChoices || {}).checkpoint === 'tail_driver') return l.tailBlocked;
+  if(l.tobiAlive && !tobiAlive()) return l.blocked || 'Not available';
   if(l.needsAny && !l.needsAny.some(x => intelHas(x))) return l.blocked || 'Not available';
   if(l.needsMission && !done(l.needsMission)) return 'Not available';
   return null;
@@ -23406,7 +23465,7 @@ function adPortrait(){ return (typeof PORTRAIT_ART !== 'undefined' && PORTRAIT_A
 function barHTML(b){
   const where = BRF.video
     ? `<span class="brf-live">${ico('dot', 'fill')}<span>VIDEO CALL · LAGOS HQ</span></span>`
-    : `<span class="brf-live">${ico('pin')}<span>NACECA HQ · LAGOS</span></span>`;
+    : `<span class="brf-live">${ico('pin')}<span>NACECA HQ · LAGOS${b.sub ? ' · ' + esc(b.sub) : ''}</span></span>`;
   return `${where}<span class="brf-kick v13-mono">${esc(b.title)}</span>`;
 }
 function optHTML(key, val, label, sub){
@@ -23427,7 +23486,7 @@ function renderPlan(){
   }
   if(n.includes('order')){
     h += `<section class="v13-sheet brf-dec"><div class="v13-sheet-h">AN INSTRUCTION</div><p class="brf-q">"${esc(b.order.text)}"</p>
-      <div class="brf-opts">${optHTML('order', 'comply', 'Comply')}${optHTML('order', 'quiet', 'Look into him quietly', 'Uses one of your two leads')}${optHTML('order', 'confront', 'Ask her about it, to her face')}${optHTML('order', 'leak', 'Pass it to a crime reporter')}</div></section>`;
+      <div class="brf-opts">${optHTML('order', 'comply', 'Comply')}${optHTML('order', 'quiet', 'Look into him quietly', 'Uses one of your two leads')}${optHTML('order', 'confront', 'Ask her about it, on the call')}${optHTML('order', 'leak', 'Pass it to a crime reporter')}</div></section>`;
   }
   if(n.includes('press')){
     const st = typeof RADIO_STATION === 'string' ? RADIO_STATION : 'RADIO';
@@ -23444,7 +23503,9 @@ function renderPlan(){
     return `<button class="v13-sheet brf-lead${on ? ' on' : ''}${bl ? ' locked' : ''}" data-b="lead" data-id="${l.id}" aria-pressed="${on}"${bl ? ' disabled' : ''}>
       <span class="brf-box">${ico(bl ? 'lock' : 'check')}</span><span class="brf-ot"><b>${esc(l.name)}</b><span>${esc(bl || l.desc)}</span></span></button>`;
   }).join('');
-  h += `<div class="brf-advice"><span class="brf-who">COMMANDER ADAEZE</span><p>"${esc(b.advice.text)}"</p></div>`;
+  // her advice never sends you to a lead you can't work (Tunde won't talk to you)
+  const tipLead = b.leads.find(l => l.tip), advice = (b.advice.alt && tipLead && leadBlocked(tipLead)) ? b.advice.alt : b.advice.text;
+  h += `<div class="brf-advice"><span class="brf-who">COMMANDER ADAEZE</span><p>"${esc(advice)}"</p></div>`;
   h += certHTML();
   if(d.money && d.money.open) h += `<p class="brf-small">NFIU: <span class="v13-mono">${d.money.req}</span> financial-intelligence request${d.money.req === 1 ? '' : 's'} available.</p>`;
   return h;
@@ -23583,9 +23644,10 @@ function applyDecisions(r){
     d.order = dec.order;
     if(dec.order === 'comply'){ applyEffect({ agencyFavour:+4 }); out.push({ h:'THE ENGINEER', t:'You leave him alone. She notices, and thanks you for it.' }); }
     if(dec.order === 'quiet'){ knowAdd('engineer', 'You'); intelSet('engineer_log'); applyEffect({ intel:+8 }); addInvEvidence('inv_engineer');
-      out.push({ h:'THE ENGINEER', t:"Off the books, you pull his line. Last month it called a number saved nowhere — the same number KC knows as CONTROL — 41 times, always after midnight. Nobody else knows you looked." }); }
-    if(dec.order === 'confront'){ applyEffect({ agencyFavour:-3 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer', 'Cdr. Adaeze');
-      out.push({ h:'THE ENGINEER', t:'"He is how we found Lekki. You will have to trust me on this one, Kelechi." She holds your eye. Some of it is true.' }); }
+      out.push({ h:'THE ENGINEER', t:'Off the books, you pull his line. Last month it called one number 41 times, always after midnight — the same number KC has saved as "C.". Nobody else knows you looked.' }); }
+    // asking her gives you her answer and nothing else: the Engineer's calls are found only by pulling his line ('quiet')
+    if(dec.order === 'confront'){ applyEffect({ agencyFavour:-3 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer_asked', 'Cdr. Adaeze');
+      out.push({ h:'THE ENGINEER', t:'"He is how we found Lekki. You will have to trust me on this one, Kelechi."' }); }
     if(dec.order === 'leak'){ applyEffect({ publicTrust:+3, agencyFavour:-6 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer', 'The press'); intelSet('engineer_fled');
       out.push({ h:'THE ENGINEER', t:'The story runs that evening: "NACECA informant linked to kidnap ring." By morning the Engineer has vanished, and the Commander has stopped saying good morning.' }); }
   }
@@ -23621,9 +23683,11 @@ function runTip(l){
   return `"${TIP_TRUE}"` + (intelHas('tower_fix') ? ' It matches the tower fix.' : '');
 }
 
+// a lead that could not be worked (Tobi dead, Tunde not talking, nothing to decrypt…) leaves no "while you were
+// busy" line: its dropped text would contradict the reason it was blocked
 function dropUnworked(k){
   const b = BRIEFINGS[k], d = I();
-  b.leads.forEach(l => { if(!d.leads[l.id]){ d.leads[l.id] = 'dropped'; if(l.dropped) d.dropLog.push({ week:b.week, lead:l.id, text:l.dropped, buried:b.advice.drop === l.id && b.advice.buries }); } });
+  b.leads.forEach(l => { if(!d.leads[l.id]){ const bl = leadBlocked(l); d.leads[l.id] = 'dropped'; if(l.dropped && !bl) d.dropLog.push({ week:b.week, lead:l.id, text:l.dropped, buried:b.advice.drop === l.id && b.advice.buries }); } });
 }
 function finishBriefing(){
   const k = BRF.k; if(!k) return;
@@ -23741,7 +23805,7 @@ function warrantResultLine(id){
   const s = wState(id), eko = id === 'w_eko';
   const h = eko ? 'THE WARRANT' : 'THE PRODUCTION ORDER';
   if(s.status === 'signed') return { h, t: !eko ? 'Signed. Whatever comes off that cabinet, you can put in front of a judge.'
-    : s.route === 'zonal' ? "Signed by Zonal's magistrate at 22:40. Benin Zonal is not pleased you went round your own Commander." : 'Signed. It went through the Commander\'s office, the usual way.' };
+    : s.route === 'zonal' ? "Signed by Zonal's duty magistrate at 19:10. Benin Zonal is not pleased you went round your own Commander." : 'Signed. It went through the Commander\'s office, the usual way.' };
   if(s.status === 'exigent') return { h, t:"No warrant. If it comes to it, you'll tell the judge a student's life was at stake." };
   if(s.status === 'none') return { h, t:'No order. If you pull data at that mast, the defence will ask on whose authority.' };
   return { h, t:'Never put to a magistrate.' };
@@ -23837,7 +23901,7 @@ const SO_EVENTS = [
   { t:'15:20', sil:'bags',   txt:'A man in a cap carries two Ghana-must-go bags into Zuma Court. He knows the guard by name.', acts:['photo'], rel:'so_courier' },
   { t:'17:30', sil:'walker', txt:'A young woman locks the Apex glass door and waves at the guard on her way out.', acts:['photo'] },
   { t:'17:55', sil:'car',    txt:'A black Lexus, Lagos plates. A man in agbada uses the ATM next door and drives off.', acts:['photo', 'plate'], plate:'LAG 771 XC' },
-  { t:'18:15', sil:'car',    txt:'A Toyota Corolla stops at the gate. Government plates. Nobody gets out. The man in the cap comes back out and passes an envelope through the rear window.', acts:['photo', 'plate'], plate:'LND-412-KJ', rel:'so_poolcar', relPlate:'so_plate' },
+  { t:'18:15', sil:'car',    txt:'A grey Toyota Corolla stops at the gate. Government plates. Nobody gets out. The man in the cap comes back out and passes an envelope through the rear window.', acts:['photo', 'plate'], plate:'LND 590 XA', rel:'so_poolcar', relPlate:'so_plate' },
   { t:'18:24', sil:'car',    txt:'The Corolla pulls away toward the Airport Road.', acts:['follow'] },
   { t:'18:40', sil:null,     txt:'Nothing. The street is empty. The suya seller packs up.', acts:['wait', 'back'], empty:true },
 ];
@@ -23914,7 +23978,7 @@ function soAct(a){
       if(intelHas('lead_gatehouse')){
         // the match exists either way (the finale and court can use it); only Recruit is told
         intelSet('so_plate_match'); knowAdd('poolcar', 'You');
-        if(recruit() && !s.matchTold){ s.matchTold = true; applyEffect({ intel:+10 }); if(typeof toast === 'function') toast('PLATE MATCH', 'LND-412-KJ — the same car as the Lekki gatehouse log', 3200); s.log.push({ k:'match' }); }
+        if(recruit() && !s.matchTold){ s.matchTold = true; applyEffect({ intel:+10 }); if(typeof toast === 'function') toast('PLATE MATCH', 'LND 590 XA — the same car as the Lekki gatehouse log', 3200); s.log.push({ k:'match' }); }
       }
     }
   }
@@ -23931,7 +23995,7 @@ function finishSO(){
     const parts = [];
     if(intelHas('so_courier')) parts.push('a courier carrying cash bags into Zuma Court');
     if(intelHas('so_poolcar')) parts.push('an envelope passed into a government car');
-    if(intelHas('so_plate')) parts.push('its plate, LND-412-KJ' + (recruit() && intelHas('so_plate_match') ? ' — the car from the Lekki gatehouse log' : ''));
+    if(intelHas('so_plate')) parts.push('its plate, LND 590 XA' + (recruit() && intelHas('so_plate_match') ? ' — the car from the Lekki gatehouse log' : ''));
     if(intelHas('so_back')) parts.push('a back entrance nobody mentioned');
     s.got = got; s.done = true;
     s.txt = parts.length ? 'From the feed you logged ' + parts.join(', ') + '.' : 'A long afternoon on a grainy feed, and nothing you can use. That happens too.';
@@ -23948,14 +24012,14 @@ window.openStakeout = openStakeout;
    Same in both difficulties (A8): the meter, the pause and the one-shot cover card are
    consequences, not hints. State persists in I().uc after every answer. */
 const UC_STEPS = [
-  { who:'RECEPTIONIST', q:'Good morning. Your name, sir?', opts:[['Chidi Anyanwu.', 0], ['Kelechi— sorry. Chidi. Chidi Okafor.', 35], ['Why do you need my name?', 15]] },
-  { who:'RECEPTIONIST', q:'And who referred you to us?', opts:[['Alhaji Sanni, at Bluewater.', 0], ['A friend at NACECA.', 75], ['I found you on Google.', 20]] },
+  { who:'RECEPTIONIST', q:'Good afternoon. Your name, sir?', opts:[['Obinna Anyanwu.', 0], ['Kelechi— sorry. Obinna. Obinna Okafor.', 35], ['Why do you need my name?', 15]] },
+  { who:'RECEPTIONIST', q:'And who referred you to us?', opts:[['Alhaji Danjuma, at Bluewater.', 0], ['A friend at NACECA.', 75], ['I found you online.', 20]] },
   { probe:true, txt:'She turns to photocopy his ID. The visitor book lies open on the desk.', act:'Tell him to read the visitor book', sus:15, got:'uc_book', res:'Two lines repeat every month: "C.A. — 1st, 10:00" and "Bluewater — Kunle".' },
   { who:'BARR. TAMUNO BRIGGS', q:'So. What will this company do?', opts:[['Generator parts. I import through Onitsha.', 0], ['Logistics. Haulage.', 20], ['Consulting, mostly.', 25]] },
   { who:'BARR. TAMUNO BRIGGS', q:'Ten days is fast. What were you told it costs?', opts:[['₦450,000. Ten days.', 0], ['Whatever it costs.', 15], ['₦200,000.', 10]] },
-  { probe:true, txt:'Briggs mentions they can provide "a director, if you\'d rather not be on paper".', act:'Have him ask if it works like it does for C.A. Consulting', sus:30, got:'uc_nominee', res:'He smiles. "Grace handles our nominees. Our C.A. client has never once set foot in this office. That is the service."' },
+  { probe:true, txt:'Briggs mentions they can provide "a director, if you\'d rather not be on paper".', act:'Have him ask if it works like it does for C.A. Consulting', sus:30, got:'uc_nominee', res:'He smiles. "Bimpe handles our nominees. Our C.A. client has never once set foot in this office. That is the service."' },
   { who:'BARR. TAMUNO BRIGGS', q:'Leave a number. We will call you when the name is reserved.', opts:[['Give the cover SIM.', 0], ['Give your own number.', 50], ["Say you'll call back.", 10]] },
-  { probe:true, txt:'On the way out he passes the out-tray. A stack of invoices, the top one face up.', act:'Tell him to pocket the top invoice', sus:25, got:'uc_invoice', res:'Invoice from C.A. Consulting Services Ltd to the Ugbowo Relief Foundation. "Retainer, monthly." ₦9.2M.' },
+  { probe:true, txt:'On the way out he passes the out-tray. A stack of invoices, the top one face up.', act:'Tell him to pocket the top invoice', sus:25, got:'uc_invoice', res:'Invoice from C.A. Consulting Services Ltd to the Ugbowo Relief Foundation. "Retainer, monthly." ₦10M.' },
 ];
 const UC = { done:null };
 function ensureUC(){
@@ -23997,8 +24061,8 @@ function renderUC(){
   document.getElementById('uc-val').textContent = String(sus);
   if(s.i < 0){
     body.innerHTML = `<section class="v13-sheet uc-cover"><div class="v13-sheet-h">THE COVER</div>
-      <dl><div><dt>NAME</dt><dd>Chidi Anyanwu</dd></div><div><dt>BUSINESS</dt><dd>Generator-parts importer, Onitsha</dd></div>
-      <div><dt>WANTS</dt><dd>A company registered in ten days</dd></div><div><dt>REFERRED BY</dt><dd>Alhaji Sanni at Bluewater</dd></div>
+      <dl><div><dt>NAME</dt><dd>Obinna Anyanwu</dd></div><div><dt>BUSINESS</dt><dd>Generator-parts importer, Onitsha</dd></div>
+      <div><dt>WANTS</dt><dd>A company registered in ten days</dd></div><div><dt>REFERRED BY</dt><dd>Alhaji Danjuma at Bluewater</dd></div>
       <div><dt>BUDGET</dt><dd class="v13-mono">₦450,000</dd></div><div><dt>PHONE</dt><dd>The cover SIM. Never his own.</dd></div></dl></section>
       <p class="uc-note">Learn it. Once he is through that door, neither of you can look at this card again. Every answer he gives is the one you feed him.</p>
       <div class="uc-acts"><button class="v13-btn primary" data-uc="go">KNOCK ON SUITE 4B${ico('next')}</button></div>`;
@@ -24039,7 +24103,7 @@ function ucFinalize(){
   s.done = true;
   if(s.blown){
     d.alert = (d.alert || 0) + 1; knowAdd('cover', 'Apex Corporate Services'); intelSet('apex_blown');
-    s.txt = 'Your cover is blown. They are polite, too polite. By Monday Suite 4B has new locks and a "To Let" sign — and somebody has made a phone call about you.' + (s.got.length ? ` You still walked out with ${s.got.length} thing${s.got.length > 1 ? 's' : ''} you can use.` : '');
+    s.txt = 'The cover is blown. They are polite, too polite. By morning Suite 4B has new locks and a "To Let" sign — and somebody has made a phone call about you.' + (s.got.length ? ` You still walked out with ${s.got.length} thing${s.got.length > 1 ? 's' : ''} you can use.` : '');
   } else {
     if(s.got.includes('uc_invoice')){ applyEffect({ intel:+12 }); addInvEvidence('inv_invoice'); }
     if(s.got.includes('uc_book')) applyEffect({ intel:+6 });
@@ -24078,8 +24142,8 @@ window.openUndercover = openUndercover;
 
 ACHIEVEMENTS.push(
   { id:'one_office',   name:'One Office',          desc:'Find the entities sharing one desk in Wuse II.' },
-  { id:'four_billion', name:'Follow the Money',    desc:'Trace the whole ₦4bn network from a ₦150,000 alert.' },
-  { id:'cover_held',   name:'Chidi Anyanwu',       desc:'Walk out of Apex with your cover intact.' },
+  { id:'four_billion', name:'Follow the Money',    desc:'Trace the whole ₦5bn network from a ₦150,000 alert.' },
+  { id:'cover_held',   name:'Obinna Anyanwu',      desc:'Walk out of Apex with your cover intact.' },
   { id:'clean_chain',  name:'Clean Chain',         desc:'Every exhibit you tendered was admitted.' },
 );
 
@@ -24173,7 +24237,7 @@ const COURT_OBJ = {
     opts:[['witness','Call the estate manager who kept it'],['tender','Tender the logbook on its own'],['withdraw','Withdraw it']] },
   photocopy:{ say:'These are printouts. A photocopy of a public record is not the record.',
     opts:[['ctc','Tender certified true copies from the CAC'],['portal','Explain they were printed from the CAC portal'],['withdraw','Withdraw them']] },
-  ident:{ say:'Night photographs, a blur in a back seat. The prosecution cannot say whose car that is.',
+  ident:{ say:'Photographs from a van across the street at dusk, a blur in a back seat. The prosecution cannot say whose car that is.',
     opts:[['plate','Tender the plate log against the motor-pool register'],['look','Ask the court to look closer'],['withdraw','Withdraw them']] },
   deception:{ say:'An officer lied his way into a law office under a false name. This was obtained by deception.',
     opts:[['s14','Argue sections 14 and 15 — improperly obtained is not inadmissible'],['deny','Deny the officer was undercover'],['withdraw','Withdraw it']] },
@@ -24203,7 +24267,7 @@ function courtObjection(x){
 }
 const COURT_WEAK = { tainted:'Recovered where the officer took a bribe', contested:'Contested in the field', custody:'Chain of custody broken', noorder:'No production order',
   warrantless:'No warrant: taken under exigent circumstances', inducement:'Witness promised leniency', accomplice:'Witness kept the books — an accomplice',
-  hearsay:'The gateman is not a witness', photocopy:'Printouts, not certified copies', ident:'Night photos — identification', deception:'Obtained undercover' };
+  hearsay:'The gateman is not a witness', photocopy:'Printouts, not certified copies', ident:'Dusk photos from a van — identification', deception:'Obtained undercover' };
 function courtWeak(x){
   if(x.k === 'contested') return { money:'Contested: your charge sheet put the money elsewhere', method:'Contested: your charge sheet named a different scheme', exigent:'Contested: seized without a warrant' }[x.why] || COURT_WEAK.contested;
   if(x.k === 'warrantless' && x.raid === 'shrine') return 'No warrant: the shrine was entered by force';
@@ -24313,7 +24377,7 @@ function courtRule(ex, choice){
       if(choice === 'portal') return lose(1, 'Sustained. Bring the certified record.');
       break;
     case 'ident':
-      if(choice === 'plate') return ctHas('so_plate') ? ok(1, 'LND-412-KJ. The motor-pool register shows who had that car that night. Admitted.') : lose(1, 'You never logged the plate. Sustained.');
+      if(choice === 'plate') return ctHas('so_plate') ? ok(1, 'LND 590 XA. The motor-pool register shows who had that car that night. Admitted.') : lose(1, 'You never logged the plate. Sustained.');
       if(choice === 'look') return lose(1, 'The court looks. It sees a car.');
       break;
     case 'deception':
@@ -24396,7 +24460,7 @@ function courtHead(){
     <div class="ct-meta"><span class="v13-mono">CHARGE NO. FHC/B/41C/2026</span><span class="ct-pat" aria-label="Judge's patience ${ctPat()} of ${COURT_PATIENCE}">PATIENCE <b class="v13-mono">${ctPat()}/${COURT_PATIENCE}</b></span></div>`;
 }
 const ctFoot = (act, label) => `<button class="v13-btn primary ct-go" data-ct="${act}">${ctEsc(label)}${ctIco('next')}</button>`;
-const CT_DEF = 'CHIEF ABIODUN FAGBEMI, SAN · FOR THE DEFENCE';
+const CT_DEF = 'CHIEF ABIODUN FADEYI, SAN · FOR THE DEFENCE';
 function ctSheetSummary(){
   const rec = ctAcc('voice'); if(!rec) return '';
   const ok = rec.ok || {}, right = !!ok.suspect;
@@ -24671,7 +24735,10 @@ function renderReviewHTML(inDesk){
   if(wrongOn(lagos, 'tunde')) prot.push(['Tunde, your own informant, spent a night in a NACECA cell on your charge sheet.', false]);
   if(wrongOn(lagos, 'pos')) prot.push(['An Ikeja POS agent spent the night in a cell as "the ringleader" on your charge sheet.', false]);
   const alive = ctTobiAlive();
-  prot.push(!alive ? ['Tobi did not make it out of Asaba.', false] : mc.asaba === 'rescue' ? ['You carried Tobi out of the smoke.', true] : ['Sgt. Uche carried Tobi out of the smoke while you went after the fixer.', true]);
+  // one rule with the h6 lead and the epilogue (alive: rescue, or the chase with the hostage not lost); only the
+  // deliberate rescue gives evidence at the trial (STORY-CANON "Tobi (if rescued in M6)")
+  prot.push(!alive ? ['Tobi did not make it out of Asaba.', false] : mc.asaba === 'rescue' ? ['You carried Tobi out of the smoke.', true]
+    : ['Sgt. Uche carried Tobi out of the smoke while you went after the fixer. He read the payroll for the prosecution; his doctors kept him out of the witness box.', true]);
   if(wrongOn(route, 'tobi')) prot.push([alive ? 'Then your route charge sheet named Tobi the principal. He was held until noon.' : 'Your route charge sheet named Tobi the principal. His family read it in the papers.', false]);
   if(wrongOn(route, 'musa')) prot.push(['Musa was charged as "the route\'s principal" on your charge sheet.', false]);
   if(wrongOn(route, 'agent')) prot.push(['A SIM agent was taken from a stall at Asaba Main Market on your charge sheet.', false]);
@@ -24699,9 +24766,9 @@ function renderReviewHTML(inDesk){
     [ctHas('zuma_cluster'), `${NUM[nZ] || nZ} entities with different owners shared one office: Suite 4B, Zuma Court.`],
     [ctHas('so_plate_match'), 'The car at the Zuma Court handover was the same pool car that visited Lekki before the raid.'],
     [ctHas('reg_ca'), 'C.A. Consulting was incorporated on 14 March 2019. "C.A." was the Commander.'],
-    [!!flagged.kc_call_control, 'CONTROL always called at seven. So did the Voice.'],
+    [!!flagged.kc_call_control, '"C." always called at seven. So did the Voice.'],
     [!!flagged.musa_ph_hotel, "Musa's own camera put him in Asaba."],
-    [!!flagged.bu_ph_gate, 'The burner held a photo of the blue gate on Akintola Close, weeks before the tower trace.'],
+    [!!flagged.bu_ph_gate, 'The burner held a photo of the gate on Akintola Close, its number painted over, two nights before the tower trace.'],
     [ctHas('reg_silverline'), 'The fake Asaba assault story came out of the same office.'],
   ];
   h += hidden.map(([got,t])=>`<p class="rv-line"><span class="rv-m${got ? ' v13-mark-ok' : ''}">${got ? ctIco('check') : ''}</span><span>${ctEsc(t)}${got ? '<span class="rv-tag">FOUND</span>' : '<span class="rv-tag v13-dim">YOU NEVER FOUND THIS</span>'}</span></p>`).join('');
@@ -24711,7 +24778,7 @@ function renderReviewHTML(inDesk){
   h += `<div class="v13-sheet-h">DECISIONS THAT CHANGED THE STORY</div>`;
   const dec = [];
   if(d.custodyAsk) dec.push(d.custodyAsk === 'gave' ? 'You sent her the ledger. Page 14 never came back.' : 'You kept the ledger in the exhibit room.');
-  if(d.order) dec.push({ comply:'You left the Engineer alone when she asked.', quiet:'You investigated her source behind her back.', confront:'You asked her about the Engineer to her face. She changed every phone that night.', leak:'You leaked the Engineer to the press. He vanished.' }[d.order]);
+  if(d.order) dec.push({ comply:'You left the Engineer alone when she asked.', quiet:'You investigated her source behind her back.', confront:'You asked her about the Engineer on an open call. She changed every phone that night.', leak:'You leaked the Engineer to the press. He vanished.' }[d.order]);
   if(d.press) dec.push({ bodycam:'You released the Asaba body-cam.', quiet:'You stayed silent about the Asaba story.', trace:'You traced the Asaba story to its source.' }[d.press]);
   if(d.court){
     const n = (d.court.proven || []).length;
@@ -24805,16 +24872,7 @@ W('epilogueSlides', orig => function(){
     const sl = slides.find(x => x.name === 'COMMANDER ADAEZE');
     if(sl){ sl.text = t; sl.art = I().court.proven.length >= 2 ? 'adaeze_afraid' : 'adaeze_evasive'; }
   }, 'epilogue');
-  // the chase branch: Uche carried Tobi out alive (casework, v12.2 h6), so his slide can't say he died
-  safe(()=>{
-    const m = S.game.moralChoices || {};
-    if(m.asaba !== 'chase' || S.game._asabaHostageLost) return;
-    const sl = slides.find(x => x.name === 'TOBI ONUOHA'); if(!sl || !/^Tobi did not live/.test(sl.text || '')) return;
-    const r = (S.game.accusations || {}).route, named = !!(r && r.ok && r.ok.suspect === false && r.suspect === 'tobi');
-    sl.art = 'tobi_neutral';
-    sl.text = named ? 'Sgt. Uche carried Tobi out of the Asaba smoke, and your charge sheet held him until noon. He went home to his sister. He does not take NACECA\'s calls.'
-      : 'Sgt. Uche carried Tobi out of the Asaba smoke. He went home to his sister, and he does not talk about the warehouse.';
-  }, 'tobi');
+  // (Tobi's chase branch — alive when the hostage was not lost — is the base epilogue's own now: finale.js)
   return slides;
 });
 W('advanceEpilogue', orig => function(){

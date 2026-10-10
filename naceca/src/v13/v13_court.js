@@ -256,7 +256,7 @@ function courtRule(ex, choice){
       if(choice === 'portal') return lose(1, 'Sustained. Bring the certified record.');
       break;
     case 'ident':
-      if(choice === 'plate') return ctHas('so_plate') ? ok(1, 'LND-412-KJ. The motor-pool register shows who had that car that night. Admitted.') : lose(1, 'You never logged the plate. Sustained.');
+      if(choice === 'plate') return ctHas('so_plate') ? ok(1, 'LND 590 XA. The motor-pool register shows who had that car that night. Admitted.') : lose(1, 'You never logged the plate. Sustained.');
       if(choice === 'look') return lose(1, 'The court looks. It sees a car.');
       break;
     case 'deception':

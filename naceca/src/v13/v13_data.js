@@ -51,7 +51,7 @@ const INTEL_ITEMS = {
   inv_invoice:       { m:'m5', kind:'DOCUMENT',  tier:'confirmed',          src:"Apex Corporate Services' out-tray", inv:true },
 };
 const INV_NAMES = {
-  inv_gatehouse:'Lekki Gatehouse Log — LND-412-KJ',
+  inv_gatehouse:'Lekki Gatehouse Log — LND 590 XA',
   inv_ca:'C.A. Consulting — CAC Record and Money Trail',
   inv_engineer:'The Engineer\'s Call Log — 41 Calls to "C."',
   inv_stakeout:'Zuma Court Stakeout Photographs',
@@ -201,7 +201,7 @@ const BRIEFINGS = {
         dropped:'Two of the three POS agents close their stands by morning.' },
       // a plate and a government car, nothing more: whose car it is is the player's own match (the Zuma Court plate, h5)
       { id:'gatehouse', name:"Pull the Lekki estate's gatehouse log", desc:'Who visited the mansion in the days before the raid.',
-        res:"Two nights before the raid: LND-412-KJ, a grey saloon with government plates, 23:10–23:40. The driver's signature is illegible; the estate manager only saw the back seat.", flag:'lead_gatehouse', intel:12,
+        res:"Two nights before the raid: LND 590 XA, a grey saloon with government plates, 23:10–23:40. The driver's signature is illegible; the estate manager only saw the back seat.", flag:'lead_gatehouse', intel:12,
         dropped:"That afternoon, \"officials\" collected the gatehouse logbook. The estate manager can't say which agency." },
     ]},
   // h4: the same video call as "Go at first light, with Uche"

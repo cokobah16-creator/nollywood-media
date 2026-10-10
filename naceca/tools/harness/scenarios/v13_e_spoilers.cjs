@@ -151,7 +151,7 @@ module.exports = async h => {
   await B.plan(['drives', 'gatehouse']);
   await B.runToEnd();
   const gate = await B.text('#screen-briefing .brf-note');
-  h.assert(/LND-412-KJ/.test(gate) && /government plates/.test(gate), 'the gatehouse log: a plate and a government car');
+  h.assert(/LND 590 XA/.test(gate) && /government plates/.test(gate), 'the gatehouse log: a plate and a government car');
   await B.click('#screen-briefing [data-b="done"]'); await h.step(300);
   await deskTour();
   const w1 = await h.ev(() => ({ ca:!!I().reg.found.ca, n_ca:!!I().money.traced.n_ca, obi:!!I().money.traced.n_obi, bw:!!I().money.traced.n_bluewater, charity:!!I().money.traced.n_charity }));
@@ -244,7 +244,7 @@ module.exports = async h => {
   const srcs = new Set(seen.map(x => x.src.replace(/:.*/, '')));
   for(const s of ['screen-briefing', 'screen-desk', 'screen-so', 'screen-uc', 'dlg', 'radio']) h.assert(srcs.has(s), 'rendered: ' + s);
   const all = seen.map(x => x.t).join('\n');
-  h.assert(/C\.A\. Consulting/.test(all) && /"C\."|C\. /.test(all) && /LND-412-KJ/.test(all), 'the earned clues are there: C.A. Consulting, "C.", the plate');
+  h.assert(/C\.A\. Consulting/.test(all) && /"C\."|C\. /.test(all) && /LND 590 XA/.test(all), 'the earned clues are there: C.A. Consulting, "C.", the plate');
 
   // ================= 8. canon: Tobi reads the same everywhere =================
   const tobi = await h.ev(() => {
