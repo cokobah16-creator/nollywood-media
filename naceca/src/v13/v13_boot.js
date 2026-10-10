@@ -24,15 +24,22 @@ W('beginMission', orig => function(id){
 W('showAftermath', orig => function(){ safe(()=>intelOnMissionEnd(S.game.currentMission), 'end'); return orig.apply(this, arguments); });
 
 /* ---------- the weekly briefing comes before the operation it prepares ---------- */
-W('loadMission', orig => function(id){
-  const self = this, args = arguments;
-  if(safe(()=>briefingKeyBefore(id), 'brief?')){ maybeBriefingBefore(id, ()=>orig.apply(self, args)); return; }
-  return orig.apply(this, arguments);
-});
+// From Case 04 on, the briefing runs inside the hub's Commander call (V12.hubCallAfter in
+// v13_briefing.js), so loadMission is never intercepted for it: h.start, Continue, the mission
+// select and the aftermath all give the same order. The one exception is Week 1 below.
 // Night Shift walks straight into the Bypass: brief before "TWO DAYS LATER", not after it
 W('titleCard', orig => function(lines){
   const self = this, args = arguments;
-  if(Array.isArray(lines) && lines[0] === 'BENIN BYPASS' && safe(()=>briefingKeyBefore('m4'), 'brief?')){ maybeBriefingBefore('m4', ()=>orig.apply(self, args)); return; }
+  if(Array.isArray(lines) && lines[0] === 'BENIN BYPASS' && typeof openBriefing === 'function' && safe(()=>briefingPending('m3'), 'brief?')){ openBriefing('m3', ()=>orig.apply(self, args)); return; }
+  return orig.apply(this, arguments);
+});
+// ...and a Week-1 briefing interrupted by a quit (open or committed) reopens before the Bypass
+W('loadMission', orig => function(id){
+  const self = this, args = arguments;
+  if(id === 'm4' && typeof openBriefing === 'function' && safe(()=>briefingResumable('m3'), 'brief?')){
+    openBriefing('m3', ()=>titleCard(['BENIN BYPASS', 'TWO DAYS LATER'], 2600, ()=>orig.apply(self, args)));
+    return;
+  }
   return orig.apply(this, arguments);
 });
 
