@@ -9,13 +9,15 @@ const V12 = window.V12;
 if(!V12 || typeof V12.wrap !== 'function'){ console.warn('[v13] needs the v12 layer'); return; }
 const W = V12.wrap;
 const safe = (f, label) => { try{ return f(); }catch(e){ console.warn('[v13] ' + label, e); } };
-V12.version = 'v13';
+V12.version = 'v13+beta';                     // playtest events carry the build: v12.2, the friends beta and v13
 
 /* ---------- every logged exhibit gets a record ---------- */
-W('collectEvidence', orig => function(ev){ const r = orig.apply(this, arguments); safe(()=>intelOnEvidence(ev), 'evidence'); return r; });
+// I() runs first, so a new item is never mistaken for one logged before the Case Desk existed
+W('collectEvidence', orig => function(ev){ safe(()=>I(), 'intel'); const r = orig.apply(this, arguments); safe(()=>intelOnEvidence(ev), 'evidence'); return r; });
 
 /* ---------- operations start and end ---------- */
 W('beginMission', orig => function(id){
+  safe(()=>I(), 'intel');                       // a new game gets its record at m0; an old save is migrated once (design A1/A9)
   const before = S.game._opStart;
   const r = orig.apply(this, arguments);
   if(S.game._opStart !== before && S.game.currentMission === id && ENGINE.player) safe(()=>intelOnMissionStart(id), 'start');
@@ -78,57 +80,20 @@ W('finaleRevealScript', orig => function(){
 });
 
 /* ---------- consequences elsewhere in the game ---------- */
-// the caretaker's tip opens the back gate, as Musa's does
-W('musaGaveTip', orig => function(){ return orig.apply(this, arguments) || !!safe(()=>intelHas('lead_caretaker'), 'tip'); });
-// a refused application leaks
-W('startMansionWipe', orig => function(){
-  const r = orig.apply(this, arguments);
-  if(S.game.flags && S.game.flags.obi_tipped){
-    S.game._wipeTotal = Math.max(25, (S.game._wipeTotal || 55) - 15);
-    setTimeout(()=>toast('HE WAS READY', `A court clerk talked. Obi had his finger on the button — about ${S.game._wipeTotal} seconds.`, 2800), 2900);
-  }
-  return r;
-});
-W('towerPowerOn', orig => function(){
-  const r = orig.apply(this, arguments);
-  if(S.game.flags && S.game.flags.cdr_tipped){
-    S.game._towerWindow = Math.max(40, (S.game._towerWindow || 75) - 15);
-    V12.say('SGT. UCHE', "They've been rotating handsets since your application leaked. Less time on that cabinet, sir.", 3800);
-  }
-  return r;
-});
+// the caretaker's tip opens the back gate, as Musa's does — and the caretaker gets the credit (backgate_src)
+W('musaGaveTip', orig => function(){ return orig.apply(this, arguments) || !!safe(()=>intelBackGate(), 'tip'); });
+// (no leak timers: an investigative choice never shortens the Lekki wipe or the Ugbowo cabinet window)
 
 /* ---------- warrants are applied for, not awarded ---------- */
-V12.warrant = () => !!safe(()=>warrantGranted('w_lekki'), 'warrant');
-if(V12.INTEL_TIERS && V12.INTEL_TIERS[0]) Object.assign(V12.INTEL_TIERS[0], { name:'MAGISTRATE', text:'Magistrates take your applications seriously: +2 on every warrant basis.' });
-{ const tm = (V12.OPS_THEORIES || []).find(t => t.id === 't_money'); if(tm) tm.effect = 'Strong grounds for the Lekki warrant: an inked theory counts double in your application.'; }
+// The board is the magistrate: V12.warrant(), intel tier 0 ('ON FILE') and the t_money text stay the beta's.
+// v13 reads every warrant through V12.warrantState (v13_intel.js); w_cdr / w_eko are filed with V12.fileV13Warrant.
 
 /* ---------- the investigation's findings count in the accusation ---------- */
 { const strong = V12.strongAgainstAdaeze;
   if(typeof strong === 'function') V12.strongAgainstAdaeze = function(){ const out = strong.apply(this, arguments) || {}; safe(()=>Object.assign(out, intelStrongExtras()), 'strong'); return out; }; }
 
 /* ---------- the raid plan: apply for the Lekki warrant from the gate ---------- */
-{ const plan = V12.planM3;
-  if(typeof plan === 'function') V12.planM3 = function(onGo){
-    DESK.planGo = onGo;
-    const r = plan.apply(this, arguments);
-    safe(planWarrantButton, 'plan');
-    return r;
-  }; }
-function planWarrantButton(){
-  const ov = document.getElementById('screen-plan'); if(!ov) return;
-  const add = ()=>{
-    const w = WARRANTS.find(x => x.id === 'w_lekki');
-    if(!w || warrantGranted('w_lekki') || !warrantOpen(w) || ov.querySelector('#plan-warrant')) return;
-    const host = ov.querySelector('.plan-pred'); if(!host) return;
-    const b = document.createElement('button'); b.id = 'plan-warrant'; b.className = 'mini-btn';
-    b.textContent = `APPLY FOR THE WARRANT · BASIS ${warrantScore(w)}/${w.need} ▸`;
-    b.addEventListener('click', e => { e.stopPropagation(); openDesk('warrants'); });
-    host.appendChild(b);
-  };
-  add();
-  if(!ov._v13obs){ ov._v13obs = new MutationObserver(add); ov._v13obs.observe(ov, { childList:true }); }
-}
+// (nothing here any more: the beta's raid gate files the Lekki warrant before the plan opens, and the plan reads it)
 
 /* ---------- entry points: HUD EVIDENCE → Case Desk; a DESK button on the operations table ---------- */
 W('ensureHudV8', orig => function(){
