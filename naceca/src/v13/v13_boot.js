@@ -136,7 +136,7 @@ W('ensureHudV8', orig => function(){
   safe(()=>{
     const b = document.getElementById('cb-ev'); if(!b || b._v13) return;
     const c = b.cloneNode(true); c._v13 = true; b.replaceWith(c);           // drops the old listener, keeps the counter
-    c.addEventListener('click', e => { e.stopPropagation(); if(ENGINE.movementEnabled) openDesk('locker'); });
+    c.addEventListener('click', e => { e.stopPropagation(); if(ENGINE.movementEnabled && typeof openDesk === 'function') openDesk('locker'); });
     c.addEventListener('touchstart', e => e.stopPropagation(), { passive:true });
   }, 'hud');
   return r;
@@ -146,8 +146,8 @@ W('ensureHudV8', orig => function(){
     const r = openOps.apply(this, arguments);
     safe(()=>{
       const host = document.querySelector('#screen-ops .ops-btns'); if(!host || document.getElementById('ops-desk')) return;
-      const b = document.createElement('button'); b.className = 'ops-b'; b.id = 'ops-desk'; b.textContent = 'CASE DESK';
-      b.addEventListener('click', e => { e.stopPropagation(); openDesk(); });
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'ops-b'; b.id = 'ops-desk'; b.textContent = 'CASE DESK';
+      b.addEventListener('click', e => { e.stopPropagation(); if(typeof openDesk === 'function') openDesk(); });
       host.insertBefore(b, host.firstChild);
     }, 'ops');
     return r;

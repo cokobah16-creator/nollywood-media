@@ -68,7 +68,7 @@ const PHONES = [
     { id:'kc_del_control', sec:'DELETED', from:'(recovered fragment)', text:"…dont ever call CONTROL from this line. if they pick you, you dont know me…", rel:true, why:'KC was told to protect CONTROL above everyone.' },
   ]},
   { id:'musa', name:"Musa's phone", model:'Itel button phone + old Samsung', needs:'ransom_ledger', items:[
-    { id:'musa_ride_asaba', sec:'RIDE HISTORY', from:'Bolt', text:'Benin Bypass → Riverview Suites, Asaba · 2 weeks ago, 23:40', rel:true, why:'Musa was in Asaba recently.' },
+    { id:'musa_ride_asaba', sec:'RIDE HISTORY', from:'Bolt', text:'Benin Bypass to Riverview Suites, Asaba · 2 weeks ago, 23:40', rel:true, why:'Musa was in Asaba recently.' },
     { id:'musa_ph_hotel', sec:'PHOTOS', from:'Camera', text:'Musa outside Riverview Suites, Asaba. The Niger Bridge lights behind him.', rel:true, why:'He says he has never been to Asaba. His own camera disagrees.' },
     { id:'musa_call_engineer', sec:'CALLS', from:'Engineer', text:'02:10 · 02:14 · 02:31 — every pickup night', rel:true, why:'The Engineer calls before each pickup.' },
     { id:'musa_msg_home', sec:'MESSAGES', from:'Home', text:'The children ask when you are coming back. Aisha has fever small.', rel:false },
@@ -77,7 +77,7 @@ const PHONES = [
   ]},
   { id:'burner', name:'Warehouse burner', model:'Unbranded · found with the SIM packs', needs:'asaba_sims', items:[
     { id:'bu_contacts', sec:'CONTACTS', from:'Phonebook', text:'Two entries only: "E." and "CONTROL".', rel:true, why:'This handset existed to talk to two people.' },
-    { id:'bu_msg_accountant', sec:'MESSAGES', from:'→ CONTROL', text:'The accountant keeps asking about the drive. What do we do.', rel:true, why:'Tobi was taken because of what he knew.' },
+    { id:'bu_msg_accountant', sec:'MESSAGES', from:'Sent to CONTROL', text:'The accountant keeps asking about the drive. What do we do.', rel:true, why:'Tobi was taken because of what he knew.' },
     { id:'bu_msg_student', sec:'MESSAGES', from:'CONTROL', text:"Move him tonight. The student's file stays with me.", rel:true, why:'The kidnapping is about a file a student found.' },
     { id:'bu_ping_ugbowo', sec:'LOCATION', from:'Network', text:'Last registered cell: Ugbowo, Benin City — three nights running.', rel:true, why:'CONTROL works near the Ugbowo mast.' },
     { id:'bu_ph_gate', sec:'PHOTOS', from:'Camera', text:'A blue gate. The house number has been painted over.', rel:true, why:'A house someone wanted remembered — and hidden.' },
