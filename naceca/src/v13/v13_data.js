@@ -330,9 +330,10 @@ const RADIO_RUMOURS = [
 ];
 
 /* ---- 12. Court: FRN v. Cdr. Adaeze & 2 Ors ---- */
+// a count is proven at weight 2 (admitted exhibits × their weight, then the finale charge sheet: v13_court courtSheetEffects)
 const COURT_COUNTS = [
-  { id:'c1', name:'Count 1 — Kidnapping of Osas Ehigie' },
-  { id:'c2', name:'Count 2 — Conspiracy' },
-  { id:'c3', name:'Count 3 — Money laundering' },
-  { id:'c4', name:'Count 4 — Abuse of office' },
+  { id:'c1', short:'Count 1', name:'Count 1 — Kidnapping of Osas Ehigie' },
+  { id:'c2', short:'Count 2', name:'Count 2 — Conspiracy' },
+  { id:'c3', short:'Count 3', name:'Count 3 — Money laundering' },
+  { id:'c4', short:'Count 4', name:'Count 4 — Abuse of office' },
 ];

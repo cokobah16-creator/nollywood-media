@@ -48,27 +48,38 @@ W('loadMission', orig => function(id){
 /* ---------- the trial before the epilogue, the review after it ---------- */
 W('startEpilogue', orig => function(){
   const self = this, args = arguments, o = (S.game.moralChoices || {}).finale;
-  if((o === 'proven' || o === 'contested') && !I().court && typeof openCourt === 'function'){ openCourt(()=>orig.apply(self, args)); return; }
+  // the court sits once per finale run (a replayed M8 clears it: v13_court courtResetForReplay)
+  const done = typeof courtDoneFor === 'function' ? !!safe(()=>courtDoneFor(o), 'court?') : !!I().court;
+  if((o === 'proven' || o === 'contested') && !done && typeof openCourt === 'function'){ openCourt(()=>orig.apply(self, args)); return; }
   return orig.apply(this, arguments);
 });
 W('epilogueSlides', orig => function(){
   const slides = orig.apply(this, arguments);
   safe(()=>{
-    const t = courtEpilogueText(); if(!t) return;
+    const t = courtEpilogueText(); if(!t) return;                       // null unless a court sat on THIS finale
     const sl = slides.find(x => x.name === 'COMMANDER ADAEZE');
     if(sl){ sl.text = t; sl.art = I().court.proven.length >= 2 ? 'adaeze_afraid' : 'adaeze_evasive'; }
   }, 'epilogue');
+  // the chase branch: Uche carried Tobi out alive (casework, v12.2 h6), so his slide can't say he died
+  safe(()=>{
+    const m = S.game.moralChoices || {};
+    if(m.asaba !== 'chase' || S.game._asabaHostageLost) return;
+    const sl = slides.find(x => x.name === 'TOBI ONUOHA'); if(!sl || !/^Tobi did not live/.test(sl.text || '')) return;
+    const r = (S.game.accusations || {}).route, named = !!(r && r.ok && r.ok.suspect === false && r.suspect === 'tobi');
+    sl.art = 'tobi_neutral';
+    sl.text = named ? 'Sgt. Uche carried Tobi out of the Asaba smoke, and your charge sheet held him until noon. He went home to his sister. He does not take NACECA\'s calls.'
+      : 'Sgt. Uche carried Tobi out of the Asaba smoke. He went home to his sister, and he does not talk about the warehouse.';
+  }, 'tobi');
   return slides;
 });
 W('advanceEpilogue', orig => function(){
-  const r = orig.apply(this, arguments);
-  safe(()=>{
-    if(EPI.i >= EPI.slides.length && !I().reviewShown){
-      I().reviewShown = true;
-      openReview(()=>{ showOverlay('screen-title'); if(typeof musicForScene === 'function') musicForScene('title'); });
-    }
-  }, 'review');
-  return r;
+  const self = this, args = arguments;
+  // the case review comes after the last slide and BEFORE the title screen (its music, its toast), not over it
+  if(EPI.i + 1 >= EPI.slides.length && !I().reviewShown && typeof openReview === 'function'){
+    I().reviewShown = true;
+    if(safe(()=>{ openReview(()=>orig.apply(self, args)); return true; }, 'review')) return;
+  }
+  return orig.apply(this, arguments);
 });
 
 /* ---------- her case, and how she read you, in the reveal ---------- */
