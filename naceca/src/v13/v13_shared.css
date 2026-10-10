@@ -1,0 +1,77 @@
+/* v13 · shared primitives for every v13 screen (Case Desk, briefing, van, undercover, court, review).
+   Written on the beta palette (see styles.css :root): flat fills, 1px rules, 2–4px radius, no
+   gradients, glows, shadows or blur. Everything is scoped to the v13 overlays so nothing leaks into
+   the rest of the game. Screens are ink panels; documents inside them are manila .v13-sheet.
+   Right/wrong is never colour alone: .v13-mark-ok / .v13-mark-bad carry a word and a mark. */
+
+/* ---------- buttons ---------- */
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-btn,.mini-btn){
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:8px 12px;margin:0;
+  background:transparent;border:1px solid var(--manila,#E9DCC0);border-radius:2px;color:var(--manila,#E9DCC0);
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;font-weight:500;letter-spacing:.1em;
+  line-height:1.2;text-transform:uppercase;cursor:pointer;box-shadow:none}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-btn,.mini-btn):hover{background:var(--ink-3,#34342F)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-btn,.mini-btn).primary{background:var(--green,#0B6E4F);border-color:var(--green,#0B6E4F);color:var(--manila,#E9DCC0)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-btn,.mini-btn).danger{border-color:var(--red,#B3261E)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-btn,.mini-btn):is(.on,.armed){background:var(--red,#B3261E);border-color:var(--red,#B3261E);color:var(--manila,#E9DCC0)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-btn,.mini-btn):disabled{opacity:.45;cursor:not-allowed}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-btn,.mini-btn) .ico{font-size:16px;flex:0 0 auto}
+/* on paper the buttons are ink */
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet :is(.v13-btn,.mini-btn){border-color:var(--ink,#1C1C1A);color:var(--ink,#1C1C1A)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet :is(.v13-btn,.mini-btn):hover{background:rgba(28,28,26,.08)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet :is(.v13-btn,.mini-btn).primary{background:var(--green,#0B6E4F);border-color:var(--green,#0B6E4F);color:var(--manila,#E9DCC0)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet :is(.v13-btn,.mini-btn):is(.on,.armed){background:var(--red,#B3261E);border-color:var(--red,#B3261E);color:var(--manila,#E9DCC0)}
+
+/* ---------- chips (choices you can toggle) ---------- */
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-chip,.chip){
+  display:inline-flex;align-items:center;gap:6px;min-height:32px;margin:0 6px 6px 0;padding:6px 10px;
+  background:transparent;border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-radius:2px;color:var(--manila,#E9DCC0);
+  font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:12px;cursor:pointer}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-chip,.chip).on{background:var(--manila,#E9DCC0);border-color:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet :is(.v13-chip,.chip){border-color:var(--rule-paper,rgba(28,28,26,.32));color:var(--ink,#1C1C1A)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet :is(.v13-chip,.chip).on{background:var(--ink,#1C1C1A);border-color:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0)}
+
+/* touch: every v13 control is a 44px target */
+.touch-active :is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-btn,.mini-btn,.v13-chip,.chip,button){min-height:44px;min-width:44px}
+
+/* ---------- paper ---------- */
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet{
+  position:relative;background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);border:1px solid var(--ink,#1C1C1A);border-radius:3px;
+  padding:12px 14px;margin:0 0 10px;text-align:left;box-shadow:none}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet .v13-sheet-h{
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  border-bottom:1px solid var(--ink,#1C1C1A);padding-bottom:6px;margin-bottom:8px}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-mono{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace)}
+
+/* rubber stamp, inline (ink-red by default, agency green for a granted/upheld state) */
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-stamp{
+  display:inline-block;padding:2px 8px;border:2px solid var(--red,#B3261E);border-radius:3px;color:var(--red,#B3261E);
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:700;font-size:13px;letter-spacing:.16em;
+  text-transform:uppercase;transform:rotate(-3deg);background:transparent}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-stamp.good{border-color:var(--green,#0B6E4F);color:var(--green,#0B6E4F)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-stamp.plain{border-color:currentColor;color:inherit}
+
+/* right / wrong as an ink word with a mark (readable on ink and on paper, never colour alone) */
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-mark-ok,.v13-mark-bad,.ok,.bad){
+  color:inherit;font-weight:600;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-mark-ok,.ok){text-decoration-color:var(--green,#0B6E4F)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-mark-bad,.bad){text-decoration-color:var(--red,#B3261E);text-decoration-style:wavy}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-mark-ok,.v13-mark-bad) .ico{font-size:1.05em;vertical-align:-2px;margin-right:3px}
+/* quieter text: manila-2 on ink, ink-soft on paper (both ≥4.5:1) */
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-dim,.dim){color:var(--manila-2,#A89F8A)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet :is(.v13-dim,.dim){color:var(--ink-soft,#4F4C44)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-warn,.warn){color:inherit;border-left:3px solid var(--red,#B3261E);padding-left:6px}
+
+/* evidence tier tag (word, never colour alone) */
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.v13-tier,.tier){
+  display:inline-block;padding:1px 6px;border:1px solid currentColor;border-radius:2px;white-space:nowrap;
+  font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:inherit}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.t-confirmed){border-style:solid;border-width:2px}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.t-probable){border-style:solid}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) :is(.t-allegation,.t-rumour){border-style:dashed}
+
+/* flat meter: a ruled track and a solid fill, value printed beside it */
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-meter{position:relative;height:6px;background:var(--rule-ink,rgba(233,220,192,.24));border-radius:1px;overflow:hidden}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-meter > i{position:absolute;left:0;top:0;bottom:0;background:var(--manila,#E9DCC0)}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet .v13-meter{background:var(--rule-paper,rgba(28,28,26,.32))}
+:is(#screen-desk,#screen-briefing,#screen-so,#screen-uc,#screen-court,#screen-review) .v13-sheet .v13-meter > i{background:var(--ink,#1C1C1A)}

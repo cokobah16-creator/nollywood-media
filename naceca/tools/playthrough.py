@@ -14,7 +14,7 @@ port=int(sys.argv[1]); srv = socketserver.TCPServer(('127.0.0.1',port), Q); thre
 THREE_PATH = os.environ.get('THREE_JS')  # optional local copy of three.min.js r128 if the CDN is blocked
 THREE = open(THREE_PATH,'rb').read() if THREE_PATH else None
 MISSIONS = sys.argv[2].split(',') if len(sys.argv)>2 else ['m1','m2','m3','m4','m5','m6','m7']
-POLICIES = [0,1,2]
+POLICIES = [int(x) for x in os.environ.get('KS','0,1,2').split(',')]
 DRIVER = r"""
 async ({mid, k}) => {
   const sleep = ms => new Promise(r=>setTimeout(r,ms));
@@ -25,6 +25,10 @@ async ({mid, k}) => {
   const order = MISSIONS.map(m=>m.id); const idx = order.indexOf(mid);
   S.game.completedMissions = order.slice(0, idx);
   S.game.moralChoices.asaba = ['chase','rescue',null][k];
+  // v13: weekly briefings are exercised by tools/v13_test.py; mark them done so missions are compared like for like
+  if(typeof I === 'function'){ const d = I(); d.briefed = { m3:1, m4:1, m5:1, m6:1, m7:1 }; }
+  // v12 M2: the van waits for three inked links or a real attempt at the table (12 tries) — take the fail-forward path
+  if(mid === 'm2' && typeof V12 !== 'undefined' && V12.ops){ const o = V12.ops(); o.tries = Math.max(o.tries || 0, 12); }
   showOverlay(null); loadMission(mid); await sleep(150);
   if(shown().includes('screen-controls')) beginMission(mid);
   await sleep(500);
@@ -42,6 +46,28 @@ async ({mid, k}) => {
         else if(!document.querySelector('#dlg-continue').classList.contains('hide')) advanceDialogue();
         await sleep(40); continue;
       }
+      // v11 field skills: play them through the engine's own API
+      if(sh.includes('screen-minigame') && typeof MINI!=='undefined' && MINI.active){
+        const run = MINI.active;
+        if(run.phase === 'play'){ miniSuccess(run, {stars:3}); log.push('mini:'+(run.cfg.id||run.cfg.type)); }
+        else { const b = document.querySelector('#mg-actions button'); if(b) b.click(); }
+        await sleep(80); continue;
+      }
+      // v12 documents: the conclusion, then the line that proves it
+      if(sh.includes('screen-puzzle') && document.querySelector('.puzzle-frame.v12-doc')){
+        const title = (document.querySelector('.puzzle-frame.v12-doc h2')||{}).textContent;
+        const key = Object.keys(PUZZLES).find(x=>PUZZLES[x].title===title);
+        const spec = key && V12.docFromPuzzle && V12.docFromPuzzle(key);
+        if(spec){
+          const oi = spec.options.findIndex(o=>o.correct); const ob = document.querySelectorAll('#v12-opts .v12-opt')[oi]; if(ob) ob.click();
+          const line = [...document.querySelectorAll('#v12-lines .v12-line.live')].find(l=>spec.proof.some(x=>l.textContent.includes(x))); if(line) line.click();
+          const go = document.getElementById('v12-doc-go'); if(go && !go.disabled) go.click();
+          log.push('doc:'+key);
+        } else { const x = document.getElementById('v12-doc-x'); if(x) x.click(); }
+        await sleep(1600); continue;
+      }
+      if(sh.includes('screen-plan')){ const g = document.getElementById('plan-go'); if(g){ g.click(); log.push('plan'); } await sleep(200); continue; }
+      if(sh.includes('screen-ops')){ if(typeof V12!=='undefined' && V12.closeOps) V12.closeOps(); else showOverlay(null); await sleep(80); continue; }
       if(sh.includes('screen-puzzle')){
         const title = document.querySelector('#puzzle-title').textContent;
         const key = Object.keys(PUZZLES).find(x=>PUZZLES[x].title===title);
