@@ -5,6 +5,7 @@ const read = h => h.ev(() => { try{ return JSON.parse(localStorage.getItem('nace
 const flush = h => h.ev(() => { V12.log('_flush', {}); for(let i = 0; i < 12; i++) V12.log('_pad', {}); });
 module.exports = async h => {
   await h.ev(() => { try{ localStorage.removeItem('naceca_pt_v1'); }catch(e){} });
+  const { SET0, VER0 } = await h.ev(() => ({ SET0:{ marker:SETTINGS.marker }, VER0:V12.version }));
   await h.start('m2', { completed:['m0', 'm1'] });
   const touch = await h.ev(() => document.body.classList.contains('touch-active'));
 
@@ -22,9 +23,11 @@ module.exports = async h => {
   // the game's own hint, a silent mission end, a chase that ends, the wipe running out
   await h.ev(() => { toast('HINT', 'Try this next: Speak with Tunde. Follow the arrow.', 600); });
   await h.ev(() => { const r = { position:{ x:0, y:0, z:0 }, rotation:{ y:0 }, userData:{} }; const c = startChase({ runner:r, path:[[0,0],[5,0]], label:'TEST' }); c.bumps = 2; stopChase(); c.onEscaped(); });
-  await h.ev(() => { S.game._wipeTotal = 55; S.game._wipeT = 55; S.game._wipeLost = true; });
+  await h.ev(() => { S.game.currentMission = 'm3'; S.game._wipeTotal = 55; S.game._wipeT = 20; });
   await h.step(1300);
-  await h.ev(() => { S.game._wipeTotal = 0; S.game._wipeLost = false; });
+  await h.ev(() => { S.game._wipeT = 55; S.game._wipeLost = true; });
+  await h.step(1300);
+  await h.ev(() => { S.game._wipeTotal = 0; S.game._wipeLost = false; S.game.currentMission = 'm2'; });
   // stuck: pretend the last progress was two minutes of PLAY ago and let the sampler see it
   await h.ev(() => { ENGINE.movementEnabled = true; showOverlay(null); const P = V12._ptState; P.lastProg = P.play - 120000; P.stuckAt = 0; P.sig = progressSig(); });
   await h.step(2600);
@@ -97,6 +100,43 @@ module.exports = async h => {
   await h.ev(() => completeMission('m2', { silent:true }));
   await flush(h); ev = await read(h);
   h.assert(ev.some(e => e.type === 'mission_end' && e.d.m === 'm2' && e.d.silent), 'a silent completion (the van) still logs mission_end');
+  // review fixes: no double mission_end for Night Shift; no stale wipe outside the mansion; a newly shown
+  // overlay counts as 'opened'; success toasts are not refusals; teleports are not walking; the session
+  // event carries the real settings; a slice that ends silently still gets its two questions
+  await h.ev(() => { const n0 = 0; completeMission('m3n', { silent:true }); });
+  await h.ev(() => { S.game.currentMission = 'm4'; S.game._wipeTotal = 65; S.game._wipeT = 26; S.game._wipeDone = true; });
+  await h.step(1300);
+  await h.ev(() => { S.game._wipeTotal = 0; S.game._wipeDone = false; S.game.currentMission = 'm2'; });
+  await h.ev(() => { toast('CAPABILITY UNLOCKED', 'LONG LENS', 500); toast('AMBUSH', 'They were waiting for the lights.', 500); toast('THE TABLE FIRST', 'File three links', 500); });
+  await h.ev(() => { ENGINE.interactables = ENGINE.interactables.filter(i => i.label !== 'Test gate'); const P = ENGINE.player.position; ENGINE.interactables.push({ mesh:{ position:{ x:P.x, y:0, z:P.z } }, label:'Test sheet', range:3, priority:99, onInteract:()=>showOverlay('screen-evidence') }); tryInteract(); });
+  await h.step(700);
+  await h.ev(() => showOverlay(null));
+  await flush(h); ev = await read(h);
+  h.assert(!ev.some(e => e.type === 'mission_end' && e.d.m === 'm3n' && e.d.silent), 'Night Shift is not logged twice (it logs its own mission_end)');
+  h.assert(!ev.some(e => e.type === 'wipe_end' && e.m === 'm4'), 'stale wipe fields outside the mansion log nothing');
+  const bl = ev.filter(e => e.type === 'blocked').map(e => e.d.big);
+  h.assert(!bl.includes('CAPABILITY UNLOCKED') && !bl.includes('AMBUSH') && bl.includes('THE TABLE FIRST'), 'success/info toasts are not refusals; THE TABLE FIRST is ' + JSON.stringify(bl));
+  const sheet = ev.filter(e => e.type === 'interact_result').find(e => e.d.label === 'Test sheet');
+  h.assert(sheet && sheet.d.outcome === 'opened', 'a newly shown screen counts as opened ' + JSON.stringify(sheet && sheet.d));
+  const ss2 = ev.find(e => e.type === 'session');
+  h.assert(ss2 && ss2.d.settings && ss2.d.settings.marker === SET0.marker && ss2.d.build && ss2.d.build.ver === VER0, 'the session event carries the loaded settings and the final version ' + JSON.stringify(ss2 && ss2.d));
+  // a teleport is not walking: jump 30 m, then finish an objective
+  const tp = await h.ev(() => { V12._ptState.o = null; return true; });
+  await h.step(1200);
+  await h.ev(() => { const P = ENGINE.player.position; P.x += 30; });
+  await h.step(1200);
+  await h.ev(() => { const o = S.game.objectives.find(x => !x.done); if(o) completeObjective(o.id); });
+  await flush(h); ev = await read(h);
+  const lastOd = ev.filter(e => e.type === 'obj_done').pop();
+  h.assert(lastOd && lastOd.d.walked !== null && lastOd.d.walked < 8, 'a 30 m jump does not count as walking ' + JSON.stringify(lastOd && lastOd.d));
+  // the market can be the slice end: it finishes silently, so the questions come at the next calm moment
+  await h.ev(() => { V12.PT_SLICE_END = 'm2'; S.game._ptAsked = {}; completeMission('m2', { silent:true }); showOverlay(null); ENGINE.movementEnabled = true; });
+  await h.step(2200);
+  h.assert(await h.ev(() => !!document.querySelector('#screen-pt-survey.show')), 'a silent slice end (?slice=m2) still asks the two questions');
+  await h.ev(() => document.getElementById('pt-skip').click());
+  await h.step(200);
+  await h.ev(() => { V12.PT_SLICE_END = 'm3'; });
+  h.assert(await h.ev(() => { const t = document.getElementById('pt-a1'); return parseFloat(getComputedStyle(t).fontSize) >= 16; }), 'answer boxes are 16px (no iOS zoom)');
   // Settings shows the count and can ask again
   await h.ev(() => { showOverlay(null); openSettings(); });
   await h.step(200);

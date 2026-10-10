@@ -38,9 +38,12 @@ const quit = ()=>{
 };
 window.addEventListener('pagehide', quit);
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden'){ write(); flush(); } });
-V12.log('session', { ua:navigator.userAgent.slice(0, 120), w:innerWidth, h:innerHeight, dpr:window.devicePixelRatio || 1, touch:('ontouchstart' in window),
-  build:{ ver:V12.version || null, src:(window.NACECA_BUILD || {}).src || null },
-  settings:(()=>{ try{ return { marker:SETTINGS.marker, hints:SETTINGS.hints, difficulty:SETTINGS.difficulty, timed:SETTINGS.timed }; }catch(e){ return null; } })() });
+// after boot's load handler (loadSettings) and after later layers set V12.version
+window.addEventListener('load', ()=>setTimeout(()=>{ try{
+  V12.log('session', { ua:navigator.userAgent.slice(0, 120), w:innerWidth, h:innerHeight, dpr:window.devicePixelRatio || 1, touch:('ontouchstart' in window),
+    build:{ ver:V12.version || null, src:(window.NACECA_BUILD || {}).src || null },
+    settings:(()=>{ try{ return { marker:SETTINGS.marker, hints:SETTINGS.hints, difficulty:SETTINGS.difficulty, timed:SETTINGS.timed, casework:(typeof gameDifficulty === 'function' ? gameDifficulty() : null) }; }catch(e){ return null; } })() });
+}catch(e){} }, 0));
 
 V12.ptExport = async ()=>{
   write();
@@ -135,7 +138,7 @@ V12.wrap('tryInteract', orig => function(){
   const classify = (tries)=>{
     if(typeof ENGINE !== 'undefined' && ENGINE.seq && tries < 12){ setTimeout(()=>classify(tries + 1), 250); return; }   // a staged action is still playing
     try{
-      const moved = sigNow() !== rec.sig0, ov = shownOverlays(), opened = ov !== rec.ov0 && /screen-(dialogue|puzzle|minigame|doc|ops|plan|phone|news|desk|briefing)/.test(ov);
+      const moved = sigNow() !== rec.sig0, ov = shownOverlays(), before = rec.ov0.split(','), opened = ov.split(',').some(id => id && !before.includes(id));
       const outcome = moved ? 'progress' : opened ? 'opened' : rec.toasts.length ? 'refused' : 'noop';
       if(outcome === 'refused'){ PT.totals.refusals++; if(PT.o) PT.o.refusals++; }
       V12.log('interact_result', { label:rec.label, verb:rec.verb, outcome, toast:rec.toasts[0] || null, alt:rec.alt || [], dist:rec.dist, obj:rec.obj, want:rec.want });
@@ -144,13 +147,13 @@ V12.wrap('tryInteract', orig => function(){
   setTimeout(()=>classify(0), 300);
   return r;
 });
-const BLOCKED = /NOT YET|FIRST|LOCKED|CAN'T|CANNOT|TOO FAR|NOT NOW|NO WAY|BLOCKED|WAIT|NEED |NO EVIDENCE|PENDING|ALREADY/i;
+const BLOCKED = /\b(NOT YET|LOCKED|CAN'T|CANNOT|TOO FAR|NOT NOW|NO WAY|BLOCKED|PENDING|ALREADY|REQUIRED|NO EVIDENCE|NEED INTEL|NO POWER|NO GROUNDS|FIRST|PLAN FIRST|OBJECTIVES PENDING)\b/;
 V12.wrap('toast', orig => function(big, small){
   try{
     const b = String(big || ''), sm = String(small || '').replace(/<[^>]+>/g, '');
     if(PT.inInteract) PT.inInteract.toasts.push({ big:b.slice(0, 40), small:sm.slice(0, 80) });
     else if(b === 'HINT'){ PT.totals.hints++; if(PT.o) PT.o.hints++; const me = ppos(), t = target(); V12.log('hint', { obj:curObj(), what:sm.slice(0, 80), dist:(me && t) ? r1(Math.hypot(t.x - me.x, t.z - me.z)) : null }); }
-    else if(BLOCKED.test(b + ' ' + sm)) V12.log('blocked', { big:b.slice(0, 40), small:sm.slice(0, 80), obj:curObj() });
+    else if(BLOCKED.test(b.toUpperCase()) || /\bfirst\.?$/i.test(sm.trim())) V12.log('blocked', { big:b.slice(0, 40), small:sm.slice(0, 80), obj:curObj() });
   }catch(e){}
   return orig.apply(this, arguments);
 });
@@ -170,9 +173,10 @@ V12.wrap('completeObjective', orig => function(id){
   progress();
   return r;
 });
-V12.wrap('beginMission', orig => function(){ progress(); PT.o = null; return orig.apply(this, arguments); });
+V12.wrap('beginMission', orig => function(){ progress(); PT.o = null; PT.prev = null; return orig.apply(this, arguments); });
 V12.wrap('completeMission', orig => function(id, opts){
-  try{ if(opts && opts.silent) V12.log('mission_end', { m:id, silent:true }); }catch(e){}
+  try{ if(opts && opts.silent && id !== 'm3n' && id !== 't7') V12.log('mission_end', { m:id, silent:true }); }catch(e){}   // m3n and t7 log their own
+  try{ if(opts && opts.silent && id === V12.PT_SLICE_END) PT.pendingSurvey = 'slice:' + id; }catch(e){}
   return orig.apply(this, arguments);
 });
 V12.wrap('startChase', orig => function(cfg){
@@ -215,14 +219,15 @@ setInterval(()=>{
     if(typeof S === 'undefined' || !S.game || !S.game.currentMission) return;
     // the mansion wipe ends either way
     const g = S.game;
-    if(g._wipeTotal && !PT.wipe) PT.wipe = { m:g.currentMission };
+    if(g.currentMission === 'm3' && g._wipeTotal && !g._wipeDone && !g._wipeLost && !PT.wipe) PT.wipe = { m:'m3' };
     if(PT.wipe && (g._wipeDone || g._wipeLost) && !PT.wipe.logged){ PT.wipe.logged = true;
       V12.log('wipe_end', { lost:!!g._wipeLost, pct:g._wipeTotal ? Math.round(Math.min(1, (g._wipeT || 0) / g._wipeTotal) * 100) : null, total:g._wipeTotal || null }); }
-    if(!g._wipeTotal && PT.wipe) PT.wipe = null;
+    if(PT.wipe && g.currentMission !== 'm3') PT.wipe = null;
     if(typeof ENGINE === 'undefined' || !ENGINE.movementEnabled || document.querySelector('.overlay.show')) return;
     const me = ppos(); if(!me) return;
     const id = curObj(); if(!PT.o || PT.o.id !== id) objStart(id);
-    const step = PT.prev ? Math.hypot(me.x - PT.prev.x, me.z - PT.prev.z) : 0;
+    let step = PT.prev ? Math.hypot(me.x - PT.prev.x, me.z - PT.prev.z) : 0;
+    if(step > 8) step = 0;   // a scene change or a scripted move, not walking
     const t = target(), dist = t ? Math.hypot(t.x - me.x, t.z - me.z) : null;
     const o = PT.o; o.n++; o.walked += step;
     if(window.WAY && WAY._guideState === 'arrow') o.arrow++;
@@ -260,12 +265,14 @@ V12.ptSurvey = function(where){
   const prev = [...document.querySelectorAll('.overlay.show')].map(e => e.id).filter(id => id !== 'screen-pt-survey');
   const close = ()=>{ ov.classList.remove('show'); if(prev.length && typeof showOverlay === 'function') showOverlay(prev[prev.length - 1]); };
   ov.querySelector('#pt-a1').value = ''; ov.querySelector('#pt-a2').value = '';
-  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); write(); close(); };
+  const done = ()=>{ try{ const k = String(where || '').replace(/^slice:/, ''); S.game._ptAsked = S.game._ptAsked || {}; S.game._ptAsked[k] = Date.now(); }catch(e){} PT.pendingSurvey = null; };
+  PT.surveyOpen = where;
+  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); done(); write(); close(); };
   ov.querySelector('#pt-save').onclick = ()=>{
     const a1 = ov.querySelector('#pt-a1').value.trim(), a2 = ov.querySelector('#pt-a2').value.trim();
     V12.log('survey', { where, satisfying:a1, unfair:a2, diff:(typeof gameDifficulty === 'function' ? gameDifficulty() : null),
       secsPlayed:Math.round(PT.play / 1000), missions:((S.game && S.game.completedMissions) || []).slice(), misses:PT.totals.misses, refusals:PT.totals.refusals, hints:PT.totals.hints, build:(window.NACECA_BUILD || {}).src || null });
-    write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close();
+    done(); write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close();
   };
   ov.classList.add('show');
   try{ const t = document.getElementById('toast'); if(t) t.classList.remove('show'); }catch(e){}   // a save toast would sit on the first answer
@@ -283,9 +290,17 @@ V12.wrap('showAftermath', orig => function(){
   try{
     const m = S.game.currentMission;
     S.game._ptAsked = S.game._ptAsked || {};
-    if(m === V12.PT_SLICE_END && !S.game._ptAsked[m]){ S.game._ptAsked[m] = Date.now(); setTimeout(()=>V12.ptSurvey('slice:' + m), 1800); }
+    if(m === V12.PT_SLICE_END && !S.game._ptAsked[m]){ PT.pendingSurvey = 'slice:' + m; V12.ptSurvey('slice:' + m); }   // over the aftermath, at once
   }catch(e){}
   return r;
 });
+// a slice that ends silently (the market van), or a sheet another screen hid before it was answered:
+// ask at the next calm moment (the world is live and no other screen is up)
+setInterval(()=>{ try{
+  const ov = document.getElementById('screen-pt-survey');
+  if(!PT.pendingSurvey || (ov && ov.classList.contains('show'))) return;
+  if(typeof ENGINE === 'undefined' || !ENGINE.movementEnabled || document.querySelector('.overlay.show')) return;
+  V12.ptSurvey(PT.pendingSurvey);
+}catch(e){} }, 1500);
 
 })();
