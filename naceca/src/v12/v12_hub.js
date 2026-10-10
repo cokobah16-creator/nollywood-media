@@ -449,7 +449,11 @@ function dressHub(h){
     const brief = (pre)=>{
       DIALOGUE.hub_cmd_run = (pre || []).concat(cmdLines(h));
       if(H.city === 'benin') V12.videoCall(true);
-      startDialogue('hub_cmd_run', ()=>{ V12.videoCall(false); completeObjective('hb_cmd'); endHub(h); });
+      // an optional layer (v13's briefing) can run inside the same call before the office closes
+      startDialogue('hub_cmd_run', ()=>{
+        const done = ()=>{ V12.videoCall(false); completeObjective('hb_cmd'); endHub(h); };
+        if(typeof V12.hubCallAfter === 'function') V12.hubCallAfter(h, done); else done();
+      });
     };
     if(HUB_CASE[h] && typeof V12.raidGate === 'function') V12.raidGate(HUB_CASE[h], { where:'hub', video:H.city === 'benin' }, brief);
     else brief([]);

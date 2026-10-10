@@ -9,7 +9,8 @@
 //
 // A scenario module exports `async function (h)` where h = {
 //   page, ev(fn, arg)   — page.evaluate shortcut
-//   start(missionId, {completed:[...], state:fn})  — fresh state, begin a mission
+//   start(missionId, {completed:[...], state:fn, briefings:bool})  — fresh state, begin a mission
+//                       (v13 briefings are pre-marked done unless briefings:true)
 //   step(ms)            — let the game loop run
 //   shot(name)          — screenshot into --shots
 //   errors              — page errors so far (array of strings)
@@ -61,12 +62,14 @@ const srv = http.createServer((q, r) => {
     assert: (c, m) => { if (!c) throw new Error('ASSERT: ' + m); },
     shot: async name => { if (!shots) return; fs.mkdirSync(shots, { recursive: true }); await page.screenshot({ path: path.join(shots, name + '.png') }); },
     start: async (id, o = {}) => {
-      await page.evaluate(({ id, completed, extra }) => {
+      await page.evaluate(({ id, completed, extra, briefings }) => {
         ART.failed = true; ART.promise = null;
         S = defaultState(); S.game.completedMissions = completed || [];
+        // v13's weekly briefings are marked done unless a scenario asks for them ({ briefings:true })
+        if (!briefings) S.game.intel = { briefed: { m3: 1, m4: 1, m5: 1, m6: 1, m7: 1 } };
         if (extra) (new Function('S', extra))(S);
         showOverlay(null); loadMission(id);
-      }, { id, completed: o.completed, extra: o.state ? `(${o.state.toString()})(S)` : null });
+      }, { id, completed: o.completed, extra: o.state ? `(${o.state.toString()})(S)` : null, briefings: !!o.briefings });
       await page.waitForTimeout(600);
       await page.evaluate(id => { if (document.querySelector('#screen-controls.show')) beginMission(id); }, id);
       await page.waitForTimeout(o.wait || 1500);
