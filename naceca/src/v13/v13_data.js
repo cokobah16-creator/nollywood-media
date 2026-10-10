@@ -178,22 +178,24 @@ const WARRANTS = [
    Two of three leads per week. Her advice is sometimes honest and sometimes
    the exact lead that would lead to her. buries:true marks the second kind. */
 const BRIEFINGS = {
-  m3: { week:1, before:'m4', title:'WEEK 1 · AFTER LEKKI', intro:"Good work at the mansion. Three things on the table. We have the bodies for two.",
-    advice:{ drop:'gatehouse', text:"Leave the gatehouse log. That's a week of reading visitors' handwriting. The drives are where the money is.", buries:true },
+  // Week 1: after Night Shift, in person at Lagos HQ, before the "BENIN BYPASS · TWO DAYS LATER" card
+  m3: { week:1, before:'m4', card:'BENIN BYPASS', title:'BRIEFING · AFTER LEKKI', intro:"Good work at the mansion. Three things on the table. We have the bodies for two.",
+    advice:{ drop:'gatehouse', text:"Leave the gatehouse log. That's days of reading visitors' handwriting. The drives are where the money is.", buries:true },
     leads:[
       { id:'drives', name:'Decrypt the Lekki drives', desc:"Forensics on Chief Obi's laptop and safe drives.", needsAny:['laptop','safe_drives'], blocked:'Nothing was recovered from Lekki to decrypt.',
         res:"The spreadsheet calls it 'route protection': monthly transfers from Bluewater Logistics, initialled 'C.'. You now have a company to follow.", money:['n_bluewater'], intel:10,
-        dropped:"The drives sit in the forensics queue for a month." },
+        dropped:"The drives sit in the forensics queue for days." },
       { id:'pos', name:'Profile the Ikeja POS cluster', desc:'Three agents cashing out ₦5M a day. Find who feeds them.', call:'gk_pos',
         res:'Odogwu Ventures is the hub. The attendant says the cash leaves in a dark-blue Sienna.', money:['n_odogwu'], reg:['odogwu'], intel:8,
-        dropped:'Two of the three POS agents close their stands by Friday.' },
+        dropped:'Two of the three POS agents close their stands by morning.' },
       { id:'gatehouse', name:"Pull the Lekki estate's gatehouse log", desc:'Who visited the mansion in the week before the raid.',
-        res:'Two nights before the raid: LND-412-KJ, government plates, 23:10–23:40. The estate manager says it is a NACECA motor-pool car. The driver\'s signature is illegible.', card:'a_poolcar', flag:'lead_gatehouse', intel:12,
+        res:'Two nights before the raid: LND-412-KJ, government plates, 23:10–23:40. The estate manager says it is a NACECA motor-pool car. The driver\'s signature is illegible.', flag:'lead_gatehouse', intel:12,
         dropped:"On Tuesday, \"officials\" collected the gatehouse logbook. The estate manager can't say which agency." },
     ]},
-  m4: { week:2, before:'m5', title:'WEEK 2 · AFTER THE BYPASS', intro:"AKS are pleased. So am I. Again — two of three.",
-    custody:{ item:'ransom_ledger', ask:"Leave the ransom ledger with me. I'll walk it to the prosecutor myself. It's safer on my desk than in that exhibit room." },
-    advice:{ drop:'initial', text:"Skip the 'E.' entries. We know E. is the Engineer. Spend the week on Musa and the registry.", buries:false },
+  // h4: the same video call as "Go at first light, with Uche"
+  m4: { week:2, before:'m5', hub:'h4', title:'BRIEFING · AFTER THE BYPASS', intro:"Before first light — the Anti-Kidnapping Squad is pleased, and so am I. Three things on the table again. We have the bodies for two.",
+    custody:{ item:'ransom_ledger', ask:"Send the ransom ledger to my office. I'll take it to the prosecutor myself. It's safer on my desk than in that exhibit room." },
+    advice:{ drop:'initial', text:"Skip the 'E.' entries. We know E. is the Engineer. Spend the time on Musa and the registry.", buries:false },
     leads:[
       { id:'musa', name:'Sit down with Musa properly', desc:'His phone, his statement, his story.', needsMission:'m4',
         res:"Musa's phone is now in the desk. Read it against what he told you.", phone:'musa', statement:'st_musa', intel:6,
@@ -205,25 +207,27 @@ const BRIEFINGS = {
         res:'E. is the Engineer. Seven pickups, all between 02:00 and 03:00. He usually reaches a pickup by 23:00 the night before.', flag:'lead_e', intel:4,
         dropped:'The E. entries stay a pattern without a face. You lose nothing you need.' },
     ]},
-  m5: { week:3, before:'m6', title:'WEEK 3 · AFTER OZALLA', intro:"Before we choose — one instruction from me.",
+  // h5: after the charge sheet, "Go tonight" — NACECA Abuja does the Abuja work, you direct it from Benin
+  m5: { week:3, before:'m6', hub:'h5', title:'BRIEFING · AFTER OZALLA', intro:"Before you cross the bridge — one instruction from me. Then Abuja is yours for the afternoon: our people there can work two of these, and you direct them from Benin.",
     order:{ text:"Leave the Engineer alone. He is a registered source. My source. He's how we found Lekki, and he's worth more running than in a cell." },
-    advice:{ drop:'undercover', text:"Don't send yourself into Apex with a fake name. It's a lawyer's office. They'll have your badge by lunchtime.", buries:true },
+    advice:{ drop:'undercover', text:"Don't send anyone into Apex with a fake name. It's a lawyer's office. They'll have the badge by lunchtime.", buries:true },
     leads:[
-      { id:'stakeout', name:'Surveillance van: Zuma Court', desc:'One night outside Suite 4B. See who comes and goes.', needsAny:['reg_bluewater','reg_apex','zuma_cluster'], blocked:'You need an address worth watching first.', game:'stakeout',
-        dropped:"Nobody watches Zuma Court that week. Whatever arrived, arrived." },
-      { id:'undercover', name:'Go in undercover at Apex Corporate Services', desc:'Pose as a client who needs a company, fast.', needsAny:['reg_bluewater','reg_apex','zuma_cluster'], blocked:'You need to know where the paperwork is done first.', game:'undercover',
-        dropped:"Apex files a new nominee director for C.A. Consulting that week. Nobody notices." },
-      { id:'tunde', name:'Re-interview Tunde', desc:'Read his old tips against what you know now.', statement:'st_tunde', heatMax:70, heatBlocked:"Tunde won't be seen with you. Your Underworld Heat is too high.",
+      { id:'stakeout', name:'The Abuja van: Zuma Court', desc:'An Abuja team parks outside Suite 4B this afternoon. You watch the live feed and call it.', needsAny:['reg_bluewater','reg_apex','zuma_cluster'], blocked:'You need an address worth watching first.', game:'stakeout',
+        dropped:"Nobody watches Zuma Court that afternoon. Whatever arrived, arrived." },
+      { id:'undercover', name:'Put an Abuja officer into Apex, on a wire', desc:'He poses as a client who needs a company, fast. You feed him every answer.', needsAny:['reg_bluewater','reg_apex','zuma_cluster'], blocked:'You need to know where the paperwork is done first.', game:'undercover',
+        dropped:"Apex files a new nominee director for C.A. Consulting the same afternoon. Nobody notices." },
+      { id:'tunde', name:'Re-interview Tunde', desc:'Read his old tips against what you know now.', statement:'st_tunde', tunde:true, heatMax:70, heatBlocked:"Tunde won't be seen with you. Your Underworld Heat is too high.",
         res:"Tunde's statement is in the desk. Check every claim against your exhibits.", intel:4,
         dropped:"Tunde calls twice. You don't pick up." },
     ]},
-  m6: { week:4, before:'m7', title:'WEEK 4 · AFTER ASABA', intro:"Before anything else — have you heard the radio this morning?",
+  // h6: after "Take Uche. Keep it quiet." — the production order for Ugbowo is decided here (w_cdr)
+  m6: { week:4, before:'m7', hub:'h6', title:'BRIEFING · AFTER ASABA', intro:"One more thing — have you heard the radio tonight?",
     press:true, warrant:'w_cdr',
     advice:{ drop:'trustees', text:"Forget the charity's trustees. Charities are a swamp. You'll drown in receipts.", buries:true },
     leads:[
       { id:'burner', name:'Dump the warehouse burner', desc:'The handset found with the SIM packs.', needsAny:['asaba_sims'], blocked:'No handset was recovered in Asaba.', phone:'burner',
         res:'The burner is in the desk. Two contacts. Read everything.', intel:6,
-        dropped:'The burner\'s battery dies in an evidence bag. Forensics can still read it — next month.' },
+        dropped:'The burner\'s battery dies in an evidence bag. Forensics can still read it — later.' },
       { id:'tobi', name:'Debrief Tobi Onuoha', desc:'The accountant you carried out of the smoke.', needsAny:['asaba_hostage'], blocked:'Tobi did not survive Asaba.', statement:'st_tobi',
         res:"Tobi's statement is in the desk. He says the money went through a charity in Benin.", money:['n_charity'], intel:8,
         dropped:'Tobi goes home to his family. His statement waits.' },
@@ -231,32 +235,38 @@ const BRIEFINGS = {
         res:"The trustees are a pastor, a market leader and a retired teacher who has never signed anything. The real signatory 'comes on the first of the month, in a government car'.", reg:['urf','amadi'], flag:'lead_trustees', intel:10,
         dropped:'The Foundation files its annual return late. Nobody asks why.' },
     ]},
-  m7: { week:5, before:'m8', title:'WEEK 5 · BEFORE EKOSODIN', intro:"We have the area. Tonight we choose how we go in.",
+  // h7: after "You know where he is. Bring him home." — before the t7 tail, so it names Ekosodin and
+  // never the close, the gate or the back way's street. The Ekosodin warrant is decided here (w_eko).
+  m7: { week:5, before:'t7', hub:'h7', title:'BRIEFING · BEFORE EKOSODIN', intro:"You have the area. Before the Engineer moves tonight, we choose how you go in.",
     warrant:'w_eko',
     advice:{ drop:'caretaker', text:"Don't waste a call on caretakers. Every caretaker in Ekosodin is somebody's cousin. Follow Tunde's tip.", buries:true },
     leads:[
-      { id:'tip', name:"Follow Tunde's tip", desc:'He says he has heard where the boy is.', tip:true },
-      { id:'caretaker', name:'Call the caretaker on Akintola Close', desc:'Caretakers know every tenant on their street.', call:'gk_caretaker',
-        res:'The caretaker says the blue-gate tenant paid a year in cash, a government car comes after dark, and the generator man leaves the back gate open at nine.', flag:'lead_caretaker', intel:10,
-        dropped:'Nobody calls the caretaker. He watches the blue gate on his own.' },
+      { id:'tip', name:"Follow Tunde's tip", desc:'He says he has heard where the boy is.', tip:true, tunde:true },
+      { id:'caretaker', name:'Call the caretakers on the Ekosodin closes', desc:'Somebody is renting to a stranger who never turns the generator off.', call:'gk_caretaker',
+        res:'A caretaker says a tenant on one of the closes off the UNIBEN fence road paid a year in cash, a government car comes after dark, and the generator man leaves the back way open at nine.', flag:'lead_caretaker', intel:10,
+        dropped:'Nobody calls the caretakers. Whatever they know, they keep.' },
       { id:'pattern', name:'Pull the Ekosodin call pattern', desc:'Which handset sleeps in that compound.', needsAny:['tower_cdr','tower_fix'], blocked:'You have no tower data to work from.',
         res:"CONTROL's handset sleeps in the same 300 m as the ransom phone, every night. Same person, two phones.", flag:'lead_pattern', intel:10,
         dropped:'The pattern stays in the raw data.' },
     ]},
 };
 
-/* the tip changes with how you've worked: lean on informants and the Voice feeds them */
-const TIP_TRUE = "Ekosodin boys are talking about a blue gate on Akintola Close. A student is inside, and the house is never dark.";
+/* the tip changes with how you've worked: lean on informants and the Voice feeds them.
+   " It matches the tower fix." is added only when you hold the tower fix (v13_briefing.js). */
+const TIP_TRUE = "Ekosodin boys are talking about a house by the UNIBEN fence where a student is inside and the generator never stops.";
 const TIP_FALSE = "Oga, they moved the boy to Uselu. A bungalow behind the filling station, I swear.";
 
 /* ---- 9. Gatekeepers: secretaries, attendants, caretakers ---- */
+/* A choice's effect only carries its flag (the dialogue applies it as the line is chosen); its
+   reputation cost, `rep`, is applied once by v13_briefing.js with the call's outcome, so a quit
+   mid-call can never count it twice. `tag` is shown in Recruit only. */
 const GATEKEEPER_DIALOGUE = {
   gk_pos: [
     { speaker:'POS ATTENDANT — COMPUTER VILLAGE', text:'Oga, I no get time o. Na transfer you wan do or na question?',
       textEn:"Sir, I don't have time. Do you want a transfer or are you here to ask questions?",
       choices:[
-        { text:'Show the badge. "NACECA. Talk, or we close this stand."', tag:'harsh', effect:{ publicTrust:-2, flag:{ gk_pos:'badge' } } },
-        { text:'"Make I do ₦5,000 withdrawal first. Then we fit talk small."', tag:'savvy', effect:{ publicTrust:+2, flag:{ gk_pos:'custom' } } },
+        { text:'Show the badge. "NACECA. Talk, or we close this stand."', tag:'harsh', effect:{ flag:{ gk_pos:'badge' } }, rep:{ publicTrust:-2 } },
+        { text:'"Make I do ₦5,000 withdrawal first. Then we fit talk small."', tag:'savvy', effect:{ flag:{ gk_pos:'custom' } }, rep:{ publicTrust:+2 } },
         { text:'"Good afternoon. I just want to understand who brings the big cash."', tag:'lawful', effect:{ flag:{ gk_pos:'polite' } } },
       ]},
   ],
@@ -268,7 +278,7 @@ const GATEKEEPER_DIALOGUE = {
     { speaker:'FOUNDATION SECRETARY', text:'Ugbowo Relief Foundation, good morning. Who is calling, please?',
       choices:[
         { text:'"Good morning, ma. I\'m sorry to disturb you — I\'m helping the trustees tidy their annual return."', tag:'savvy', effect:{ flag:{ gk_found:'respect' } } },
-        { text:'"NACECA. I need your trustee file by noon."', tag:'harsh', effect:{ agencyFavour:+1, flag:{ gk_found:'badge' } } },
+        { text:'"NACECA. I need your trustee file by noon."', tag:'harsh', effect:{ flag:{ gk_found:'badge' } }, rep:{ agencyFavour:+1 } },
         { text:'"I\'d like to donate. Who signs for the Foundation?"', tag:'lawful', effect:{ flag:{ gk_found:'donor' } } },
       ]},
   ],
@@ -277,27 +287,27 @@ const GATEKEEPER_DIALOGUE = {
   gk_found_donor: [ { speaker:'FOUNDATION SECRETARY', text:"God bless you. Donations go to the account directly. Our signatory is… away. Comes once a month. I can send you the account number." } ],
 
   gk_caretaker: [
-    { speaker:'CARETAKER — AKINTOLA CLOSE', text:'Hello? Who is this?' },
-    { speaker:'AGENT KELECHI', portrait:'kelechi', text:"Good evening, sir. I'm asking about the house with the blue gate." },
-    { speaker:'CARETAKER — AKINTOLA CLOSE', text:'[off the phone, in Igbo] Ọ bụ onye uwe ojii. Gwa ya na ọ nweghị onye bi ebe ahụ.',
+    { speaker:'CARETAKER — EKOSODIN', text:'Hello? Who is this?' },
+    { speaker:'AGENT KELECHI', portrait:'kelechi', text:"Good evening, sir. I'm asking about a tenant on your close — the one whose generator never stops." },
+    { speaker:'CARETAKER — EKOSODIN', text:'[off the phone, in Igbo] Ọ bụ onye uwe ojii. Gwa ya na ọ nweghị onye bi ebe ahụ.',
       textEn:"[off the phone, in Igbo] It's the police. Tell him nobody lives there.",
       choices:[
-        { text:'Answer in Igbo: "Nna anyị, ekwela ka ụmụ okorobịa a gbuo nwata."', tag:'savvy', effect:{ publicTrust:+2, flag:{ gk_care:'igbo' } } },
+        { text:'Answer in Igbo: "Nna anyị, ekwela ka ụmụ okorobịa a gbuo nwata."', tag:'savvy', effect:{ flag:{ gk_care:'igbo' } }, rep:{ publicTrust:+2 } },
         { text:'Stay quiet. Let them keep talking.', tag:'lawful', effect:{ flag:{ gk_care:'listen' } } },
         { text:'"Sir, obstruction is an offence. Tell me who lives there."', tag:'harsh', effect:{ flag:{ gk_care:'threat' } } },
       ]},
   ],
   gk_care_igbo: [
-    { speaker:'CARETAKER — AKINTOLA CLOSE', mood:'afraid', text:"[in Igbo] Ị na-asụ Igbo? …Ngwanu. Listen. The tenant paid one year, cash. A government car comes after dark. And the generator man leaves the back gate open at nine.",
-      textEn:"[in Igbo] You speak Igbo? …Alright. Listen. The tenant paid one year, cash. A government car comes after dark. And the generator man leaves the back gate open at nine." },
-    { speaker:'AGENT KELECHI', portrait:'kelechi', text:'(He said: "Father, don\'t let these young men kill a child." It was enough.)' },
+    { speaker:'CARETAKER — EKOSODIN', mood:'afraid', text:"[in Igbo] Ị na-asụ Igbo? …Ngwanu. Listen. A tenant on one of the closes off the UNIBEN fence road paid a year in cash. A government car comes after dark. And the generator man leaves the back way open at nine.",
+      textEn:"[in Igbo] You speak Igbo? …Alright. Listen. A tenant on one of the closes off the UNIBEN fence road paid a year in cash. A government car comes after dark. And the generator man leaves the back way open at nine." },
+    { speaker:'AGENT KELECHI', portrait:'kelechi', text:'(I said: "Father, don\'t let these young men kill a child." It was enough.)' },
   ],
   gk_care_listen: [
-    { speaker:'CARETAKER — AKINTOLA CLOSE', text:"[in Igbo, not to you] Ụgbọala gọọmentị ahụ na-abịa n'abalị. Onye na-elekọta jenerato na-emeghe ọnụ ụzọ azụ n'elekere itoolu.",
-      textEn:"[in Igbo, not to you] That government car comes at night. The generator man opens the back gate at nine." },
-    { speaker:'CARETAKER — AKINTOLA CLOSE', text:'Officer? Nobody lives there. Goodnight.' },
+    { speaker:'CARETAKER — EKOSODIN', text:"[in Igbo, not to you] Ụgbọala gọọmentị ahụ na-abịa n'abalị. Onye na-elekọta jenerato na-emeghe ọnụ ụzọ azụ n'elekere itoolu.",
+      textEn:"[in Igbo, not to you] That government car comes at night. The generator man leaves the back way open at nine." },
+    { speaker:'CARETAKER — EKOSODIN', text:'Officer? Nobody lives there. Goodnight.' },
   ],
-  gk_care_threat: [ { speaker:'CARETAKER — AKINTOLA CLOSE', mood:'angry', text:"Then come and arrest me. I don't know any blue gate." } ],
+  gk_care_threat: [ { speaker:'CARETAKER — EKOSODIN', mood:'angry', text:"Then come and arrest me. I don't know any tenant." } ],
 };
 
 /* ---- 10. Radio: the world reacting to what you did ---- */

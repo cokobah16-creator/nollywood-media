@@ -1,42 +1,190 @@
-/* v13 · briefing, stakeout, undercover */
-/* briefing */
-.brf-frame{width:min(720px,96vw)}
-.brf-week{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.3em;color:#d8a64a}
-.brf-head{font-family:'Oswald',sans-serif;font-size:24px;letter-spacing:.2em;color:#fff;margin:2px 0 4px}
-.brf-unit{font-size:10px;letter-spacing:.14em;color:#7f8da3;font-family:'Oswald',sans-serif;margin-bottom:10px}
-.brf-ad{display:flex;gap:12px;align-items:center;margin-bottom:10px}.brf-ad img{width:64px;height:64px;object-fit:cover;border:1px solid rgba(216,166,74,.5)}
-.brf-who{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.2em;color:#d8a64a}
-.brf-say{font-size:14px;color:#e6ecf4;font-style:italic;line-height:1.5;margin:4px 0 8px}
-.brf-radio{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.03em;color:#ffcf7a;background:rgba(232,160,48,.08);border-left:3px solid #e8a030;padding:8px 10px;margin:4px 0}
-.brf-block{margin-bottom:6px}
-.seg.col{flex-direction:column}.seg.col button{text-align:left;font-size:12.5px;letter-spacing:.02em;font-family:'Inter',sans-serif;padding:10px 12px;line-height:1.35}
-.lead{display:block;width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);padding:10px 12px;margin:0 0 6px;color:inherit;cursor:pointer}
-.lead.on{border-color:var(--naceca-gold);background:rgba(216,166,74,.13)}.lead.locked{opacity:.45;cursor:not-allowed}
-.brf-advice{font-size:13px;color:#d9c79a;background:rgba(216,166,74,.07);border:1px dashed rgba(216,166,74,.4);padding:9px 11px;margin:10px 0;line-height:1.45}
-.brf-drop{font-size:12.5px;color:#c8d2e0;margin:0 0 4px}
-.brf-cert{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;margin:4px 0}
-.brf-foot{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}.brf-foot .btn{min-width:0;padding:12px 18px;font-size:12px}
-.brf-foot .btn:disabled{opacity:.4;cursor:not-allowed}
-/* stakeout */
-.so-frame{width:min(560px,96vw)}
-.so-top{display:flex;justify-content:space-between;font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.16em;color:#fff;margin-bottom:6px}
-.so-rec{color:#e84a5c;animation:soblink 1.2s steps(2) infinite}@keyframes soblink{50%{opacity:.2}}
-.so-scene{position:relative;height:190px;overflow:hidden;background:#060a12;border:1px solid #2a3550}
-.so-sky{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 0%,#1a2a48,#05080e 70%)}
-.so-bld{position:absolute;left:14%;right:18%;bottom:34px;top:26px;background:#141c2c;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:26px 14px 10px}
-.so-bld i{background:#2a2410;opacity:.5}.so-bld i:nth-child(3n){background:#e8c870;opacity:.65}.so-bld i:nth-child(5n){background:#e8c870;opacity:.4}
-.so-sign{position:absolute;top:6px;left:0;right:0;text-align:center;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.3em;color:#5dd07a}
-.so-gate{position:absolute;left:40%;width:20%;bottom:0;height:34px;background:repeating-linear-gradient(90deg,#3a3a40 0 3px,transparent 3px 9px);border-top:2px solid #555}
-.so-lamp{position:absolute;right:9%;bottom:0;width:3px;height:120px;background:#444}.so-lamp::after{content:"";position:absolute;top:-6px;left:-30px;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,rgba(255,200,110,.45),transparent 70%)}
-.so-subj{position:absolute;left:46%;bottom:8px;font-size:34px;filter:drop-shadow(0 0 6px #000) brightness(.75);opacity:0}.so-subj.in{animation:soin .7s ease forwards}@keyframes soin{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
-.so-vf{position:absolute;inset:10px;border:1px solid transparent;background:linear-gradient(#fff,#fff) top left/18px 2px no-repeat,linear-gradient(#fff,#fff) top left/2px 18px no-repeat,linear-gradient(#fff,#fff) top right/18px 2px no-repeat,linear-gradient(#fff,#fff) top right/2px 18px no-repeat,linear-gradient(#fff,#fff) bottom left/18px 2px no-repeat,linear-gradient(#fff,#fff) bottom left/2px 18px no-repeat,linear-gradient(#fff,#fff) bottom right/18px 2px no-repeat,linear-gradient(#fff,#fff) bottom right/2px 18px no-repeat;opacity:.5}
-.so-txt{font-size:14px;color:#e6ecf4;margin:10px 0;min-height:42px;line-height:1.45}
-.so-acts{display:flex;flex-wrap:wrap;gap:6px}
-.so-log{margin-top:10px;font-size:11.5px;color:#93a1b6;max-height:90px;overflow-y:auto}
-/* undercover */
-.uc-frame{width:min(560px,96vw)}
-.uc-meter{display:flex;align-items:center;gap:8px;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.2em;color:#93a1b6;margin-bottom:10px}.uc-meter .rb{height:8px}
-.uc-cover{background:#f3ead2;color:#1a1d24;padding:12px 14px;margin:6px 0}.uc-cover div{font-size:14px;padding:3px 0}.uc-cover span{display:inline-block;width:110px;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.14em;color:#7a4a18}
-.uc-who{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.2em;color:#d8a64a;margin-top:8px}
-.uc-q{font-size:15px;color:#fff;margin:4px 0 10px;font-style:italic}.uc-txt{font-size:14px;color:#e6ecf4;margin:8px 0 10px}
-.uc-log{font-size:11.5px;color:#93a1b6;margin:0 0 4px}
+/* v13 · briefing, the Abuja van, the officer on a wire, gatekeeper portraits.
+   Beta identity (docs/SYNC-2026-10-08-beta.md §4): palette tokens only, flat fills, 1px rules,
+   2–4px radius, no gradients, glows, shadows, blur or filters. Ink frames hold manila documents
+   (.v13-sheet from v13_shared.css). Everything is scoped to #screen-briefing / #screen-so /
+   #screen-uc or a .v13-* class. 16px side gutters on phones; every target 44px on touch. */
+
+/* ---------- the three overlays ---------- */
+:is(#screen-briefing,#screen-so,#screen-uc).overlay{padding:max(12px, env(safe-area-inset-top, 0px)) 16px max(12px, env(safe-area-inset-bottom, 0px))}
+:is(#screen-briefing,#screen-so,#screen-uc) > .overlay-bg{background:var(--ink,#1C1C1A);opacity:1}
+:is(#screen-briefing,#screen-so,#screen-uc) > .overlay-bg::after{display:none}
+:is(#screen-briefing,#screen-so,#screen-uc) .ico{flex:0 0 auto}
+:is(#screen-briefing,#screen-so,#screen-uc) :is(.v13-btn) .ico{font-size:15px}
+:is(#screen-briefing,#screen-so,#screen-uc) p{margin:0}
+
+/* ---------- briefing: an ink video-call frame ---------- */
+#screen-briefing .brf-frame{position:relative;width:min(720px, 100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--manila-3,#8C8473);border-radius:3px;font-family:'Inter', system-ui, sans-serif}
+#screen-briefing .brf-bar{flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;padding:8px 16px;
+  border-bottom:1px solid var(--rule-ink,rgba(233,220,192,.24));background:var(--ink-2,#262623)}
+#screen-briefing .brf-live{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.18em;color:var(--manila,#E9DCC0)}
+#screen-briefing .brf-live .ico{font-size:13px;color:var(--red,#B3261E)}
+#screen-briefing .brf-kick{font-size:11px;letter-spacing:.06em;color:var(--manila-2,#A89F8A)}
+#screen-briefing .brf-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 16px 6px}
+#screen-briefing .brf-foot{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;padding:10px 16px 12px;border-top:1px solid var(--rule-ink,rgba(233,220,192,.24))}
+#screen-briefing .brf-foot:empty{display:none}
+#screen-briefing .brf-h{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:600;font-size:24px;letter-spacing:.14em;line-height:1.15;color:var(--manila,#E9DCC0);margin:0 0 2px}
+#screen-briefing .brf-unit{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.14em;color:var(--manila-2,#A89F8A);margin-bottom:12px}
+#screen-briefing .brf-ad{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+#screen-briefing .brf-ad img,#screen-briefing .brf-noimg{flex:0 0 auto;width:60px;height:60px;object-fit:cover;object-position:50% 22%;border:1px solid var(--manila-3,#8C8473);border-radius:2px;background:var(--ink-2,#262623)}
+#screen-briefing .brf-noimg{display:inline-flex;align-items:center;justify-content:center;font-size:28px;color:var(--manila-3,#8C8473)}
+#screen-briefing .brf-who{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.18em;color:var(--manila-2,#A89F8A)}
+#screen-briefing .brf-say{font-size:15px;line-height:1.5;font-style:italic;color:var(--manila,#E9DCC0);margin:4px 0 10px}
+#screen-briefing .brf-sec{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.16em;color:var(--manila,#E9DCC0);margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--rule-ink,rgba(233,220,192,.24))}
+#screen-briefing .brf-small{font-size:13px;line-height:1.45;color:var(--manila-2,#A89F8A);margin:4px 0 8px}
+
+/* documents on the call: notes, requests, the radio */
+#screen-briefing .v13-sheet{margin:0 0 10px}
+#screen-briefing .brf-note .brf-drops{list-style:none;margin:0;padding:0}
+#screen-briefing .brf-drops li{font-size:13.5px;line-height:1.45;padding:4px 0 4px 10px;border-left:2px solid var(--grey,#6B6B63);margin:0 0 6px}
+#screen-briefing .brf-q{font-size:14px;line-height:1.5;font-style:italic;margin:0 0 10px}
+#screen-briefing .brf-radio{font-size:12.5px;line-height:1.5;border-left:3px solid var(--ink,#1C1C1A);padding:2px 0 2px 10px;margin:0 0 8px}
+#screen-briefing .brf-opts{display:flex;flex-direction:column;gap:6px}
+
+/* a choice line on paper or on ink: a box that holds a check when chosen (never colour alone) */
+#screen-briefing .brf-opt{display:flex;align-items:flex-start;gap:10px;width:100%;min-height:44px;margin:0;padding:10px 12px;text-align:left;cursor:pointer;
+  background:transparent;border:1px solid var(--rule-paper,rgba(28,28,26,.32));border-radius:2px;color:var(--ink,#1C1C1A);font:inherit;font-size:14px;line-height:1.4;-webkit-tap-highlight-color:transparent}
+#screen-briefing .brf-opt:hover{border-color:var(--ink,#1C1C1A)}
+#screen-briefing .brf-opt.on{border:2px solid var(--ink,#1C1C1A);padding:9px 11px}
+#screen-briefing .brf-opt.armed{border-color:var(--red,#B3261E)}
+#screen-briefing .brf-arm{font-style:normal;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.12em;color:var(--ink,#1C1C1A);
+  text-decoration:underline;text-decoration-color:var(--red,#B3261E);text-decoration-thickness:2px;text-underline-offset:3px;margin-top:2px}
+#screen-briefing .brf-box{flex:0 0 auto;width:22px;height:22px;margin-top:1px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;
+  border:1.5px solid currentColor;border-radius:2px;background:transparent;color:inherit}
+#screen-briefing .brf-box .ico{visibility:hidden}
+#screen-briefing :is(.brf-opt.on,.brf-lead.on) > .brf-box{background:var(--ink,#1C1C1A);border-color:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0)}
+#screen-briefing :is(.brf-opt.on,.brf-lead.on) > .brf-box .ico{visibility:visible}
+#screen-briefing .brf-ot{display:flex;flex-direction:column;gap:3px;min-width:0}
+#screen-briefing .brf-ot b{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:600;font-size:15px;letter-spacing:.03em;line-height:1.3}
+#screen-briefing .brf-ot > span{font-size:13px;line-height:1.45;color:var(--ink-soft,#4F4C44)}
+
+/* lead slips: manila, one per lead */
+#screen-briefing .brf-lead{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:44px;text-align:left;cursor:pointer;font:inherit;padding:12px 14px;-webkit-tap-highlight-color:transparent}
+#screen-briefing .brf-lead:hover{border-color:var(--ink,#1C1C1A)}
+#screen-briefing .brf-lead.on{border-width:2px;padding:11px 13px}
+#screen-briefing .brf-lead.locked{cursor:not-allowed;border-style:dashed;background:var(--paper-2,#DCCDAB)}
+#screen-briefing .brf-lead.locked > .brf-box{border-style:dashed}
+#screen-briefing .brf-lead.locked > .brf-box .ico{visibility:visible}
+#screen-briefing .brf-lead:disabled{opacity:1}
+#screen-briefing .brf-lead.locked .brf-ot b{color:var(--ink-soft,#4F4C44)}
+
+#screen-briefing .brf-advice{margin:12px 0;padding:8px 0 8px 12px;border-left:3px solid var(--manila-2,#A89F8A)}
+#screen-briefing .brf-advice p{font-size:14px;line-height:1.5;font-style:italic;margin-top:4px}
+#screen-briefing .brf-cert{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 10px;font-size:13.5px;padding:6px 0;border-bottom:1px solid var(--rule-ink,rgba(233,220,192,.24))}
+#screen-briefing .brf-cert > span{min-width:0;flex:1 1 160px}
+
+/* what came back: a manila note */
+#screen-briefing .brf-note{padding:12px 14px}
+#screen-briefing .brf-r{padding:8px 0;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-briefing .brf-r:first-child{border-top:0;padding-top:0}
+#screen-briefing .brf-r-h{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.16em;margin-bottom:3px}
+#screen-briefing .brf-r p,#screen-briefing .brf-r-empty{font-size:14px;line-height:1.5}
+
+/* the court order: a manila document with a stamp */
+#screen-briefing .brf-w{padding:14px 16px}
+#screen-briefing .brf-w-head{border-bottom:2px solid var(--ink,#1C1C1A);padding-bottom:8px;margin-bottom:10px}
+#screen-briefing .brf-w-agency{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:10.5px;letter-spacing:.14em;line-height:1.35}
+#screen-briefing .brf-w-title{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:700;font-size:20px;letter-spacing:.05em;line-height:1.2;margin:4px 0;color:var(--ink,#1C1C1A)}
+#screen-briefing .brf-w-meta{font-size:11px;line-height:1.5}
+#screen-briefing .brf-w-stamp{margin:0 0 10px}
+#screen-briefing .brf-facts{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px 16px;margin:0 0 12px}
+#screen-briefing .brf-facts > div{border-top:1px solid var(--rule-paper,rgba(28,28,26,.32));padding-top:6px}
+#screen-briefing .brf-facts dt{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.14em}
+#screen-briefing .brf-facts dd{margin:2px 0 0;font-size:13px;line-height:1.4}
+#screen-briefing .brf-w-lead{font-size:14px;line-height:1.5;margin:0 0 10px}
+#screen-briefing .brf-w-cost{font-size:13.5px;line-height:1.45;margin:0 0 12px}
+#screen-briefing .brf-acts{display:flex;flex-wrap:wrap;gap:8px}
+#screen-briefing .brf-w .v13-btn.danger:not(.armed){color:var(--ink,#1C1C1A);border-color:var(--red,#B3261E)}
+
+/* ---------- the Abuja van: a flat ink viewfinder, the log on a manila strip ---------- */
+#screen-so .so-frame,#screen-uc .uc-frame{position:relative;width:min(560px, 100%);max-height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--manila-3,#8C8473);border-radius:3px;padding:14px 16px;font-family:'Inter', system-ui, sans-serif}
+#screen-so .so-title,#screen-uc .uc-title{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:600;font-size:16px;letter-spacing:.14em;line-height:1.25;margin-bottom:6px}
+#screen-so .so-top{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.14em;color:var(--manila,#E9DCC0);margin-bottom:8px}
+#screen-so .so-top .v13-mono{letter-spacing:.04em}
+#screen-so .so-where{color:var(--manila-2,#A89F8A);flex:1 1 auto}
+#screen-so .so-rec{display:inline-flex;align-items:center;gap:5px}
+#screen-so .so-rec .ico{color:var(--red,#B3261E);font-size:13px;animation:v13-soblink 1.2s steps(2) infinite}
+@keyframes v13-soblink{50%{opacity:.25}}
+body.reduce-motion #screen-so .so-rec .ico{animation:none}
+#screen-so .so-view{position:relative;height:clamp(130px, 28vh, 190px);overflow:hidden;background:var(--ink,#1C1C1A);border:1px solid var(--manila-3,#8C8473);border-radius:2px}
+#screen-so .so-bld{position:absolute;left:12%;right:20%;bottom:30px;top:20px;background:var(--ink-2,#262623);border:1px solid var(--ink-3,#34342F);display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;padding:24px 12px 8px}
+#screen-so .so-bld i{background:var(--ink-3,#34342F)}
+#screen-so .so-bld i:nth-child(3n){background:var(--manila-3,#8C8473)}
+#screen-so .so-sign{position:absolute;top:5px;left:0;right:0;text-align:center;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:10px;letter-spacing:.3em;color:var(--manila-2,#A89F8A)}
+#screen-so .so-gate{position:absolute;left:38%;width:22%;bottom:0;height:30px;border-top:2px solid var(--manila-3,#8C8473);display:flex;justify-content:space-between;padding:0 2px}
+#screen-so .so-gate i{width:2px;background:var(--manila-3,#8C8473)}
+#screen-so .so-lamp{position:absolute;right:9%;bottom:0;width:3px;height:62%;background:var(--manila-3,#8C8473)}
+#screen-so .so-lamp::after{content:"";position:absolute;top:-3px;left:-9px;width:21px;height:6px;background:var(--manila-2,#A89F8A);border-radius:1px}
+#screen-so .so-subj{position:absolute;left:42%;bottom:4px;height:46%;opacity:0}
+#screen-so .so-subj svg{display:block;height:100%;width:auto;fill:var(--manila-2,#A89F8A)}
+#screen-so .so-subj svg .ln{fill:none;stroke:var(--manila-3,#8C8473);stroke-width:2}
+#screen-so .so-subj svg .wh{fill:var(--ink,#1C1C1A);stroke:var(--manila-2,#A89F8A);stroke-width:3}
+#screen-so .so-subj.in{animation:v13-soin .7s ease forwards}
+@keyframes v13-soin{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+body.reduce-motion #screen-so .so-subj.in{animation:none;opacity:1}
+#screen-so .so-vf{position:absolute;inset:8px;pointer-events:none}
+#screen-so .so-vf i{position:absolute;width:16px;height:16px;border:0 solid var(--manila-2,#A89F8A)}
+#screen-so .so-vf i:nth-child(1){top:0;left:0;border-top-width:2px;border-left-width:2px}
+#screen-so .so-vf i:nth-child(2){top:0;right:0;border-top-width:2px;border-right-width:2px}
+#screen-so .so-vf i:nth-child(3){bottom:0;left:0;border-bottom-width:2px;border-left-width:2px}
+#screen-so .so-vf i:nth-child(4){bottom:0;right:0;border-bottom-width:2px;border-right-width:2px}
+#screen-so .so-txt{font-size:14.5px;line-height:1.5;margin:10px 0;min-height:44px}
+#screen-so .so-acts,#screen-uc .uc-acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+#screen-so .so-log{margin:0;padding:10px 12px}
+#screen-so #so-log{max-height:110px;overflow-y:auto}
+#screen-so .so-ll{display:flex;align-items:center;gap:8px;font-size:12px;line-height:1.5;padding:2px 0}
+#screen-so .so-ll .ico{font-size:14px}
+#screen-so .so-none{color:var(--ink-soft,#4F4C44)}
+
+/* ---------- the officer on a wire: the cover card and the result are manila sheets ---------- */
+#screen-uc .uc-top{display:flex;align-items:center;gap:10px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.18em;color:var(--manila-2,#A89F8A);margin-bottom:12px}
+#screen-uc .uc-meter{flex:1 1 auto;height:8px}
+#screen-uc .uc-meter > i.mid{background:var(--manila-2,#A89F8A)}
+#screen-uc .uc-meter > i.hi{background:var(--red,#B3261E)}
+#screen-uc .uc-top b{font-size:13px;color:var(--manila,#E9DCC0);min-width:28px;text-align:right}
+#screen-uc .uc-cover dl{margin:0}
+#screen-uc .uc-cover dl > div{display:grid;grid-template-columns:110px minmax(0, 1fr);gap:8px;padding:5px 0;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32))}
+#screen-uc .uc-cover dl > div:first-child{border-top:0}
+#screen-uc .uc-cover dt{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.14em;color:var(--ink-soft,#4F4C44)}
+#screen-uc .uc-cover dd{margin:0;font-size:14px;line-height:1.4}
+#screen-uc .uc-note{font-size:13.5px;line-height:1.5;color:var(--manila-2,#A89F8A);margin:0 0 12px}
+#screen-uc .uc-who{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.2em;color:var(--manila-2,#A89F8A);margin-top:10px}
+#screen-uc .uc-q{font-size:15.5px;line-height:1.45;font-style:italic;margin:4px 0 10px}
+#screen-uc .uc-txt{font-size:14.5px;line-height:1.5;margin:10px 0}
+#screen-uc .uc-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+#screen-uc .uc-opt{display:block;width:100%;min-height:44px;margin:0;padding:10px 12px;text-align:left;cursor:pointer;font:inherit;font-size:14px;line-height:1.4;
+  background:transparent;color:var(--manila,#E9DCC0);border:1px solid var(--manila-3,#8C8473);border-radius:2px;-webkit-tap-highlight-color:transparent}
+#screen-uc .uc-opt:hover{background:var(--ink-3,#34342F);border-color:var(--manila,#E9DCC0)}
+#screen-uc .uc-log{display:flex;gap:6px;align-items:flex-start;font-size:12.5px;line-height:1.45;color:var(--manila-2,#A89F8A);margin:0 0 5px}
+#screen-uc .uc-log.got{color:var(--manila,#E9DCC0)}
+#screen-uc .uc-log .ico{font-size:14px;margin-top:2px}
+#screen-uc .uc-res p{font-size:14px;line-height:1.5}
+
+/* ---------- gatekeeper calls: a flat palette silhouette, never the Commander's portrait ---------- */
+.dialogue-portrait .portrait-frame.v13-gk{position:relative;overflow:hidden;background:var(--manila-3,#8C8473)}
+.dialogue-portrait .portrait-frame.v13-gk svg{width:100%;height:100%;display:block}
+
+/* ---------- phones ---------- */
+@media (max-width:620px){
+  #screen-briefing .brf-h{font-size:21px}
+  #screen-briefing .brf-scroll{padding:12px 12px 6px}
+  #screen-briefing .brf-bar,#screen-briefing .brf-foot{padding-left:12px;padding-right:12px}
+  :is(#screen-briefing,#screen-so,#screen-uc).overlay{justify-content:flex-start}
+  #screen-briefing .brf-foot .v13-btn{flex:1 1 0}
+  #screen-briefing .brf-foot .v13-btn.primary{flex:1.6 1 0}
+  #screen-briefing .brf-facts{grid-template-columns:1fr}
+  #screen-briefing .brf-acts .v13-btn{flex:1 1 100%}
+  #screen-so .so-frame,#screen-uc .uc-frame{padding:12px}
+  #screen-so .so-acts .v13-btn{flex:1 1 calc(50% - 4px)}
+  #screen-uc .uc-cover dl > div{grid-template-columns:96px minmax(0, 1fr)}
+}
+@media (max-height:480px){
+  #screen-so .so-view{height:110px}
+  #screen-so .so-bld{top:12px;bottom:22px;padding:16px 10px 6px;gap:5px}
+  #screen-so .so-gate{height:22px}
+  #screen-briefing .brf-h{font-size:19px}
+  #screen-briefing .brf-say{font-size:14px;margin-bottom:6px}
+  #screen-briefing .brf-unit{margin-bottom:8px}
+  #screen-briefing .brf-ad img,#screen-briefing .brf-noimg{width:44px;height:44px}
+}
