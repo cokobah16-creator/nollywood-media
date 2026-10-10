@@ -19,6 +19,8 @@ async (cs) => {
   S = defaultState();
   S.game.completedMissions = ['m1','m2','m3','m4','m5','m6','m7'];
   Object.assign(S.game.moralChoices, cs.mc || {}); Object.assign(S.game.flags, cs.flags || {});
+  S.game.completedMissions.splice(0, 0, 'm0'); S.game.completedMissions.splice(4, 0, 'm3n');
+  if(typeof I === 'function'){ const d = I(); d.briefed = { m3:1, m4:1, m5:1, m6:1, m7:1 }; Object.assign(d, cs.intel || {}); }
   showOverlay(null); loadMission('m8'); await sleep(150);
   if(shown().includes('screen-controls')) beginMission('m8');
   await sleep(400);
@@ -26,6 +28,12 @@ async (cs) => {
   async function talk(k){
     for(let g=0; g<120; g++){
       const sh = shown();
+      if(sh.includes('screen-minigame') && typeof MINI!=='undefined' && MINI.active){
+        const run = MINI.active;
+        if(run.phase === 'play'){ miniSuccess(run, {stars:3}); log.push('mini:'+(run.cfg.id||run.cfg.type)); }
+        else { const b = document.querySelector('#mg-actions button'); if(b) b.click(); }
+        await sleep(80); continue;
+      }
       if(sh.includes('screen-dialogue')){
         skipTypewriter();
         const ch=[...document.querySelectorAll('#dlg-choices button')];
@@ -60,6 +68,19 @@ async (cs) => {
   if(!S.game._finInside){ use('Breach the front gate'); await sleep(250); await talk(0); }
   log.push('inside:'+S.game._finInside);
   use('Free Osas'); await sleep(250); await talk(0);
+  // v12: before they arrive, name the Voice and put three pieces of evidence to them
+  for(let t=0; t<40 && !shown().includes('screen-accuse'); t++) await sleep(100);
+  if(shown().includes('screen-accuse')){
+    const who = cs.who || 'adaeze';
+    const card = document.querySelector(`#screen-accuse .acc-card[data-id="${who}"]`); if(card) card.click(); await sleep(40);
+    const strong = (typeof V12!=='undefined' && V12.strongAgainstAdaeze) ? V12.strongAgainstAdaeze() : {};
+    const ids = [...document.querySelectorAll('#screen-accuse .acc-item')].map(b=>b.dataset.id);
+    const pick = ids.filter(id=>strong[id]).concat(ids.filter(id=>!strong[id])).slice(0, 3);
+    for(const id of pick){ const b=document.querySelector(`#screen-accuse .acc-item[data-id="${id}"]`); if(b) b.click(); await sleep(30); }
+    const go=document.getElementById('acc-go'); if(go){ go.click(); await sleep(30); go.click(); }
+    log.push('accused:'+who+' picks:'+pick.join(','));
+    await sleep(600);
+  }
   await sleep(1400); await talk(cs.reveal||0); await sleep(500); await talk(0); await sleep(600);
   const ah=document.querySelector('.headline-block .head');
   const res = { route, outcome:S.game.moralChoices.finale, osas:S.game.flags.fin_osas, proofs:finaleProofs().length,
@@ -68,7 +89,22 @@ async (cs) => {
     objs:(S.game.objectives||[]).map(o=>(o.done?'✓':'·')+o.id).join(' '), log:log.slice(-8) };
   if(cs.epilogue){
     document.querySelector('#btn-aftermath-continue').click(); await sleep(400);
+    if(shown().includes('screen-court')){
+      const best = { s84:'cert', custody:'keeper', noorder:'s14', warrantless:'s14', inducement:'corroborate', accomplice:'corroborate', hearsay:'witness', photocopy:'ctc', ident:'plate', deception:'s14', contested:'explain', none:'tender' };
+      if(cs.prep){ [...document.querySelectorAll('[data-ct="cert"]')].slice(0,2).forEach(b=>b.click()); const c=document.querySelector('[data-ct="ctc"]'); if(c) c.click(); }
+      document.querySelector('[data-ct="begin"]').click(); await sleep(40);
+      for(let n=0; n<80 && shown().includes('screen-court'); n++){
+        if(COURT.phase==='cred') document.querySelector('[data-ct="cred"]').click();
+        else if(COURT.phase==='ex'){ const x=COURT.ex[COURT.i]; (document.querySelector(`[data-ct="resp"][data-v="${best[x.k]}"]:not([disabled])`)||document.querySelector('[data-ct="resp"][data-v="trust"]')||document.querySelector('[data-ct="resp"][data-v="withdraw"]')||document.querySelector('[data-ct="resp"]')).click(); }
+        else if(COURT.phase==='ruling') document.querySelector('[data-ct="next"]').click();
+        else if(COURT.phase==='judgment') document.querySelector('[data-ct="end"]').click();
+        await sleep(25);
+      }
+      res.court = S.game.intel && S.game.intel.court ? S.game.intel.court.proven.length + '/4' : null;
+    }
     const slides=[]; for(let i=0;i<20 && shown().includes('screen-epilogue');i++){ slides.push((document.querySelector('.epi-name')||document.querySelector('.epi-title')||document.querySelector('.epi-place')||{}).textContent); advanceEpilogue(); await sleep(60); }
+    res.review = shown().includes('screen-review');
+    if(res.review){ document.getElementById('btn-review-done').click(); await sleep(80); }
     res.epilogue = slides; res.after = shown(); res.s1 = !!S.game.seasonOneComplete;
   }
   return res;
@@ -90,7 +126,7 @@ with sync_playwright() as p:
         ok = '✅' if r.get('completed') else '❌'
         print(ok, cs.get('name'), json.dumps({k:r.get(k) for k in ['route','outcome','osas','proofs','grade','ev','headline']}))
         print('    ', r.get('objs'), '|', r.get('log'))
-        if r.get('epilogue'): print('     epilogue:', r['epilogue'], '→', r.get('after'), 's1:', r.get('s1'))
+        if r.get('epilogue'): print('     epilogue:', r['epilogue'], '→', r.get('after'), 's1:', r.get('s1'), 'court:', r.get('court'), 'review:', r.get('review'))
         if r.get('error'): print('     ERR', r['error'])
         for e in errs[n0:n0+4]: print('     ', e)
     b.close()

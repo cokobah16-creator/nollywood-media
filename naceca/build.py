@@ -85,6 +85,12 @@ V12_JS = ["v12_core.js", "v12_docs.js", "v12_ops.js", "v12_plan.js", "v12_finale
           "v12_night.js", "v12_mem.js", "v12_street.js", "v12_hub.js", "v12_sound.js", "v12_car.js",
           "v12_daily.js", "v12_share.js", "v12_vo.js", "v12_pt.js", "v12_boot.js"]
 
+# v13 layer (the investigation layer: Case Desk, briefings, trial) — after v12, before the beta,
+# so the beta's paper styling and casework wrap over it
+V13_DIR = os.path.join(SRC, "v13")
+V13_CSS = ["v13.css"]
+V13_JS = ["v13_data.js", "v13_intel.js", "v13_desk.js", "v13_briefing.js", "v13_court.js", "v13_boot.js"]
+
 # beta layer (friends-beta pass: wayfinding, chases, casework, paper UI) — after v12, so it wins
 BETA_DIR = os.path.join(SRC, "beta")
 BETA_CSS = ["paper.css", "wayfind.css", "board.css", "casework.css"]
@@ -148,6 +154,16 @@ def build_html(bundle):
         if "</script" in code.lower():
             raise SystemExit(f"v12/{name} contains a closing script tag")
         parts.append(f"<script>/* ---------- {name} (v12) ---------- */\n{code}\n</script>")
+    # Append the v13 layer after v12
+    for name in V13_CSS:
+        with open(os.path.join(V13_DIR, name), "r", encoding="utf-8") as fh:
+            parts.append(f'<style id="{name[:-4]}">\n{fh.read()}\n</style>')
+    for name in V13_JS:
+        with open(os.path.join(V13_DIR, name), "r", encoding="utf-8") as fh:
+            code = fh.read()
+        if "</script" in code.lower():
+            raise SystemExit(f"v13/{name} contains a closing script tag")
+        parts.append(f"<script>/* ---------- {name} (v13) ---------- */\n{code}\n</script>")
     # Append the beta layer after v12
     for name in BETA_CSS:
         with open(os.path.join(BETA_DIR, name), "r", encoding="utf-8") as fh:
