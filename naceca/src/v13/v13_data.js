@@ -8,15 +8,17 @@
 /* ---- 1. Evidence model: what each logged item IS ----
    tier: confirmed · probable · allegation · rumour
    e: electronic (needs an Evidence Act 2011 s.84 certificate to be admitted)   */
+/* how KC's SIM batch reached the file: his statement (v12_core, a fair arrest) or the sleeve sweep */
+function kcSimsByStatement(){ const e = ((typeof S !== 'undefined' && S && S.game && S.game.evidence) || []).find(x => x.id === 'kc_sims'); return !!(e && /statement/i.test(e.name || '')); }
 const INTEL_ITEMS = {
   phishing_template: { m:'m2', kind:'DIGITAL',   tier:'confirmed', e:true,  src:"KC's phone — forensic scan, Ikeja charging stand" },
   laptop:            { m:'m3', kind:'DEVICE',    tier:'confirmed', e:true,  src:"Chief Obi's study, Lekki" },
   cash:              { m:'m3', kind:'PHYSICAL',  tier:'confirmed',          src:'Coffee table, Lekki living room' },
   safe_drives:       { m:'m3', kind:'DEVICE',    tier:'confirmed', e:true,  src:'Wall safe, Lekki study' },
-  broken_seal:       { m:'m4', kind:'PHYSICAL',  tier:'confirmed',          src:'Livestock truck, Benin Bypass' },
-  ransom_ledger:     { m:'m4', kind:'DOCUMENT',  tier:'confirmed',          src:'Rear compartment, livestock truck' },
-  concealed_arms:    { m:'m4', kind:'PHYSICAL',  tier:'confirmed',          src:'Rear compartment, livestock truck' },
-  musa_statement:    { m:'m4', kind:'TESTIMONY', tier:'probable',           src:'Musa, roadside interview with AKS' },
+  broken_seal:       { m:'m4', kind:'PHYSICAL',  tier:'confirmed',          src:'Cattle lorry, Benin Bypass' },
+  ransom_ledger:     { m:'m4', kind:'DOCUMENT',  tier:'confirmed',          src:'Welded compartment, cattle lorry' },
+  concealed_arms:    { m:'m4', kind:'PHYSICAL',  tier:'confirmed',          src:'Welded compartment, cattle lorry' },
+  musa_statement:    { m:'m4', kind:'TESTIMONY', tier:'probable',           src:'Musa, roadside interview with the Anti-Kidnapping Squad' },
   shrine_pots:       { m:'m5', kind:'PHYSICAL',  tier:'confirmed',          src:'Libation pots, Ozalla shrine' },
   shrine_cache:      { m:'m5', kind:'PHYSICAL',  tier:'confirmed',          src:'Jerry-cans, Ozalla shrine' },
   e_shrine_ledger:   { m:'m5', kind:'DOCUMENT',  tier:'confirmed',          src:'Inside the jerry-can cache' },
@@ -31,9 +33,15 @@ const INTEL_ITEMS = {
   fin_recording:     { m:'m8', kind:'TELECOM',   tier:'confirmed', e:true,  src:'Field-office recording of the evening call' },
   // v12 evidence
   co_madam:          { m:'m0', kind:'DEVICE',    tier:'probable',  e:true,  src:'Cracked phone in a Mushin puddle, the night before' },
-  kc_sims:           { m:'m2', kind:'PHYSICAL',  tier:'confirmed',          src:'SIM sleeves behind the Ikeja stalls' },
+  // KC's SIM batch comes from his statement (a fair arrest) or from the sleeve sweep: the source says which
+  kc_sims:           { m:'m2', get kind(){ return kcSimsByStatement() ? 'TESTIMONY' : 'PHYSICAL'; }, get tier(){ return kcSimsByStatement() ? 'probable' : 'confirmed'; },
+                       get src(){ return kcSimsByStatement() ? "KC's statement after his arrest, Ikeja market" : 'SIM sleeves behind the Ikeja stalls'; } },
   obi_notebook:      { m:'m3', kind:'DOCUMENT',  tier:'confirmed',          src:"Chief Obi's study, beside the cash" },
-  osas_voicemail:    { m:'m3n',kind:'TELECOM',   tier:'probable',  e:true,  src:'Your desk phone, Lagos HQ, 23:40' },
+  osas_voicemail:    { m:'m3n',kind:'TELECOM',   tier:'probable',  e:true,  src:'Your desk phone, Lagos HQ — left 14:02, heard 23:40' },
+  // v12.2 evidence
+  musa_record:       { m:'m4', kind:'TESTIMONY', tier:'probable',           src:'Musa, wired at the Benin Bypass after he turned' },
+  efe_statement:     { m:'m7', kind:'TESTIMONY', tier:'probable',           src:'Efe, a UNIBEN student, at the university gate' },
+  tail_plate:        { m:'t7', kind:'PHOTO',     tier:'confirmed', e:true,  src:"Agt. Kelechi's phone camera, the tail from Ugbowo junction" },
   // what the investigation itself produces (added to the case between operations)
   inv_gatehouse:     { m:'m3', kind:'DOCUMENT',  tier:'probable',           src:'Lekki estate gatehouse logbook', inv:true },
   inv_ca:            { m:'m6', kind:'DOCUMENT',  tier:'confirmed',          src:'CAC records and NFIU returns', inv:true },
@@ -147,16 +155,20 @@ const VERDICTS = [
 ];
 
 /* ---- 7. Warrants: when you ask, what you ask with, and who hears about it ---- */
+/* Display data only (v13 model, design §1/A5): the board is the magistrate. V12.warrantState(id) reads
+   w_lekki / w_asaba from the beta charge sheet (V12.accused(case).warrant) and w_cdr / w_eko from the
+   decision filed at the h6 / h7 briefing (V12.fileV13Warrant). basis/need/leak/without are no longer read. */
 const WARRANTS = [
-  { id:'w_lekki', name:'Search warrant — Obi residence, Lekki', court:'Magistrate, Ikeja', before:'m3', need:7,
+  { id:'w_lekki', case:'lagos', short:'LAGOS · LEKKI', name:'Search warrant — Obi residence, Lekki', court:'Magistrate, Ikeja', before:'m3', need:7,
     basis:['theory:t_money','theory:t_sims','phishing_template','kc_sims','kc_ph_gate','kc_bank_150k','kc_msg_control'], closeOnPlan:true,
     leak:'Chief Obi hears from a court clerk. The wipe will start faster.',
     without:'Lekki evidence is taken without a warrant. The defence will call it an unlawful search.' },
-  { id:'w_cdr', name:'Production order — Ugbowo cell records', court:'Federal High Court, Benin', before:'m7', need:7,
+  { id:'w_asaba', case:'route', short:'ROUTE · ASABA', name:'Search warrant — riverside warehouse, Asaba', court:'Magistrate, Asaba', before:'m6' },
+  { id:'w_cdr', case:'route', short:'UGBOWO ORDER', name:'Production order — Ugbowo cell records', court:'Federal High Court, Benin', before:'m7', need:7,
     basis:['theory:t_route','ransom_ledger','musa_statement','asaba_sims','bu_ping_ugbowo','bu_contacts'],
     leak:'The network rotates its handsets. Your trace window at the mast will be shorter.',
     without:'Tower data is pulled without a court order. It will be challenged.' },
-  { id:'w_eko', name:'Search & arrest warrant — the house in Ekosodin', court:'Magistrate, Benin', before:'m8', need:6, routed:true,
+  { id:'w_eko', case:'voice', short:'EKOSODIN', name:'Search & arrest warrant — the house in Ekosodin', court:'Magistrate, Benin', before:'m8', need:6, routed:true,
     basis:['theory:t_voice','tower_fix','tower_cdr','bu_ph_gate','bu_msg_student','lead_caretaker'],
     leak:'The application circulates. Whoever holds Osas may hear.',
     without:"You'll go in on exigency — a hostage inside. Lawful, but the defence will test it." },
@@ -298,11 +310,13 @@ const RADIO_FILLER = [
   'A reminder from your bank: we will NEVER call you to ask for your BVN. Hang up.',
   'Rain expected in Benin City tonight. Ekosodin and Ugbowo, carry umbrella.',
 ];
+// newest first: the bulletin leads with the rumour about the latest operation; `when` keeps a rumour to its branch
 const RADIO_RUMOURS = [
+  { needs:'m6', when:mc => mc.asaba === 'rescue' || (mc.asaba === 'chase' && !S.game._asabaHostageLost), text:'Asaba: a warehouse fire, a rescue, and a lot of questions about who owns that building.' },
+  { needs:'m6', when:mc => !(mc.asaba === 'rescue' || (mc.asaba === 'chase' && !S.game._asabaHostageLost)), text:'Asaba: a warehouse fire on the riverside, and a lot of questions about who owns that building.' },
+  { needs:'m5', when:mc => mc.shrine === 'force', text:'A shrine in Ozalla, raided? The elders are not happy, and neither is the Oba\'s palace.' },
+  { needs:'m3', text:'Sources say a Lekki chief\'s house was raided. The Chief\'s lawyers say it was "a misunderstanding".' },
   { needs:'m2', text:'Callers say the kidnap ransom calls are coming from Warri. Police have not confirmed.' },
-  { needs:'m3', text:'Sources say a Lekki politician\'s house was raided. The Chief\'s lawyers say it was "a misunderstanding".' },
-  { needs:'m5', text:'A shrine in Ozalla, raided? The elders are not happy, and neither is the Oba\'s palace.' },
-  { needs:'m6', text:'Asaba: a warehouse fire, a rescue, and a lot of questions about who owns that building.' },
 ];
 
 /* ---- 12. Court: FRN v. Cdr. Adaeze & 2 Ors ---- */
