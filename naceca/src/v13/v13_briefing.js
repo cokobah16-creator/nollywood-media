@@ -149,12 +149,13 @@ function openBriefing(k, then, opts){
   const d = I();
   closeStale(k);
   Object.assign(BRF, { k, phase:'plan', sel:[], dec:{}, then:typeof then === 'function' ? then : null, video:!!(opts && opts.video), armed:null, wArm:null, _top:true });
+  // the model's own work at a briefing (e.g. money nodes from flags since the last one), once. It runs before the
+  // top-up below, so a trail it opens (Senior's flagged clues) gets this briefing's requests too, as Recruit's does
+  if(typeof window.intelOnBriefingOpen === 'function'){ d.brfHook = d.brfHook || {}; if(!d.brfHook[k]){ d.brfHook[k] = true; safe(()=>window.intelOnBriefingOpen(k), 'brief hook'); } }
   // more NFIU requests with each briefing, once
   // (decided once, at the first opening: a reload never tops them up again)
   d.briefedReq = d.briefedReq || {};
   if(!d.briefedReq[k]){ d.briefedReq[k] = true; if(d.money && d.money.open) d.money.req += (typeof MONEY_PER_WEEK === 'number' ? MONEY_PER_WEEK : 2); }
-  // the model's own work at a briefing (e.g. money nodes from flags since the last one), once
-  if(typeof window.intelOnBriefingOpen === 'function'){ d.brfHook = d.brfHook || {}; if(!d.brfHook[k]){ d.brfHook[k] = true; safe(()=>window.intelOnBriefingOpen(k), 'brief hook'); } }
   if(k === 'm3' && d.brfOpen !== 'm3'){ d.brfOpen = 'm3'; save(); }       // Week 1 survives a quit
   if(typeof musicForScene === 'function') safe(()=>musicForScene('investigation'), 'music');
   const r = d.brf && d.brf.k === k ? d.brf : null;
@@ -390,8 +391,9 @@ function applyDecisions(r){
     // asking her gives you her answer and nothing else: the Engineer's calls are found only by pulling his line ('quiet')
     if(dec.order === 'confront'){ applyEffect({ agencyFavour:-3 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer_asked', 'Cdr. Adaeze');
       out.push({ h:'THE ENGINEER', t:'"He is how we found Lekki. You will have to trust me on this one, Kelechi."' }); }
-    if(dec.order === 'leak'){ applyEffect({ publicTrust:+3, agencyFavour:-6 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer', 'The press'); intelSet('engineer_fled');
-      out.push({ h:'THE ENGINEER', t:'The story runs that evening: "NACECA informant linked to kidnap ring." By morning the Engineer has vanished, and the Commander has stopped saying good morning.' }); }
+    // the press gets the story, not his calls (only 'quiet' finds those), and he stays in play: h7 and the tail (t7) follow him
+    if(dec.order === 'leak'){ applyEffect({ publicTrust:+3, agencyFavour:-6 }); d.alert = (d.alert || 0) + 1; knowAdd('engineer_leak', 'The press');
+      out.push({ h:'THE ENGINEER', t:'The story runs that evening: "NACECA informant linked to kidnap ring." It doesn\'t print his name, but the Commander has stopped saying good morning.' }); }
   }
   if(dec.press){
     const o = (d.opLog || {}).m6 || {}, clean = !(o.force > 0) && !(o.bumps > 0);
@@ -730,18 +732,34 @@ function soAct(a){
   save();
   renderSO(false);
 }
+/* Recruit: what the feed is worth (the drop's reading, from the hidden relevance flags) */
+function soReading(){
+  const parts = [];
+  if(intelHas('so_courier')) parts.push('a courier carrying cash bags into Zuma Court');
+  if(intelHas('so_poolcar')) parts.push('an envelope passed into a government car');
+  if(intelHas('so_plate')) parts.push("the Corolla's plate, LND 590 XA" + (intelHas('so_plate_match') ? ' — the car from the Lekki gatehouse log' : ''));
+  if(intelHas('so_back')) parts.push('a back entrance nobody mentioned');
+  return parts.length ? 'From the feed you logged ' + parts.join(', ') + '.' : 'A long afternoon on a grainy feed, and nothing you can use. That happens too.';
+}
+/* Senior: what the team logged, every frame and plate alike, with no word on which of them matters (A8) */
+function soRecord(s){
+  const log = s.log || [], photos = log.filter(x => x.k === 'photo').map(x => x.t), plates = log.filter(x => x.k === 'plate').map(x => x.plate);
+  const n = photos.length, parts = [];
+  if(n) parts.push(`${n} photograph${n > 1 ? 's' : ''} (${photos.join(', ')})`);
+  if(plates.length) parts.push(`the plate${plates.length > 1 ? 's' : ''} ${plates.join(' and ')}`);
+  let t = parts.length ? `From the feed you logged ${parts.join(' and ')}.` : 'The feed ends with nothing in the log.';
+  if(intelHas('so_followed')) t += ' The team tried to follow the Corolla and lost it at Lugbe.';
+  if(intelHas('so_back')) t += ' Round the back of Zuma Court: a motorbike, engine still warm.';
+  return t;
+}
 function finishSO(){
   const s = soState(); if(!s) return;
   if(!s.done){
     const got = ['so_courier', 'so_poolcar', 'so_plate', 'so_plate_match', 'so_back', 'so_followed'].filter(intelHas);
-    const parts = [];
-    if(intelHas('so_courier')) parts.push('a courier carrying cash bags into Zuma Court');
-    if(intelHas('so_poolcar')) parts.push('an envelope passed into a government car');
-    if(intelHas('so_plate')) parts.push('its plate, LND 590 XA' + (recruit() && intelHas('so_plate_match') ? ' — the car from the Lekki gatehouse log' : ''));
-    if(intelHas('so_back')) parts.push('a back entrance nobody mentioned');
     s.got = got; s.done = true;
-    s.txt = parts.length ? 'From the feed you logged ' + parts.join(', ') + '.' : 'A long afternoon on a grainy feed, and nothing you can use. That happens too.';
-    if(intelHas('so_poolcar')) addInvEvidence('inv_stakeout');
+    s.txt = recruit() ? soReading() : soRecord(s);
+    // Senior: the exhibit lands in the Locker without a toast (a toast only for the 18:15 photo would mark it as the one)
+    if(intelHas('so_poolcar')) addInvEvidence('inv_stakeout', !recruit());
     save();
   }
   modalOff('screen-so');
@@ -754,7 +772,8 @@ window.openStakeout = openStakeout;
    Same in both difficulties (A8): the meter, the pause and the one-shot cover card are
    consequences, not hints. State persists in I().uc after every answer. */
 const UC_STEPS = [
-  { who:'RECEPTIONIST', q:'Good afternoon. Your name, sir?', opts:[['Obinna Anyanwu.', 0], ['Kelechi— sorry. Obinna. Obinna Okafor.', 35], ['Why do you need my name?', 15]] },
+  // the Abuja officer speaks under the cover (A10): his slip is a wrong surname, never Kelechi's name
+  { who:'RECEPTIONIST', q:'Good afternoon. Your name, sir?', opts:[['Obinna Anyanwu.', 0], ['Obinna— sorry. Obinna Okafor.', 35], ['Why do you need my name?', 15]] },
   { who:'RECEPTIONIST', q:'And who referred you to us?', opts:[['Alhaji Danjuma, at Bluewater.', 0], ['A friend at NACECA.', 75], ['I found you online.', 20]] },
   { probe:true, txt:'She turns to photocopy his ID. The visitor book lies open on the desk.', act:'Tell him to read the visitor book', sus:15, got:'uc_book', res:'Two lines repeat every month: "C.A. — 1st, 10:00" and "Bluewater — Kunle".' },
   { who:'BARR. TAMUNO BRIGGS', q:'So. What will this company do?', opts:[['Generator parts. I import through Onitsha.', 0], ['Logistics. Haulage.', 20], ['Consulting, mostly.', 25]] },
@@ -830,7 +849,7 @@ function ucAct(a, ds){
   if(s.done) return;
   if(a === 'go'){ if(s.i < 0){ s.i = 0; save(); renderUC(); } return; }
   const st = UC_STEPS[s.i]; if(!st || s.blown) return;
-  if(a === 'ans' && !st.probe){ const o = st.opts[+ds.k]; if(!o) return; s.sus += o[1]; s.log.push({ t:`${st.who}: "${st.q}" — You: "${o[0]}"${o[1] >= 30 ? ' (a pause. Too long.)' : ''}` }); if(o[1]) sfx('sfxFail'); }
+  if(a === 'ans' && !st.probe){ const o = st.opts[+ds.k]; if(!o) return; s.sus += o[1]; s.log.push({ t:`${st.who}: "${st.q}" — He says: "${o[0]}"${o[1] >= 30 ? ' (a pause. Too long.)' : ''}` }); if(o[1]) sfx('sfxFail'); }
   else if(a === 'probe' && st.probe){ s.sus += st.sus; s.got.push(st.got); s.log.push({ t:st.res, got:true }); sfx('sfxBlip'); }
   else if(a === 'skip' && st.probe){ s.log.push({ t:'You let it go.' }); }
   else return;
@@ -845,13 +864,13 @@ function ucFinalize(){
   s.done = true;
   if(s.blown){
     d.alert = (d.alert || 0) + 1; knowAdd('cover', 'Apex Corporate Services'); intelSet('apex_blown');
-    s.txt = 'The cover is blown. They are polite, too polite. By morning Suite 4B has new locks and a "To Let" sign — and somebody has made a phone call about you.' + (s.got.length ? ` You still walked out with ${s.got.length} thing${s.got.length > 1 ? 's' : ''} you can use.` : '');
+    s.txt = 'The cover is blown. They are polite, too polite. By morning Suite 4B has new locks and a "To Let" sign — and somebody has made a phone call about you.' + (s.got.length ? ` He still walked out with ${s.got.length} thing${s.got.length > 1 ? 's' : ''} you can use.` : '');
   } else {
     if(s.got.includes('uc_invoice')){ applyEffect({ intel:+12 }); addInvEvidence('inv_invoice'); }
     if(s.got.includes('uc_book')) applyEffect({ intel:+6 });
     if(s.got.includes('uc_nominee')) applyEffect({ intel:+6 });
     if(typeof unlock === 'function' && s.sus < 40) safe(()=>unlock('cover_held'), 'ach');
-    s.txt = s.got.length ? `Your cover held. You walked out with: ${s.got.map(g => ({ uc_book:'the visitor book pattern', uc_nominee:"Briggs's admission about C.A.'s nominee", uc_invoice:'a C.A. Consulting invoice to the Foundation' }[g])).join('; ')}.` : 'Your cover held, and you took nothing. Clean — and empty.';
+    s.txt = s.got.length ? `His cover held. He walked out with: ${s.got.map(g => ({ uc_book:'the visitor book pattern', uc_nominee:"Briggs's admission about C.A.'s nominee", uc_invoice:'a C.A. Consulting invoice to the Foundation' }[g])).join('; ')}.` : 'His cover held, and he took nothing. Clean — and empty.';
   }
   save();
 }

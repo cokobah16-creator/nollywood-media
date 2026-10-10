@@ -136,8 +136,10 @@ module.exports = async h => {
   await ev(['phishing_template', 'kc_sims']);
   await h.ev(() => { showOverlay(null); showHUD(true); ENGINE.movementEnabled = true; });
   await deskTour();
-  const c02 = await h.ev(() => ({ ca:!!I().reg.found.ca, apex:!!I().reg.found.apex, traced:Object.keys(I().money.traced || {}).length }));
-  h.assert(c02.apex && !c02.ca, 'Case 02: "apex" finds Apex, but neither a name search nor the Zuma Court address search lists C.A. Consulting');
+  const c02 = await h.ev(() => ({ ca:!!I().reg.found.ca, apex:!!I().reg.found.apex, cluster:!!I().flags.zuma_cluster, traced:Object.keys(I().money.traced || {}).length }));
+  // (R14) the Zuma Court companies are on the register only once the case reaches them (Case 04): no search here
+  // finds Apex, so no address search can put the cluster — or C.A. Consulting — together in Case 02
+  h.assert(!c02.apex && !c02.ca && !c02.cluster, 'Case 02: no name search finds Apex or C.A. Consulting, and nothing builds the Zuma Court cluster');
   h.assert(c02.traced === 0, 'Case 02: nothing can be traced before the Lagos charge sheet');
 
   // ================= 2. after Lekki: the Week-1 briefing at Lagos HQ, the next morning =================

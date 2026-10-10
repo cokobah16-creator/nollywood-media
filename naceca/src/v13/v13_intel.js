@@ -129,9 +129,10 @@ function intelTobiAlive(){ const a = (S.game.moralChoices || {}).asaba; return a
 
 /* ---------- who knows what ---------- */
 // the Locker shows this panel; before the reveal the Commander's entry reads as her unit (v13_desk.js)
+// engineer: only pulling his line ('quiet') finds his calls to "C."; 'confront' and 'leak' record only what was said or printed
 const FACTS = {
   eko_house:'The Ekosodin warrant', engineer:'The Engineer\'s calls to "C."', engineer_asked:'You asked about the Engineer', zuma:'Suite 4B, Zuma Court',
-  ledger:'The ransom ledger', poolcar:'The government car at Lekki', cover:'Your Apex cover name',
+  engineer_leak:'A NACECA informant inside the kidnap ring', ledger:'The ransom ledger', poolcar:'The government car at Lekki', cover:'The Apex cover name',
 };
 function knowAdd(fact, who){ const k = I().known; k[fact] = k[fact] || ['You']; if(!k[fact].includes(who)) k[fact].push(who); }
 
@@ -149,6 +150,7 @@ function intelOnEvidence(ev){
       { t:`Sealed and tagged — exhibit NAC/EX/0034/${String(n).padStart(2,'0')}` } ] };
     if(midx(meta.m) >= 3 && !meta.inv) d.items[ev.id].custody.push({ t:'Witnessed: Sgt. Uche' });
   }
+  if(ev.id === 'obi_notebook') moneySync();                             // Obi's account can be listed now
 }
 /* findings from the desk and the briefings become exhibits you can put to her */
 function addInvEvidence(id, quiet){
@@ -304,9 +306,13 @@ function intelIntegrity(id){ return intelAdmissibility(id).score; }
 const CERT_SLOTS = 2;
 function certWindowOpen(id){
   const d = I(), it = d.items[id]; if(!it) return false;
-  if(d.court || S.game.seasonOneComplete) return false;                 // the trial has been and gone
+  if(d.court) return false;                                           // the trial has been and gone
+  // after the season only M8 replayed (begun after the season, intelOnMissionStart) reopens a window: a new night
+  // and a new trial (courtResetForReplay clears d.court), so its pre-trial file can certify the Ekosodin material
+  if(S.game.seasonOneComplete && !(d.m8Replay && opNow() === 'm8')) return false;
   const closeAt = BRIEF_BEFORE.find(b => midx(b) > midx(it.m));
   if(!closeAt) return true;                                           // the finale's exhibits: until the trial
+  if(d.started[closeAt]) return false;                                // closed for good once that operation started: a replay never reopens it
   const raw = S.game.currentMission || 'm1', cur = opNow(raw), between = raw !== cur;   // a hub or the car
   return midx(cur) < midx(closeAt) || (cur === closeAt && !between && !d.started[closeAt]);
 }
@@ -356,6 +362,7 @@ function flagClue(cid, on){
 }
 /* a briefing opens: Senior's flagged money clues join the trail now, without saying which flag did it */
 function intelBriefingOpened(){
+  moneySync();
   if(!intelSenior()) return [];
   const d = I(), m = d.money, ids = [];
   PHONES.forEach(p => p.items.forEach(c => { if(c.rel && c.money && d.flagged[c.id] === true && !m.unlocked[c.money]) ids.push(c.money); }));
@@ -364,10 +371,25 @@ function intelBriefingOpened(){
 }
 
 /* ---------- money ---------- */
+/* gate 'lekki' (Obi's account): not listed at all until Lekki is behind you or his notebook is in hand — its
+   line quotes the notebook. A trace or lead that reaches it earlier leaves it waiting (I().money.waiting);
+   moneySync lists it once the gate opens (on evidence, at every operation's start and end, at a briefing). */
+const lekkiBehind = () => (S.game.completedMissions || []).includes('m3') || intelHas('obi_notebook');
+const moneyListable = id => { const n = MONEY_NODES[id]; return !n || n.gate !== 'lekki' || lekkiBehind(); };
+function moneyWait(m, id){ (m.waiting = m.waiting || {})[id] = true; }
+function moneySync(){
+  const m = I().money;
+  // a save from before the gate may list the account early: it goes back to waiting until Lekki
+  Object.keys(m.unlocked || {}).forEach(id => { if(m.unlocked[id] && !m.traced[id] && !moneyListable(id)){ delete m.unlocked[id]; moneyWait(m, id); } });
+  const ready = Object.keys(m.waiting || {}).filter(moneyListable);
+  ready.forEach(id => { delete m.waiting[id]; });
+  if(ready.length) moneyUnlock(ready, false);
+}
 function moneyUnlock(ids, announce){
   const m = I().money;
   ids.forEach(id=>{
     if(!MONEY_NODES[id] || m.unlocked[id]) return;
+    if(!moneyListable(id)){ moneyWait(m, id); return; }
     m.unlocked[id] = true;
     if(!m.open){ m.open = true; m.req += MONEY_START_REQUESTS; }
     if(announce && !intelSenior()) toast('MONEY TRAIL', MONEY_NODES[id].name + ' — follow it in the Case Desk', 2200);
@@ -382,6 +404,7 @@ function intelMoneyGate(id){
   const n = MONEY_NODES[id]; if(!n || !intelMoneyOpen()) return false;
   const g = n.gate || 'lagos', done = S.game.completedMissions || [];
   if(g === 'lagos') return true;
+  if(g === 'lekki') return lekkiBehind();
   const r = (window.V12 && typeof V12.accused === 'function') ? V12.accused('route') : null;
   const route = !!r || done.includes('m6');
   if(g === 'route') return route;
@@ -394,7 +417,7 @@ function moneyTrace(id){
   if(!n || !m.unlocked[id] || m.traced[id]) return false;
   if(m.req <= 0){ toast('NO NFIU REQUESTS LEFT', 'More come with the next briefing'); if(typeof sfxFail==='function') sfxFail(); return false; }
   m.req--; m.traced[id] = true;
-  n.next.forEach(x=>{ m.unlocked[x] = true; });
+  n.next.forEach(x=>{ if(moneyListable(x)) m.unlocked[x] = true; else moneyWait(m, x); });
   if(n.reg) regFind([n.reg]);
   // Senior: every trace is worth the same, so neither a toast nor the intel count marks the key node
   if(intelSenior()) applyEffect({ intel:+2 });
@@ -414,9 +437,10 @@ function naira(v){
 function regFind(keys){ const r = I().reg; keys.forEach(k=>{ if(REGISTRY[k]) r.found[k] = true; }); checkInvEvidence(); }
 function regSearch(q){
   q = (q||'').trim().toLowerCase(); if(q.length < 3) return [];
-  const r = I().reg;
+  const r = I().reg, done = S.game.completedMissions || [];
   const hits = Object.keys(REGISTRY).filter(k=>{
     const e = REGISTRY[k]; if(e.hidden && !r.found[k]) return false;
+    if(e.from && !done.includes(e.from) && !r.found[k]) return false;   // not before the case reaches it (REGISTRY `from`)
     return (e.name + ' ' + e.no + ' ' + e.people.join(' ')).toLowerCase().includes(q);
   });
   regFind(hits);
@@ -520,8 +544,10 @@ function stJudge(stId, cid, v){
 function intelOnMissionStart(id){
   const d = I();
   d.started[id] = true;
+  d.m8Replay = id === 'm8' && !!S.game.seasonOneComplete;             // the finale replayed after the season (certWindowOpen)
   v13NavReset();                                                      // a new operation: no v13 flow resumes into it
   bookIn();
+  moneySync();
   if(id === 'm8'){
     const st = intelStyle();
     d.styleAtFinale = st.key;
@@ -538,6 +564,7 @@ function intelOnMissionEnd(mid){
   const d = I(), o = S.game._opStart || {};
   d.opLog[mid] = { force: Math.max(0, (S.game.forceUsed||0) - (o.force||0)), bumps: S.game._opBumps || 0 };
   bookIn(mid);
+  moneySync();
   if(mid === 'm8'){
     if(S.game.flags && S.game.flags.fin_bodycam) addPseudoItem('bodycam_eko', 'm8', 'VIDEO', "Agt. Kelechi's body-camera, the yard on Akintola Close");
     ledgerCustody();
@@ -572,7 +599,8 @@ function intelRevealExtras(){
   };
   const after = [{ speaker:'COMMANDER ADAEZE', mood:'evasive', text: STYLE_LINE[st] || STYLE_LINE.proc }];
   if(d.order === 'comply') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You left the Engineer alone when I asked you to. You have no idea how much I wanted you to say no.' });
-  if(d.order === 'confront') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You asked me on an open call, with Uche in the room. I respected that. Then I changed every phone that night.' });
+  // she cut off the Engineer, not her own number: "C." still calls the ransom phone in the M7 tower data (h7 'pattern')
+  if(d.order === 'confront') after.push({ speaker:'COMMANDER ADAEZE', mood:'evasive', text:'You asked me on an open call, with Uche in the room. I respected that. Then I made sure the Engineer never called me again.' });
   return { before, after };
 }
 
