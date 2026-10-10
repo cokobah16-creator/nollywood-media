@@ -295,11 +295,15 @@ V12.wrap('showAftermath', orig => function(){
   return r;
 });
 // a slice that ends silently (the market van), or a sheet another screen hid before it was answered:
-// ask at the next calm moment (the world is live and no other screen is up)
+// ask at the next calm moment (the world is live, no other screen is up, no chase), and only in a save
+// that has finished the slice and not answered yet (a new game or another save in this tab is left alone)
 setInterval(()=>{ try{
   const ov = document.getElementById('screen-pt-survey');
   if(!PT.pendingSurvey || (ov && ov.classList.contains('show'))) return;
   if(typeof ENGINE === 'undefined' || !ENGINE.movementEnabled || document.querySelector('.overlay.show')) return;
+  if(typeof CHASE !== 'undefined' && CHASE.active) return;
+  const k = String(PT.pendingSurvey).replace(/^slice:/, ''), g = S.game || {};
+  if(!(g.completedMissions || []).includes(k) || (g._ptAsked && g._ptAsked[k])) return;
   V12.ptSurvey(PT.pendingSurvey);
 }catch(e){} }, 1500);
 

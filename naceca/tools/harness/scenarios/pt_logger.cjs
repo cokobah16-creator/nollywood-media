@@ -135,6 +135,18 @@ module.exports = async h => {
   h.assert(await h.ev(() => !!document.querySelector('#screen-pt-survey.show')), 'a silent slice end (?slice=m2) still asks the two questions');
   await h.ev(() => document.getElementById('pt-skip').click());
   await h.step(200);
+  // a sheet hidden without an answer asks again in that save, but never in a new game, nor during a chase
+  await h.ev(() => { S.game._ptAsked = {}; V12._ptState.pendingSurvey = 'slice:m2'; const keep = S.game.completedMissions; S.game.completedMissions = ['m0', 'm1']; window._ptKeep = keep; });
+  await h.step(2200);
+  h.assert(await h.ev(() => !document.querySelector('#screen-pt-survey.show')), 'a pending question is not asked in a save that has not finished the slice');
+  await h.ev(() => { S.game.completedMissions = window._ptKeep; const r = { position:{ x:60, y:0, z:60 }, rotation:{ y:0 }, userData:{} }; window._ptChase = startChase({ runner:r, path:[[60,60],[200,60]], label:'TEST' }); window._ptChase.onEscaped = ()=>{}; window._ptChase.onCaught = ()=>{}; });
+  await h.step(2200);
+  h.assert(await h.ev(() => !document.querySelector('#screen-pt-survey.show')), 'nor during a chase');
+  await h.ev(() => { stopChase(); });
+  await h.step(2200);
+  h.assert(await h.ev(() => !!document.querySelector('#screen-pt-survey.show')), 'it comes back in the save that finished the slice, once calm');
+  await h.ev(() => document.getElementById('pt-skip').click());
+  await h.step(200);
   await h.ev(() => { V12.PT_SLICE_END = 'm3'; });
   h.assert(await h.ev(() => { const t = document.getElementById('pt-a1'); return parseFloat(getComputedStyle(t).fontSize) >= 16; }), 'answer boxes are 16px (no iOS zoom)');
   // Settings shows the count and can ask again
