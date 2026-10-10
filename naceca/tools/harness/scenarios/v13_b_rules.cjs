@@ -63,7 +63,7 @@ module.exports = async h => {
     ${lagos('tunde')} S.game.accusations.route = { suspect:'ifeanyi', method:'route', money:'asaba', ok:{ suspect:true, method:true, money:true }, warrant:'signed' };`));
   await open('m5', true);
   const tun = await h.ev(() => { const b = document.querySelector('#screen-briefing [data-b="lead"][data-id="tunde"]'); return { dis:b.disabled, txt:b.textContent }; });
-  h.assert(tun.dis && /stopped taking NACECA's calls after the cell/.test(tun.txt), 'Tunde wrongly held: "Re-interview Tunde" is blocked with the in-world reason');
+  h.assert(tun.dis && /stopped taking your calls after your charge sheet put him in a cell/.test(tun.txt), 'Tunde wrongly held: "Re-interview Tunde" is blocked with the in-world reason');
   await V('h5_plan', '#screen-briefing');
   await B.click('#screen-briefing [data-b="dec"][data-k="order"][data-v="comply"]');
   await V('h5_plan_dec', '#screen-briefing');
@@ -164,7 +164,8 @@ module.exports = async h => {
     });
     await open('m7', true);
     const tip = await h.ev(() => { const b = document.querySelector('#screen-briefing [data-b="lead"][data-id="tip"]'); return { dis:b.disabled, txt:b.textContent }; });
-    h.assert(tip.dis && /stopped taking NACECA's calls/.test(tip.txt), 'Tunde wrongly held: his tip is blocked too');
+    h.assert(tip.dis && /stopped taking your calls/.test(tip.txt), 'Tunde wrongly held: his tip is blocked too');
+    h.assert(await h.ev(() => { const p = document.querySelector('#screen-briefing .brf-advice p'); return !!p && !/Tunde/.test(p.textContent); }), 'Tunde wrongly held: her advice no longer sends you to his tip');
     if(branch === 'igbo') await V('h7_plan', '#screen-briefing');
     await B.plan(['caretaker', 'pattern']);
     await B.runToEnd({ gk:{ gk_caretaker:branch }, until: s => s.phase === 'warrant' });
