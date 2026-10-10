@@ -1,4 +1,5 @@
-"""NACECA playthrough test — plays every mission to its end under 3 choice policies.
+"""NOTE: targets the vendor drop's standalone v13 semantics (before the friends-beta integration); superseded by tools/harness/scenarios/v13_port_playthrough.cjs.
+NACECA playthrough test — plays every mission to its end under 3 choice policies.
 Usage:  pip install playwright && playwright install chromium
         python3 tools/playthrough.py 8800            # all missions
         python3 tools/playthrough.py 8800 m5,m6      # a subset

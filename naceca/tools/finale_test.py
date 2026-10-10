@@ -1,4 +1,5 @@
-"""NACECA finale test — plays Mission 8 down every route.
+"""NOTE: targets the vendor drop's standalone v13 semantics (before the friends-beta integration); superseded by tools/harness/scenarios/v13_port_finale.cjs.
+NACECA finale test — plays Mission 8 down every route.
 Usage: python3 tools/finale_test.py 8890 '[{"name":"A","mc":{"tower":"hold"},"reveal":0}]'
 Case keys: mc (moralChoices), flags, back (use back gate), follow (tail properly), k (call choices), reveal (choice index), epilogue."""
 import http.server, threading, socketserver, os, sys, json
