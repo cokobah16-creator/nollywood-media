@@ -20737,7 +20737,8 @@ window.addEventListener('error', e => { try{ V12.log('js_error', { msg:String(e.
 })();
 
 </script>
-<style id="v13">
+<style id="v13_shared">
+/* v13 · shared bits (buttons, chips, tier tags). Owned by the desk pass. */
 /* ======================= v13 · investigation layer (Case Desk, weekly briefing, set-pieces, court, review) ======================= */
 .mini-btn{background:rgba(216,166,74,.12);border:1px solid rgba(216,166,74,.55);color:#f0d9a6;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.1em;padding:8px 11px;cursor:pointer;min-height:36px;line-height:1.2}
 .mini-btn:disabled{opacity:.35;cursor:not-allowed}
@@ -20747,6 +20748,10 @@ window.addEventListener('error', e => { try{ V12.log('js_error', { msg:String(e.
 .tier{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.16em;padding:2px 6px;border:1px solid;white-space:nowrap}
 .t-confirmed{color:#5dd07a;border-color:rgba(93,208,122,.5)}.t-probable{color:#4aa3e8;border-color:rgba(74,163,232,.5)}
 .t-allegation{color:#e8a030;border-color:rgba(232,160,48,.5)}.t-rumour{color:#ff8a96;border-color:rgba(232,74,92,.5)}
+
+</style>
+<style id="v13_desk">
+/* v13 · Case Desk */
 /* desk */
 .desk-frame{width:min(760px,96vw)}
 .desk-tabs{margin:0 0 10px;gap:4px}
@@ -20799,6 +20804,10 @@ window.addEventListener('error', e => { try{ V12.log('js_error', { msg:String(e.
 .basis{list-style:none;margin:6px 0;font-size:12px;color:#7f8da3}.basis li.have{color:#c8f0d2}
 .w-acts{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .controls-warrant{margin:6px 0 10px;font-size:12px;color:#ffcf7a;text-align:center;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+
+</style>
+<style id="v13_brief">
+/* v13 · briefing, stakeout, undercover */
 /* briefing */
 .brf-frame{width:min(720px,96vw)}
 .brf-week{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.3em;color:#d8a64a}
@@ -20840,6 +20849,10 @@ window.addEventListener('error', e => { try{ V12.log('js_error', { msg:String(e.
 .uc-who{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.2em;color:#d8a64a;margin-top:8px}
 .uc-q{font-size:15px;color:#fff;margin:4px 0 10px;font-style:italic}.uc-txt{font-size:14px;color:#e6ecf4;margin:8px 0 10px}
 .uc-log{font-size:11.5px;color:#93a1b6;margin:0 0 4px}
+
+</style>
+<style id="v13_court">
+/* v13 · court and case review */
 /* court */
 .court-frame{width:min(680px,96vw)}
 .ct-crest{font-family:'Oswald',sans-serif;font-size:9.5px;letter-spacing:.24em;color:#d8a64a;text-align:center}

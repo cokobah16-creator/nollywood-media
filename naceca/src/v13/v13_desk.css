@@ -1,0 +1,53 @@
+/* v13 · Case Desk */
+/* desk */
+.desk-frame{width:min(760px,96vw)}
+.desk-tabs{margin:0 0 10px;gap:4px}
+.desk-tabs button{position:relative;padding:8px 9px;font-size:10.5px}
+.dk-badge{position:absolute;top:-6px;right:-6px;background:#e84a5c;color:#fff;font-style:normal;font-size:9px;min-width:15px;height:15px;line-height:15px;border-radius:8px;text-align:center;padding:0 3px}
+.desk-body{font-size:13px;color:#d9e1ec;line-height:1.45}
+.dk-intro{font-size:12.5px;color:#aab6c8;margin:0 0 10px;line-height:1.5}
+.dk-item,.mn,.claim,.reg-card,.brf-res{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);padding:10px 12px;margin:0 0 8px}
+.dk-row1{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dk-name{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.05em;color:#fff}
+.dk-meta{font-size:11.5px;color:#93a1b6;margin-top:2px}
+.dk-integ{display:flex;align-items:center;gap:8px;margin:7px 0 2px;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.14em;color:#93a1b6}
+.dk-integ .rb,.uc-meter .rb,.ct-count .rb{flex:1;height:6px;background:rgba(255,255,255,.08);position:relative}
+.dk-integ .rb i,.uc-meter .rb i,.ct-count .rb i{position:absolute;left:0;top:0;bottom:0;display:block}
+.dk-integ b{color:#fff;font-size:12px;min-width:34px;text-align:right}
+.dk-flaws{margin:4px 0 0 16px;font-size:12px;color:#ffb3bc}
+.dk-cert{margin-top:6px;font-size:12px}
+.dk-chain{margin-top:6px;font-size:11.5px;color:#aab6c8}.dk-chain summary{cursor:pointer;color:#d8a64a;font-size:11px;letter-spacing:.06em}
+.dk-known{font-size:12px;color:#c8d2e0;margin:0 0 4px}
+.dk-card{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(216,166,74,.25);padding:10px 12px;margin:0 0 8px;color:inherit;cursor:pointer;flex-direction:row}
+.dk-card>div{flex:1}.dk-card.locked{opacity:.45;cursor:default;display:block}
+.st-card img{width:44px;height:44px;object-fit:cover;border-radius:50%;border:1px solid rgba(216,166,74,.5)}
+.phone-shell{margin-top:10px;background:#0a0f19;border:2px solid #2a3550;border-radius:18px;padding:12px}
+.phone-top{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.14em;color:#fff;display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}.phone-top span{color:#7f8da3;font-size:10px;letter-spacing:.04em}
+.phone-secs{margin-bottom:8px}.phone-secs button{font-size:10px;padding:6px 8px}
+.ph-item{border-bottom:1px solid rgba(255,255,255,.06);padding:8px 0;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.ph-item.flagged{background:rgba(232,74,92,.06)}
+.ph-from{grid-column:1;font-size:10.5px;color:#d8a64a;font-family:'Oswald',sans-serif;letter-spacing:.08em}
+.ph-text{grid-column:1;font-size:13px;color:#e6ecf4}
+.ph-item .mini-btn{grid-column:2;grid-row:1/3}
+.money-head{display:flex;gap:18px;margin-bottom:6px}.money-head span{display:block;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.18em;color:#93a1b6}.money-head b{font-family:'Oswald',sans-serif;font-size:22px;color:#fff}
+.money-meter{margin:0 0 10px;height:6px}
+.mn{border-left:3px solid #4a5a78}.mn.traced{border-left-color:#d8a64a}.mn.dead{opacity:.6;border-left-color:#555}.mn.key{border-left-color:#e84a5c;background:rgba(232,74,92,.07)}
+.mn-kind{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.18em;color:#93a1b6}
+.mn-desc{font-size:12.5px;color:#c8d2e0;margin-top:4px}.mn-amt{font-family:'Oswald',sans-serif;font-size:15px;color:#ffd76a;margin-top:3px}
+.mn .mini-btn{margin-top:6px}
+.reg-search{display:flex;gap:6px;margin-bottom:10px}
+.reg-search input,.nb-compose select,#nb-free{flex:1;min-width:0;background:#0b1426;border:1px solid rgba(216,166,74,.4);color:#fff;font-size:16px;padding:8px 10px;font-family:'Inter',sans-serif;user-select:text;-webkit-user-select:text}
+#nb-free{width:100%;font-size:14px;resize:vertical}
+.reg-crest{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.2em;color:#2a8a6a;margin-bottom:4px}
+.reg-card{background:#f3ead2;color:#1a1d24;border:none}.reg-card .dk-name{color:#0b1426}
+.reg-tbl{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}.reg-tbl td{padding:4px 6px;border-bottom:1px solid rgba(0,0,0,.08);vertical-align:top}.reg-tbl td:first-child{width:92px;color:#5a4a32;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em}
+.reg-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.reg-card .mini-btn{background:#0b1426;color:#f0d9a6}.reg-card .ok{color:#1d7a40}
+.claim-text{font-size:13.5px;color:#fff;margin-bottom:7px;font-style:italic}
+.claim .seg button{font-size:10px;padding:7px 8px}
+.claim-fb{font-size:12px;margin-top:6px}
+.st-who{margin:8px 0}
+.nb-compose{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.nb-compose select{font-size:14px;flex:1 1 140px}
+.nb-entry{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}.nb-entry .dim{font-size:11px;white-space:nowrap}
+.basis{list-style:none;margin:6px 0;font-size:12px;color:#7f8da3}.basis li.have{color:#c8f0d2}
+.w-acts{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.controls-warrant{margin:6px 0 10px;font-size:12px;color:#ffcf7a;text-align:center;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}

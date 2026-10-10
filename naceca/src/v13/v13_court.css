@@ -1,0 +1,28 @@
+/* v13 · court and case review */
+/* court */
+.court-frame{width:min(680px,96vw)}
+.ct-crest{font-family:'Oswald',sans-serif;font-size:9.5px;letter-spacing:.24em;color:#d8a64a;text-align:center}
+.ct-title{font-family:'Oswald',sans-serif;font-size:22px;letter-spacing:.14em;color:#fff;text-align:center;margin:4px 0}
+.ct-pat{text-align:center;font-size:11px;letter-spacing:.2em;color:#93a1b6;margin-bottom:8px}
+.ct-ex{font-family:'Oswald',sans-serif;font-size:16px;color:#ffd76a;margin:6px 0}
+.ct-def{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.2em;color:#ff8a96;margin-top:8px}
+.ct-say{font-size:14px;color:#e6ecf4;font-style:italic;margin:4px 0 10px;line-height:1.5}
+.ct-rule{font-size:14px;line-height:1.5;padding:10px 12px;border-left:3px solid}.ct-rule.ok{border-color:#5dd07a;color:#d7f5df}.ct-rule.bad{border-color:#e84a5c;color:#ffd0d6}
+.ct-count{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px}.ct-count .rb{grid-column:1/-1;height:5px}
+.ct-count.ok b{color:#5dd07a}.ct-count.bad b{color:#ff8a96}.ct-count b{font-family:'Oswald',sans-serif;letter-spacing:.14em;font-size:12px}
+.ct-verdict{font-size:15px;color:#fff;margin:12px 0 6px;line-height:1.5}
+/* review */
+.review-frame{width:min(680px,96vw)}
+.rv-pct{text-align:center;margin:4px 0 10px}.rv-pct span{display:block;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.3em;color:#d8a64a}.rv-pct b{font-family:'Oswald',sans-serif;font-size:54px;color:#fff;line-height:1}
+.rv-parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;font-size:12px;color:#aab6c8;margin-bottom:6px}.rv-parts div{display:flex;justify-content:space-between}.rv-parts b{color:#fff}
+.rv-line{font-size:13px;color:#c8d2e0;margin:0 0 5px;line-height:1.45}.rv-line.ok{color:#c8f0d2}.rv-line.bad{color:#ffc2c9}
+@media(max-width:760px){
+  .desk-tabs button{padding:7px 7px;font-size:9.5px;letter-spacing:.04em}
+  .brf-head{font-size:20px}.ct-title{font-size:18px}
+  .so-scene{height:150px}
+}
+
+.seg button:disabled{opacity:.38;cursor:not-allowed}
+
+#screen-ops .ops-b#ops-desk{letter-spacing:.12em}
+#plan-warrant{margin-top:8px}

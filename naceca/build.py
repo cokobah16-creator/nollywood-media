@@ -88,7 +88,7 @@ V12_JS = ["v12_core.js", "v12_docs.js", "v12_ops.js", "v12_plan.js", "v12_finale
 # v13 layer (the investigation layer: Case Desk, briefings, trial) — after v12, before the beta,
 # so the beta's paper styling and casework wrap over it
 V13_DIR = os.path.join(SRC, "v13")
-V13_CSS = ["v13.css"]
+V13_CSS = ["v13_shared.css", "v13_desk.css", "v13_brief.css", "v13_court.css"]
 V13_JS = ["v13_data.js", "v13_intel.js", "v13_desk.js", "v13_briefing.js", "v13_court.js", "v13_boot.js"]
 
 # beta layer (friends-beta pass: wayfinding, chases, casework, paper UI) — after v12, so it wins

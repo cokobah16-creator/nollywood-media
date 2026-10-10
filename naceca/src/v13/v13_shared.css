@@ -1,0 +1,10 @@
+/* v13 · shared bits (buttons, chips, tier tags). Owned by the desk pass. */
+/* ======================= v13 · investigation layer (Case Desk, weekly briefing, set-pieces, court, review) ======================= */
+.mini-btn{background:rgba(216,166,74,.12);border:1px solid rgba(216,166,74,.55);color:#f0d9a6;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.1em;padding:8px 11px;cursor:pointer;min-height:36px;line-height:1.2}
+.mini-btn:disabled{opacity:.35;cursor:not-allowed}
+.mini-btn.on{background:rgba(232,74,92,.2);border-color:#e84a5c;color:#ffd0d6}
+.chip{display:inline-block;margin:0 6px 6px 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:#dfe6f0;font-size:12px;padding:6px 10px;cursor:pointer}
+.ok{color:#5dd07a}.bad{color:#ff8a96}.dim{color:#7f8da3}.warn{color:#ffcf7a}
+.tier{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.16em;padding:2px 6px;border:1px solid;white-space:nowrap}
+.t-confirmed{color:#5dd07a;border-color:rgba(93,208,122,.5)}.t-probable{color:#4aa3e8;border-color:rgba(74,163,232,.5)}
+.t-allegation{color:#e8a030;border-color:rgba(232,160,48,.5)}.t-rumour{color:#ff8a96;border-color:rgba(232,74,92,.5)}
