@@ -15,7 +15,8 @@
    - Senior Agent (default): every answer is open; reaching for something you
      don't hold costs patience. Recruit: as delivered ('not in your file').
    - the review reads filed records only (charge sheets, warrants, branches).
-   - Esc never drops the trial (v13Modal); a replayed M8 gets a fresh trial.
+   - Esc never drops the trial (v13Modal); a closed tab resumes it at the same step (I().courtRun, saved after
+     every step, like a committed briefing: A4); a replayed M8 gets a fresh trial.
    Everything here is scoped to #screen-court / #screen-review / .v13-review.
    ========================================================================= */
 
@@ -39,6 +40,9 @@ const ctVal = (v, ...a) => typeof v === 'function' ? v(...a) : v;
 const ctItems = () => (typeof INTEL_ITEMS !== 'undefined' ? INTEL_ITEMS : {});
 const ctHas = id => { try{ return typeof intelHas === 'function' ? intelHas(id) : (S.game.evidence || []).some(e => e.id === id); }catch(e){ return false; } };
 const ctTobiAlive = () => { const a = (S.game.moralChoices || {}).asaba; return a === 'rescue' || (a === 'chase' && !S.game._asabaHostageLost); };
+// the first sentence of a line, an honorific's dot ("Sgt. Uche") not ending it. No regex lookbehind: Safari before
+// 16.4 (every iPhone 6s/7 and SE 1) rejects one while parsing, and this whole file would never run there.
+const ctFirstSentence = s => String(s).replace(/\b(Sgt|Engr|Insp|Cdr|Dr|Mr|Mrs|Barr)\./g, '$1\u0001').split(/\.\s+/)[0].replace(/\u0001/g, '.');
 
 /* the warrant record the court and the review read (design §1/A5; V12.warrantState when the model has it) */
 const CT_WARRANT_LABEL = { w_lekki:'Search warrant — Lekki, Old GRA', w_asaba:'Search warrant — Asaba riverside',
@@ -168,9 +172,26 @@ function ctVerdictScore(stId, c){
   if(!v) return null;
   return typeof stExpected === 'function' ? v === stExpected(c) : null;
 }
-function ctWitnessLied(stId){
+function ctFiledVerdict(stId, c){
+  if(typeof intelVerdictOf === 'function'){ try{ const r = intelVerdictOf(stId, c.id); return r ? r.verdict : null; }catch(e){ return null; } }
+  const r = (((typeof I === 'function' ? I().st : null) || {})[stId] || {})[c.id];
+  return r == null ? null : (typeof r === 'object' ? r.verdict : r) || null;
+}
+/* what your own file says about a witness the defence can use (A8): null when every filed claim scores right.
+   The trigger is any claim scoring false; the words follow what the file actually says about that claim —
+   "lied" only where the officer filed CONTRADICTED (a claim filed CORROBORATED without its proof is not that). */
+const CT_FILE_SAYS = {
+  contradicted:"Your own officer's file says this witness lied to you.",
+  mistaken:"Your own officer's file says this witness got it wrong.",
+  corroborated:'Your own officer vouched for this witness without the proof to back it.',
+  unverified:"Your own officer's file never settles what this witness told you.",
+};
+function ctWitnessFile(stId){
   const st = (typeof STATEMENTS !== 'undefined' ? STATEMENTS : []).find(s => s.id === stId);
-  return !!(st && st.claims.some(c => ctVerdictScore(stId, c) === false));
+  if(!st) return null;
+  const said = st.claims.filter(c => ctVerdictScore(stId, c) === false).map(c => ctFiledVerdict(stId, c));
+  if(!said.length) return null;
+  return ['contradicted', 'mistaken', 'corroborated', 'unverified'].find(v => said.includes(v)) || 'corroborated';
 }
 
 function courtExhibits(){
@@ -181,7 +202,8 @@ function courtExhibits(){
     const x = { id, name, sup:Object.assign({}, sup), k, cap:1, raid:ctRaidOf(id) };
     if(k === 'contested') x.why = ctContestReason(id);
     if(wrong && picks.includes(id)){ x.cap = 0.5; x.wrongPick = true; }       // "FAILS: built against the wrong person"
-    if(CT_WITNESS_ST[id] && ctWitnessLied(CT_WITNESS_ST[id])) x.lied = true;
+    const file = CT_WITNESS_ST[id] ? ctWitnessFile(CT_WITNESS_ST[id]) : null;
+    if(file){ x.lied = true; x.fileSays = file; }                           // x.lied: a claim on your file scores false (A8)
     if((id === 'tobi' && routeWrong === 'tobi') || (id === 'musa_statement' && routeWrong === 'musa')) x.namedOnSheet = true;
     X.push(x);
   };
@@ -319,16 +341,50 @@ window.addEventListener('keydown', e=>{
 function courtResume(){ ensureCourt(); if(typeof showHUD === 'function') showHUD(false); showOverlay('screen-court'); renderCourt(); }
 function openCourt(then){
   ensureCourt();
-  const rec = ctAcc('voice'), creds = [];
-  if(rec && rec.ok && rec.ok.suspect === false) creds.push('wrong');
-  if((S.game.moralChoices || {}).arrest === 'bribe') creds.push('bribe');
-  Object.assign(COURT, { ex:courtExhibits(), i:0, patience:COURT_PATIENCE, phase:'pre', then, half:false, admitted:[], struck:[], cred:{}, creds, ci:0, n:1, note:null, patienceNoted:false, lastRuling:null });
+  const run = ctRunFor((S.game.moralChoices || {}).finale);
+  if(run) ctRestore(run, then);                     // a trial cut off by a closed tab goes on where it was left
+  else {
+    const rec = ctAcc('voice'), creds = [];
+    if(rec && rec.ok && rec.ok.suspect === false) creds.push('wrong');
+    if((S.game.moralChoices || {}).arrest === 'bribe') creds.push('bribe');
+    Object.assign(COURT, { ex:courtExhibits(), i:0, patience:COURT_PATIENCE, phase:'pre', then, half:false, admitted:[], struck:[], cred:{}, creds, ci:0, n:1, note:null, patienceNoted:false, lastRuling:null });
+  }
   if(typeof showHUD === 'function') showHUD(false);
   if(typeof musicForScene === 'function') musicForScene('investigation');
   ctClearToast();
   showOverlay('screen-court');
   ctModal('screen-court', courtResume);
   renderCourt();
+  ctPersist();
+}
+/* The trial is transactional, like a briefing (A4): every step is written to I().courtRun and saved, so a tab
+   closed mid-trial (a phone discarding it) comes back to the same step — never to a fresh trial with every answer
+   open again, and never to a lost epilogue (the resumeCampaign wrap below). RISE clears it. */
+const CT_RUN_KEYS = ['i', 'patience', 'phase', 'half', 'cred', 'creds', 'ci', 'n', 'note', 'patienceNoted', 'lastRuling'];
+function ctRunFor(o){
+  const r = I().courtRun;
+  return (r && (o === 'proven' || o === 'contested') && r.finale === o && Array.isArray(r.ex)) ? r : null;
+}
+function ctPersist(){
+  if(!COURT.then) return;                           // no trial in progress (ended, or reset for a replay)
+  const ix = x => COURT.ex.indexOf(x), run = { finale:(S.game.moralChoices || {}).finale || null, ex:COURT.ex.map(x => Object.assign({}, x)),
+    admitted:COURT.admitted.map(ix), struck:COURT.struck.map(ix) };
+  CT_RUN_KEYS.forEach(k => { run[k] = COURT[k] == null ? null : JSON.parse(JSON.stringify(COURT[k])); });
+  I().courtRun = run;
+  if(typeof saveGame === 'function') saveGame(true);
+}
+function ctRestore(run, then){
+  const ex = run.ex.map(x => Object.assign({}, x));
+  Object.assign(COURT, { ex, then, admitted:(run.admitted || []).map(i => ex[i]).filter(Boolean), struck:(run.struck || []).map(i => ex[i]).filter(Boolean) });
+  CT_RUN_KEYS.forEach(k => { COURT[k] = run[k]; });
+  COURT.cred = COURT.cred || {}; COURT.creds = COURT.creds || [];
+}
+/* a closed tab on the M8 aftermath or mid-trial left the season open (the epilogue sets seasonOneComplete) */
+function ctFinalePending(){
+  const g = S.game, o = (g.moralChoices || {}).finale;
+  if(!o || !(g.completedMissions || []).includes('m8') || typeof startEpilogue !== 'function') return false;
+  if(typeof nextPlayableMission === 'function' && nextPlayableMission()) return false;
+  return !g.seasonOneComplete || !!ctRunFor(o);   // ...or a replayed M8's trial was cut off after it opened
 }
 // a toast left over from the aftermath would sit on the court record (later ones go to the top: v13_court.css)
 function ctClearToast(){ const t = document.getElementById('toast'); if(t) t.classList.remove('show'); }
@@ -338,6 +394,9 @@ function courtHead(){
     <h2 class="ct-title" id="court-title">FRN v. CDR. ADAEZE &amp; 2 ORS</h2>
     <div class="ct-meta"><span class="v13-mono">CHARGE NO. FHC/B/41C/2026</span><span class="ct-pat" aria-label="Judge's patience ${ctPat()} of ${COURT_PATIENCE}">PATIENCE <b class="v13-mono">${ctPat()}/${COURT_PATIENCE}</b></span></div>`;
 }
+// an exhibit that gets a SIGN s.84 button at the pre-trial file
+const ctCanSign = (id, it) => { const meta = ctItems()[id];
+  return !!(meta && meta.e && it && !it.cert && typeof certWindowOpen === 'function' && certWindowOpen(id) && typeof certSlotsLeft === 'function' && certSlotsLeft(it.m) > 0); };
 const ctFoot = (act, label) => `<button class="v13-btn primary ct-go" data-ct="${act}">${ctEsc(label)}${ctIco('next')}</button>`;
 const CT_DEF = 'CHIEF ABIODUN FADEYI, SAN · FOR THE DEFENCE';
 function ctSheetSummary(){
@@ -356,7 +415,9 @@ function renderCourt(){
   head.innerHTML = courtHead();
   if(COURT.phase === 'pre'){
     const d = I();
-    const slots = typeof certSlotsLeft === 'function' ? certSlotsLeft('m8') : 0;
+    // the promise follows the SIGN buttons below: Ekosodin exhibits that can still be signed, up to the slots left
+    const signable = COURT.ex.filter(x => { const it = (d.items || {})[x.id]; return it && it.m === 'm8' && ctCanSign(x.id, it); }).length;
+    const slots = signable && typeof certSlotsLeft === 'function' ? Math.min(signable, certSlotsLeft('m8')) : 0;
     body.innerHTML = `<div class="ct-sec-h">PRE-TRIAL · THE PROOF OF EVIDENCE</div>
       <p class="ct-lead">NACECA Legal files tomorrow. <span class="v13-mono">${COURT.ex.length}</span> exhibit${COURT.ex.length===1?'':'s'} to tender.${slots > 0 ? ` Digital Forensics can still certify the Ekosodin material — <span class="v13-mono">${slots}</span> item${slots===1?'':'s'}.` : ''}</p>` +
       ctSheetSummary() +
@@ -365,7 +426,7 @@ function renderCourt(){
         let cert = '';
         if(meta && meta.e){
           if(it && it.cert) cert = `<span class="v13-mark-ok">${ctIco('check')}S.84 CERTIFICATE ON FILE</span>`;
-          else if(it && typeof certWindowOpen === 'function' && certWindowOpen(x.id) && typeof certSlotsLeft === 'function' && certSlotsLeft(it.m) > 0) cert = `<button class="v13-btn" data-ct="cert" data-id="${ctEsc(x.id)}">${ctIco('stamp')}SIGN s.84 · <span class="v13-mono">${certSlotsLeft(it.m)}</span> LEFT</button>`;
+          else if(it && ctCanSign(x.id, it)) cert = `<button class="v13-btn" data-ct="cert" data-id="${ctEsc(x.id)}">${ctIco('stamp')}SIGN s.84 · <span class="v13-mono">${certSlotsLeft(it.m)}</span> LEFT</button>`;
           else cert = `<span class="v13-mark-bad">${ctIco('cross')}NO S.84 CERTIFICATE</span>`;
         }
         const weak = [courtWeak(x), x.wrongPick ? 'Filed against the wrong person on your charge sheet' : null].filter(Boolean);
@@ -381,7 +442,7 @@ function renderCourt(){
     const nm = rec ? ctOptName('voice', 'suspect', rec.suspect) : 'someone else';
     const held = rec && C && C.held ? ctVal(C.held[rec.suspect]) : '';
     // the beta's own line for that arrest ("On your word, Sgt. Uche was arrested at HQ…"), in the defence's mouth
-    let arrest = held && /^On your word, /.test(held) ? held.split(/(?<!\b(?:Sgt|Engr|Insp|Cdr|Dr|Mr|Mrs|Barr))\.\s+/)[0].replace(/\.?$/, '.').replace(/^On your word, /, "on this officer's word, ") : `on this officer's word, ${nm} was arrested.`;
+    let arrest = held && /^On your word, /.test(held) ? ctFirstSentence(held).replace(/\.?$/, '.').replace(/^On your word, /, "on this officer's word, ") : `on this officer's word, ${nm} was arrested.`;
     if(!/as the Voice/.test(arrest)) arrest = arrest.replace(/\.$/, '') + ', as the Voice.';
     const say = kind === 'wrong'
       ? `Before the prosecution begins, My Lord: ${arrest} Now the same officer says it was the defendant. Which night was he right?`
@@ -398,11 +459,11 @@ function renderCourt(){
   if(COURT.phase === 'ex'){
     const x = COURT.ex[COURT.i];
     if(!x){ COURT.phase = 'judgment'; renderCourt(); return; }
-    // a witness your own file has down as lying: the defence starts there (A8), once
+    // a witness your own file got wrong: the defence starts there, with what the file says (A8), once
     let first = '';
     if(x.lied){
       if(!x.liedDone){ x.liedDone = true; COURT.patience = Math.max(0, COURT.patience - 1); head.innerHTML = courtHead(); }
-      first = `<blockquote class="ct-say">"Your own officer's file says this witness lied to you."</blockquote><p class="ct-aside v13-dim">The judge makes a note.</p>`;
+      first = `<blockquote class="ct-say">"${ctEsc(CT_FILE_SAYS[x.fileSays] || CT_FILE_SAYS.contradicted)}"</blockquote><p class="ct-aside v13-dim">The judge makes a note.</p>`;
     }
     const o = courtObjection(x), rec = ctRecruit();
     const note = COURT.note ? `<p class="ct-note ${COURT.note.bad ? 'v13-warn' : ''}">${ctEsc(COURT.note.t)}</p>` : '';
@@ -440,7 +501,8 @@ function renderCourt(){
     foot.innerHTML = ctFoot('end', 'RISE');
   }
 }
-function courtAct(a, ds){
+function courtAct(a, ds){ courtStep(a, ds); if(a !== 'end') ctPersist(); }
+function courtStep(a, ds){
   if(a === 'cert'){ if(typeof certify === 'function') certify(ds.id); renderCourt(); return; }
   if(a === 'ctc'){ const d = I(); d.reg = d.reg || { found:{}, ctc:{} }; d.reg.ctc = d.reg.ctc || {}; d.reg.ctc.ca = true; renderCourt(); return; }
   if(a === 'begin'){ COURT.phase = COURT.creds.length ? 'cred' : 'ex'; renderCourt(); return; }
@@ -480,6 +542,7 @@ function courtAct(a, ds){
   if(a === 'end'){
     const cb = COURT.then; COURT.then = null;
     if(!I().court) courtJudgment();
+    delete I().courtRun;                                                       // the court has risen: nothing to resume
     if(COURT.struck.length === 0 && COURT.admitted.length > 0 && typeof unlock === 'function') unlock('clean_chain');
     ctModalEnd('screen-court');
     if(typeof saveGame === 'function') saveGame(true);
@@ -504,7 +567,10 @@ function courtVerdictText(n){
   return 'The defence makes a no-case submission. It succeeds. She is discharged — and dismissed from service the same week.';
 }
 /* the court has sat for this finale (a replayed M8 clears it, below) */
-function courtDoneFor(outcome){ const c = I().court; return !!c && (!c.finale || c.finale === outcome); }
+function courtDoneFor(outcome){
+  if(ctRunFor(outcome)) return false;               // still sitting: a trial cut off before RISE (its judgment may be written)
+  const c = I().court; return !!c && (!c.finale || c.finale === outcome);
+}
 /* the epilogue line for Adaeze, once a court has spoken on THIS finale */
 function courtEpilogueText(){
   const c = I().court, fin = (S.game.moralChoices || {}).finale;
@@ -519,11 +585,25 @@ function courtEpilogueText(){
 function courtResetForReplay(){
   const d = I();
   if(d.court){ d.courtLog = (d.courtLog || []).concat([d.court]).slice(-5); d.court = null; }
+  delete d.courtRun;
   d.reviewShown = false;
   if(COURT.then){ COURT.then = null; ctModalEnd('screen-court'); }
 }
 if(window.V12 && typeof V12.wrap === 'function'){
   V12.wrap('finResetFlags', orig => function(){ const r = orig.apply(this, arguments); try{ courtResetForReplay(); }catch(e){ console.warn('[v13] court reset', e); } return r; });
+  // Continue (and the pause menu's Load) after a tab closed on the M8 aftermath or mid-trial: back to the trial,
+  // where it was left, then the epilogue that closes the season — not "CAMPAIGN UP TO DATE" with both lost
+  V12.wrap('resumeCampaign', orig => function(){
+    try{
+      if(ctFinalePending()){
+        S.game.currentMission = 'm8';
+        if(typeof ENGINE !== 'undefined' && ENGINE) ENGINE.movementEnabled = false;
+        if(typeof stopAmbient === 'function') try{ stopAmbient(); }catch(e){}   // as the finale left it: no title ambience under the court
+        showOverlay(null); startEpilogue(); return;
+      }
+    }catch(e){ console.warn('[v13] resume the finale', e); }
+    return orig.apply(this, arguments);
+  });
   // the m8 aftermath: the trial comes before the epilogue
   V12.wrap('nextMissionPreview', orig => function(){
     let h = orig.apply(this, arguments);
@@ -589,6 +669,13 @@ function rvWarrantLine(id){
   if(s === 'none') return [`${lbl}: never put to a magistrate — no charge sheet was filed.`, null];
   return [`${lbl}: never put to a magistrate.`, null];
 }
+/* a wrongly named Voice, the beta's way (casework.js held lines; SYNC-2026-10-08-beta "Obi is still arrested at
+   Lekki"): the officers and the engineer were arrested in front of their own people; Obi has been in custody since
+   Lekki and was charged again from his cell; Ifeanyi was charged as the Voice. Neither was "arrested in public". */
+const CT_VOICE_WRONG = {
+  obi:'"Chief" Obi, in custody since Lekki, was charged as the Voice on your word.',
+  ifeanyi:'Ifeanyi was charged as the Voice on your word.',
+};
 function renderReviewHTML(inDesk){
   if(!S.game.seasonOneComplete && inDesk) return '<div class="v13-review v13-sheet"><p class="rv-line"><span class="rv-m"></span><span>The case review opens when the season is closed.</span></p></div>';
   const { d, mc, fl, parts, pct, relClues } = reviewData();
@@ -621,7 +708,7 @@ function renderReviewHTML(inDesk){
   if(wrongOn(route, 'tobi')) prot.push([alive ? 'Then your route charge sheet named Tobi the principal. He was held until noon.' : 'Your route charge sheet named Tobi the principal. His family read it in the papers.', false]);
   if(wrongOn(route, 'musa')) prot.push(['Musa was charged as "the route\'s principal" on your charge sheet.', false]);
   if(wrongOn(route, 'agent')) prot.push(['A SIM agent was taken from a stall at Asaba Main Market on your charge sheet.', false]);
-  if(voice && voice.ok && voice.ok.suspect === false) prot.push([`${nm(voice.suspect)} was arrested in public as the Voice, on your word.`, false]);
+  if(voice && voice.ok && voice.ok.suspect === false) prot.push([CT_VOICE_WRONG[voice.suspect] || `${nm(voice.suspect)} was arrested in public as the Voice, on your word.`, false]);
   prot.push(mc.shrine === 'negotiate' ? ["Pa Eze's shrine was entered with his blessing.", true] : mc.shrine === 'force' ? ['The shrine was entered by force.', false] : ['You left the shrine alone.', true]);
   prot.push(fl.child_gentle ? ['The girl from Lekki was carried out gently.', true] : ['The girl from Lekki was frightened by the raid.', false]);
   prot.push(fl.fin_osas === 'hurt' ? ['Osas came home with a broken wrist.', false] : ['Osas walked out on his own feet.', true]);
