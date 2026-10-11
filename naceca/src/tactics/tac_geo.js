@@ -227,10 +227,12 @@ function checkDrift(){
   const key = tableKey(); if(!key) return;
   const e = eng();
   const log = d => { drift.logged = true; try{ if(V() && V12.log) V12.log('geo_drift', d); }catch(err){ TAC._err(err); } };
-  if(key === 'mansion_legacy'){ log({ scene:'m3', reason:'legacy', unknown:[], matched:0, total:((e && e.obstacles) || []).length }); return; }
+  if(key === 'mansion_legacy'){ log({ scene:mission() || 'm3', reason:'legacy', unknown:[], matched:0, total:((e && e.obstacles) || []).length }); return; }
   const s = fresh().stats;
   const tableN = key === 'mansion' ? MANSION.length : 0;
-  if(s.unknown > 0 || (key === 'mansion' && s.matched < tableN)) log({ scene:key, reason:'table', unknown:s.unknownAt.slice(0, 20), matched:s.matched, total:s.total });
+  // scene is always the mission id (as for the legacy house), so drift groups by mission; the table that was
+  // tried follows from it (m3: the art mansion; m2: the dressed market when total is 61, else the legacy one)
+  if(s.unknown > 0 || (key === 'mansion' && s.matched < tableN)) log({ scene:mission() || null, reason:'table', unknown:s.unknownAt.slice(0, 20), matched:s.matched, total:s.total });
 }
 TAC.onTick(() => { try{ checkDrift(); }catch(e){ TAC._err(e); } }, { order:-50 });
 

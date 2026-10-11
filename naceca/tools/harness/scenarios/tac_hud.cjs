@@ -27,8 +27,17 @@ window.__avoid = () => {
   WAY.hudRects(true).forEach(q => { if (['#radio-sub', '#hint-chip.show', '#joystick', '#hud-sprint', '.hud-topright'].includes(q.sel)) out.push({ sel:q.sel, l:q.l, t:q.t, r:q.r, b:q.b }); });
   add('#hud-mission', document.getElementById('hud-mission'));
   add('.minimap', document.querySelector('.minimap'));
+  add('.tac-mark', document.querySelector('.tac-mark'));
+  add('#world-label', document.getElementById('world-label'));
   return out;
 };
+// where the eye lives when nothing is in the way: the top centre, or (a phone held upright) under the minimap
+window.__home = () => { const e = __rect(document.getElementById('eye-ind'));
+  if (innerHeight > innerWidth) { const m = __rect(document.querySelector('.hud-topright')); return { x:Math.max(16, Math.min(innerWidth - 16 - e.w, m.r - e.w)), y:m.b + 8 }; }
+  return { x:innerWidth / 2 - e.w / 2, y:16 }; };
+window.__homeFree = () => { const e = __rect(document.getElementById('eye-ind')), hm = __home(), b = { l:hm.x, t:hm.y, r:hm.x + e.w, b:hm.y + e.h };
+  return !__avoid().some(q => b.l < q.r + 4 && b.r > q.l - 4 && b.t < q.b + 4 && b.b > q.t - 4); };
+window.__atHome = () => { const e = __rect(document.getElementById('eye-ind')), hm = __home(); return Math.abs(e.l - hm.x) <= 1.5 && Math.abs(e.t - hm.y) <= 1.5; };
 window.__overlaps = () => { const e = __rect(document.getElementById('eye-ind')); return __avoid().filter(q => e.l < q.r && e.r > q.l && e.t < q.b && e.b > q.t).map(q => q.sel); };
 window.__inGutter = () => { const e = __rect(document.getElementById('eye-ind')); return e.l >= 16 - 0.5 && e.t >= 16 - 0.5 && e.r <= innerWidth - 16 + 0.5 && e.b <= innerHeight - 16 + 0.5; };
 `;
@@ -80,7 +89,7 @@ module.exports = async h => {
       overlaps:__overlaps(), gutter:__inGutter(), eye:__rect(el), avoid:__avoid().map(q => [q.sel, Math.round(q.l), Math.round(q.t), Math.round(q.r), Math.round(q.b)]),
       mark:!!mk, markSvg:!!(mk && __isIcon(mk.querySelector('.tac-mark-ico svg'), 'eye')), markText:mk ? mk.textContent.trim() : null, bar:mk ? __rect(mk.querySelector('.tac-mark-bar')) : null,
       markShown:mk ? getComputedStyle(mk).display : null, fill:mk ? mk.querySelector('.tac-mark-bar i').style.width : null,
-      hintTac:!!(S.game._hints && S.game._hints.tac_sight), shownTac:TAC.hintsShown.slice(),
+      hintTac:!!(S.game._hints && (S.game._hints.tac_sight || S.game._hints.tac_sight_m2)), shownTac:TAC.hintsShown.slice(),
       pills:pills ? getComputedStyle(pills).visibility : null };
   });
   h.log('noticed (Senior)', JSON.stringify(s1));
@@ -90,7 +99,7 @@ module.exports = async h => {
   h.assert(s1.gutter, 'the eye sits inside a 16 px gutter: ' + JSON.stringify(s1.eye));
   h.assert(s1.mark && s1.markSvg && s1.markText === '' && s1.markShown !== 'none', 'the head marker is an svg.ico (no text glyph)');
   h.assert(s1.bar && Math.round(s1.bar.w) === 44 && Math.round(s1.bar.h) === 6 && parseFloat(s1.fill) > 30, 'the head marker bar is 44 × 6 px and fills with suspicion');
-  h.assert(!s1.hintTac && !s1.shownTac.includes('tac_sight'), 'Senior Agent: no tac_sight chip');
+  h.assert(!s1.hintTac && !s1.shownTac.some(k => /^tac_sight/.test(k)), 'Senior Agent: no tac_sight chip');
   if (!env.touch) {
     h.log('pills', pills0, '→', s1.pills);
     h.assert(/^visible/.test(pills0) && s1.pills === 'hidden', 'desktop: the menu pills hide only while the eye shows');
@@ -104,6 +113,28 @@ module.exports = async h => {
   const s2 = await h.ev(() => ({ overlaps:__overlaps(), gutter:__inGutter(), eye:__rect(document.getElementById('eye-ind')), radio:__rect(document.getElementById('radio-sub')) }));
   h.log('radio arrives', JSON.stringify(s2));
   h.assert(!s2.overlaps.length && s2.gutter, 'a radio line arriving later: the eye is re-placed clear of it');
+
+  // a hint chip on top of the radio strip: still clear of both, and (a phone held upright) still in the top band
+  await h.ev(() => showHint('tac_test_probe2', 'A hint chip that is already up', 'A hint chip that is already up', 9000));
+  await h.step(650); await h.ev(() => __wf.run(0.2));
+  const s3 = await h.ev(() => ({ overlaps:__overlaps(), gutter:__inGutter(), eye:__rect(document.getElementById('eye-ind')), chip:__rect(document.getElementById('hint-chip')), radio:__rect(document.getElementById('radio-sub')) }));
+  h.log('radio + hint chip', JSON.stringify(s3));
+  h.assert(!s3.overlaps.length && s3.gutter, 'the radio strip and a hint chip both up: the eye overlaps neither');
+  if (env.H > env.W) h.assert(s3.eye.b <= env.H * 0.38, 'portrait: with the radio strip and a hint chip up the eye stays in the top band (bottom ' + Math.round(s3.eye.b) + ' ≤ ' + Math.round(env.H * 0.38) + ')');
+  // the head marker lands on the eye: the eye moves off it
+  await h.ev(() => { const e = __rect(document.getElementById('eye-ind')); window.__pin0 = Object.assign({}, __pin); __pin.x = Math.round((e.l + e.r) / 2); __pin.y = Math.round(e.b); updateMarkers(); });
+  await h.step(650); await h.ev(() => { __wf.run(0.2); updateMarkers(); });
+  const s3m = await h.ev(() => { const r = { overlaps:__overlaps(), mark:__rect(document.querySelector('.tac-mark[data-who="kc"]')), eye:__rect(document.getElementById('eye-ind')) }; Object.assign(__pin, __pin0); updateMarkers(); return r; });
+  h.log('marker on the eye', JSON.stringify(s3m));
+  h.assert(!s3m.overlaps.length, 'the head marker landing on the eye: the eye moves clear of it');
+  // everything goes: the eye goes home (it never stays stranded mid-screen)
+  await h.ev(() => { clearHint(); clearRadio(); });
+  await h.step(650); await h.ev(() => __wf.run(0.2)); await h.step(650); await h.ev(() => __wf.run(0.2));
+  const s4 = await h.ev(() => ({ eye:__rect(document.getElementById('eye-ind')), home:__home(), at:__atHome(), free:__homeFree(), overlaps:__overlaps() }));
+  h.log('all clear', JSON.stringify(s4));
+  h.assert((s4.at || !s4.free) && !s4.overlaps.length, 'once the radio strip and the chip are gone the eye returns home (' + (env.H > env.W ? 'under the minimap' : 'top centre') + ') unless a fixed HUD piece holds it: ' + JSON.stringify(s4.eye) + ' vs ' + JSON.stringify(s4.home));
+  if (env.H > env.W) h.assert(s4.at, 'portrait: home under the minimap is free, and the eye is back there');
+  else h.assert(s4.eye.t <= 16.5, 'desktop / landscape: the eye is back on the top edge');
 
   // paper: the eye, the why-line, the marker and (desktop) the chip
   const paper = await h.ev(() => {
@@ -164,23 +195,31 @@ module.exports = async h => {
   h.log('yield', JSON.stringify(yl));
   h.assert(!yl.inCar.show && !yl.inCar.tacEye && yl.after, 'in the car the eye yields; out of it TAC drives it again');
 
-  // Recruit: the tac_sight chip, once per save, worded for the device
+  // Recruit: the sight chip, once per save, worded for the encounter and the device. M2 (KC's cone has no crouch
+  // cover) gets tac_sight_m2 without the crouch advice; the crouch chip tac_sight waits for an encounter where it works
   const rc = await h.ev(() => {
-    clearHint(); __w.reset(0); const P = ENGINE.player.position; P.x = 30; P.z = 30; __wf.run(0.5);
+    const chipText = () => { const c = document.querySelector('#hint-chip.show .hc-text'); return c ? c.textContent : null; };
+    const notice = () => { clearHint(); __w.reset(0); const P = ENGINE.player.position; P.x = 30; P.z = 30; __wf.run(0.5); P.x = 2.5; P.z = 4; __wf.run(6, () => __w.state.level === 'notice'); };
     S.game.difficulty = 'recruit';
-    P.x = 2.5; P.z = 4; __wf.run(6, () => __w.state.level === 'notice');
-    const chip = document.querySelector('#hint-chip.show .hc-text'); const t1 = chip ? chip.textContent : null;
-    const whyNow = document.querySelector('#eye-ind .eye-why').textContent;
-    const n1 = TAC.hintsShown.filter(k => k === 'tac_sight').length;
-    clearHint(); __w.reset(0); P.x = 30; P.z = 30; __wf.run(0.5); P.x = 2.5; P.z = 4; __wf.run(6, () => __w.state.level === 'notice');
+    notice();
+    const t1 = chipText(), whyNow = document.querySelector('#eye-ind .eye-why').textContent;
+    const n1 = TAC.hintsShown.filter(k => k === 'tac_sight_m2').length, crouch1 = TAC.hintsShown.includes('tac_sight');
+    notice();
     const again = !!document.querySelector('#hint-chip.show');
+    // a later encounter that is not the market (TAC.mission() is read when the chip fires)
+    const m0 = TAC.mission; TAC.mission = () => 'm5';
+    let t2, n2, again2;
+    try { notice(); t2 = chipText(); n2 = TAC.hintsShown.filter(k => k === 'tac_sight').length; notice(); again2 = !!document.querySelector('#hint-chip.show'); }
+    finally { TAC.mission = m0; }
     S.game.difficulty = 'senior';
-    return { t1, n1, again, whyNow, saved:!!(S.game._hints && S.game._hints.tac_sight) };
+    return { t1, n1, crouch1, again, whyNow, saved:!!(S.game._hints && S.game._hints.tac_sight_m2), t2, n2, again2, saved2:!!(S.game._hints && S.game._hints.tac_sight) };
   });
   h.log('Recruit', JSON.stringify(rc));
-  h.assert(rc.n1 === 1 && rc.saved && !rc.again, 'Recruit: the tac_sight chip shows once per save');
+  h.assert(rc.n1 === 1 && rc.saved && !rc.again && !rc.crouch1, 'Recruit, M2: the tac_sight_m2 chip shows once per save (and not the crouch chip)');
+  h.assert(rc.t1 === 'Come at him from the side or from behind, or keep a trader between you.' && !/crouch/i.test(rc.t1), 'Recruit, M2: the chip leads with what works on KC and gives no crouch advice: ' + rc.t1);
   h.assert(/^He can see you/.test(rc.whyNow), 'after reset(0) a new notice reads in the present tense (the alarm line is released): ' + rc.whyNow);
-  h.assert(env.touch ? /^Tap CROUCH behind something lower than you/.test(rc.t1) : /^Crouch behind something lower than you, keep people around you, or come at him from behind\.$/.test(rc.t1), 'the chip is worded for the device: ' + rc.t1);
+  h.assert(rc.n2 === 1 && rc.saved2 && !rc.again2, 'Recruit, a later encounter: the crouch chip tac_sight shows once per save');
+  h.assert(env.touch ? /^Tap CROUCH behind something lower than you/.test(rc.t2) : /^Crouch behind something lower than you, keep people around you, or come at him from behind\.$/.test(rc.t2), 'the crouch chip is worded for the device: ' + rc.t2);
   await h.shot('tac_hud_' + env.W + 'x' + env.H);
   await h.ev(() => { WAY._testProject = null; __w.unwatch(); });
   h.assert(!h.errors.length, 'no page errors');

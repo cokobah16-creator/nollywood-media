@@ -130,6 +130,22 @@ function whyLine(w, s, past){
   }
   return '';
 }
+// The line names the cause from the last second (foundations §3.7). Once nothing has gained for WHY_HOLD seconds the
+// present tense would be wrong ("He can see you … standing" while you crouch behind the stall), so the line says why
+// it is draining instead. It explains what happened; it never says what to do next (Senior Agent sees it too).
+const WHY_HOLD = 1.0;
+// why the suspicion is falling: also evaded.how and its mix (§4)
+const drainOf = s => s.crowd ? 'crowd' : (s.inRange && s.inCone && s.los !== 'clear') ? 'cover' : !s.inRange ? (s.lit === 'dark' ? 'dark' : 'distance') : 'cone';
+function lostLine(w, s, last){
+  const He = w.cfg.he || 'He', his = /^she$/i.test(He) ? 'her' : 'his';
+  const how = drainOf(s), lost = He + ' lost ' + (last === 'sight' ? 'sight' : 'track') + ' of you';
+  if(how === 'cover') return `${He} lost sight of you — ${s.crouch ? 'crouched ' : ''}behind ${s.cover || 'cover'}`;
+  if(how === 'crowd') return `${He} lost sight of you in the crowd`;
+  if(how === 'dark') return `${He} lost sight of you in the dark`;
+  if(how === 'distance') return `${lost} — too far away`;
+  if(s.seen) return `${He} looked away`;                                   // in plain view, but his attention is elsewhere
+  return last === 'sight' ? `${lost} — out of ${his} view` : `${lost} — you went quiet`;
+}
 
 /* ---------- telemetry ---------- */
 const extraOf = w => { try{ return w.cfg.logExtra ? (w.cfg.logExtra() || {}) : {}; }catch(e){ TAC._err(e); return {}; } };
@@ -172,11 +188,17 @@ function levelFrom(w, v, prev){
 function changed(w, lv, prev){
   const c = w.cfg;
   if(c.onLevel) try{ c.onLevel(lv, w.state); }catch(e){ TAC._err(e); }
-  if(lv === 'notice' && prev === 'calm' && c.hud !== false){
-    TAC.hint('sight', 'Crouch behind something lower than you, keep people around you, or come at him from behind.',
-      'Tap CROUCH behind something lower than you, keep people around you, or come at him from behind.');
-  }
+  if(lv === 'notice' && prev === 'calm' && c.hud !== false) sightTip();
 }
+// The Recruit chip (TAC.hint: Recruit only, once per save per id) leads with what works in the encounter it fires in.
+// KC's cone at the market has no crouch cover (tac_geo_market's survey: every cell visible; DESIGN §1), so M2 gets its
+// own chip without the crouch advice, and the crouch chip stays for the first encounter where crouching can hide you.
+const SIGHT_TIPS = {
+  m2:['sight_m2', 'Come at him from the side or from behind, or keep a trader between you.', 'Come at him from the side or from behind, or keep a trader between you.'],
+};
+const SIGHT_TIP = ['sight', 'Crouch behind something lower than you, keep people around you, or come at him from behind.',
+  'Tap CROUCH behind something lower than you, keep people around you, or come at him from behind.'];
+function sightTip(){ const t = SIGHT_TIPS[TAC.mission()] || SIGHT_TIP; return TAC.hint(t[0], t[1], t[2]); }
 
 /* ---------- one watcher, one 10 Hz step ---------- */
 function step(w, dt){
@@ -204,7 +226,16 @@ function step(w, dt){
     if(w._alarmT >= (c.alarmHold == null ? K.alarmHold : c.alarmHold)) st.susp = Math.min(st.susp, w.levels.alarm - 1);
   }
   st.peak = Math.max(st.peak, st.susp);
-  if(s.cause && clock >= w._frozenUntil) st.why = whyLine(w, s, false);
+  w._s = s;
+  // the why-line: present tense while a cause is active (and for WHY_HOLD s after); then why it drains. An owner's
+  // line (reset {why}) and the frozen alarm line are past tense already, so they stay until a new cause replaces them.
+  if(s.cause){
+    w._causeAt = clock; w._lastCause = s.cause;
+    if(clock >= w._frozenUntil){ st.why = whyLine(w, s, false); w._whyMode = 'live'; }
+  } else if(w._whyMode && clock >= w._frozenUntil){
+    if(st.susp <= 0){ st.why = ''; w._whyMode = null; }
+    else if(clock - w._causeAt >= WHY_HOLD - 1e-6){ st.why = lostLine(w, s, w._lastCause); w._whyMode = 'lost'; }
+  }
   const lv = levelFrom(w, st.susp, prev);
   if(lv !== prev){
     st.level = lv;
@@ -221,14 +252,14 @@ function step(w, dt){
     if(lv === 'alarm'){
       if(!w._ep) startEpisode(w, false);
       w._ep.alarm = true; w._alarmT = 0;
-      st.why = st.whyPast = whyLine(w, s, true) || st.why; w._frozenUntil = clock + 8;
+      st.why = st.whyPast = whyLine(w, s, true) || st.why; w._frozenUntil = clock + 8; w._whyMode = null;
       logSeen(w, 'alarm', st, null, st.whyPast);
     }
     changed(w, lv, prev);
   }
   // the drain: why the suspicion is falling (for evaded.how and mix)
   if(w._ep && s.gain === 0 && st.level !== 'alarm'){
-    const why = s.crowd ? 'crowd' : (s.inRange && s.inCone && s.los !== 'clear') ? 'cover' : !s.inRange ? (s.lit === 'dark' ? 'dark' : 'distance') : 'cone';
+    const why = drainOf(s);
     w._ep.mix[why] = (w._ep.mix[why] || 0) + dt; w._ep.drain += dt; if(crouch) w._ep.crouch += dt;
   }
   if(w._ep && st.level === 'calm' && st.susp < K.evadeBelow) endEpisode(w);
@@ -270,13 +301,14 @@ function hud(){
   placeEye();
 }
 // The eye goes where nothing else is: measured each half second against the radio strip, the mission panel,
-// the minimap, the hint chip and the thumb controls, inside a 16 px gutter. It stays put while its spot is clear,
-// and moves to the clear spot nearest the top centre when something lands on it (on a phone held either way the
-// top edge is crowded: the base position overlaps the mission panel in portrait and the radio in landscape).
+// the minimap, the hint chip, the thumb controls, the head marker and the world label, inside a 16 px gutter.
+// It has a home: the top centre on a desktop or a phone on its side, and the band under the minimap on a phone
+// held upright (there the top edge is the mission panel's). When something lands on it, it moves to the clear
+// spot nearest home; when home (or a spot clearly nearer it) is free again, it goes back.
 const AVOID = ['#radio-sub.show', '#hud-mission', '.hud-topright', '.minimap-label', '#hud-pausebtn', '#hint-chip.show', '#joystick', '#hud-sprint',
-  '#hud-ctx', '#hud-casebar', '#hud-meters', '.hud-bottomright', '#tac-chips', '.hud-topleft-controls'];
+  '#hud-ctx', '#hud-casebar', '#hud-meters', '.hud-bottomright', '#tac-chips', '.hud-topleft-controls', '.tac-mark', '#world-label'];
 const ov = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
-const G = 16;
+const G = 16, BACK = 24;                    // px of cost a spot must save before the eye moves from a clear one
 function avoidRects(){
   const rects = [];
   for(const sel of AVOID) document.querySelectorAll(sel).forEach(n => {
@@ -287,6 +319,15 @@ function avoidRects(){
   });
   return rects;
 }
+function homeOf(W0, H0, Wv, Hv){
+  if(Hv > Wv){
+    const mm = document.querySelector('.hud-topright');
+    const r = mm && mm.getBoundingClientRect();
+    if(r && r.width > 2 && r.height > 2 && getComputedStyle(mm).display !== 'none')
+      return { x:Math.max(G, Math.min(Wv - G - W0, r.right - W0)), y:r.bottom + 8, wx:0.5 };
+  }
+  return { x:Wv / 2 - W0 / 2, y:G, wx:1 };
+}
 function placeEye(force){
   const el = eyeEl(); if(!el || !EYE.on) return;
   const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -296,15 +337,23 @@ function placeEye(force){
   if(!el.classList.contains('tac-placed')){ el.classList.add('tac-placed'); el.style.transform = 'none'; }
   const W0 = Math.max(1, el.offsetWidth), H0 = Math.max(1, el.offsetHeight);
   const ok = (x, y) => { if(x < G || y < G || x + W0 > Wv - G || y + H0 > Hv - G) return false; const b = { l:x, t:y, r:x + W0, b:y + H0 }; return !rects.some(q => ov(b, q)); };
+  const home = homeOf(W0, H0, Wv, Hv), costOf = (x, y) => home.wx * Math.abs(x - home.x) + 1.5 * Math.abs(y - home.y);
   const cx = parseFloat(el.style.left), cy = parseFloat(el.style.top);
-  if(isFinite(cx) && isFinite(cy) && ok(cx, cy)) return;              // still clear: stay
-  let best = null, bc = Infinity;
-  for(let y = G; y + H0 <= Hv * 0.6; y += 6) for(let x = G; x + W0 <= Wv - G; x += 6){
-    const cost = Math.abs(x + W0 / 2 - Wv / 2) + 1.5 * (y - G);
+  const cur = (isFinite(cx) && isFinite(cy) && ok(cx, cy)) ? costOf(cx, cy) : Infinity;
+  if(cur < 1) return;                                                // at home
+  let best = null, bc = cur === Infinity ? Infinity : cur - BACK;
+  // candidates: a 6 px grid, home, and every spot flush against an edge of something to avoid (so a gap just
+  // tall enough, between the radio strip and a hint chip, is found)
+  const xs = [Math.round(home.x)], ys = [Math.round(home.y)];
+  for(let y = G; y + H0 <= Hv * 0.6; y += 6) ys.push(y);
+  for(let x = G; x + W0 <= Wv - G; x += 6) xs.push(x);
+  for(const q of rects){ xs.push(Math.ceil(q.r), Math.floor(q.l - W0)); ys.push(Math.ceil(q.b), Math.floor(q.t - H0)); }
+  for(const y of ys){ if(y + H0 > Hv * 0.6) continue; for(const x of xs){
+    const cost = costOf(x, y);
     if(cost >= bc || !ok(x, y)) continue;
     bc = cost; best = [x, y];
-  }
-  if(!best) best = [Math.round(Wv / 2 - W0 / 2), G];
+  } }
+  if(!best){ if(cur < Infinity) return; best = [Math.round(Wv / 2 - W0 / 2), G]; }
   el.style.left = Math.round(best[0]) + 'px'; el.style.top = Math.round(best[1]) + 'px';
 }
 addEventListener('resize', () => { try{ EYE.placeT = -1e9; placeEye(true); }catch(e){} });
@@ -380,7 +429,7 @@ function watch(cfg){
   if(c.range.dark == null) c.range.dark = c.range.lit / 2;
   const w = { cfg:c, baseYaw:c.mesh && c.mesh.rotation ? +c.mesh.rotation.y || 0 : 0,
     levels:Object.assign({}, K.levels, c.levels || {}), _lastSeen:{}, _acc:{ sight:0, noise:0, close:0 }, _unseenT:99, _graceT:0,
-    _alarmT:0, _glanceTo:0, _glanceHold:0, _frozenUntil:-1, _firstGain:null, _ep:null,
+    _alarmT:0, _glanceTo:0, _glanceHold:0, _frozenUntil:-1, _firstGain:null, _ep:null, _s:null, _causeAt:-1e9, _lastCause:null, _whyMode:null,
     state:{ id:c.id, active:false, susp:0, level:'calm', peak:0, seen:false, heard:false, dist:null, angle:null, inCone:false, inRange:false,
       los:'none', cover:null, crouch:false, gait:'still', speed:0, lit:'lit', crowd:false, cause:null, why:'', whyPast:'', place:null,
       parts:{ sight:0, noise:0, close:0, rush:0 }, glance:0 } };
@@ -391,14 +440,16 @@ function watch(cfg){
     reset(v, o){
       o = o || {}; const st = w.state, prev = st.level;
       st.susp = clamp(+v || 0, 0, 100); st.peak = Math.max(st.peak, st.susp); w._alarmT = 0;
-      if(o.why){ st.why = o.why; if(st.susp >= w.levels.alarm) st.whyPast = o.why; w._frozenUntil = clock + 3; } else w._frozenUntil = -1;   // the owner acted: the line follows what happens next
+      if(o.why){ st.why = o.why; if(st.susp >= w.levels.alarm) st.whyPast = o.why; w._frozenUntil = clock + 3; w._whyMode = null; } else w._frozenUntil = -1;   // the owner acted: the line follows what happens next
       const lv = st.susp >= w.levels.alarm ? 'alarm' : st.susp >= w.levels.notice ? 'notice' : (prev === 'calm' ? 'calm' : (st.susp >= w.levels.exit ? 'notice' : 'calm'));
       if(lv !== 'calm' && !w._ep) startEpisode(w, !!o.quiet);
       else if(o.quiet && w._ep) w._ep.quiet = true;
       if(lv !== prev){
         st.level = lv;
-        if(lv === 'alarm'){ w._ep.alarm = true; if(!o.why) st.whyPast = st.why; }
-        if(o.cause && (lv === 'notice' || lv === 'alarm')) logSeen(w, lv, st, o.cause, o.why || (st.cause ? st.why : null));
+        // an alarm the owner raised without a line: the past tense of what he perceives right now, or nothing
+        // (never the present-tense line: the alarm toast prints whyPast verbatim, §3.6). Owners should pass `why`.
+        if(lv === 'alarm'){ w._ep.alarm = true; if(!o.why) st.whyPast = (st.cause && w._s && w._s.cause) ? whyLine(w, w._s, true) : ''; }
+        if(o.cause && (lv === 'notice' || lv === 'alarm')) logSeen(w, lv, st, o.cause, lv === 'alarm' ? (st.whyPast || null) : (o.why || (st.cause ? st.why : null)));
         changed(w, lv, prev);
       }
       if(lv === 'calm' && w._ep){ w._ep.quiet = true; endEpisode(w); }       // the owner settled it: nobody evaded anything

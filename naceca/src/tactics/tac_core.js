@@ -32,7 +32,7 @@ try{ if(typeof ICONS !== 'undefined' && !ICONS.crouch) ICONS.crouch = '<circle c
 /* ---------- Grey Man now names every watcher it slows (CAPS is private to v12_core) ---------- */
 try{
   const gm = (typeof SKILLS !== 'undefined' && Array.isArray(SKILLS.fieldcraft)) ? SKILLS.fieldcraft.find(s => s && s.id === 'greyman') : null;
-  if(gm){ gm.desc = "When someone is watching for you, you're slower to notice."; gm.where = "The courier · KC at his stand · Obi's study · the finale tail"; }
+  if(gm){ gm.desc = "When someone is watching for you, they're slower to notice you."; gm.where = "The courier · KC at his stand · Obi's study · the finale tail"; }
 }catch(e){ TAC._err(e); }
 
 /* ---------- the setting row: Crouch · Auto / Hold / Toggle ---------- */

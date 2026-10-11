@@ -29,12 +29,19 @@
 body.tac-eye #eye-ind .eye-why:not(:empty){display:block}
 body.tac-eye #eye-ind #eye-dist:empty{display:none}
 /* placed by measured rects (tac_sight.js): left/top are written inline */
-body.tac-eye #eye-ind.tac-placed{transform:none}
+body.tac-eye #eye-ind.tac-placed{transform:none;width:max-content}   /* its size never depends on where it sits */
 /* a phone on its side: the eye and its line side by side, so the pair fits above the radio strip */
 @media (orientation:landscape) and (max-height:520px){
   body.tac-eye.touch-active #eye-ind{flex-direction:row;align-items:center;gap:6px}
   body.tac-eye.touch-active #eye-ind svg{width:48px;height:28px;flex:0 0 48px}
   body.tac-eye.touch-active #eye-ind .eye-why{max-width:280px;text-align:left}
+}
+/* a phone held upright: side by side as well, so the pair is one short band that fits under the minimap and
+   between the radio strip and a hint chip instead of dropping into the middle of the screen */
+@media (orientation:portrait){
+  body.tac-eye.touch-active #eye-ind{flex-direction:row;align-items:center;gap:6px}
+  body.tac-eye.touch-active #eye-ind svg{width:44px;height:26px;flex:0 0 44px}
+  body.tac-eye.touch-active #eye-ind .eye-why{max-width:min(230px,calc(100vw - 98px));text-align:left}
 }
 
 /* ---------- the head marker: .tac-mark[data-who] = icon + a 44 × 6 bar (ink outline, red fill) ---------- */

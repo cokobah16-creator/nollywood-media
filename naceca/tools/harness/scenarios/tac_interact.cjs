@@ -180,5 +180,31 @@ module.exports = async h => {
   h.log('m3 #ctx-main by the safe:', JSON.stringify(m3click));
   h.assert(m3click.label === 'Crack the safe' && m3click.ov1.length > m3click.ov0.length && !m3click.ov1.includes('screen-dialogue'), 'the #ctx-main click by the safe opens the safe, not the arrest');
   await T.restoreArt(h);
+
+  // ---------- after M3: the mansion defaults stay in the mansion ----------
+  // _mansionPreBriefed stays true in the save, and "Brief with Sgt. Uche" is also the first objective of M5-M8:
+  // there he is never spent, and a press just out of his reach says "Move closer", on Recruit and Senior alike
+  for (const m of ['m5', 'm7']) {
+    const ORDER = ['m0', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7'];
+    await T.start(h, m, { completed:ORDER.slice(0, ORDER.indexOf(m)), state:S => { S.game._mansionPreBriefed = true; S.game._evCash = true; S.game._marketScanned = true; } });
+    await h.ev(() => __wf.run(0.3));
+    const later = await h.ev(() => {
+      const u = ENGINE.interactables.find(i => i.label === 'Brief with Sgt. Uche'); if (!u) return { err:'no Uche' };
+      const P = ENGINE.player.position, R = u.range || 2.4;
+      P.x = u.mesh.position.x + R + 0.8; P.z = u.mesh.position.z;
+      if (blockedAt(P.x, P.z)) P.x = u.mesh.position.x - R - 0.8;
+      const out = { m:TAC.mission(), pre:S.game._mansionPreBriefed, spent:TAC.interact.isSpent(u), eff:TAC.interact.eff(u), lines:{} };
+      for (const diff of ['recruit', 'senior']) {
+        S.game.difficulty = diff; clearHint(); const c = document.getElementById('hint-chip'); if (c) delete c.dataset.tac; TAC._miss.at = -1e9;
+        tryInteract();
+        const t = document.querySelector('#hint-chip.show .hc-text'); out.lines[diff] = t ? t.textContent : null;
+      }
+      clearHint();
+      return out;
+    });
+    h.log(m, 'Uche after M3:', JSON.stringify(later));
+    h.assert(!later.err && later.m === m && later.pre === true && later.spent === false && later.eff >= 0, m + ': "Brief with Sgt. Uche" is not spent although _mansionPreBriefed is still true');
+    h.assert(later.lines.recruit === 'Move closer — Brief with Sgt. Uche' && later.lines.senior === 'Move closer — Brief with Sgt. Uche', m + ': just out of his reach the miss line says "Move closer — Brief with Sgt. Uche" (Recruit and Senior)');
+  }
   h.assert(!h.errors.length, 'no page errors');
 };

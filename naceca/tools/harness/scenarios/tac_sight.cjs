@@ -92,19 +92,25 @@ module.exports = async h => {
   await T.capture(h);
   const d = await h.ev(src => {
     TAC.sight.watchers().forEach(w => w.unwatch()); eval(src);
-    const P = ENGINE.player.position, run = (speed, crouch) => {
+    const P = ENGINE.player.position, run = (speed, crouch, settle) => {
       P.x = 14; P.z = 1.5; ENGINE.keys.KeyC = !!crouch; __wf.run(0.5); __w.reset(0);   // placed, then settled: the speed meter reads still
       let peak = 0, cause = null, maxNoise = 0;
       const off = TAC.onTick(() => { const s = __w.state; peak = Math.max(peak, s.susp); if (s.parts.noise > maxNoise) { maxNoise = s.parts.noise; cause = s.cause; } }, { order:20 });
       __wf.run(1.4, () => { P.z += speed / 60; }); off();
-      ENGINE.keys.KeyC = false; return { peak:+peak.toFixed(2), cause, why:__w.state.why, gait:__w.state.gait, inCone:__w.state.inCone, noise:+maxNoise.toFixed(1) };
+      const r = { peak:+peak.toFixed(2), cause, why:__w.state.why, gait:__w.state.gait, inCone:__w.state.inCone, noise:+maxNoise.toFixed(1) };
+      // then stand still and silent: once nothing has gained for a second the line says why it drains
+      if (settle) { __wf.run(settle); const d = document.querySelector('#eye-ind .eye-why'); r.after = { why:__w.state.why, dom:d ? d.textContent : null, susp:+__w.state.susp.toFixed(1), cause:__w.state.cause }; }
+      ENGINE.keys.KeyC = false; return r;
     };
-    return { sprint:run(5.2, false), sneak:run(1.25, true), walk:run(1.55, false) };
+    return { sprint:run(5.2, false, 1.4), sneak:run(1.25, true), walk:run(1.55, false) };
   }, watchKC);
   h.log('(d)', JSON.stringify(d));
   h.assert(d.sprint.cause === 'noise' && d.sprint.peak > 0 && !d.sprint.inCone && d.sprint.gait === 'sprint', '(d) sprinting 6 m behind him: cause noise');
   h.assert(/^He can hear you sprinting behind him on the street$/.test(d.sprint.why), '(d) the why-line: ' + d.sprint.why);
   h.assert(d.sneak.peak === 0 && d.walk.peak === 0, '(d) sneaking (or walking) 6 m behind him: 0');
+  h.assert(d.sprint.after.cause === null && d.sprint.after.susp > 0.5 && !/can (see|hear)/.test(d.sprint.after.why) && d.sprint.after.why === 'He lost track of you — you went quiet' && d.sprint.after.dom === d.sprint.after.why,
+    '(d) standing still and silent after the sprint, the eye stops saying he can hear you: ' + JSON.stringify(d.sprint.after));
+  h.assert(d.sneak.why === '' && d.walk.why === '', '(d) a watcher reset to 0 that gains nothing has no line left over from the sprint');
 
   // (e) dark: no gain at 8 m in his cone; lit there gains
   const e = await h.ev(() => { TAC.sight.lights({ ambient:'dark' }); const dark = TAC.sight.probe('test', 0, 4, { gait:'walk' });
@@ -128,16 +134,28 @@ module.exports = async h => {
     const w = TAC.sight.watch({ id:'lane', enc:'test', mesh:__mk(10, -2, 0), eyeH:1.5, range:{ lit:12, dark:6 }, logExtra:() => ({ phase:'g' }) });
     const P = ENGINE.player.position; P.x = 10; P.z = 6.2;
     __wf.run(6, () => w.state.level === 'notice');
-    const atNotice = w.state.susp;
+    const atNotice = w.state.susp, whyNotice = w.state.why;
     ENGINE.keys.KeyC = true;
+    // the line under the eye on every tick of the drain: [s since the crouch, state.why, the DOM text, susp, cause]
+    const t0 = __wf.t, lines = [];
+    const off = TAC.onTick(() => { const d = document.querySelector('#eye-ind .eye-why'), on = document.getElementById('eye-ind').classList.contains('show');
+      lines.push([+(__wf.t - t0).toFixed(2), w.state.why, on && d ? d.textContent : null, +w.state.susp.toFixed(1), w.state.cause]); }, { order:20 });
     __wf.run(10, () => w.state.susp === 0);
+    off();
     ENGINE.keys.KeyC = false;
-    return { atNotice:+atNotice.toFixed(1), end:w.state.susp, level:w.state.level, why:w.state.why, peak:w.state.peak };
+    return { atNotice:+atNotice.toFixed(1), whyNotice, end:w.state.susp, level:w.state.level, why:w.state.why, peak:w.state.peak, lines };
   });
+  h.log('(g) drain lines', JSON.stringify(g.lines.filter((x, i) => i % 5 === 0 || i === g.lines.length - 1)));
+  const late = g.lines.filter(x => x[0] >= 1.05 && x[3] > 0.5);
+  h.assert(/^He can see you .*standing behind the stall$/.test(g.whyNotice), '(g) at the notice he can see you standing behind the stall: ' + g.whyNotice);
+  h.assert(late.length > 20 && late.every(x => x[4] === null && !/can (see|hear)/.test(x[1]) && x[2] === x[1]),
+    '(g) a second after the crouch, and for the rest of the drain, the eye no longer says he can see you: ' + JSON.stringify(late.filter(x => /can (see|hear)/.test(x[1]) || x[2] !== x[1]).slice(0, 3)));
+  h.assert(late.every(x => x[1] === 'He lost sight of you — crouched behind the stall'), '(g) it says why it drains: "He lost sight of you — crouched behind the stall"');
+  h.assert(g.lines.filter(x => x[0] < 0.95).every(x => /^He can see you/.test(x[1])), '(g) for the first second the line still names the last cause (foundations §3.7: the last 1 s)');
   ev = (await T.events(h)).map(x => x[1] && Object.assign({ type:x[0] }, x[1])).filter(x => x.type === 'evaded' || x.type === 'seen');
   h.log('(g)', JSON.stringify(g), JSON.stringify(ev.map(x => [x.type, x.level || x.how, x.crouchPct, x.mix, x.phase])));
   const evd = ev.filter(x => x.type === 'evaded');
-  h.assert(g.atNotice >= 35 && g.end === 0 && g.level === 'calm', '(g) noticed, then crouched behind the counter, he loses you (0)');
+  h.assert(g.atNotice >= 35 && g.end === 0 && g.level === 'calm' && g.why === '', '(g) noticed, then crouched behind the counter, he loses you (0), and the line is cleared');
   h.assert(evd.length === 1 && evd[0].how === 'cover' && evd[0].crouchPct === 100 && evd[0].phase === 'g' && typeof evd[0].secs === 'number' && evd[0].mix && evd[0].mix.cover === 1,
     '(g) one evaded{how:"cover", crouchPct:100, mix} with logExtra');
 
@@ -201,6 +219,28 @@ module.exports = async h => {
   h.assert(j.latched.level === 'alarm' && j.latched.susp === 100 && j.unlatched.level === 'notice' && j.unlatched.susp <= 99 && j.decaying < j.unlatched.susp, '(j) alarmHold: latched for 6 s unseen, then 99 and decaying');
   h.assert(j.calm === 'calm' && j.q === 'notice' && ev.filter(x => x[2] === 'tunde').length === 1 && j.end === 0 && !ev.some(x => x[0] === 'evaded'), '(j) a quiet reset from calm logs its one seen, and its episode never logs an evaded');
   h.assert(ev.filter(x => x[2] === 'scan')[0][3] === null, '(j) a reset with a cause but no why, while he can\'t see you, logs no stale line');
+
+  // (j2) an owner raises the alarm without a line: whyPast is the past tense of what he perceives now, or empty —
+  // never the present-tense line (the alarm toast prints whyPast verbatim, DESIGN §3.6)
+  await T.capture(h);
+  const j2 = await h.ev(() => {
+    const w = TAC.sight.watch({ id:'scanA', enc:'test', mesh:__mk(8, 4, -Math.PI / 2), eyeH:1.5, range:{ lit:12, dark:6 } });
+    const P = ENGINE.player.position; P.x = 2.5; P.z = 4; __wf.run(0.5); w.reset(0);
+    __wf.run(6, () => w.state.level === 'notice');
+    const before = w.state.why;
+    w.reset(100, { cause:'scan' });
+    const hot = { level:w.state.level, why:w.state.why, whyPast:w.state.whyPast };
+    const cold = TAC.sight.watch({ id:'scanB', enc:'test', mesh:__mk(30, 30, 0), eyeH:1.6 });
+    cold.reset(100, { cause:'scan' });
+    const r = { before, hot, cold:{ level:cold.state.level, whyPast:cold.state.whyPast } };
+    w.unwatch(); cold.unwatch(); return r;
+  });
+  const sj2 = (await T.events(h, 'seen')).map(e => e[1]).filter(e => /^scan[AB]$/.test(e.who) && e.level === 'alarm').map(e => [e.who, e.cause, e.why]);
+  h.log('(j2)', JSON.stringify(j2), JSON.stringify(sj2));
+  h.assert(j2.before === 'He can see you 6 m away, standing' && j2.hot.level === 'alarm' && j2.hot.whyPast === 'He saw you 6 m away, standing',
+    '(j2) reset(100, {cause}) without why while he sees you: whyPast is the past tense ("He saw you …"): ' + j2.hot.whyPast);
+  h.assert(j2.cold.level === 'alarm' && j2.cold.whyPast === '', '(j2) a watcher that never perceived you: whyPast stays empty');
+  h.assert(sj2.length === 2 && sj2[0][2] === j2.hot.whyPast && sj2[1][2] === null, '(j2) the alarm seen carries whyPast (or null): ' + JSON.stringify(sj2));
 
   // (l) cost: 20k sight tests on the dressed market
   const cost = await h.ev(() => { let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647; const t0 = performance.now(); let n = 0;

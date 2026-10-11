@@ -52,5 +52,7 @@ module.exports = async h => {
   const gm = await h.ev(() => { const s = SKILLS.fieldcraft.find(x => x.id === 'greyman'); return { desc:s.desc, where:s.where }; });
   h.log('Grey Man', JSON.stringify(gm));
   h.assert(/watching for you/.test(gm.desc) && /KC at his stand/.test(gm.where) && /Obi's study/.test(gm.where), 'Grey Man: the desc and where name every watcher it slows');
+  // the watcher is the one who is slower (rate × 0.65), not the player
+  h.assert(gm.desc === "When someone is watching for you, they're slower to notice you." && !/you're slower/.test(gm.desc), 'Grey Man: the desc says the watcher is slower to notice you: ' + gm.desc);
   h.assert(!h.errors.length, 'no page errors');
 };

@@ -24,20 +24,23 @@ const G = () => (typeof S !== 'undefined' && S && S.game) ? S.game : {};
 const mc = () => G().moralChoices || {};
 const esc = s => (V() && V12.esc) ? V12.esc(s) : String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 
-/* ---------- the default spent table (DESIGN §3.4; the owning team re-registers its own labels) ---------- */
+/* ---------- the default spent table (DESIGN §3.4; the owning team re-registers its own labels) ----------
+   Each default is scoped to the mission it was written for: the flags it reads outlive that mission in the save
+   (_mansionPreBriefed stays true after M3, and "Brief with Sgt. Uche" is also the first objective of M5-M8). */
+const inM = (m, fn) => it => TAC.mission() === m && fn(it);
 const SPENT = {
-  'Scan suspect phone':            () => !!G()._marketScanned,
-  'Confront teen suspect':         () => !G()._marketScanned || !!mc().market_runner,      // B adds TAC.m2.run().resolving
-  'Speak with Informant Tunde':    () => !!G()._marketTunde,
-  'Plan the raid with Sgt. Uche':  () => !!G()._mansionPreBriefed,
-  'Brief with Sgt. Uche':          () => !!G()._mansionPreBriefed,
-  'Move on suspect':               () => !!mc().arrest,
-  'Calm and escort the child':     () => !!G()._civChild,
-  'Inspect laptop':                () => !!(G()._evLaptop || G()._wipeLost),
-  'Stop laptop wipe':              () => !!(G()._evLaptop || G()._wipeLost),
-  'Bag cash evidence':             () => !!G()._evCash,
-  'Crack the safe':                () => !!G()._evSafe,
-  'Search the open drawer':        () => !!G()._drawerSearched,
+  'Scan suspect phone':            inM('m2', () => !!G()._marketScanned),
+  'Confront teen suspect':         inM('m2', () => !G()._marketScanned || !!mc().market_runner),      // B adds TAC.m2.run().resolving
+  'Speak with Informant Tunde':    inM('m2', () => !!G()._marketTunde),
+  'Plan the raid with Sgt. Uche':  inM('m3', () => !!G()._mansionPreBriefed),
+  'Brief with Sgt. Uche':          inM('m3', () => !!G()._mansionPreBriefed),
+  'Move on suspect':               inM('m3', () => !!mc().arrest),
+  'Calm and escort the child':     inM('m3', () => !!G()._civChild),
+  'Inspect laptop':                inM('m3', () => !!(G()._evLaptop || G()._wipeLost)),
+  'Stop laptop wipe':              inM('m3', () => !!(G()._evLaptop || G()._wipeLost)),
+  'Bag cash evidence':             inM('m3', () => !!G()._evCash),
+  'Crack the safe':                inM('m3', () => !!G()._evSafe),
+  'Search the open drawer':        inM('m3', () => !!G()._drawerSearched),
 };
 TAC._spentA = SPENT;
 const register = () => { for(const k of Object.keys(SPENT)) TAC.interact.spent(k, SPENT[k]); };

@@ -81,5 +81,15 @@ module.exports = async h => {
   const ev = await T.events(h, 'geo_drift');
   h.log('geo_drift events', JSON.stringify(ev));
   h.assert(ev.length === 0, 'no geo_drift on the dressed market');
+
+  // a market the table doesn't cover (one collider nobody classified): one geo_drift{reason:'table'}, and its scene is
+  // the mission id, as for the legacy house (not the table's key), so drift groups by mission
+  await T.start(h, 'm2', { seed:1 });
+  await T.capture(h);
+  const dr = await h.ev(() => { addObstacle(0.5, -25.5, 1.2, 1.2); __wf.run(0.5); return { m:TAC.mission(), legacy:!ENGINE._dress, unknown:TAC.geo.classify().unknown }; });
+  const ev2 = (await T.events(h, 'geo_drift')).map(e => e[1]);
+  h.log('legacy market with a stray collider:', JSON.stringify(dr), 'geo_drift', JSON.stringify(ev2));
+  h.assert(dr.unknown === 1 && ev2.length === 1 && ev2[0].reason === 'table' && ev2[0].scene === 'm2' && ev2[0].unknown.length === 1,
+    'an unmatched collider logs one geo_drift{reason:"table", scene:"m2"} (the mission id): ' + JSON.stringify(ev2));
   h.assert(!h.errors.length, 'no page errors');
 };
