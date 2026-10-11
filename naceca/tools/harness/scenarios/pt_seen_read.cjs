@@ -90,6 +90,21 @@ module.exports = async h => {
   h.assert(r.length === 2 && r[0].d.end === 'replaced' && near(r[0].d.ms, 600, 100) && r[1].d.end === 'scene', 'a new alarm replaces the line; a scene change ends it');
   if(!full) await P.eye(h, null);
 
+  // 7. D-5: an alarm whose line never reaches the screen (a watcher the eye doesn't show, no toast) logs no seen_read:
+  //    §4's via is 'eye'|'toast'|'both', so there is no read to report and the analyser stamps NO READ DATA
+  await T.start(h, 'm2', { seed:9 });
+  t0 = await P.mark(h);
+  await h.ev(() => { const w = TAC.sight.watch({ id:'kc3', enc:'m2_kc', mesh:ENGINE._marketKC, eyeH:1.5, hud:false, active:() => true });
+    const p = ENGINE.player.position; p.x = -15; p.z = 15; w.reset(100, { cause:'sight', why:'He saw you by the far stall, standing' }); window.__ptW3 = w; });
+  h.assert(await h.ev(() => !!V12.ptKit.reading()), 'the alarm starts a read');
+  await run(1.0);
+  await h.ev(() => showOverlay('screen-pause'));
+  await h.step(100);
+  r = await reads(t0);
+  h.log('7', JSON.stringify(r.map(e => e.d)));
+  h.assert(r.length === 0 && !(await h.ev(() => V12.ptKit.reading())), 'no seen_read for a line that was never on screen (no via outside eye|toast|both)');
+  await h.ev(() => { showOverlay(null); window.__ptW3.reset(0); window.__ptW3.unwatch(); window.__ptW3 = null; });
+
   // 6. none without an alarm: a notice, a toast with any text, the eye on
   await T.start(h, 'm2', { seed:9 });
   t0 = await P.mark(h);

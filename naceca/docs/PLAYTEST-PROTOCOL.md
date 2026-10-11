@@ -7,8 +7,11 @@ One page, for whoever runs a mixed desktop and phone session. The kit is the pla
 **Two starts.** Record which one each player had.
 - **Full start** (sessions of 60 minutes or more): NEW INVESTIGATION. The cold open and HQ (M0, M1) are a warm-up: they
   teach crouch, sprint and the action button, and they are logged too. Budget about 75 minutes per player.
-- **M2 start** (sessions under 60 minutes): **START AT M2** in Settings (below) gives a fresh Senior Agent investigation
-  with M0 and M1 done, at the market's start screen. Budget about 45 minutes.
+- **M2 start** (sessions under 60 minutes): **START AT M2** (the title screen's SETTINGS, on a `?pt=1` page; below) gives a
+  fresh Senior Agent investigation with M0 and M1 done, at the market's start screen. Budget about 45 minutes. It plays a
+  slightly different game from a full start: the player has **no XP and no capabilities from M0 and M1**, and nothing
+  from the cold open except the "Tell Madam it's clean" phone (granted, so the M2 operations table has the same cards).
+  Compare M2-start players with each other, not with full-start players, on anything that depends on capabilities.
 
 Use 4 to 8 players, at least two on phones and two on desktops. Plan one facilitator for every 2 to 3 players.
 **You need:** this sheet, a watch, paper observation sheets, and one laptop with this repo for the analysis afterwards. No
@@ -18,6 +21,8 @@ network is needed.
 Open the game with `?pt=1` at the end of its address (for example `…/naceca.html?pt=1`). That shows the **Player** and
 **Summary** rows in Settings › PLAYTEST. After the first NEW PLAYER they stay, without `?pt=1`. The first NEW PLAYER also
 gives the device a 4-character id, for example **B7QX**, which stays on the device (also through CLEAR).
+**START AT M2** replaces the game in progress, so it shows only on a `?pt=1` page and only in the Settings opened from the
+**title screen** (never from the pause menu during play). Keep `?pt=1` in the address for sessions that use the M2 start.
 
 ## Before each player (per device, about 5 minutes)
 1. Go to **Settings › PLAYTEST**. If *Playtest log* shows events from someone else, tap **EXPORT** (or Summary › VIEW ›
@@ -32,7 +37,8 @@ gives the device a 4-character id, for example **B7QX**, which stays on the devi
    them: **B7QX·P3**. The Summary sheet and the report print players the same way.
 4. On a phone, turn brightness up and rotation lock off. On a desktop, use headphones.
 5. **Full start:** Title › **NEW INVESTIGATION** › **SENIOR AGENT** (already selected) › **BEGIN**.
-   **M2 start:** Settings › PLAYTEST › Player › **START AT M2**, twice.
+   **M2 start:** on the title screen (`?pt=1` page), **SETTINGS** › PLAYTEST › Player › **START AT M2**, twice
+   (the first tap reads `TAP AGAIN · START AT M2`), then **BEGIN** on the market's start screen.
    Write the start (full or M2) beside the label. Hand over the device.
 
 ## What to say (keep to this)
@@ -56,7 +62,8 @@ from the log).
   read?
 
 **Step in only** after about 3 minutes stuck with visible frustration. Say only "What are you trying to do?", never point
-anything out. Write **INTERVENED HH:MM**. If the game freezes or errors, write the time, reload and tap CONTINUE.
+anything out. Write **INTERVENED HH:MM**. If the game freezes or errors, write the time, reload and tap CONTINUE. The
+player label and their play time carry on through the reload.
 
 ## The two questions, after the Lekki aftermath
 The game asks them on screen over the aftermath. If the player skips them, or they don't appear, ask them yourself word for
@@ -74,7 +81,8 @@ the title screen (or the next hub) open the pause menu (the pause pill, or Esc o
    beside them. It shows evidence, not a verdict:
    - a red **ASK THEM** stamp: the reason they were seen was on screen too briefly to read, or their "unfair" answer is about
      being seen. Ask about it in your own debrief notes, never during play;
-   - **NO READ DATA**: the log can't tell whether they read the reason. Rely on your C notes;
+   - **NO READ DATA**: the log can't tell whether they read the reason (for example the reason never reached the screen).
+     Rely on your C notes;
    - a green **LIKELY UNDERSTOOD**: every reason was on screen long enough to read. Your C notes still win.
    BACK (or Esc) returns to Settings.
 2. **Phone:** tap **SEND LOG** on the sheet. The share sheet opens with this player's log, for example

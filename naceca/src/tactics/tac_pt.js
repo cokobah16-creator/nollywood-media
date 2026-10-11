@@ -44,10 +44,14 @@ const settingsNow = () => { try{ return { marker:SETTINGS.marker, hints:SETTINGS
 
 let RD = null, eyeObs = null, eyeEl = null, frameOff = null;   // the seen_read in progress (below)
 
-/* ---------- the player and the device id (naceca_pt_player: {label, at, dev}; survives reloads and CLEAR) ---------- */
-const P = { label:null, at:null, dev:null, base:0 };   // base: PT.play at this page load's NEW PLAYER (0 for a label from storage)
-try{ const j = JSON.parse(localStorage.getItem(PLAYER_KEY) || 'null'); if(j && typeof j === 'object'){ P.label = j.label || null; P.at = j.at || null; P.dev = j.dev || null; } }catch(e){}
-const savePlayer = () => { try{ localStorage.setItem(PLAYER_KEY, JSON.stringify({ label:P.label, at:P.at, dev:P.dev })); }catch(e){} };
+/* ---------- the player and the device id (naceca_pt_player: {label, at, dev, ps}; survives reloads and CLEAR) ----------
+   ps is "play seconds since this player's NEW PLAYER", also across reloads: PT.play restarts with every page load
+   (v12_pt.js), so the player's seconds so far are stored with the label (on the 20 s tick, on hidden and on pagehide)
+   and this page's play time counts on from them. */
+const P = { label:null, at:null, dev:null, base:0 };   // base: the PT.play value at which this player's ps was 0
+try{ const j = JSON.parse(localStorage.getItem(PLAYER_KEY) || 'null'); if(j && typeof j === 'object'){ P.label = j.label || null; P.at = j.at || null; P.dev = j.dev || null;
+  if(P.label && typeof j.ps === 'number' && isFinite(j.ps) && j.ps > 0) P.base = (+PT.play || 0) - j.ps * 1000; } }catch(e){}
+const savePlayer = () => { try{ localStorage.setItem(PLAYER_KEY, JSON.stringify({ label:P.label, at:P.at, dev:P.dev, ps:P.label ? ps() : 0 })); }catch(e){} };
 const DEV_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function devId(){
   if(P.dev && /^[A-Z0-9]{4}$/.test(P.dev)) return P.dev;
@@ -87,6 +91,18 @@ function guard(type, d){
   const pass = (s, a) => { const o = {}; for(const k of Object.keys(d)) o[k] = keep.includes(k) ? d[k] : cut(d[k], s, a, 0); o.trunc = true; return o; };
   let o = pass(200, 24);
   if(sizeOf(type, o) > max) o = pass(60, 8);
+  if(sizeOf(type, o) > max) o = pass(40, 4);
+  // still over: blank the largest fields one by one (the key stays, its value becomes null, its name goes in cut)
+  // until it fits, so a summary keeps every other value
+  if(sizeOf(type, o) > max){
+    const gone = [];
+    for(let i = 0; i < 40 && sizeOf(type, o) > max; i++){
+      let big = null, bs = 8;
+      for(const k of Object.keys(o)){ if(k === 'trunc' || k === 'cut' || keep.includes(k) || o[k] == null) continue; const n = JSON.stringify(o[k]).length; if(n > bs){ bs = n; big = k; } }
+      if(!big) break;
+      o[big] = null; gone.push(big); o.cut = gone.slice(0, 12);
+    }
+  }
   if(sizeOf(type, o) > max){ o = { trunc:true, keys:Object.keys(d).slice(0, 24) }; for(const k of ['p', 'ps', 'rep', 'who', 'enc', 'level', 'cause', 'obj']) if(d[k] != null && typeof d[k] !== 'object') o[k] = clip(d[k], 60); }
   return o;
 }
@@ -110,15 +126,19 @@ function logDropped(){
   V12.log('pt_dropped', { byType:JSON.parse(sig) });
 }
 
-// interact_result: a press that starts a chase is progress, not a refusal (DESIGN §4)
+// interact_result: a press that starts a chase is progress, not a refusal (DESIGN §4). Only a chase that started
+// INSIDE the press (startChase during tryInteract, with no chase running before it) counts; only 'refused' is
+// rewritten (noop stays noop); and v12_pt's refusal totals, already counted, are taken back.
 let chaseStarts = 0, chaseStamp = null;
 const presses = [];
 function reclass(d){
   const i = presses.findIndex(p => p.label === d.label); if(i < 0) return;
   const p = presses.splice(i, 1)[0];
-  if(!p.idle || chaseStarts <= p.n0) return;
-  if(d.outcome === 'refused' || d.outcome === 'noop') d.outcome = 'progress';
-  d.chase = true;
+  if(!p.idle || !p.started) return;
+  if(d.outcome === 'refused'){
+    d.outcome = 'progress'; d.chase = true;
+    try{ const t = PT.totals; if(t && t.refusals > 0) t.refusals--; if(PT.o && PT.o.refusals > 0) PT.o.refusals--; }catch(e){}
+  } else if(d.outcome === 'progress' || d.outcome === 'opened') d.chase = true;
 }
 function enrich(type, d){
   switch(type){
@@ -170,7 +190,7 @@ const wrapped = function(type, data){
       return;
     }
     flushPending();
-    if(type === 'quit'){ endRead('quit'); logDropped(); }
+    if(type === 'quit'){ endRead('quit'); logDropped(); if(P.label) savePlayer(); }
     if(type === 'seen' && d.level === 'alarm' && RD) endRead('replaced');   // a new alarm line replaces the one being read
     const ok = emit(type, d);
     if(ok && type === 'seen' && d.level === 'alarm') startRead(d);
@@ -188,9 +208,10 @@ const allEvents = () => {
   try{ if(typeof sum0 === 'function') sum0(); }catch(e){}   // flushes v12_pt's private buffer into the key
   try{ return JSON.parse(localStorage.getItem(LOG_KEY) || '[]') || []; }catch(e){ return []; }
 };
-setInterval(logDropped, 20000);
+setInterval(() => { logDropped(); if(P.label) savePlayer(); }, 20000);
 // on hidden: settle the slot, the read and the tally BEFORE v12_pt's own listener writes (window capture runs first)
-window.addEventListener('visibilitychange', () => { try{ if(document.visibilityState !== 'hidden') return; flushPending(); endRead('quit'); logDropped(); }catch(e){} }, true);
+window.addEventListener('visibilitychange', () => { try{ if(document.visibilityState !== 'hidden') return; flushPending(); endRead('quit'); logDropped(); if(P.label) savePlayer(); }catch(e){} }, true);
+window.addEventListener('pagehide', () => { try{ if(P.label) savePlayer(); }catch(e){} });
 
 /* ---------- chase_end how/by: an onCaught/onEscaped wrapper outside v12_pt's (DESIGN §3.5) ---------- */
 V12.wrap('startChase', orig => function(){
@@ -209,14 +230,17 @@ V12.wrap('startChase', orig => function(){
 });
 /* ---------- interact_result reclass: was a chase already running before the press? ---------- */
 V12.wrap('tryInteract', orig => function(){
+  let rec = null;
   try{
     const it = typeof nearestInteractable === 'function' ? nearestInteractable() : null;
     if(it){
-      presses.push({ label:String(it.label || '').slice(0, 60), idle:!(typeof CHASE !== 'undefined' && CHASE.active), n0:chaseStarts });
+      rec = { label:String(it.label || '').slice(0, 60), idle:!(typeof CHASE !== 'undefined' && CHASE.active), n0:chaseStarts, started:false };
+      presses.push(rec);
       while(presses.length > 8) presses.shift();
     }
   }catch(e){}
-  return orig.apply(this, arguments);
+  try{ return orig.apply(this, arguments); }
+  finally{ if(rec) rec.started = chaseStarts > rec.n0; }   // the chase began during this press, not later
 });
 /* ---------- toasts: BACK TO THE TABLE is a refusal; the alarm line read in a toast ---------- */
 V12.wrap('toast', orig => function(big, small){
@@ -232,18 +256,25 @@ V12.wrap('toast', orig => function(big, small){
 
 /* ---------- ov_dwell: time on an investigation screen, logged when it closes ---------- */
 const OV_SKIP = /^screen-(title|missions|controls|pause|settings|records|recap|newgame|pt-survey|pt-report|dialogue|aftermath|epilogue|car|news)$/;
-const OV = new Map();                        // id → performance.now() when it was first seen open
+const OV = new Map();                        // id → {t0, h0, obj}: when it was first seen open, the hidden ms then, the objective then
+// time with the page hidden (the phone locked, another tab) is not time on a screen
+let hidMs = 0, hidAt = null;
+const hiddenNow = () => hidMs + (hidAt == null ? 0 : performance.now() - hidAt);
+document.addEventListener('visibilitychange', () => { try{
+  if(document.visibilityState === 'hidden'){ if(hidAt == null) hidAt = performance.now(); }
+  else if(hidAt != null){ hidMs += performance.now() - hidAt; hidAt = null; }
+}catch(e){} }, true);
 function syncOverlays(){
   const now = performance.now(), shown = new Set(shownIds());
-  for(const [id, t0] of [...OV]){
+  for(const [id, o] of [...OV]){
     if(shown.has(id)) continue;
     OV.delete(id);
     if(RD) RD.ov0.delete(id);
-    if(!OV_SKIP.test(id)) V12.log('ov_dwell', { id, secs:r1((now - t0) / 1000), obj:curObj() });
+    if(!OV_SKIP.test(id)) V12.log('ov_dwell', { id, secs:r1(Math.max(0, now - o.t0 - (hiddenNow() - o.h0)) / 1000), obj:o.obj });
   }
   for(const id of shown){
     if(OV.has(id)) continue;
-    OV.set(id, now);
+    OV.set(id, { t0:now, h0:hiddenNow(), obj:curObj() });
     if(RD && !RD.ov0.has(id)) endRead('overlay');
   }
 }
@@ -293,7 +324,11 @@ function readToast(sm){
 function endRead(end){
   const r = RD; if(!r) return;
   RD = null;
-  const via = r.everEye && r.everToast ? 'both' : r.everEye ? 'eye' : r.everToast ? 'toast' : null;
+  // DESIGN §4: via is 'eye'|'toast'|'both'. A line that never reached the screen (no eye line, no toast: the kernel's
+  // fallback eye, or a second alarm in the same tick) has no read to report, so nothing is logged and the analyser
+  // stamps NO READ DATA for that alarm.
+  if(!r.everEye && !r.everToast) return;
+  const via = r.everEye && r.everToast ? 'both' : r.everEye ? 'eye' : 'toast';
   V12.log('seen_read', { who:r.who, enc:r.enc, ms:Math.round(r.ms), via, words:r.words, end });
 }
 function onFrame(dt){
@@ -398,6 +433,13 @@ function arm(btn, armed, idle){
   btn._ptT = setTimeout(() => { if(btn.isConnected){ btn.dataset.armed = ''; btn.textContent = idle; btn.classList.remove('pt-armed'); } }, 4000);
 }
 const esc = s => (typeof V12.esc === 'function' ? V12.esc(s) : String(s == null ? '' : s));
+// where Settings was opened from: renderSettings runs inside openSettings BEFORE it records _settingsReturn
+// (settings.js:213-216), so while Settings isn't up yet the screen showing now is where it returns to
+function settingsFrom(){
+  const sh = shownIds();
+  if(sh.includes('screen-settings')){ try{ return typeof _settingsReturn !== 'undefined' ? _settingsReturn : null; }catch(e){ return null; } }
+  return sh[0] || null;
+}
 function playerRows(body){
   const clear = body.querySelector('#pt-clear');
   if(clear){
@@ -417,8 +459,11 @@ function playerRows(body){
     note = `${esc(devId())}·${esc(P.label)} · ${n} event${n === 1 ? '' : 's'}${at ? ' since ' + pad(at.getHours()) + ':' + pad(at.getMinutes()) : ''}. Start a new player before you hand the device over.`;
   }
   const next = nextLabel(P.label);
+  // the facilitator's short start replaces the game in progress: only on the facilitator's page (?pt=1), and only from the
+  // title screen, never from the pause menu during play
+  const m2ok = ptParam() && settingsFrom() === 'screen-title';
   const prow = V12.el('div', 'set-row pt-row', `<div class="set-label">Player<div class="set-note">${note}</div></div>
-    <div class="set-ctl"><div class="seg"><button type="button" id="pt-new">NEW PLAYER</button><button type="button" id="pt-m2">START AT M2</button></div></div>`);
+    <div class="set-ctl"><div class="seg"><button type="button" id="pt-new">NEW PLAYER</button>${m2ok ? '<button type="button" id="pt-m2">START AT M2</button>' : ''}</div></div>`);
   const srow = V12.el('div', 'set-row pt-row', `<div class="set-label">Summary<div class="set-note">Where they got lost, what failed, why they were seen, how they approached it.</div></div>
     <div class="set-ctl"><div class="seg"><button type="button" id="pt-view">VIEW</button></div></div>`);
   prow.dataset.key = 'pt_player'; srow.dataset.key = 'pt_summary';
@@ -430,19 +475,23 @@ function playerRows(body){
     if(typeof renderSettings === 'function') renderSettings();
   };
   const m2 = prow.querySelector('#pt-m2');
-  m2.onclick = () => {
+  if(m2) m2.onclick = () => {
     if(m2.dataset.armed !== '1'){ arm(m2, 'TAP AGAIN · START AT M2', 'START AT M2'); return; }
     startAtM2();
   };
   srow.querySelector('#pt-view').onclick = () => { if(typeof V12.ptReportOpen === 'function') V12.ptReportOpen('player'); };
 }
 // the facilitator's short-session start (DESIGN §10): a fresh Senior Agent investigation with M0 and M1 done, at the
-// market's start screen — the state the harness's h.start('m2', {completed:['m0','m1']}) uses. Like NEW INVESTIGATION,
-// it replaces the game in progress.
+// market's start screen — the state the harness's h.start('m2', {completed:['m0','m1']}) uses, plus the one piece of
+// evidence the cold open always leaves (co_madam, from prologueEnd, v12_core.js:319), so the M2 operations table has the
+// same cards as after a full start. No M0/M1 XP or capabilities (the protocol says so). Like NEW INVESTIGATION, it
+// replaces the game in progress; it is offered only on the title screen of a ?pt=1 page.
 function startAtM2(){
   try{
     if(typeof v13NavReset === 'function') v13NavReset();
     S = defaultState(); S.game.difficulty = 'senior'; S.game.completedMissions = ['m0', 'm1'];
+    if(Array.isArray(S.game.evidence) && !S.game.evidence.some(e => e && e.id === 'co_madam'))
+      S.game.evidence.push({ id:'co_madam', name:"Courier's Dropped Phone — 'Tell Madam it's clean'", t:Date.now() });
     if(typeof syncDifficultyClass === 'function') syncDifficultyClass();
     V12.log('new_game', { d:'senior' });
     if(typeof showOverlay === 'function') showOverlay(null);

@@ -31,12 +31,18 @@ module.exports = async h => {
     h.log(r.out.split('\n').filter(l => /^(skip|=|[A-Z0-9]{4}·|ACROSS)/.test(l) || /·/.test(l.slice(0, 12))).slice(0, 14).join('\n'));
     h.assert(r.code === 0, 'exit 0 (also with skipped files): ' + r.code);
     h.assert(/^skip \(not a playtest log\): .*broken\.json — not JSON/m.test(r.out) && /^skip \(not a playtest log\): .*notes\.txt — /m.test(r.out), 'a skip line for broken.json (and a note file)');
+    // D-11: the skip reason is clipped before its closing parenthesis
+    const skipB = r.out.split('\n').find(l => /broken\.json — /.test(l)) || '', why = skipB.replace(/^.*? — /, '');
+    h.assert((why.match(/\(/g) || []).length === (why.match(/\)/g) || []).length && /\)$/.test(why), 'the skip line\'s parentheses close: ' + skipB);
     const heads = ['WHERE DID THEY GET LOST?', 'WHICH INTERACTIONS FAILED?', 'DID THEY UNDERSTAND WHY THEY WERE SEEN?', 'DID THEY USE MORE THAN ONE APPROACH?'];
     const blocks = r.out.split('='.repeat(78)).slice(1);
     const players = blocks.filter(b => !/^\s*ACROSS/.test(b));
     h.assert(players.length === 4, 'four players (page P1, the fixtures\' P1 and P2, the v1 log; the two exports of one device are one player): ' + players.length);
     h.assert(players.every(b => heads.every(q => b.includes(q))), 'each player has the four headings');
     h.assert(players.some(b => b.trim().startsWith(pageDev + '·P1 · ')), 'the page\'s player prints as dev·label');
+    // D-8: every per-player export names its build (from the export header: CLEAR removed the session event)
+    const fxA = JSON.parse(P.fixture('deviceA-desk.json')), pa = players.find(b => b.trim().startsWith(fxA.dev + '·P1 · '));
+    h.assert(pa && pa.split('\n').find(l => l.trim()).includes('build ' + fxA.src) && players.every(b => / · build \S+/.test(b.split('\n').find(l => l.trim()))), 'every player\'s lead line names the build ' + (pa || '').trim().split('\n')[0]);
     h.assert(blocks.some(b => /^\s*ACROSS 4 PLAYERS/.test(b)), 'ACROSS N PLAYERS');
     h.assert(/LIKELY UNDERSTOOD/.test(r.out) && /ASK THEM/.test(r.out) && /No detection data in this build/.test(r.out), 'the stamps and the v1 answer');
 

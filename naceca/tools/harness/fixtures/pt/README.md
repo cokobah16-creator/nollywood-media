@@ -19,9 +19,9 @@ replace every stand-in, and `pt_report_core` must still pass.
  "A": {
   "file": "deviceA-desk.json",
   "early": "deviceA-desk-early.json",
-  "exportName": "naceca-playtest-PC72-ALL-20261011-0017.json",
-  "earlyName": "naceca-playtest-PC72-ALL-20261011-0017.json",
-  "build": "567c7ea973",
+  "exportName": "naceca-playtest-PC72-ALL-20261011-0109.json",
+  "earlyName": "naceca-playtest-PC72-ALL-20261011-0109.json",
+  "build": "8e1dad470b",
   "what": "desktop P1: sneaky M2 (stuck at the scan, wrong target ×3, one alarm read 2.6 s, Tunde quiet + tip, Uche posted at the corner and veered), the two questions",
   "standIns": [
    "enc m2_tunde",
@@ -42,8 +42,8 @@ replace every stand-in, and `pt_report_core` must still pass.
  },
  "B": {
   "file": "deviceB-phone.txt",
-  "exportName": "naceca-playtest-EVYW-P2-20261011-0018.txt",
-  "build": "567c7ea973",
+  "exportName": "naceca-playtest-EVYW-P2-20261011-0110.txt",
+  "build": "8e1dad470b",
   "what": "phone P2: three taps just out of reach, Tunde loud, two alarms on screen under 1 s, a front confront and a tackle, the ops table, a loud M3 entry, an unfair answer about being seen, a quit right after the questions",
   "standIns": [
    "enc m2_tunde",

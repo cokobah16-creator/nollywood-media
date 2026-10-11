@@ -6,6 +6,8 @@
 //   node tools/harness/run.cjs tools/harness/scenarios/pt_slice_m2.cjs --html <build>/naceca.html --w 1280 --h 800
 // Until Team B has merged it runs the same drive and checks the contract on whatever this build logs (D's own events),
 // and logs SKIP (needs B) for the market asserts; until Team A has merged, SKIP (needs A) for the eye.
+// A run with any SKIP ends with an INCOMPLETE line: it has not checked the contract on the real emitters. The
+// integrator runs it with PT_SLICE_STRICT=1 once A and B are in, which turns INCOMPLETE into a failure.
 const P = require('./pt_lib.cjs');
 const T = P.T;
 module.exports = async h => {
@@ -48,20 +50,31 @@ module.exports = async h => {
     runs.push({ style, hasB, full, evs, eye, perTick });
     h.log(style, `B:${hasB} A:${full} events:${evs.length} tactics:${evs.filter(e => P.TACTICS.test(e.type)).map(e => e.type === 'enc' ? e.d.enc : e.type).join(',')} in 30 s near KC:${perTick}`);
   }
+  const missing = new Set();
   for (const r of runs) {
-    P.sliceAsserts(h, r.evs, { name:'M2 ' + r.style, once:r.hasB ? ['m2_summary'] : [] });
+    const tac = P.sliceAsserts(h, r.evs, { name:'M2 ' + r.style, once:r.hasB ? ['m2_summary'] : [] });
+    h.log(`M2 ${r.style}: the contract was checked on ${r.evs.length} events, ${tac.length} of them tactics events`);
     h.assert(r.perTick <= 40, `M2 ${r.style}: nothing per tick (${r.perTick} V12.log calls in 30 s near KC, ≤ 40)`);
-    if (!r.hasB) { h.log(`SKIP (needs B): M2 ${r.style}: enc m2_tunde / m2_kc and m2_summary come from tac_market.js, which is not in this build`); continue; }
-    h.assert(r.evs.some(e => e.type === 'enc' && e.d.enc === 'm2_tunde') && r.evs.some(e => e.type === 'enc' && e.d.enc === 'm2_kc'), `M2 ${r.style}: enc m2_tunde and m2_kc`);
-    const alarms = r.evs.filter(e => e.type === 'seen' && e.d.level === 'alarm');
-    const reads = r.evs.filter(e => e.type === 'seen_read');
-    h.assert(reads.length >= alarms.length - 1, `M2 ${r.style}: a seen_read for each alarm (${reads.length} for ${alarms.length})`);
-    if (!r.full) { h.log(`SKIP (needs A): M2 ${r.style}: seen.why against the eye's line (TAC.sight.full is false)`); continue; }
+    if (!r.hasB) { missing.add('B'); h.log(`SKIP (needs B): M2 ${r.style}: enc m2_tunde / m2_kc and m2_summary come from tac_market.js, which is not in this build`); }
+    else {
+      h.assert(r.evs.some(e => e.type === 'enc' && e.d.enc === 'm2_tunde') && r.evs.some(e => e.type === 'enc' && e.d.enc === 'm2_kc'), `M2 ${r.style}: enc m2_tunde and m2_kc`);
+      const alarms = r.evs.filter(e => e.type === 'seen' && e.d.level === 'alarm');
+      const reads = r.evs.filter(e => e.type === 'seen_read');
+      h.assert(reads.length >= alarms.length - 1, `M2 ${r.style}: a seen_read for each alarm (${reads.length} for ${alarms.length})`);
+    }
+    if (!r.full) { missing.add('A'); h.log(`SKIP (needs A): M2 ${r.style}: seen.why against the eye's line (TAC.sight.full is false)`); continue; }
     const mine = r.eye.filter(x => x.top === x.who && x.shown);
     const off = mine.filter(x => x.at !== x.why);
     off.slice(0, 5).forEach(x => h.log('  why/eye: ' + JSON.stringify(x)));
     h.assert(mine.length > 0 || !r.evs.some(e => e.type === 'seen'), `M2 ${r.style}: the eye showed the watcher that logged seen`);
     h.assert(off.length === 0, `M2 ${r.style}: seen.why equals the eye's .eye-why at that tick`);
+  }
+  // D-10: a run that SKIPped is not a pass of the contract. Say so on the last line; PT_SLICE_STRICT=1 (the integrator, after
+  // A and B have merged) turns it into a failure
+  if (missing.size) {
+    const m = [...missing].sort().join(' and ');
+    h.log(`INCOMPLETE (needs ${m}): only this build's own events were checked against DESIGN §4; the market emitters were not exercised`);
+    h.assert(!process.env.PT_SLICE_STRICT, `PT_SLICE_STRICT: pt_slice_m2 ran without ${m}`);
   }
   if (runs.every(r => r.hasB)) {
     const fam = (r) => { const box = {}; require('vm').runInNewContext(require('fs').readFileSync(require('path').join(P.ROOT, 'src', 'tactics', 'tac_pt_report.js'), 'utf8'), box); return box.PT_REPORT.analyze(r.evs).approaches; };

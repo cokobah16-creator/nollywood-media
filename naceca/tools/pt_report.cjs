@@ -94,8 +94,9 @@ if (opt.around) {
   process.exit(0);
 }
 
+const ctx = { txt:R.objTexts(all) };   // objective names from every loaded log
 for (const p of players) {
-  const res = R.analyze(p.events);
+  const res = R.analyze(p.events, ctx);
   out.push({ name:p.name, dev:p.dev, label:p.label, res });
   line('\n' + '='.repeat(78));
   R.text(res, p.name).forEach(line);

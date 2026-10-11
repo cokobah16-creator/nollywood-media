@@ -10,7 +10,15 @@ module.exports = async h => {
   await h.start('m2', { completed:['m0', 'm1'] });
   const touch = await h.ev(() => document.body.classList.contains('touch-active'));
   h.log('touch', touch);
+  // D-3: START AT M2 replaces the game in progress, so it is offered only on the title screen of a ?pt=1 page
   await P.openSettings(h);
+  h.assert(await h.ev(() => !!document.getElementById('pt-new') && !document.getElementById('pt-m2')), 'Settings over the world: NEW PLAYER, but no START AT M2');
+  await h.ev(() => { showOverlay(null); togglePause(); }); await h.step(150);
+  await h.ev(() => document.getElementById('btn-pause-settings').click()); await h.step(200);
+  h.assert(await h.ev(() => !!document.getElementById('pt-new') && !document.getElementById('pt-m2')), 'Settings from the pause menu: no START AT M2');
+  await h.ev(() => showOverlay(null));
+  await P.openSettings(h, 'screen-title');
+  h.assert(await h.ev(() => !!document.getElementById('pt-m2')), 'Settings from the title screen of a ?pt=1 page: START AT M2');
   let labels = await P.rowLabels(h);
   h.assert(labels.includes('Player') && labels.includes('Summary'), 'with ?pt=1 the Player and Summary rows show ' + JSON.stringify(labels));
   const order = await h.ev(() => { const b = document.getElementById('settings-body'); const kids = [...b.children]; const g = kids.findIndex(k => k.classList.contains('set-group') && k.textContent.trim() === 'PLAYTEST');
@@ -124,7 +132,7 @@ module.exports = async h => {
   h.assert(/^Playtest log0 events/.test(after.note.replace(/\s+/g, '')) || /0 events/.test(after.note), 'the log row reads 0 events after CLEAR: ' + after.note);
 
   // the facilitator's short-session start: START AT M2 (two taps) → a fresh Senior save with M0 and M1 done, at M2
-  await P.openSettings(h);
+  await P.openSettings(h, 'screen-title');
   const m2a = await h.ev(() => { const b = document.getElementById('pt-m2'); b.click(); return { t:b.textContent, m:S.game.currentMission }; });
   h.assert(m2a.t === 'TAP AGAIN · START AT M2', 'START AT M2 arms on the first tap');
   {
@@ -136,9 +144,11 @@ module.exports = async h => {
     const ng = P.of(ev, 'new_game', t0);
     h.log('start at M2', JSON.stringify(st), JSON.stringify(ng.map(e => e.d)));
     h.assert(st.m === 'm2' && JSON.stringify(st.done) === '["m0","m1"]' && st.d === 'senior' && !st.shown.includes('screen-settings'), 'the second tap starts M2 on a fresh Senior save with M0 and M1 done');
+    h.assert(await h.ev(() => V12.hasEv('co_madam')), 'and the cold open\'s "Tell Madam it\'s clean" phone, as after a full start');
     h.assert(ng.length === 1 && ng[0].d.d === 'senior' && ng[0].d.p === 'P2', 'it logs new_game {d:senior} for the player');
   }
   // the label and the device id survive a reload; the session event names the player
+  const psBefore = await h.ev(() => V12.ptKit.ps());
   await P.reload(h, '');
   const k = await h.ev(() => ({ label:V12.ptKit.label(), dev:V12.ptKit.device(), rows:V12.ptKit.rowsShown() }));
   h.assert(k.label === 'P2' && k.dev === np.dev && k.rows, 'the label and device id survive a reload (and the rows show without ?pt=1) ' + JSON.stringify(k));
@@ -150,5 +160,19 @@ module.exports = async h => {
   ev = await P.all(h);
   const d = P.of(ev, 'pt_test_d')[0];
   h.assert(d.d.p === 'P2' && typeof d.d.ps === 'number', 'events after the reload still carry P2');
+  // D-2: ps counts on from the player's NEW PLAYER across the reload (a facilitator reloads after a freeze)
+  h.log('ps before the reload', psBefore, 'after', d.d.ps);
+  h.assert(psBefore >= 19 && d.d.ps >= psBefore - 1 && d.d.ps <= psBefore + 4, `ps continues after a reload (${psBefore} before, ${d.d.ps} after)`);
+  await P.play(h, 10);
+  await h.ev(() => { V12.ptSurvey('settings'); document.getElementById('pt-a1').value = 'a'; document.getElementById('pt-a2').value = 'b'; document.getElementById('pt-save').click(); });
+  await h.step(200);
+  ev = await P.all(h);
+  const sv2 = P.of(ev, 'survey').pop();
+  h.assert(sv2 && sv2.d.secsPlayed >= psBefore + 9 && sv2.d.secsPlayed <= psBefore + 14, `survey.secsPlayed counts the play before the reload (${sv2 && sv2.d.secsPlayed}, ${psBefore} + 10 expected)`);
+  await h.ev(() => showOverlay(null));
+  // without ?pt=1 the rows stay (a label is set), but START AT M2 doesn't, even on the title screen
+  await P.openSettings(h, 'screen-title');
+  h.assert(await h.ev(() => !!document.getElementById('pt-new') && !document.getElementById('pt-m2')), 'no ?pt=1: NEW PLAYER, but no START AT M2 on the title screen');
+  await h.ev(() => showOverlay(null));
   h.assert(h.errors.length === 0, 'no page errors');
 };

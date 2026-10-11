@@ -60,7 +60,8 @@ P.reload = async (h, query) => {
   await h.page.goto(u.toString(), { waitUntil:'load', timeout:90000 });
   await h.step(1500);
 };
-P.openSettings = async h => { await h.ev(() => { showOverlay(null); openSettings(); }); await h.step(150); };
+// Settings opened over the world (from = null) or from a screen, e.g. 'screen-title' (the title's SETTINGS button)
+P.openSettings = async (h, from) => { await h.ev(from => { showOverlay(from || null); openSettings(); }, from || null); await h.step(150); };
 P.rowLabels = h => h.ev(() => [...document.querySelectorAll('#settings-body .set-label')].map(l => l.childNodes[0].textContent.trim()));
 P.newPlayerUI = async h => {
   const armed = await h.ev(() => { const b = document.getElementById('pt-new'); if(!b) return null; b.click(); return b.textContent; });
@@ -107,7 +108,7 @@ const SCHEMA = {
   'enc:m3_laptop':{ req:['outcome', 'pct', 'files', 'ledger', 'total', 'firstAt', 'armedAt', 'mg'], en:{ outcome:E('never_started', 'halted', 'lost', 'abandoned') } },
   'enc:m3_child':{ req:['choice', 'by', 'calm', 'outAt', 'gentle'], en:{ choice:E('gentle', 'stay', null), by:E('kelechi', 'uche', null) } },
   m3_summary:{ req:['entry', 'door', 'power', 'uche', 'obi', 'seen', 'wipe', 'child', 'secs', 'build'] },
-  seen_read:{ req:['who', 'enc', 'ms', 'via', 'words', 'end'], en:{ via:E('eye', 'toast', 'both', null), end:E('overlay', 'hidden', 'replaced', 'scene', 'timeout', 'quit') } },
+  seen_read:{ req:['who', 'enc', 'ms', 'via', 'words', 'end'], en:{ via:E('eye', 'toast', 'both'), end:E('overlay', 'hidden', 'replaced', 'scene', 'timeout', 'quit') } },
   ov_dwell:{ req:['id', 'secs', 'obj'] },
   pt_player:{ req:['label', 'dev', 'prev', 'ps0', 'w', 'h', 'touch', 'orient', 'settings'] },
   pt_export:{ req:['via', 'events', 'chars', 'file'], en:{ via:E('share', 'claude', 'link', 'declined', 'failed') } },
@@ -129,7 +130,6 @@ P.check = evs => {
     for (const k of s.req) if (!(k in d)) bad.push(`${where}: missing ${k}`);
     for (const [k, vals] of Object.entries(s.en || {})) if (k in d && !vals.includes(d[k])) bad.push(`${where}: ${k}=${JSON.stringify(d[k])} not in ${JSON.stringify(vals)}`);
     for (const [k, sub] of Object.entries(s.sub || {})) if (d[k] && typeof d[k] === 'object') for (const f of sub) if (!(f in d[k])) bad.push(`${where}: missing ${k}.${f}`);
-    if (e.type === 'seen_read' && d.via == null && d.ms) bad.push(`${where}: ms ${d.ms} with no via`);
     if (e.type === 'enc' && d.enc === 'm3_obi' && Array.isArray(d.states) && d.states.length > 8) bad.push(`${where}: states > 8`);
   }
   return bad;

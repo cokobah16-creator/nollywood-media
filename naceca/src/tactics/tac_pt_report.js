@@ -41,14 +41,17 @@ R.INVEST = { strike:1, docFailed:1, refused:2, pending:1, openPer:300, lostAt:3,
 R.ACTS = /^(veer|tackle|box|callout|cover_held|escort)$/;            // Uche doing something (arrive is not an act)
 R.ORDER_SRC = /^(talk|button|key|card)$/;                           // an order the player gave
 R.NAMES = { kc:'KC', obi:'Obi', m2_kc:'KC', m2_tunde:'Tunde', m3_entry:'Entry', m3_obi:'Obi', m3_laptop:'Laptop', m3_child:'The child', uche:'Uche' };
-R.SCREENS = { 'screen-ops':'operations table', 'screen-desk':'case desk', 'screen-puzzle':'document', 'screen-evidence':'evidence', 'screen-casefile':'case file',
-  'screen-plan':'raid plan', 'screen-briefing':'briefing', 'screen-warrant':'warrant', 'screen-warrant-t':'warrant', 'screen-charge':'charge sheet', 'screen-accuse':'accusation',
-  'screen-court':'trial', 'screen-review':'case review', 'screen-phone':'phone', 'screen-minigame':'mini-game', 'screen-skills':'capabilities', 'warrant':'warrant request' };
+// the investigation screens only: time on a briefing, the phone, a mini-game or the capabilities page is not "lost"
+R.SCREENS = { 'screen-ops':'operations table', 'screen-desk':'case desk', 'screen-puzzle':'document', 'screen-warrant':'warrant', 'screen-warrant-t':'warrant',
+  'warrant':'warrant request' };
 const nameOf = k => R.NAMES[k] || k || '?';
 const screenOf = id => R.SCREENS[id] || String(id || '?').replace(/^screen-/, '');
 
 /* ---------- input: files, devices, dedupe, players ---------- */
 const isEv = e => e && typeof e === 'object' && typeof e.type === 'string' && typeof e.t === 'number' && isFinite(e.t);
+// a parser's message, cut short without leaving its own "(line 1 column 62)" half open
+const clipWhy = (m, n) => { m = String(m).replace(/\s+/g, ' ').trim(); if(m.length <= n) return m; m = m.slice(0, n - 1);
+  const o = m.lastIndexOf('('); if(o > m.lastIndexOf(')')) m = m.slice(0, o).trim(); return m + '…'; };
 const isDevId = s => typeof s === 'string' && /^[A-Z0-9]{4}$/.test(s);
 // parse one export: {events} (desktop .json), the same JSON in a .txt (the phone's share sheet), or a bare array.
 // → { ok, reason, events, dev, file }
@@ -57,7 +60,7 @@ R.parse = function(input, file){
   if(typeof j === 'string'){
     const s = j.replace(/^﻿/, '').trim();
     if(!s) return { ok:false, reason:'empty file', events:[], file };
-    try{ j = JSON.parse(s); }catch(e){ return { ok:false, reason:'not JSON (' + String(e.message || e).slice(0, 60) + ')', events:[], file }; }
+    try{ j = JSON.parse(s); }catch(e){ return { ok:false, reason:'not JSON (' + clipWhy(e.message || e, 70) + ')', events:[], file }; }
   }
   const list = Array.isArray(j) ? j : (j && Array.isArray(j.events) ? j.events : null);
   if(!list) return { ok:false, reason:'no events array', events:[], file };
@@ -66,8 +69,11 @@ R.parse = function(input, file){
   // the device's zone: the export's local ISO time carries its offset (+01:00 → getTimezoneOffset -60)
   const m = j && typeof j.exported === 'string' && j.exported.match(/([+-])(\d\d):(\d\d)$/);
   const tz = m ? -(m[1] === '-' ? -1 : 1) * (+m[2] * 60 + +m[3]) : null;
-  return { ok:true, reason:null, events:evs, dev:(j && !Array.isArray(j) && isDevId(j.dev)) ? j.dev : null, file:file || null, ptv:(j && j.ptv) || 1, tz };
+  // the build the export came from (its header): per-player exports have no session event after CLEAR
+  const hb = j && !Array.isArray(j) ? (typeof j.src === 'string' && j.src ? j.src : null) : null;
+  return { ok:true, reason:null, events:evs, dev:(j && !Array.isArray(j) && isDevId(j.dev)) ? j.dev : null, file:file || null, ptv:(j && j.ptv) || 1, tz, build:hb };
 };
+let SRC_N = 0;   // one id per normalize() call: each export (file) is its own source for R.dedupe
 // attach each event's device: the export's header dev, else a pt_player marker in the same session, else the file
 R.normalize = function(input, file, devHint){
   const p = (input && input.ok !== undefined && Array.isArray(input.events)) ? input : R.parse(input, file);
@@ -76,13 +82,34 @@ R.normalize = function(input, file, devHint){
   for(const e of p.events) if(e.type === 'pt_player' && isDevId(dOf(e).dev)) bySid[e.sid] = dOf(e).dev;
   const any = Object.values(bySid)[0] || null;
   const fallback = devHint || p.dev || any || (p.file ? 'file:' + String(p.file).replace(/^.*[\\/]/, '') : 'device');
-  return p.events.map(e => Object.assign({ d:{} }, e, { _dev:p.dev || devHint || bySid[e.sid] || fallback, _file:p.file || null, _tz:p.tz == null ? null : p.tz })).sort((a, b) => a.t - b.t);
+  const src = ++SRC_N;
+  return p.events.map(e => Object.assign({ d:{} }, e, { _dev:p.dev || devHint || bySid[e.sid] || fallback, _file:p.file || null, _tz:p.tz == null ? null : p.tz,
+    _src:src, _bsrc:p.build || null })).sort((a, b) => a.t - b.t);
 };
-// the same event exported twice (two exports of one device) counts once: key (sid, t, type)
+// the same event exported twice (two exports of one device) counts once. V12.log stamps t with Date.now(), so events
+// logged in one JS turn share (sid, t, type): the key is the whole event (sid, t, type, m, d), and copies are counted
+// per export, keeping the most any one export holds. Two different events in one millisecond both stay; two exports
+// of one event (byte-identical) count once; nothing within a single export is ever dropped.
+R.evKey = e => e.sid + '|' + e.t + '|' + e.type + '|' + (e.m == null ? '' : e.m) + '|' + JSON.stringify(e.d || {});
 R.dedupe = function(evs){
-  const seen = new Set(), out = [];
-  for(const e of evs){ const k = e.sid + '|' + e.t + '|' + e.type; if(seen.has(k)) continue; seen.add(k); out.push(e); }
+  const kept = new Map(), per = new Map(), out = [];
+  for(const e of evs){
+    const k = R.evKey(e), sk = (e._src == null ? '' : e._src) + '#' + k;
+    const n = (per.get(sk) || 0) + 1; per.set(sk, n);
+    if(n <= (kept.get(k) || 0)) continue;
+    kept.set(k, n); out.push(e);
+  }
   return out.sort((a, b) => a.t - b.t);
+};
+// objective text by mission and id, from any obj_done.txt or stuck.txt in a log (rows for an objective that was never
+// finished or stuck still get its name when another player's log has it)
+R.objTexts = function(evs){
+  const t = {};
+  for(const e of evs || []){
+    const d = dOf(e), id = e.type === 'obj_done' ? d.id : e.type === 'stuck' ? d.obj : null;
+    if(id && d.txt && !t[(e.m || '?') + '|' + id]) t[(e.m || '?') + '|' + id] = String(d.txt);
+  }
+  return t;
 };
 R.labelOf = e => dOf(e).p || e.p || null;
 // players keyed by device + label, printed B7QX·P3
@@ -105,7 +132,7 @@ R.matchPlayer = (pl, q) => {
 };
 
 /* ---------- 1. where did they get lost? ---------- */
-R.lost = function(ev){
+R.lost = function(ev, ctx){
   const by = new Map(), inv = new Map();
   const get = (m, obj) => { const k = m + '|' + obj; if(!by.has(k)) by.set(k, { kind:'obj', m, obj, txt:null, secs:null, stuck:0, hints:0, away:0, eff:null, walked:null, direct:null, quit:false, nothing:0, done:false, want:null }); return by.get(k); };
   const iget = (m, id) => { const k = m + '|' + id; if(!inv.has(k)) inv.set(k, { kind:'inv', m, id, name:screenOf(id), open:0, opens:0, strikes:0, files:0, struck:0, docFailed:0, refused:0, pending:0, verdicts:0 }); return inv.get(k); };
@@ -136,8 +163,9 @@ R.lost = function(ev){
     }
     if(e.type !== 'quit' && e.type !== 'seen_read' && e.type !== 'pt_dropped') prev = e;
   }
-  const L = R.LOST, I = R.INVEST, rows = [];
+  const L = R.LOST, I = R.INVEST, rows = [], names = (ctx && ctx.txt) || {};
   for(const o of by.values()){
+    if(!o.txt && names[o.m + '|' + o.obj]) o.txt = names[o.m + '|' + o.obj];
     o.score = L.stuck * o.stuck + L.hint * o.hints + L.away * o.away + (o.eff != null && o.eff < 0.4 && (o.walked || 0) >= 25 ? L.ineff : 0) + (o.quit ? L.quit : 0) + (o.nothing >= 3 ? L.taps : 0);
     o.level = o.score >= L.lostAt ? 'lost' : (o.score >= L.slowAt || (o.secs || 0) >= L.slowSecs) ? 'slow' : null;
     if(o.level) rows.push(o);
@@ -175,7 +203,8 @@ R.lostLine = o => {
   if(o.nothing >= 3) bits.push(`${o.nothing} taps on nothing`);
   if(o.quit) bits.push('quit here');
   if(!o.done) bits.push('not finished');
-  if(o.want && o.stuck) bits.push('wanted: ' + short(o.want, 28));
+  const same = (a, b) => short(a, 60).toLowerCase() === short(b, 60).toLowerCase();
+  if(o.want && o.stuck && !(o.txt && same(o.want, o.txt))) bits.push('wanted: ' + short(o.want, 28));
   return `${up(o.m)} · ${short(o.txt || o.obj, 34)}: ${bits.join(', ')}`;
 };
 
@@ -319,9 +348,10 @@ R.approaches = function(ev){
     const os = orders.filter(e => (e.m || '?') === m && R.ORDER_SRC.test(dOf(e).src || '') && dOf(e).def !== true && dOf(e).ok !== false);
     const as = acts.filter(e => (e.m || '?') === m);
     const posts = os.filter(e => dOf(e).post && dOf(e).post !== 'van');
-    const f = [];
-    if(posts.length){ use('preparation', `${up(m)} Uche posted to the ${dOf(posts[posts.length - 1]).post}`); f.push('preparation'); }
-    if(os.length && as.length){ use('Uche', `${up(m)} Uche ${dOf(as[0]).task}`); f.push('Uche'); }
+    const f = [], post = posts.length ? dOf(posts[posts.length - 1]).post : null;
+    // one decision, one family: a post that Uche then acted on is the Uche family; a post alone is preparation
+    if(os.length && as.length){ use('Uche', `${up(m)} Uche ${dOf(as[0]).task}` + (post ? ` (posted to the ${post})` : '')); f.push('Uche'); }
+    else if(post){ use('preparation', `${up(m)} Uche posted to the ${post}`); f.push('preparation'); }
     const ord = os.map(e => dOf(e).order + (dOf(e).post ? ' ' + dOf(e).post : '')).join(', ');
     rows.push({ m, enc:'uche', chosen:os.length ? 'ordered: ' + ord : 'no order', def:!os.length,
       result:(as.length ? 'acted: ' + [...new Set(as.map(e => dOf(e).task))].join(', ') : 'did nothing on screen') + (!os.length && as.length ? ' (not counted: never ordered)' : ''), fams:f });
@@ -351,13 +381,15 @@ R.meta = function(ev){
   if(!anyPs && sv.length && dOf(sv[sv.length - 1]).secsPlayed != null){ anyPs = true; play = dOf(sv[sv.length - 1]).secsPlayed; }
   const ends = [...new Set(ev.filter(e => e.type === 'mission_end').map(e => dOf(e).m).filter(Boolean))];
   ['m2', 'm3'].forEach(m => { if(ev.some(e => e.type === m + '_summary') && !ends.includes(m)) ends.push(m); });
-  return { kinds, sessions:new Set(ev.map(e => e.sid)).size, diff, pace:set.difficulty || null, hints:set.hints || null, build:(s.build || {}).src || null,
+  const hdr = ev.find(e => e._bsrc);
+  return { kinds, sessions:new Set(ev.map(e => e.sid)).size, diff, pace:set.difficulty || null, hints:set.hints || null, build:(s.build || {}).src || (hdr ? hdr._bsrc : null),
     w:s.w || p.w || null, h:s.h || p.h || null, from:ev.length ? ev[0].t : null, to:ev.length ? ev[ev.length - 1].t : null,
     wallSecs:ev.length ? Math.round((ev[ev.length - 1].t - ev[0].t) / 1000) : 0, playSecs:anyPs ? Math.round(play) : null,
     missions:ends, survey:sv.map(e => ({ where:dOf(e).where, satisfying:dOf(e).satisfying, unfair:dOf(e).unfair })), events:ev.length,
     v2:ev.some(e => e.type === 'session' && dOf(e).ptv === 2) || ev.some(e => typeof dOf(e).ps === 'number') };
 };
-R.analyze = ev => ({ meta:R.meta(ev), lost:R.lost(ev), failed:R.failed(ev), detection:R.detection(ev), approaches:R.approaches(ev) });
+// ctx (optional): { txt } objective names by 'm|id' (R.objTexts over every loaded log, plus the game's own list on the page)
+R.analyze = (ev, ctx) => ({ meta:R.meta(ev), lost:R.lost(ev, ctx), failed:R.failed(ev), detection:R.detection(ev), approaches:R.approaches(ev) });
 R.DIFF = { recruit:'Recruit', senior:'Senior Agent' };
 R.leadLine = M => [M.kinds.map(k => k === 'touch' ? 'Phone' : 'Desktop').join(' + ') || 'Device ?', R.DIFF[M.diff] || 'casework ?',
   M.hints ? 'hints when stuck ' + M.hints : null, M.playSecs != null ? mmss(M.playSecs) + ' played' : mmss(M.wallSecs) + ' on the clock',
@@ -466,10 +498,14 @@ const SH = { scope:'player', ret:null, open:false };
 const shown = () => { const ov = document.getElementById('screen-pt-report'); return !!(ov && ov.classList.contains('show')); };
 function render(ov){
   const K = kit(), label = K ? K.label() : null, dev = K ? K.device() : 'device';
-  const all = R.dedupe(R.normalize((K ? K.events() : []).filter(isEv), null, dev));
+  const all = R.dedupe(R.normalize({ ok:true, events:(K ? K.events() : []).filter(isEv), dev:null, file:null, tz:null,
+    build:(root.NACECA_BUILD || {}).src || null }, null, dev));
   if(!label) SH.scope = 'device';
   const ev = SH.scope === 'player' && label ? all.filter(e => R.labelOf(e) === label) : all;
-  const res = R.analyze(ev), M = res.meta;
+  // objective names: from the logs, then the current mission's own list
+  const txt = R.objTexts(all);
+  try{ const g = typeof S !== 'undefined' && S.game; if(g && g.currentMission) (g.objectives || []).forEach(o => { if(o && o.id && o.text) txt[g.currentMission + '|' + o.id] = short(o.text, 48); }); }catch(e){}
+  const res = R.analyze(ev, { txt }), M = res.meta;
   const title = SH.scope === 'player' && label ? dev + '·' + label : 'Whole device · ' + dev;
   const list = rows => rows.length ? `<ul>${rows.slice(0, 5).map(r => `<li>${esc(r)}</li>`).join('')}${rows.length > 5 ? `<li class="pt-more">+${rows.length - 5} more in the exported log</li>` : ''}</ul>` : '';
   const stamp = f => f ? `<span class="pt-stamp ${f}">${esc(R.STAMP[f])}</span>` : '';
@@ -494,6 +530,7 @@ function back(){
   if(typeof openSettings === 'function'){
     openSettings();
     try{ _settingsReturn = ret; }catch(e){}   // closing Settings still returns where it was opened from (the pause menu)
+    try{ if(typeof renderSettings === 'function') renderSettings(); }catch(e){}   // the PLAYTEST rows depend on where that is
   } else if(typeof showOverlay === 'function') showOverlay(ret);
 }
 V12.ptReportOpen = function(scope){

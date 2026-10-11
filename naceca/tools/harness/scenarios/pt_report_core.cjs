@@ -12,11 +12,33 @@ module.exports = async h => {
   const load = name => R.normalize(R.parse(P.fixture(name), name));
   const A = load('deviceA-desk.json'), Aearly = load('deviceA-desk-early.json'), B = load('deviceB-phone.txt'), C = load('deviceC-old.json');
   h.assert(A.length && B.length && C.length && Aearly.length, 'the fixtures parse');
-  h.assert(!R.parse(P.fixture('broken.json'), 'broken.json').ok, 'broken.json is not a playtest log: ' + R.parse(P.fixture('broken.json')).reason);
+  const brk = R.parse(P.fixture('broken.json'), 'broken.json');
+  h.assert(!brk.ok, 'broken.json is not a playtest log: ' + brk.reason);
+  // D-11: the reason is clipped before the closing parenthesis, never inside the parser's own "(line … column …)"
+  const opens = (brk.reason.match(/\(/g) || []).length, closes = (brk.reason.match(/\)/g) || []).length;
+  h.assert(opens === closes && /\)$/.test(brk.reason), 'the skip reason\'s parentheses are balanced: ' + brk.reason);
   const all = R.dedupe(A.concat(Aearly, B, C));
 
   // dedupe: two exports of the same device count once; players are keyed by device + label
   h.assert(R.dedupe(A.concat(Aearly)).length === A.length && Aearly.every(e => A.some(x => x.sid === e.sid && x.t === e.t && x.type === e.type)), 'two exports of one device dedupe to the later one');
+  h.assert(R.dedupe(B.concat(load('deviceB-phone.txt'))).length === B.length, 'the same file loaded twice counts once');
+  // D-1: different events logged in the same millisecond (one JS turn) all stay, on the sheet and in the CLI
+  {
+    const t1 = 1760000000000, mk = (type, d, t, m) => ({ t:t || t1, sid:'s1', type, m:m || 'm3', d:Object.assign({ p:'P1', ps:10 }, d) });
+    const one = [mk('pt_player', { label:'P1', dev:'B7QX' }, t1 - 5000), mk('enc', { enc:'m3_entry', entry:'quiet', door:'gate', power:'on', def:{ entry:false, power:true } }, t1 - 4000),
+      mk('enc', { enc:'m3_laptop', outcome:'abandoned', files:0 }), mk('enc', { enc:'m3_child', choice:null, by:'uche' }),
+      mk('radio', { key:'a', outcome:'preempted' }, t1 + 10), mk('radio', { key:'b', outcome:'shown' }, t1 + 10),
+      mk('obj_done', { id:'o2_custodian', secs:200 }, t1 + 20, 'm5'), mk('obj_done', { id:'o3_decide', secs:0 }, t1 + 20, 'm5'),
+      mk('interact_miss', { near:'x', why:'none' }, t1 + 30), mk('interact_miss', { near:'x', why:'none' }, t1 + 30)];
+    const n1 = R.normalize(one, null, 'B7QX'), d1 = R.dedupe(n1);
+    h.log('same-ms dedupe', one.length, '→', d1.length);
+    h.assert(d1.length === one.length, `different events in one millisecond are all kept (${one.length} in, ${d1.length} out)`);
+    const res = R.analyze(d1);
+    h.assert(res.approaches.rows.some(r => r.enc === 'm3_laptop') && res.approaches.rows.some(r => r.enc === 'm3_child') && res.lost.objectives.some(o => o.obj === 'o3_decide'),
+      'the laptop and the child both reach the approach rows; both objectives reach the lost table');
+    const twice = R.dedupe(R.normalize(one, null, 'B7QX').concat(R.normalize(one.slice(0, 6), null, 'B7QX')));
+    h.assert(twice.length === one.length, 'and two exports holding them still count each once (' + twice.length + ')');
+  }
   const pl = R.players(all);
   h.log('players', pl.map(p => p.name + ':' + p.events.length).join(', '));
   const p1 = pl.find(p => p.label === 'P1'), p2 = pl.find(p => p.label === 'P2'), old = pl.find(p => !p.label);
@@ -35,6 +57,9 @@ module.exports = async h => {
   h.assert(r1.approaches.families.length >= 2 && r1.approaches.families.includes('stealth'), 'P1 chose ≥ 2 families: ' + r1.approaches.families.join(', '));
   h.assert(r1.meta.diff === 'senior' && r1.meta.playSecs > 0 && r1.meta.kinds.join() === 'desk', 'P1: Senior Agent from new_game, played time, desktop');
   h.assert(r1.lost.screens.some(o => o.id === 'screen-ops' && o.open > 0) && !r1.lost.rows.some(o => o.kind === 'inv'), 'P1: the operations table is measured; a short visit with no strikes is not a row');
+  // D-8: a per-player export (no session event after CLEAR) still names the build, from the export's header
+  const hdrA = JSON.parse(P.fixture('deviceA-desk.json')), hdrB = JSON.parse(P.fixture('deviceB-phone.txt'));
+  h.assert(hdrA.src && r1.meta.build === hdrA.src && R.leadLine(r1.meta).includes('build ' + hdrA.src) && r2.meta.build === hdrB.src, 'the lead line names the build from the export header: ' + R.leadLine(r1.meta));
 
   // P2: ASK THEM, one family; a quit right after the survey isn't lost
   h.assert(r2.detection.flag === 'ask' && r2.detection.stamp === 'ASK THEM', 'P2: ASK THEM');
@@ -67,6 +92,9 @@ module.exports = async h => {
   h.assert(!ap.families.includes('Uche') && ap.verdict === 'None recognised', 'an unposted Uche\'s callout is not a family (' + ap.verdict + ')');
   ap = R.approaches([ev('order', { who:'uche', order:'post', post:'van', src:'talk', ok:true, def:false }), kcSeen(), callout]);
   h.assert(ap.families.includes('Uche'), 'an order the player gave + an act in the same mission → Uche');
+  // D-7: one decision is one family: a corner post that Uche then acted on is Uche, not preparation + Uche
+  ap = R.approaches([ev('order', { who:'uche', order:'post', post:'corner', src:'talk', ok:true, def:false }), ev('ally_done', { who:'uche', task:'veer', outcome:'done', secs:3 })]);
+  h.assert(ap.families.join() === 'Uche' && ap.verdict === 'One: Uche' && /posted to the corner/.test(ap.why.Uche[0]), 'one Uche order + his act is one family, not two (' + ap.verdict + ')');
   ap = R.approaches([ev('order', { who:'uche', order:'post', post:'corner', src:'talk', ok:true, def:false }, 'm2'), ev('ally_done', { who:'uche', task:'cover_held', outcome:'done', secs:1 }, 'm3')]);
   h.assert(!ap.families.includes('Uche') && ap.families.includes('preparation'), 'the order and the act must be in the same mission (a non-default post is still preparation)');
   // a defaults-only player
@@ -95,7 +123,7 @@ module.exports = async h => {
   det = R.detection([al('A one two'), al('B one two', { who:'obi', enc:'m3_obi' }), ev('seen_read', { who:'obi', enc:'m3_obi', ms:300, via:'toast', words:3, end:'hidden' }), rd(1600, 3)]);
   h.assert(det.rows[0].readMs === 1600 && det.rows[1].readMs === 300, 'seen_read pairs with its own alarm (by order, per watcher)');
   det = R.detection([al('A'), ev('seen_read', { who:'kc', enc:'m2_kc', ms:0, via:null, words:1, end:'timeout' })]);
-  h.assert(det.flag === 'ask' && /never on screen/.test(R.seenLine(det.rows[0])), 'a line that never reached the screen reads "reason never on screen"');
+  h.assert(det.flag === 'ask' && /never on screen/.test(R.seenLine(det.rows[0])), 'an older log\'s seen_read with via:null (no longer logged) still reads "reason never on screen"');
 
   // failed: noop is not a failure; blocked is refused without a press
   const f = R.failed([ev('interact_result', { label:'Talk', outcome:'noop' }), ev('interact_result', { label:'Gate', outcome:'refused', toast:{ big:'NOT YET' } }), ev('blocked', { big:'BACK TO THE TABLE', small:'x', rep:2 })]);
@@ -110,6 +138,16 @@ module.exports = async h => {
   h.assert(ops && R.lostLine(ops) === 'H2 · operations table: 6:40 open, 3 strikes, 3 links struck, lost' && ops.level === 'lost', 'the operations table row: "operations table: 6:40 open, 3 strikes"');
   h.assert(inv.rows.some(o => o.id === 'warrant' && o.refused === 1) && inv.rows.some(o => o.id === 'screen-puzzle' && o.docFailed === 1) && inv.rows.some(o => o.id === 'screen-desk' && o.verdicts === 1 && o.open === 250), 'warrant, document and desk rows');
   h.assert(!inv.rows.some(o => o.id === 'screen-pause'), 'menus are not investigation');
+  // D-9: a long briefing, the capabilities page, the phone or a mini-game are not investigation screens
+  const notInv = R.lost(['screen-briefing', 'screen-skills', 'screen-phone', 'screen-minigame', 'screen-plan', 'screen-evidence'].map(id => ev('ov_dwell', { id, secs:400, obj:'o1' }, 'm3')));
+  h.assert(notInv.rows.length === 0 && notInv.screens.length === 0, 'briefing, capabilities, phone, mini-game, plan and evidence are not "lost" rows ' + JSON.stringify(notInv.rows.map(R.lostLine)));
+  // D-11: the objective's name, not its id; "wanted" only when it says something new
+  let lo = R.lost([ev('interact_miss', { near:null, why:'none', obj:'o1_tunde', rep:5 })], { txt:{ 'm2|o1_tunde':'Speak with informant Tunde' } });
+  h.assert(R.lostLine(lo.rows[0]) === 'M2 · Speak with informant Tunde: 5 taps on nothing, not finished', 'a lost row prints the objective\'s text, not its id: ' + R.lostLine(lo.rows[0]));
+  lo = R.lost([ev('stuck', { obj:'o2_scan', txt:'Scan suspect phone', want:'Scan suspect phone' }), ev('stuck', { obj:'o3_runner', txt:'Decide on the teen runner', want:'Confront teen suspect' })]);
+  const l2 = lo.rows.map(R.lostLine);
+  h.assert(!l2.find(l => /Scan suspect phone/.test(l)).includes('wanted:') && l2.find(l => /teen runner/.test(l)).includes('wanted: Confront teen suspect'), '"wanted:" only when it differs from the objective ' + JSON.stringify(l2));
+  h.assert(typeof R.objTexts === 'function' && R.objTexts(A)['m2|o2_scan'] === 'Scan suspect phone', 'R.objTexts reads the names in a log');
 
   // meta: difficulty from new_game, played time per session from ps, independent per player
   const meta = R.meta([ev('session', { settings:{ casework:'recruit' }, ps:0, p:'P2' }), ev('new_game', { d:'senior', ps:3, p:'P2' }), ev('x', { ps:100, p:'P2' }), ev('session', { ps:0, p:'P2' }, 'm2', 's2'), ev('x', { ps:40, p:'P2' }, 'm2', 's2')]);

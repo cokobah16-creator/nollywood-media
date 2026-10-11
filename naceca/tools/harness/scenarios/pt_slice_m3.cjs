@@ -6,6 +6,8 @@
 //   node tools/harness/run.cjs tools/harness/scenarios/pt_slice_m3.cjs --html <build>/naceca.html --w 1280 --h 800
 // Until Team C has merged it runs the drive and checks whatever this build logs, and logs SKIP (needs C) for the mansion
 // asserts; until Team A has merged, SKIP (needs A) for the eye.
+// A run with any SKIP ends with an INCOMPLETE line: it has not checked the contract on the real emitters. The
+// integrator runs it with PT_SLICE_STRICT=1 once A and C are in, which turns INCOMPLETE into a failure.
 const P = require('./pt_lib.cjs');
 const T = P.T;
 module.exports = async h => {
@@ -45,25 +47,34 @@ module.exports = async h => {
     h.log(`C:${hasC} A:${full} events:${evs.length} tactics:${evs.filter(e => P.TACTICS.test(e.type)).map(e => e.type === 'enc' ? e.d.enc : e.type).join(',')} in 30 s on site:${perTick}`);
   } finally { await T.restoreArt(h); }
 
-  const r = out;
-  P.sliceAsserts(h, r.evs, { name:'M3', once:r.hasC ? ['m3_summary', 'm3_entry'] : [] });
+  const r = out, missing = new Set();
+  const tac = P.sliceAsserts(h, r.evs, { name:'M3', once:r.hasC ? ['m3_summary', 'm3_entry'] : [] });
+  h.log(`M3: the contract was checked on ${r.evs.length} events, ${tac.length} of them tactics events`);
   h.assert(r.perTick <= 40, `M3: nothing per tick (${r.perTick} V12.log calls in 30 s, ≤ 40)`);
   h.assert(!r.evs.some(e => e.type === 'seen' && /^(knock|loud)$/.test(e.d.cause)), 'M3: no seen with cause knock or loud');
-  // every alarm gets its read (per watcher, by order)
+  // every alarm whose line reached the screen gets its read (per watcher); a line that never showed has none (§4's via is
+  // eye|toast|both), so no watcher has more reads than alarms
   const alarms = r.evs.filter(e => e.type === 'seen' && e.d.level === 'alarm'), reads = r.evs.filter(e => e.type === 'seen_read');
-  const byWho = {}; alarms.forEach(a => { byWho[a.d.who] = (byWho[a.d.who] || 0) + 1; }); reads.forEach(x => { byWho[x.d.who] = (byWho[x.d.who] || 0) - 1; });
-  h.assert(Object.values(byWho).every(n => n === 0), 'M3: a seen_read follows each alarm ' + JSON.stringify(byWho));
-  if (!r.hasC) { h.log('SKIP (needs C): M3: enc m3_* and m3_summary come from tac_mansion.js, which is not in this build'); }
+  const byWho = {}; alarms.forEach(a => { (byWho[a.d.who] = byWho[a.d.who] || { alarms:0, reads:0, shown:0 }).alarms++; }); reads.forEach(x => { (byWho[x.d.who] = byWho[x.d.who] || { alarms:0, reads:0, shown:0 }).reads++; });
+  if (r.full) r.eye.filter(x => x.level === 'alarm' && x.shown && x.at === x.why && byWho[x.who]).forEach(x => byWho[x.who].shown++);
+  h.assert(Object.values(byWho).every(n => n.reads <= n.alarms && n.reads >= n.shown), 'M3: a seen_read for each alarm whose line was on screen ' + JSON.stringify(byWho));
+  if (!r.hasC) { missing.add('C'); h.log('SKIP (needs C): M3: enc m3_* and m3_summary come from tac_mansion.js, which is not in this build'); }
   else {
     h.assert(r.evs.some(e => e.type === 'enc' && e.d.enc === 'm3_entry'), 'M3: enc m3_entry');
     const box = {}; require('vm').runInNewContext(require('fs').readFileSync(require('path').join(P.ROOT, 'src', 'tactics', 'tac_pt_report.js'), 'utf8'), box);
     h.log('families: ' + box.PT_REPORT.analyze(r.evs).approaches.verdict);
   }
-  if (!r.full) h.log('SKIP (needs A): M3: seen.why against the eye\'s line (TAC.sight.full is false)');
+  if (!r.full) { missing.add('A'); h.log('SKIP (needs A): M3: seen.why against the eye\'s line (TAC.sight.full is false)'); }
   else {
     const mine = r.eye.filter(x => x.top === x.who && x.shown), off = mine.filter(x => x.at !== x.why);
     off.slice(0, 5).forEach(x => h.log('  why/eye: ' + JSON.stringify(x)));
     h.assert(off.length === 0, 'M3: seen.why equals the eye\'s .eye-why at that tick');
+  }
+  // D-10: a run that SKIPped is not a pass of the contract (PT_SLICE_STRICT=1 fails it, for the integrator after A and C merge)
+  if (missing.size) {
+    const m = [...missing].sort().join(' and ');
+    h.log(`INCOMPLETE (needs ${m}): only this build's own events were checked against DESIGN §4; the mansion emitters were not exercised`);
+    h.assert(!process.env.PT_SLICE_STRICT, `PT_SLICE_STRICT: pt_slice_m3 ran without ${m}`);
   }
   h.assert(h.errors.length === 0, 'no page errors');
 };

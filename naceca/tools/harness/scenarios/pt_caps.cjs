@@ -64,6 +64,23 @@ module.exports = async h => {
   h.log('big', P.chars(big), big.d.s.length, big.d.arr.length, big.d.arr[24]);
   h.assert(big && P.chars(big) <= 1500 && big.d.trunc === true, 'a 5000-char event is stored ≤ 1500 chars with trunc:true (' + P.chars(big) + ')');
   h.assert(big.d.s.length <= 200 && big.d.arr.length === 25 && big.d.arr[24] === '+76' && big.d.keep === 'short', 'strings cut to 200, arrays to 24 with a +N marker, short fields kept');
+  // D-6: a summary still over the limit after the 200/24 and 60/8 cuts keeps its values: arrays go to 4, then the
+  // largest fields are blanked one by one; never only the key names
+  const sum = { entry:'loud', door:'front', power:'on', uche:{ orders:[], acts:[] }, spawn:'front',
+    obi:{ first:'stunned', alertedBy:'loud', alertedAt:0, outcome:'stun_grab', by:'kelechi', arrest:'professional' },
+    seen:{ notices:2, alarms:1, evaded:1, causes:{ sight:1, noise:0, close:0 } }, crouchSecs:12.4, wipe:{ armed:true, outcome:'halted', pct:34, files:5, total:7 },
+    child:{ choice:'gentle', out:true, by:'kelechi' }, extract:{ refusals:0, missing:[] }, prep:{ sims:true, kcFair:true, tip:true, tipped:true, warrant:'signed' },
+    secs:188, force:0, trust:2, grade:'B', diff:{ casework:'senior', pace:'standard' }, hints:[], build:'pt_caps' };
+  for(let i = 0; i < 8; i++){ sum.uche.orders.push({ order:'post', post:i % 2 ? 'back' : 'corner', src:'talk', ok:true, t:12.3 + i, obj:'o6_arrest' });
+    sum.uche.acts.push({ task:'cover_held', outcome:'done', secs:3.2, t:44.1 + i, post:'back' }); }
+  await h.ev(sum => V12.log('m3_summary', sum), sum);
+  ev = await P.all(h);
+  const ms = P.of(ev, 'm3_summary', t0)[0];
+  h.log('m3_summary', JSON.stringify(sum).length, '→', P.chars(ms), JSON.stringify(ms.d).slice(0, 160));
+  h.assert(JSON.stringify(sum).length > 1500 && ms && P.chars(ms) <= 1500 && ms.d.trunc === true, 'an oversized m3_summary is stored ≤ 1500 chars with trunc');
+  h.assert(!ms.d.keys && ms.d.entry === 'loud' && ms.d.obi && ms.d.obi.outcome === 'stun_grab' && ms.d.wipe && ms.d.wipe.pct === 34 && ms.d.child && ms.d.child.by === 'kelechi' && ms.d.secs === 188,
+    'it keeps its values (entry, obi, wipe, child, secs), not just the key names');
+  h.assert(ms.d.uche && ms.d.uche.orders.length <= 5 && ms.d.uche.orders[0].post === 'corner', 'its long arrays are cut to 4 with a +N marker ' + JSON.stringify(ms.d.uche).slice(0, 120));
   const sv = P.of(ev, 'survey', t0);
   h.assert(sv.length === 2 && sv.every(e => e.d.satisfying === A1 && e.d.unfair === A2), '600-char survey answers are kept whole');
   h.assert(!sv[0].d.trunc && sv[1].d.trunc === true && sv[1].d.extra.length <= 200 && P.chars(sv[1]) <= 4000, 'a survey gets 4000 chars; only its other long strings are cut');
