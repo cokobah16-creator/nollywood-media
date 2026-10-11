@@ -1,0 +1,44 @@
+/* =========================================================================
+   NACECA · src/tactics/tac_mansion.css — Team C: the UCHE order button (touch), its paper job tag, the
+   Q · UCHE chip (desktop), the plan sketch's facing tick. Paper UI: palette vars only; no gradient,
+   shadow, blur or filter; icons are icon() SVGs.
+   ========================================================================= */
+
+/* ---------- the UCHE button: its own 66 px button stacked above SCAN (not a third in .ctx-row) ---------- */
+#ctx-uche-wrap{display:none;position:relative;align-self:flex-start}
+#ctx-uche-wrap.show{display:block}
+#ctx-uche{position:relative}
+#ctx-uche .tac-uche-ico{display:flex;align-items:center;justify-content:center;width:22px;height:22px}
+#ctx-uche .tac-uche-ico svg{width:22px;height:22px}
+#ctx-uche.busy,#ctx-uche:disabled{border-style:dashed;cursor:default}
+#ctx-uche.busy:active,#ctx-uche:disabled:active{transform:none}
+/* the job, in a paper tag to its left */
+#ctx-uche-tag{position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%);box-sizing:border-box;white-space:nowrap;
+  padding:6px 10px;background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);border:1px solid var(--ink,#1C1C1A);border-radius:2px;
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;font-weight:600;letter-spacing:.14em;line-height:1.2;pointer-events:none}
+#ctx-uche-tag:empty{display:none}
+#ctx-uche-wrap[data-order="cover"] #ctx-uche-tag{border-left:3px solid var(--red,#B3261E)}
+/* a phone held upright: the meters' band (wayfind.css: 320 px up, full width) sits just above the cluster, so while
+   the button shows they move up by one button and its gap */
+@media (min-height:481px){
+  body.tac-uche-on.touch-active #hud-meters{bottom:calc(394px + env(safe-area-inset-bottom,0px))}
+}
+/* a phone on its side: no room above the cluster (the minimap and the radio strip are there), so the button
+   sits to the left of the action button, still above SCAN; the tag to its left, clear of the stick */
+@media (max-height:480px){
+  .touch-active #ctx-uche-wrap{position:absolute;left:-43px;top:9px}
+  /* the tag goes above the button, flush with its left edge: to its left it would sit in the centre toast band
+     (HE SAW YOU and COVER HIM can be up together; REVIEW C-8), below it is SCAN */
+  .touch-active #ctx-uche-tag{right:auto;left:0;top:auto;bottom:calc(100% + 10px);transform:none}
+}
+
+/* ---------- the desktop chip: [icon] Q · UCHE  COVER HIM (TAC.ui.chipRow(), hidden on touch by tactics.css) ---------- */
+.tac-uche-chip .tac-uche-key{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;
+  background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);border:1px solid var(--manila,#E9DCC0);border-radius:2px;
+  font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:11px;letter-spacing:0}
+.tac-uche-chip .tac-chip-k{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);letter-spacing:.14em;text-transform:uppercase}
+.touch-active .tac-uche-chip{display:none!important}
+
+/* ---------- the plan sketch: the SIM theory's facing tick on the study dot ---------- */
+.plan-svg .tac-face{fill:none;stroke:var(--ink,#1C1C1A);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.plan-svg .tac-blind{fill:var(--ink,#1C1C1A)}
