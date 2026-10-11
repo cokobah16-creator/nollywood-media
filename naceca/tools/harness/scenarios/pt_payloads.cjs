@@ -79,14 +79,17 @@ module.exports = async h => {
   h.assert(conf && conf.d.outcome === 'progress' && conf.d.chase === true, 'a confront that starts a chase logs interact_result progress with chase:true');
   // D-4: v12_pt counted it as a refusal before the rewrite; the totals take it back
   h.assert(ref1 === ref0.totals, `the refusal totals don't count the confront (${ref0.totals} before, ${ref1} after)`);
-  // chase_end on today's path (the base tackle): how and by are null
+  // chase_end on a tackle: how and by are null on today's path, and 'tackle' / 'player' once the market layer
+  // (Team B's tac_market.js) is in the build: it stamps every chase it starts
   t0 = await P.mark(h);
   await h.ev(() => { const r = CHASE.active.runner.position, p = ENGINE.player.position; p.x = r.x + 0.5; p.z = r.z; CHASE.active.headStart = 0; __wf.run(0.2); });
   await h.step(300);
   ev = await P.all(h);
   let ce = P.of(ev, 'chase_end', t0)[0];
   h.log('chase_end today', JSON.stringify(ce && ce.d));
-  h.assert(ce && ce.d.outcome === 'caught' && ce.d.how === null && ce.d.by === null, 'chase_end how/by are null on today\'s path');
+  const hasB = await h.ev(() => !!(window.TAC && TAC.m2));
+  if (hasB) h.assert(ce && ce.d.outcome === 'caught' && ce.d.how === 'tackle' && ce.d.by === 'player', 'chase_end how/by are tackle/player with the market layer in');
+  else h.assert(ce && ce.d.outcome === 'caught' && ce.d.how === null && ce.d.by === null, 'chase_end how/by are null on today\'s path');
   await T.finishDialogue(h); await T.choose(h, 0); await T.finishDialogue(h);
   await h.ev(() => { showOverlay(null); ENGINE.movementEnabled = true; });
   ev = await P.all(h);

@@ -47,6 +47,8 @@ module.exports = async h => {
   await h.ev(src => { eval(src); }, HELP);
   const env = await h.ev(() => ({ W:innerWidth, H:innerHeight, touch:document.body.classList.contains('touch-active') }));
   h.log('viewport', JSON.stringify(env));
+  // the placement rules are for a phone (touch, either way up) or a desktop window; a narrow window without touch is neither
+  h.assert(env.touch || env.W >= 1000, 'tac_hud runs at --w 390 --h 844 --touch 1, --w 844 --h 390 --touch 1 or --w 1280 --h 800 (got ' + env.W + 'x' + env.H + (env.touch ? ' touch' : '') + ')');
 
   // the eye is in the palette ALWAYS: the courier / car drive it with no TAC watcher
   const base = await h.ev(() => {
