@@ -2,7 +2,8 @@
 // quiet front, the side gate) × power (left on, cut) × Uche (with you, Squad Trust rear): the spawn, where Uche stands,
 // the wipe deferred (_wipeTotal 0 while pending), knock armed at 1.0 ± 0.05 s and running at 2.5 s, loud armed at 0
 // and stunned 2.5 s, no false LAPTOP WIPE RUNNING toast, the title card holding the clock and movement, the laptop
-// screen locked while pending, the power cut's dimming (restored at the next scene) and half sight.
+// screen locked while pending, the power cut's dimming (restored at the next scene) and half sight. The tracker stays on
+// Obi (o6) while he is free on every entry, so a knock or a loud entry no longer flicks child → wipe → Obi in 2.5 s.
 // Owner: Team C.
 const L = require('./tac_m3_lib.cjs');
 
@@ -45,10 +46,13 @@ module.exports = async h => {
       });
       // the house runs a little: knock arms at 1.0, runs at 2.5; loud is armed at 0, stunned 2.5 s; quiet stays pending
       const run = await h.ev(() => {
-        const R = TAC.m3.run(); let armedAt = R.wipe.mode === 'armed' ? R.t : null, runAt = null; const screens = new Set();
-        __m3.run(3.2, () => { if (armedAt == null && R.wipe.mode === 'armed') armedAt = R.t; if (runAt == null && R.obi.state === 'running') runAt = R.t; screens.add(R.M.screenState); });
+        const R = TAC.m3.run(); let armedAt = R.wipe.mode === 'armed' ? R.t : null, runAt = null, k = 0; const screens = new Set(), trk = new Set();
+        const cur = () => { const c = WAY.current(); return (c && c.obj && c.obj.id) || null; };
+        trk.add(cur());
+        __m3.run(3.2, () => { if (armedAt == null && R.wipe.mode === 'armed') armedAt = R.t; if (runAt == null && R.obi.state === 'running') runAt = R.t; screens.add(R.M.screenState);
+          if (k++ % 6 === 0 && !R.obi.outcome) trk.add(cur()); });
         return { armedAt, runAt, total:S.game._wipeTotal, mode:R.wipe.mode, screens:[...screens], obi:R.obi.state, toasts:(window.__toasts || []).map(t => t[0]).join('|'),
-          obj:(S.game.objectives.find(o => o.id === 'o4_wipe') || {}).text };
+          obj:(S.game.objectives.find(o => o.id === 'o4_wipe') || {}).text, trk:[...trk] };
       });
       const exp = { knock:55, loud:40, quiet:65, gate:80 + 15 }[key] + (power === 'cut' ? 12 : 0);   // KC also places the laptop (+15)
       const sp = { knock:[0.35, 5.0], loud:[0.35, 4.6], quiet:[0.4, 4.9], gate:[0, -7.6] }[key];
@@ -78,6 +82,7 @@ module.exports = async h => {
         check(r.obj === 'Seize the laptop', `${name}: the objective reads "Seize the laptop" until a wipe exists (${r.obj})`);
       }
       check(power === 'cut' ? Math.abs(r.mat - 0.35 * r.lm) < 1e-9 : r.mat === r.lm, `${name}: light maps ${power === 'cut' ? 'at 35%' : 'untouched'} (${r.mat})`);
+      check(run.trk.length === 1 && run.trk[0] === 'o6_arrest', `${name}: the tracker stays on Obi (o6) from the first frame while he is free (got ${run.trk})`);
       const ev = (await L.ev(h, 'enc')).filter(e => e[1].enc === 'm3_entry');
       check(ev.length === 1, `${name}: one enc m3_entry`);
       const e = ev[0] && ev[0][1];

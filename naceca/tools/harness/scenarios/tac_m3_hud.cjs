@@ -2,7 +2,8 @@
 // and --w 1280 --h 800. Obi's head marker, the UCHE button (#ctx-uche, its own 66 px button stacked above SCAN) with
 // its paper job tag (#ctx-uche-tag), and the desktop Q · UCHE chip pass A.audit (no gradient, shadow, filter or glyph;
 // palette; ≥ 44 px on touch); keyboard hints hidden on touch; nothing overlaps the radio strip, the mission panel, the
-// minimap, the hint chip, the meters, the stick or SPRINT (WAY.hudRects).
+// minimap, the hint chip, the meters, the stick or SPRINT (WAY.hudRects), nor the centre toast (an alarm's HE SAW YOU
+// can be up when COVER HIM is offered).
 // Owner: Team C.
 const L = require('./tac_m3_lib.cjs');
 const A = require('./v13_a_lib.cjs');
@@ -13,7 +14,7 @@ window.__r = el => { if (!el) return null; const r = el.getBoundingClientRect(),
 window.__hud = () => {
   const out = [];
   WAY.hudRects(true).forEach(q => { if (['#radio-sub', '#hint-chip.show', '#joystick', '#hud-sprint', '#hud-meters', '.hud-topright', '#hud-pausebtn', '#hud-casebar'].includes(q.sel)) out.push(q); });
-  for (const sel of ['#hud-mission-objs', '.minimap', '#ctx-main', '#ctx-scan', '#ctx-crouch']) { const r = __r(document.querySelector(sel)); if (r) out.push(Object.assign({ sel }, r)); }
+  for (const sel of ['#hud-mission-objs', '.minimap', '#ctx-main', '#ctx-scan', '#ctx-crouch', '#toast.show']) { const r = __r(document.querySelector(sel)); if (r) out.push(Object.assign({ sel }, r)); }
   return out;
 };
 window.__hits = el => { const a = __r(el); if (!a) return null; return __hud().filter(q => a.l < q.r && a.r > q.l && a.t < q.b && a.b > q.t).map(q => q.sel); };
@@ -43,7 +44,9 @@ module.exports = async h => {
     h.assert(s1.offer && s1.offer.order === 'take_child' && s1.meter && s1.radio && s1.hint, 'TAKE HER OUT on offer, with the wipe meter, a radio line and a hint chip all up');
     if (env.touch) {
       h.assert(s1.btn && Math.round(s1.btn.w) === 66 && Math.round(s1.btn.h) === 66 && s1.label === 'UCHE' && s1.ico, 'touch: #ctx-uche is a 66 px button labelled UCHE with an icon() svg');
-      h.assert(s1.tag && s1.tagText === 'TAKE HER OUT' && s1.tag.r <= s1.btn.l + 1, 'the job sits in a paper tag to its left: ' + s1.tagText);
+      // upright: the tag to the button's left; on its side: above it (to its left is the centre toast band, REVIEW C-8)
+      if (env.H > 480) h.assert(s1.tag && s1.tagText === 'TAKE HER OUT' && s1.tag.r <= s1.btn.l + 1, 'the job sits in a paper tag to its left: ' + s1.tagText);
+      else h.assert(s1.tag && s1.tagText === 'TAKE HER OUT' && s1.tag.b <= s1.btn.t + 1 && s1.tag.l >= s1.btn.l - 1, 'landscape: the job sits in a paper tag above the button, flush with its left edge: ' + JSON.stringify(s1.tag));
       h.assert(s1.scan && s1.btn.b <= s1.scan.t + 1 && s1.btn.l < s1.scan.r && s1.btn.r > s1.scan.l - 1, 'stacked above SCAN (not a third button in the row)');
       h.assert(!s1.hitsB.length && !s1.hitsT.length, 'the button and its tag overlap nothing: ' + JSON.stringify({ b:s1.hitsB, t:s1.hitsT }));
       h.assert(s1.meterHits && !s1.meterHits.length, 'the meters (moved up while the button shows on a phone held upright) overlap nothing: ' + JSON.stringify(s1.meterHits));
@@ -58,11 +61,15 @@ module.exports = async h => {
     // COVER HIM once he runs
     const s2 = await h.ev(() => { const R = TAC.m3.run(); __m3.run(2, () => R.obi.state === 'running' && R.t > 2.6);
       return { offer:TAC.m3.offer() }; });
-    await h.step(150);
+    // an alarm toast with a two-line why, as on a quiet entry (COVER is offered 1.5 s into its 2.6 s)
+    await h.ev(() => toast('HE SAW YOU', 'He saw you walking upright across the living room, 3 m away', 4000));
+    await h.step(450);
     const s2b = await h.ev(() => { const b = document.getElementById('ctx-uche'), tag = document.getElementById('ctx-uche-tag'), chip = document.getElementById('tac-uche');
-      return { tagText:tag && tag.textContent, hitsB:__hits(b), hitsT:__hits(tag), hitsC:__hits(chip), chipText:chip && chip.textContent.replace(/\s+/g, ' ').trim(), shield:!!(b && b.querySelector('svg.ico')) }; });
+      return { tagText:tag && tag.textContent, hitsB:__hits(b), hitsT:__hits(tag), hitsC:__hits(chip), chipText:chip && chip.textContent.replace(/\s+/g, ' ').trim(), shield:!!(b && b.querySelector('svg.ico')),
+        toast:__r(document.querySelector('#toast.show')), tag:__r(tag), btn:__r(b) }; });
     h.log('cover him', JSON.stringify(s2), JSON.stringify(s2b));
     h.assert(s2.offer && s2.offer.order === 'cover', 'COVER HIM on offer once he runs');
+    h.assert(!!s2b.toast, 'the alarm toast is up for the overlap check');
     if (env.touch) {
       h.assert(s2b.tagText === 'COVER HIM' && !s2b.hitsB.length && !s2b.hitsT.length, 'touch: the tag reads COVER HIM and overlaps nothing: ' + JSON.stringify(s2b));
       // one tap gives the job

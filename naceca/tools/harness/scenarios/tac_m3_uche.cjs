@@ -3,7 +3,10 @@
 // never answers with him after the breach (his "Plan the raid" is consumed); COVER HIM is not offered at t = 0 from
 // the doorway but is once Obi runs (and a wipe already armed stays armed); TAKE HER OUT walks the child out (+1 rescued,
 // child_gentle when nobody had spoken to her) and is refused with why 'unaware' on a quiet entry; the posted tackle
-// costs no force; the Squad Trust payoff is paid only when Uche was posted at the back when Obi was stopped.
+// costs no force; the Squad Trust payoff is paid only when Uche was posted at the back when Obi was stopped, and a
+// second Extract press inside its 1.5 s delay does not complete the operation twice. A refused job is not advertised
+// (no UCHE button or chip while he is unaware on a quiet entry; Q still answers why). An escort Kelechi overtakes
+// (he takes her hand first) ends with ally_done{escort, cancelled}.
 // Owner: Team C.
 const L = require('./tac_m3_lib.cjs');
 
@@ -87,6 +90,10 @@ module.exports = async h => {
     h.log('quiet, unaware', JSON.stringify(rq), JSON.stringify(ord));
     h.assert(rq.o && rq.o.order === 'take_child' && rq.o.ok === false && rq.o.why === 'unaware' && !rq.ok && rq.child === 'in', 'TAKE HER OUT shown but refused while he is unaware');
     h.assert(ord.length === 1 && ord[0].ok === false && ord[0].why === 'unaware' && ord[0].order === 'take_child', 'order{take_child, ok:false, why:unaware}');
+    const ui = await h.ev(() => { __m3.run(0.2); const w = document.getElementById('ctx-uche-wrap'), c = document.getElementById('tac-uche');
+      return { wrap:!!(w && w.classList.contains('show')), chip:!!(c && c.classList.contains('show')), on:document.body.classList.contains('tac-uche-on'), offer:TAC.m3.offer() }; });
+    h.log('refused job on screen', JSON.stringify(ui));
+    h.assert(ui.offer && ui.offer.ok === false && !ui.wrap && !ui.chip && !ui.on, 'a refused job is not advertised: no UCHE button and no Q · UCHE chip while he is unaware (Q still answers why)');
     await L.restore(h);
 
     // ---------- the Squad Trust payoff: posted at the back when Obi was stopped (a tackle, force 0) ----------
@@ -99,11 +106,12 @@ module.exports = async h => {
     await L.childTalk(h, 0);
     await h.ev(() => __m3.run(10, () => TAC.m3.child().state === 'out'));
     const p0 = await h.ev(() => ({ arrests:S.game.arrests, intel:S.game.intelScore }));
-    const ex = await L.extract(h, 2200);
+    const ex = await L.extract(h, 2200, { again:400 });   // a second press inside the payoff's 1.5 s delay
     const p1 = await h.ev(() => ({ arrests:S.game.arrests, intel:S.game.intelScore }));
     h.log('payoff', JSON.stringify(ex), JSON.stringify(p0), JSON.stringify(p1));
     h.assert(ex.done && ex.toasts.some(t => t[0] === 'UCHE AT THE BACK'), 'the Squad Trust payoff is paid (posted at the stop)');
     h.assert(p1.arrests - p0.arrests === 1 && p1.intel - p0.intel >= 6, '+1 arrest and +6 intel');
+    h.assert(ex.cm === 1 && ex.am === 1, 'Extract pressed twice inside the 1.5 s delay: the operation completes once (completeMission ' + ex.cm + ', showAftermath ' + ex.am + ')');
     await L.restore(h);
     // ... and not when Uche had left his post for the child before Obi was stopped
     await L.v8(h, { state:L.state('squad', 'tip') });
@@ -117,6 +125,22 @@ module.exports = async h => {
     const ex2 = await L.extract(h, 2200);
     h.log('no payoff extract', JSON.stringify(ex2));
     h.assert(ex2.done && !ex2.toasts.some(t => /UCHE AT THE BACK/.test(t[0])), 'no Squad Trust payoff when he was not posted at the stop');
+    await L.restore(h);
+
+    // ---------- TAKE HER OUT overtaken: Kelechi takes her hand before Uche gets to her ----------
+    await L.v8(h, { state:L.state('tip') });
+    await L.breach(h, { entry:'loud' });
+    await h.ev(() => { __m3.walk([[0.35,4.6],[0.5,2.6],[2.3,0.4]], 5.2, { sprint:true, max:3 }); });
+    const ga = await L.arrest(h, 0);
+    const to = await h.ev(() => { const ok = TAC.m3.order('take_child', 'button'); return { ok, job:TAC.m3.uche().job }; });
+    await L.childTalk(h, 0);
+    const oc = await h.ev(() => { const R = TAC.m3.run(); __m3.run(0.3); const job = R.uche.job; __m3.run(12, () => R.child.state === 'out');
+      return { job, child:R.child.state, by:R.child.by, choice:R.child.choice, ujob:R.uche.job }; });
+    const esc = (await L.ev(h, 'ally_done')).map(e => e[1]).filter(d => d.task === 'escort');
+    h.log('escort overtaken', JSON.stringify(ga.arrest), JSON.stringify(to), JSON.stringify(oc), JSON.stringify(esc));
+    h.assert(to.ok && to.job === 'take_child', 'TAKE HER OUT ordered after the arrest');
+    h.assert(oc.job === null && oc.choice === 'gentle' && oc.child === 'out' && oc.by === 'kelechi', 'Kelechi took her hand first: Uche drops the job, she walks out with Kelechi: ' + JSON.stringify(oc));
+    h.assert(esc.length === 1 && esc[0].outcome === 'cancelled' && esc[0].who === 'uche' && typeof esc[0].secs === 'number', 'ally_done{who:uche, task:escort, outcome:cancelled}: ' + JSON.stringify(esc));
     h.assert(!h.errors.length, 'no page errors: ' + h.errors.join(' | '));
   } finally { await L.restore(h); }
 };

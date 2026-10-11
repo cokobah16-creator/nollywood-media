@@ -27,6 +27,9 @@
    sits to the left of the action button, still above SCAN; the tag to its left, clear of the stick */
 @media (max-height:480px){
   .touch-active #ctx-uche-wrap{position:absolute;left:-43px;top:9px}
+  /* the tag goes above the button, flush with its left edge: to its left it would sit in the centre toast band
+     (HE SAW YOU and COVER HIM can be up together; REVIEW C-8), below it is SCAN */
+  .touch-active #ctx-uche-tag{right:auto;left:0;top:auto;bottom:calc(100% + 10px);transform:none}
 }
 
 /* ---------- the desktop chip: [icon] Q · UCHE  COVER HIM (TAC.ui.chipRow(), hidden on touch by tactics.css) ---------- */

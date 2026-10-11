@@ -24,13 +24,28 @@ if(!TAC || !TAC.v || TAC.m3) return;
 const V12 = window.V12;
 if(!V12 || typeof V12.wrap !== 'function') return;
 const W = V12.wrap;
-const err = e => TAC._err(e);
+// REVIEW C-9: only the frozen §3 API is load-bearing; the kernel's internals are used when present, never required
+const err = e => { try{ if(typeof TAC._err === 'function') TAC._err(e); else if(typeof console !== 'undefined') console.error('[tac_mansion]', e); }catch(_){ /* never throw from the error path */ } };
+const DT = 0.1;                                       // TAC.onTick's fixed step (DESIGN §3.1: dt = 0.1)
 const safe = (f, d) => { try{ return f(); }catch(e){ err(e); return d; } };
 const r1 = x => Math.round((+x || 0) * 10) / 10;
 const hyp = Math.hypot;
 const log = (t, d) => { try{ if(V12.log) V12.log(t, d); }catch(e){ err(e); } };
 const ico = n => typeof icon === 'function' ? icon(n) : '';
-const say = (text, key, pri, ttl) => safe(() => TAC.radio.say('SGT. UCHE', text, { key, pri, ttl }));
+// REVIEW C-1: Team A's _radioNext wrap (tac_radio.js:154-155) gives the head line default metadata in its expiry loop
+// before it attaches the pending opts, so a keyed line said on an IDLE radio loses its key, priority and ttl (it can then
+// be neither cancelled nor dropped, and a pri-3 line re-queues it). The root cause is routed to Team A. Until it is
+// fixed, the _radioNext wrap below attaches the pending opts first, for THIS file's own lines only (OWN holds the text
+// being said); once A attaches them itself the head line already has its metadata and the wrap does nothing.
+let OWN = null;
+const say = (text, key, pri, ttl) => safe(() => { OWN = text; try{ TAC.radio.say('SGT. UCHE', text, { key, pri, ttl }); } finally { OWN = null; } });
+if(typeof _radioNext === 'function') W('_radioNext', orig => function(){
+  try{
+    const RR = TAC._radio, q = (typeof RADIO !== 'undefined' && RADIO && RADIO.queue) || null, h0 = q && q[0];
+    if(OWN != null && RR && RR.pend && RR.pend.key != null && h0 && !h0._tac && h0.text === OWN) h0._tac = RR.pend;
+  }catch(e){ err(e); }
+  return orig.apply(this, arguments);
+});
 const G = () => (typeof S !== 'undefined' && S && S.game) ? S.game : null;
 const mc = () => (G() && G().moralChoices) || {};
 const flags = () => { const g = G(); if(!g.flags) g.flags = {}; return g.flags; };
@@ -96,13 +111,13 @@ function fresh(variant, M){
   return { variant, M, live:false, card:false, t:0, mgAcc:0,
     entry:null, door:'front', power:'on', uchePlan:'with', quiet:false, leak:false, plan:null, known:{}, spawn:null,
     obi:{ state:'idle', t0:0, alarmAt:null, alertedBy:null, outcome:null, by:null, runAt:null, runSecs:null, ranM:0, seg:0,
-          stopAt:null, outAt:null, dist:null, states:[], first:null, arrested:false, boxOut:false },
+          stopAt:null, outAt:null, dist:null, states:[], first:null, arrested:false, boxOut:false, box:null },
     wipe:{ mode:'off', pending:0, armedAt:null },
     uche:{ mode:'idle', job:null, lastJob:null, path:[], speed:cfg.ucheJog, onArrive:null, postedAtStop:false, orders:[], acts:[],
            jobAt:null, clip:null, decideT:0 },
     child:{ state:'in', choice:null, by:null, spoken:false, counted:false, gentle:false, outAt:null },
     lap:{ firstAt:null, outcome:null, press:null, files:null, pct:null, mg:false },
-    extract:{ refusals:0, missing:[] }, causes:{ sight:0, noise:0, close:0 }, notices:0, alarms:0,
+    extract:{ refusals:0, missing:[], pending:false }, causes:{ sight:0, noise:0, close:0 }, notices:0, alarms:0,
     its:{}, pois:{}, w:null, summary:false };
 }
 const inM3 = () => !!(R && G() && G().currentMission === 'm3');
@@ -466,6 +481,7 @@ function patchExtract(){
   const prev = it.onInteract;                              // v12's wrap (the payoff, now skipped) around the base
   it.onInteract = function(){
     if(!inM3()) return prev.apply(this, arguments);
+    if(R.extract.pending) return;                          // REVIEW C-3: the payoff's 1.5 s delay is running; one completion
     const g = G(), missing = [];
     if(!mc().arrest) missing.push('arrest');
     if(R.child.state !== 'out') missing.push('child');
@@ -489,7 +505,12 @@ function patchExtract(){
         total:R.wipe.pending || g._wipeTotal || null, firstAt:R.lap.firstAt, armedAt:R.wipe.armedAt != null ? r1(R.wipe.armedAt) : null, mg:!!R.lap.mg });
     }
     const self = this, args = arguments, run = R;
-    if(delay){ setTimeout(() => { if(R === run && inM3()) prev.apply(self, args); }, delay); return; }
+    if(delay){
+      R.extract.pending = true;
+      // the latch stays set once the operation has completed (R is dropped at the next scene); only a throw re-opens it
+      setTimeout(() => { if(R !== run || !inM3()) return; let ok = false; try{ prev.apply(self, args); ok = true; } finally { if(!ok && R === run) R.extract.pending = false; } }, delay);
+      return;
+    }
     return prev.apply(this, arguments);
   };
 }
@@ -632,10 +653,28 @@ function obiBox(){
   const o = R.M.obi.position;
   return (ENGINE.obstacles || []).findIndex(b => b && Math.abs((b.minX + b.maxX) / 2 - o.x) < 0.02 && Math.abs((b.minZ + b.maxZ) / 2 - o.z) < 0.02 && Math.abs(b.maxX - b.minX - 0.5) < 0.02);
 }
+// REVIEW C-6: his 0.5 m box is lifted while he runs; once he is stopped (in the house, or kneeling on the drive) it comes
+// back where he stands (TAC.geo.add, DESIGN §3.3: a 'person' box, so it never hides anyone), as soon as Kelechi is
+// clear of it (never shut him inside a collider). It goes again at the arrest.
+const BOX = 0.5, BOXCLEAR = 0.25 + 0.35;
+function obiBoxBack(){
+  const o = R.obi;
+  if(!o.boxOut || o.box || o.arrested || !o.outcome || mc().arrest || R.M.obi.visible === false) return;
+  const m = R.M.obi.position, p = P();
+  if(Math.abs(p.x - m.x) < BOXCLEAR && Math.abs(p.z - m.z) < BOXCLEAR) return;
+  o.box = safe(() => TAC.geo.add(m.x, m.z, BOX, BOX, { kind:'person', h:0, name:'Obi' }), null) || null;
+}
+function obiBoxDrop(){
+  const o = R.obi, b = o.box; if(!b) return;
+  o.box = null;
+  const i = (ENGINE.obstacles || []).indexOf(b); if(i >= 0) ENGINE.obstacles.splice(i, 1);
+}
 function startRun(){
   const o = R.obi; if(!FREE.has(o.state) || o.state === 'running') return;
   if(R.wipe.mode === 'pending') arm();
-  if(typeof SETTINGS !== 'undefined' && SETTINGS.timed === 'off'){ toast('HANDS UP', 'He gives up where he stands.', 2200); stop('cornered', 'kelechi'); return; }
+  // timers off (REVIEW C-4): he gives up where he stands. Nobody cornered him, so `by` is null and the payload says why;
+  // a distinct outcome value (e.g. 'gave_up') needs a DESIGN §4 row from the lead first
+  if(typeof SETTINGS !== 'undefined' && SETTINGS.timed === 'off'){ toast('HANDS UP', 'He gives up where he stands.', 2200); stop('cornered', null, null, { timers:'off' }); return; }
   const by = corneredBy();
   if(by){ toast('CORNERED', by === 'kelechi' ? 'You were in the corridor. He put his hands up.' : 'Uche was in the corridor. He put his hands up.', 2200); stop('cornered', by); return; }
   const i = obiBox(); if(i >= 0){ ENGINE.obstacles.splice(i, 1); o.boxOut = true; }
@@ -643,8 +682,8 @@ function startRun(){
   setObi('running');
   TAC.state.pursuit = 'm3_flight';
   const it = R.its.obi; if(it){ it.label = 'Stop him'; it.range = cfg.stopR; }
-  safe(() => TAC.radio.cancel('m3_knock'));
-  say(TXT.run, 'm3_run', 3, 4000);
+  say(TXT.run, 'm3_run', 3, 4000);                       // said first: it cuts a showing knock line at once (a keyed pri 1)
+  safe(() => TAC.radio.cancel('m3_knock'));                // and a knock line still waiting never plays
   if(R.uche.mode === 'hold') R.uche.mode = 'follow';
   if(typeof WAY !== 'undefined' && WAY.invalidate) WAY.invalidate();
 }
@@ -653,7 +692,7 @@ function restoreObiIt(){
   it.label = 'Move on suspect'; it.range = it._tacRange || cfg.arrestR;
 }
 const mgOpen = () => !!(typeof MINI !== 'undefined' && MINI.active && MINI.active.cfg && MINI.active.cfg.id === 'm3_wipe');
-function stop(outcome, by, st){
+function stop(outcome, by, st, extra){
   const o = R.obi; if(o.outcome) return false;
   if(o.state === 'running' && o.runAt != null) o.runSecs = R.t - o.runAt;
   else if(o.outAt != null && o.runAt != null) o.runSecs = o.outAt - o.runAt;
@@ -665,9 +704,12 @@ function stop(outcome, by, st){
   if(TAC.state.pursuit === 'm3_flight') TAC.state.pursuit = null;
   restoreObiIt();
   if(R.uche.mode === 'hold') R.uche.mode = 'follow';
+  // REVIEW C-2: he is stopped, so "He's running" (and a knock line still waiting) must not play on; a line said just
+  // before this call (the cover shout) is queued first and shows the moment the run line goes
+  safe(() => { TAC.radio.cancel('m3_run'); TAC.radio.cancel('m3_knock'); });
   if(by === 'kelechi' && outcome !== 'cornered') toast(TXT.gotHim[0], TXT.gotHim[1], 2200);
-  log('enc', { enc:'m3_obi', outcome, by, alertedBy:o.alertedBy, secs:r1(R.t), runSecs:o.runSecs != null ? r1(o.runSecs) : null, ranM:r1(o.ranM),
-    dist:r1(o.dist), duringMinigame:mgOpen(), states:o.states.slice(0, 8), ucheJob:R.uche.job || R.uche.lastJob || null, prep:prep() });
+  log('enc', Object.assign({ enc:'m3_obi', outcome, by, alertedBy:o.alertedBy, secs:r1(R.t), runSecs:o.runSecs != null ? r1(o.runSecs) : null, ranM:r1(o.ranM),
+    dist:r1(o.dist), duringMinigame:mgOpen(), states:o.states.slice(0, 8), ucheJob:R.uche.job || R.uche.lastJob || null, prep:prep() }, extra || {}));
   if(typeof WAY !== 'undefined' && WAY.invalidate) WAY.invalidate();
   return true;
 }
@@ -677,14 +719,15 @@ function outBack(){
   setObi('out_back');
   if(TAC.state.pursuit === 'm3_flight') TAC.state.pursuit = null;
   restoreObiIt();
-  say(TXT.out, 'm3_out', 3, 5000);
+  say(TXT.out, 'm3_out', 3, 5000);                       // queued ahead of the cancel, so it shows the moment the run line goes
+  safe(() => TAC.radio.cancel('m3_run'));                  // (REVIEW C-2: equal priorities never preempt each other)
   if(typeof WAY !== 'undefined' && WAY.invalidate) WAY.invalidate();
 }
 function perimeterDrop(){
   const m = R.M.obi;
   m.position.x = cfg.perimeter[0]; m.position.z = cfg.perimeter[1]; m.rotation.y = Math.PI; m.visible = true;
   stop('perimeter', 'perimeter', 'perimeter');
-  say(TXT.perim, 'm3_perim', 2, 10000);
+  say(TXT.perim, 'm3_perim', 3, 10000);                  // the chase's outcome: never left waiting behind a news bulletin
 }
 // decisions, 10 Hz
 function obiDecide(){
@@ -701,8 +744,10 @@ function obiDecide(){
   } else if(o.state === 'out_back'){
     if(R.t - o.outAt >= cfg.perimSecs - 1e-6) perimeterDrop();
   }
+  if(!o.arrested && !mc().arrest) obiBoxBack();
   if(!o.arrested && mc().arrest){
     o.arrested = true;
+    obiBoxDrop();
     if(o.states.length < 8) o.states.push(['arrested', r1(R.t)]);
     const U = R.uche;
     if(U.job === 'cover'){ R.uche.acts.push('cover_held'); log('ally_done', { who:'uche', task:'cover_held', outcome:'done', secs:r1(R.t - U.jobAt) }); U.lastJob = U.job; U.job = null; U.mode = 'follow'; }
@@ -798,8 +843,15 @@ function followDecide(){
   const pts = routeTo(NODE[best]);
   U.path = pts;
 }
+// REVIEW C-10: Kelechi took her out himself while Uche was on his way: the job ends, and the log says so (DESIGN §4)
+function escortCancelled(){
+  const U = R.uche; if(U.job !== 'take_child') return;
+  log('ally_done', { who:'uche', task:'escort', outcome:'cancelled', secs:r1(R.t - (U.jobAt || 0)) });
+  U.job = null; U.mode = 'follow'; U.path = []; U.onArrive = null;
+}
 function ucheDecide(){
-  const U = R.uche, o = R.obi;
+  const U = R.uche, o = R.obi, C = R.child;
+  if(U.job === 'take_child' && (C.state === 'walking' || (C.state === 'out' && C.by !== 'uche'))) escortCancelled();
   if(U.mode === 'hold' && !(o.state === 'unaware' || o.state === 'noticed')) U.mode = 'follow';
   if(U.job === 'cover'){ U.path = []; const om = R.M.obi.position, u = R.M.uche.position; R.M.uche.rotation.y = Math.atan2(om.x - u.x, om.z - u.z); return; }
   if(U.job) return;
@@ -879,8 +931,8 @@ function order(id, src){
   const U = R.uche; U.job = id; U.jobAt = R.t; U.lastJob = id; U.path = []; U.onArrive = null;
   if(id === 'cover'){
     if(U.mode === 'hold') U.mode = 'follow';
+    say(TXT.cover, 'm3_order', 3, 4000);                   // REVIEW C-2: queued first, so stop()'s cancel of the run line shows it
     stop('covered', 'uche');
-    say(TXT.cover, 'm3_order', 3, 4000);
     ucheClip('aim');
   } else {
     say(TXT.take, 'm3_order', 3, 4000);
@@ -890,7 +942,7 @@ function order(id, src){
     const run = R;
     U.onArrive = () => {
       if(R !== run) return;
-      const C = R.child; if(C.state === 'out' || C.state === 'walking'){ U.job = null; U.mode = 'follow'; return; }
+      const C = R.child; if(C.state === 'out' || C.state === 'walking'){ escortCancelled(); return; }
       C.state = 'escort'; C.by = 'uche';
       safe(() => R.M.child.userData.anim.play('walk', { fade:0.25, speed:cfg.childV / 1.35 }));
       U.speed = cfg.childV; U.path = cfg.childPath.slice(1).map(p => p.slice());
@@ -927,7 +979,9 @@ function uiEnsure(){
 }
 const JOB = { cover:['COVER HIM', 'COVERING', 'shield'], take_child:['TAKE HER OUT', 'ESCORTING', 'people'] };
 function uiUpdate(force){
-  const o = playing() ? offer() : null;
+  // only an offered job (or COVERING / ESCORTING while busy) shows; a refused one (TAKE HER OUT while he is unaware on
+  // a quiet entry) is hidden, and Q still answers with the reason on the radio (REVIEW C-5)
+  const o0 = playing() ? offer() : null, o = (o0 && (o0.busy || o0.ok)) ? o0 : null;
   const key = o ? (o.busy ? 'b:' : o.ok ? 'o:' : 'r:') + o.order : '';
   const w = document.getElementById('ctx-uche-wrap');
   let chip = document.getElementById('tac-uche');
@@ -976,7 +1030,8 @@ if(window.WAY && typeof WAY.current === 'function' && !WAY.current._tac){
         const pick = id => { const o = objs.find(x => x.id === id && !x.done); return o || null; };
         const lapLive = !g._evLaptop && !g._wipeLost;
         let o = null;
-        if(R.quiet && FREE.has(R.obi.state)) o = pick('o6_arrest');
+        // on Obi while he is free, on every entry (REVIEW C-7: knock and loud no longer flick child → wipe → Obi in 2.5 s)
+        if(FREE.has(R.obi.state)) o = pick('o6_arrest');
         if(!o && R.wipe.mode === 'armed' && lapLive) o = pick('o4_wipe');
         if(!o && R.child.choice === 'stay' && R.child.state !== 'out') o = lapLive ? pick('o4_wipe') : pick('o5_civ');
         if(o) r.obj = o;
@@ -1082,7 +1137,7 @@ try{
 
 /* ---------- m3_summary: once, from the completeMission('m3') wrap ---------- */
 function summary(){
-  const g = G(), o = R.obi, ms = TAC._ms || {};
+  const g = G(), o = R.obi, ms = TAC._ms || { seen:{ notice:R.notices, alarm:R.alarms } };     // C-9: own counts without A's stats
   const arc = (g.archive || []).filter(a => a && a.mid === 'm3').slice(-1)[0];
   return { entry:R.entry, door:R.door, power:R.power, spawn:R.door === 'gate' ? 'corridor' : 'front', variant:R.variant,
     obi:{ first:o.first, alertedBy:o.alertedBy || (R.entry === 'knock' || R.entry === 'loud' ? R.entry : null), alertedAt:o.alarmAt != null ? r1(o.alarmAt) : null,
@@ -1128,7 +1183,7 @@ function advance(dt){                                     // the field skill's h
   frame(dt);
   const ch = R.M.child; if(ch && ch.userData && ch.userData._walk && typeof updateWalker === 'function') updateWalker(ch, dt);
   R.mgAcc += dt;
-  while(R.mgAcc >= TAC.DT - 1e-9){ R.mgAcc -= TAC.DT; R.t += TAC.DT; decide(); }
+  while(R.mgAcc >= DT - 1e-9){ R.mgAcc -= DT; R.t += DT; decide(); }
   lossCheck();
 }
 TAC.onTick(dt => {

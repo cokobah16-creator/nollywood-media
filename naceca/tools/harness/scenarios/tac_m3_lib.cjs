@@ -12,7 +12,10 @@
 //   L.laptop(h, {seq})                press Inspect laptop at the staged spot; a field skill is won; seq:true checks the
 //                                     staged reach (ENGINE.seq) on a rig marked skinned, then fires its hit
 //   L.arrest(h, i)                    press Move on suspect (from where Kelechi stands) → the choice texts, choose i
-//   L.childTalk(h, i), L.walkOut(h), L.extract(h), L.snap(h), L.toasts(h), L.ev(h, type)
+//   L.childTalk(h, i), L.walkOut(h), L.extract(h, wait, {again}), L.snap(h), L.toasts(h), L.ev(h, type)
+//   L.realtime(h, secs, every, {stop})  game time stepped WITH wall time (__m3.run(every), then h.step(every)), so the
+//                                     radio queue's real timers advance as on a device; returns every sample
+//                                     {t, obi, strip (the radio strip's text, null when hidden), now (performance.now)}
 const T = require('./tactics_lib.cjs');
 const L = async h => { h.log('tac_m3_lib: helper module'); };
 L.T = T;
@@ -144,12 +147,33 @@ L.walkOut = async h => {
   await h.step(100);
   return r;
 };
-L.extract = async (h, wait = 1800) => {
-  await h.ev(() => { window.__toasts = []; const it = ENGINE.interactables.find(i => /^Extract/.test(i.label)); ENGINE.player.position.x = 0; ENGINE.player.position.z = 12.6; it.onInteract(it); });
-  await h.step(wait);
+// o.again: press Extract a second time after that many ms (unless the aftermath is already up); cm / am count the
+// completeMission and showAftermath calls this extraction made
+L.extract = async (h, wait = 1800, o = {}) => {
+  await h.ev(() => {
+    window.__toasts = []; window.__cm = 0; window.__am = 0;
+    for (const [n, k] of [['completeMission', '__cm'], ['showAftermath', '__am']]) {
+      const f0 = window[n]; if (typeof f0 === 'function' && !f0.__m3c) { const f = function () { window[k]++; return f0.apply(this, arguments); }; f.__m3c = true; window[n] = f; }
+    }
+    const it = ENGINE.interactables.find(i => /^Extract/.test(i.label)); ENGINE.player.position.x = 0; ENGINE.player.position.z = 12.6; it.onInteract(it); });
+  if (o.again) {
+    await h.step(o.again);
+    await h.ev(() => { if (document.querySelector('#screen-aftermath.show')) return; const it = ENGINE.interactables.find(i => /^Extract/.test(i.label)); if (it) it.onInteract(it); });
+    await h.step(Math.max(0, wait - o.again));
+  } else await h.step(wait);
   return h.ev(() => ({ toasts:window.__toasts.filter(t => /OPERATION|UCHE/.test(t[0])), done:S.game.completedMissions.includes('m3'),
     aftermath:!!document.querySelector('#screen-aftermath.show'), head:(S.game.headlines.slice(-1)[0] || {}).head || null,
-    civ:S.game.civiliansRescued, force:S.game.forceUsed, gentle:!!S.game.flags.child_gentle }));
+    civ:S.game.civiliansRescued, force:S.game.forceUsed, gentle:!!S.game.flags.child_gentle, cm:window.__cm, am:window.__am }));
+};
+L.realtime = async (h, secs, every = 0.25, o = {}) => {
+  const out = [];
+  for (let s = 0; s < secs - 1e-9; s += every) {
+    out.push(await h.ev(every => { __m3.run(every); const R = TAC.m3.run(), el = document.querySelector('#radio-sub.show');
+      return { t:R ? +R.t.toFixed(2) : null, obi:R ? R.obi.state : null, strip:el ? ((el.querySelector('.rs-text') || {}).textContent || '') : null, now:performance.now() }; }, every));
+    await h.step(Math.round(every * 1000));
+    if (o.stop && await h.ev(expr => !!(new Function('return (' + expr + ')'))(), o.stop)) break;
+  }
+  return out;
 };
 // the laptop: staged at (2.38, −1.02); a field skill is won on the spot; seq:true asserts the staged reach first
 L.laptop = async (h, o = {}) => {

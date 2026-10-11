@@ -4,11 +4,16 @@
 // intercept; a touch-jog intercept with a 1.5 s reaction; the loud stun grab (no run); beating the thumb (no wipe,
 // 7 files, the informant deal without Crisis Negotiator); cornered by Kelechi (hands up) vs a posted Uche (tackle,
 // force 0) vs a following Uche (cornered); the field skill open while he runs (he keeps running inside it,
-// duringMinigame); timers off: no run.
+// duringMinigame); timers off: no run (logged with by:null, timers:'off'). Once stopped, his box is back where he stands
+// (gone again at the arrest). The radio in real time (game time stepped with wall time): the knock line keeps its key,
+// never comes back after "He's running", the out line then the perimeter line 6 s later; after COVER HIM the run line
+// stops at once and "NACECA! On your knees!" shows within the radio's own preemption bound.
 // Owner: Team C.
 const L = require('./tac_m3_lib.cjs');
 
 const obiEnc = async h => (await L.ev(h, 'enc')).filter(e => e[1].enc === 'm3_obi').map(e => e[1]);
+const KNOCK = /^NACECA! (Search warrant: open the door|Open up)!$/, RUN = "He's running: the back corridor!",
+  OUT = "He's out the kitchen door. Perimeter, he's yours!", PERIM = "Perimeter has him, in the yard. They're bringing him round the front.", COVER = 'NACECA! On your knees!';
 
 module.exports = async h => {
   try {
@@ -22,12 +27,13 @@ module.exports = async h => {
         if (tPer == null && R.obi.state === 'perimeter'){ tPer = R.t; return true; } });
       __m3.run(0.05);
       const o = R.M.obi; return { tOut, tPer, pos:[o.position.x, o.position.z], vis:o.visible !== false, force:S.game.forceUsed, outcome:R.obi.outcome, by:R.obi.by, pursuit:TAC.state.pursuit,
-        poiRun, poiOut, poiEnd:[poi.x, poi.z], inPois:MINIMAP.pois.includes(poi) }; });
+        poiRun, poiOut, poiEnd:[poi.x, poi.z], inPois:MINIMAP.pois.includes(poi), box:blockedAt(0.9, 9.6, 0) }; });
     h.log('knock idle', JSON.stringify(out));
     h.assert(out.tOut != null && Math.abs(out.tOut - 5.98) <= 0.3, 'knock idle: out the kitchen door by about 6 s: ' + out.tOut);
     h.assert(out.tPer != null && Math.abs(out.tPer - out.tOut - 6) <= 0.15, 'the perimeter 6 s later: ' + (out.tPer - out.tOut));
     h.assert(out.vis && out.pos[0] === 0.9 && out.pos[1] === 9.6 && out.outcome === 'perimeter' && out.by === 'perimeter' && out.pursuit === null, 'Obi kneels on the drive at (0.9, 9.6), outcome perimeter');
     h.assert(out.force === f0, 'the perimeter is NOT force: forceUsed unchanged (' + f0 + ' → ' + out.force + ')');
+    h.assert(out.box === true, 'kneeling on the drive, he has his collision box again (nobody walks through him)');
     h.assert(out.inPois && out.poiRun && Math.abs(out.poiRun[0] - out.poiRun[2]) < 0.2 && Math.abs(out.poiRun[1] - out.poiRun[3]) < 0.2 && out.poiOut[0] > 1000 && out.poiEnd[0] === 0.9 && out.poiEnd[1] === 9.6,
       "the minimap's Obi blip follows him, hides while he is out the back, and sits on the drive after: " + JSON.stringify({ run:out.poiRun, out:out.poiOut, end:out.poiEnd }));
     const radio = (await L.ev(h, 'radio')).map(e => e[1].key + ':' + e[1].outcome);
@@ -38,6 +44,8 @@ module.exports = async h => {
     let a = await L.arrest(h, 0);
     h.log('perimeter arrest', JSON.stringify(a));
     h.assert(a.c.length === 2 && /^Read him his rights/.test(a.c[0]) && /^Down on the ground/.test(a.c[1]) && a.arrest === 'professional', 'two arrest choices after the perimeter');
+    const bx1 = await h.ev(() => { __m3.run(0.2); return { box:blockedAt(0.9, 9.6, 0), has:!!TAC.m3.obi().box }; });
+    h.assert(!bx1.box && !bx1.has, 'the box goes again at the arrest: ' + JSON.stringify(bx1));
     const g = await h.ev(() => {
       const R = TAC.m3.run(), op = { arrests:1, civ:0, force:0, intel:0, ev:1, xp:0 };
       const head = generateHeadline().head;
@@ -60,10 +68,16 @@ module.exports = async h => {
     h.log('sprint intercept', JSON.stringify(s));
     h.assert(s.outcome === 'intercepted' && s.by === 'kelechi' && s.obi[1] > -4.7, 'sprint: intercepted before the corridor (z > −4.7): ' + JSON.stringify(s));
     h.assert(s.label === 'Move on suspect', 'the label is back to "Move on suspect" once stopped');
+    const bx = await h.ev(() => { const R = TAC.m3.run(); __m3.run(0.3); const m = R.M.obi.position;
+      return { box:blockedAt(m.x, m.z, 0), has:!!R.obi.box, d:+Math.hypot(ENGINE.player.position.x - m.x, ENGINE.player.position.z - m.z).toFixed(2), at:[+m.x.toFixed(2), +m.z.toFixed(2)] }; });
+    h.log('box after the intercept', JSON.stringify(bx));
+    h.assert(bx.box && bx.has, 'stopped in the house, his box is back where he stands (Kelechi no longer walks through him): ' + JSON.stringify(bx));
     a = await L.arrest(h, 0);
     h.log('intercept arrest', JSON.stringify(a));
     h.assert(a.c.length === 3 && !a.c.some(c => /informant/i.test(c)) && a.arrest === 'professional', "an intercept keeps today's capability rule (no informant deal without Crisis Negotiator): " + JSON.stringify(a.c));
     h.assert((await h.ev(() => S.game.forceUsed)) === s.force, 'no force for an intercept');
+    const bx2 = await h.ev(() => { const R = TAC.m3.run(); __m3.run(0.2); const m = R.M.obi.position; return { box:blockedAt(m.x, m.z, 0), has:!!R.obi.box }; });
+    h.assert(!bx2.box && !bx2.has, 'and it goes again at the arrest: ' + JSON.stringify(bx2));
     await L.restore(h);
 
     // ---------- 3 · a touch jog after a 1.5 s reaction still makes it ----------
@@ -183,6 +197,68 @@ module.exports = async h => {
     await h.ev(() => { SETTINGS.timed = window.__timed0; });
     h.log('timers off', JSON.stringify(off));
     h.assert(off.state === 'handsup' && off.ran === 0 && !off.states.includes('running'), 'timers off: no run, hands up');
+    enc = await obiEnc(h);
+    h.log('timers off enc', JSON.stringify(enc));
+    h.assert(enc.length === 1 && enc[0].by === null && enc[0].timers === 'off', "timers off: nobody cornered him, so enc m3_obi has by:null and timers:'off' (not by:'kelechi'): " + JSON.stringify(enc));
+    await L.restore(h);
+
+    // ---------- 11 · the radio in real time: knock, stand still ----------
+    // the station's bulletins (v13_intel.js:561, 9 s after the start) are muted here and the strip cleared under the
+    // card, so the knock line is said on an IDLE radio every run (the case that lost its key, REVIEW C-1); case 12
+    // keeps the bulletins
+    await L.v8(h);
+    await h.ev(() => { if (!window.radioLine.__m3mute) { const o = window.radioLine; const f = function (sp) { if (window.__muteNews && sp === RADIO_STATION) return; return o.apply(this, arguments); };
+      f.__m3mute = true; window.radioLine = f; } window.__muteNews = true; });
+    await L.breach(h, { entry:'knock' }, { card:false });
+    await h.ev(() => clearRadio());
+    await h.step(2200);
+    const tl = await L.realtime(h, 16, 0.25, { stop:'TAC.m3.obi().state === "perimeter" && TAC.m3.run().t > TAC.m3.obi().stopAt + 1' });
+    const rev = (await L.ev(h, 'radio')).map(e => e[1]);
+    let last = ''; for (const x of tl) { const k = x.obi + '|' + x.strip; if (k !== last) { h.log('  radio', x.t, x.obi, JSON.stringify(x.strip)); last = k; } }
+    h.log('radio events', JSON.stringify(rev));
+    const iRun = tl.findIndex(x => x.strip === RUN);
+    const knockAfter = iRun >= 0 ? tl.slice(iRun).filter(x => KNOCK.test(x.strip || '')).map(x => x.t) : ['no run line'];
+    h.assert(rev.some(e => e.key === 'm3_knock' && e.pri === 1 && e.outcome === 'shown'), 'the knock line keeps its key and priority on an idle radio: radio{m3_knock, pri 1, shown}');
+    h.assert(iRun >= 0 && rev.some(e => e.key === 'm3_run' && e.outcome === 'shown'), '"He\'s running" is shown when he runs');
+    h.assert(!knockAfter.length, 'the knock line never comes back after the run line (it was at ' + JSON.stringify(knockAfter) + ')');
+    const tOutSt = (tl.find(x => x.obi === 'out_back') || {}).t, oS = tl.find(x => x.strip === OUT), pS = tl.find(x => x.strip === PERIM);
+    h.log('out state', tOutSt, 'out line', oS && oS.t, 'perimeter line', pS && pS.t);
+    h.assert(oS && tOutSt != null && oS.t - tOutSt <= 0.3 + 1e-9, 'the out line shows as he goes out the kitchen door (' + (oS && oS.t) + ' vs ' + tOutSt + ')');
+    h.assert(oS && pS && Math.abs(pS.t - oS.t - 6) <= 0.5, 'then the perimeter line about 6 s later (' + (pS && oS ? (pS.t - oS.t).toFixed(2) : null) + ' s)');
+    h.assert(!tl.slice(iRun + 1).some(x => x.strip === RUN && x.obi !== 'running'), 'the run line is gone once he is out');
+    await h.ev(() => { window.__muteNews = false; });
+    await L.restore(h);
+
+    // ---------- 12 · COVER HIM in real time: the run line stops, the cover shout comes at once ----------
+    // seeds 7 and 11 as they come; then a bulletin put on the strip just before he runs, so the run line is still
+    // waiting behind it at the tap (the case A's 1.2 s rule bounds)
+    const NEWS = 'Fuel queues are back on Ikorodu Road this morning. Marketers blame the depot price.';
+    for (const { seed, news } of [{ seed:7 }, { seed:11 }, { seed:7, news:true }]) {
+      await L.v8(h, { seed });
+      await L.breach(h, { entry:'knock' });
+      if (news) {
+        await L.realtime(h, 3, 0.15, { stop:'TAC.m3.run().t >= 2.2' });
+        await h.ev(n => { clearRadio(); radioLine(RADIO_STATION, n, 4400); }, NEWS);
+      }
+      await L.realtime(h, 4, 0.15, { stop:'TAC.m3.obi().state === "running"' });
+      await L.realtime(h, 0.3, 0.15);
+      const tap = await h.ev(() => { const s0 = document.querySelector('#radio-sub.show'), strip = s0 ? (s0.querySelector('.rs-text') || {}).textContent : null;
+        const ok = TAC.m3.order('cover', 'button'), s1 = document.querySelector('#radio-sub.show');
+        return { ok, strip, after:s1 ? (s1.querySelector('.rs-text') || {}).textContent : null, obi:TAC.m3.obi().state, now:performance.now() }; });
+      const tl2 = await L.realtime(h, 6, 0.1);
+      const ord = (await L.ev(h, 'radio')).map(e => e[1]).filter(e => e.key === 'm3_order' && e.outcome === 'shown');
+      const runAfter = tl2.filter(x => x.strip === RUN).map(x => x.t), knock2 = tl2.filter(x => KNOCK.test(x.strip || '')).map(x => x.t);
+      const iC = tl2.findIndex(x => x.strip === COVER), seenMs = tap.after === COVER ? 0 : iC >= 0 ? Math.round(tl2[iC].now - tap.now) : null;
+      h.log('cover seed ' + seed + (news ? ' + bulletin' : ''), JSON.stringify(tap), 'shown after', seenMs, 'ms', JSON.stringify(ord));
+      h.assert(tap.ok && tap.obi === 'handsup', 'seed ' + seed + ': COVER HIM taken, hands up');
+      if (news) h.assert(tap.strip === NEWS, 'the bulletin is on the strip at the tap, the run line waiting behind it: ' + JSON.stringify(tap.strip));
+      h.assert(!runAfter.length && !knock2.length, 'seed ' + seed + ': once he is covered the strip never says "He\'s running" or the knock line again: ' + JSON.stringify({ runAfter, knock2 }));
+      // the run line on the strip at the tap: the shout replaces it at once; a news or story line up instead: A's rule
+      // (a pri-3 line cuts an unkeyed one once it has been up 1.2 s, DESIGN §5.6) bounds the wait
+      const bound = tap.strip === RUN || tap.strip == null ? 500 : 1300;
+      h.assert(ord.length === 1 && ord[0].waitMs <= bound && seenMs != null && seenMs <= bound + 200, 'seed ' + seed + ': "NACECA! On your knees!" shows within ' + bound + ' ms of the tap (radio waitMs ' + (ord[0] && ord[0].waitMs) + ', on the strip after ' + seenMs + ' ms; strip at the tap: ' + JSON.stringify(tap.strip) + ')');
+      await L.restore(h);
+    }
     h.assert(!h.errors.length, 'no page errors: ' + h.errors.join(' | '));
   } finally { await L.restore(h); }
 };
