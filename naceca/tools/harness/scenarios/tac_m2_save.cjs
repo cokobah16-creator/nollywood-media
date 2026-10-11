@@ -30,7 +30,7 @@ module.exports = async h => {
     const P = ENGINE.player.position; P.x = 5.8; P.z = 4.6; TAC.player._reset();
     __wf.run(0.3);
     const st = TAC.m2.kc().state;
-    const out = { awake:R.awake, active:st.active, level:st.level, watch:+R.watchSecs.toFixed(2), uche:[U.mesh.position.x, U.mesh.position.z], post:U.post, posted:U.posted,
+    const out = { awake:R.awake, wary:R.wary, active:st.active, level:st.level, watch:+R.watchSecs.toFixed(2), uche:[U.mesh.position.x, U.mesh.position.z], post:U.post, posted:U.posted,
       m2flags:Object.keys(S.game.flags).filter(k => /^m2_/.test(k)), tunde:!!S.game._marketTunde };
     S.game._marketScanned = true;
     const it = ENGINE.interactables.find(i => i.label === 'Confront teen suspect'); it.onInteract(it);
@@ -42,7 +42,7 @@ module.exports = async h => {
   });
   h.log('resume mid-M2', JSON.stringify(r), JSON.stringify(a));
   h.assert(r.ok && r.cur === 'm2' && a.tunde, 'the old save loads into M2 with Tunde done');
-  h.assert(a.awake && a.active && a.level === 'calm' && a.watch < 1, 'KC\'s watcher is awake and calm, with no history');
+  h.assert(a.awake && a.active && a.level === 'calm' && a.watch < 1 && !a.wary, 'KC\'s watcher is awake and calm, with no history (and not wary: no m2_met)');
   h.assert(a.uche[0] === -2.4 && a.uche[1] === 11.6 && a.post === 'van' && !a.posted, 'Uche is at the van');
   h.assert(a.m2flags.length === 0, 'no m2_* flag is read or created from an old save');
   h.assert(a.row === 'legacy' && a.cfg.burst && a.cfg.burst[0] === 1.2 && a.cfg.head === 0.4 && a.stagger === 0.5 && /shoves a tray/.test(a.small), 'the first confront within 1 s gets today\'s opening');
@@ -53,6 +53,15 @@ module.exports = async h => {
     ring:MINIMAP.pois.some(p => p.color === '#0b6e4f'), gate:MINIMAP.pois.some(p => p.color === '#6b6b63'), flags:S.game.flags.m2_post }; });
   h.log('restored after posting', JSON.stringify(b));
   h.assert(b.post === 'back' && b.arrived && b.at[0] === 12.1 && b.at[1] === -19.9 && b.crouch === 0.8 && b.ring && b.gate && b.flags === 'back', 'restored after posting: Uche at the gate at once, crouched; the post ring and the back-gate ring');
+
+  // ---- seen at the meeting, then saved and reloaded: KC is still wary (the brief: "for the rest of the run"; B-MIN-3) ----
+  for (const seen of [true, false]) {
+    await resume(h, { completedMissions:['m0', 'm1'], _marketTunde:true, flags:{ m2_tunde:'loud', m2_met:{ seen, habit:!seen, tip:false } }, moralChoices:{} });
+    const w = await h.ev(() => { const R = TAC.m2.run(); return { wary:R.wary, phase:R.phase, len:+R.phaseLen.toFixed(3), tu:{ wary:R.tunde.wary, choice:R.tunde.choice, habit:R.tunde.habit }, met:S.game.flags.m2_met }; });
+    h.log('reload, seen at the meeting: ' + seen, JSON.stringify(w));
+    if (seen) h.assert(w.wary && w.tu.wary && w.phase === 'phone' && Math.abs(w.len - 4.6 * 0.75) < 1e-6 && w.tu.choice === 'loud', 'reloaded after a seen meeting: KC is still wary (phone ×0.75 from the first phase)');
+    else h.assert(!w.wary && !w.tu.wary && Math.abs(w.len - 4.6) < 1e-6 && w.tu.habit, 'reloaded after an unseen meeting: not wary');
+  }
 
   // ---- a save past M2: KC's fate and the M3 intel are exactly as before; no m2_* flag appears ----
   const past = { completedMissions:['m0', 'm1', 'm2'], flags:{ kc_statement:true }, moralChoices:{ market_runner:'caught', choice:'detain' }, _marketTunde:true, _marketScanned:true };

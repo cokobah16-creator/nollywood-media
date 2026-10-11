@@ -17,13 +17,23 @@ module.exports = async h => {
     for (const id of ['o1_tunde', 'o2_scan', 'o3_runner']) { const r = WAY.resolve(); res.push(r && r.label); WAY.invalidate(); completeObjective(id); }
     return { near:it && it.label, d:+Math.hypot(U.mesh.position.x - P.x, U.mesh.position.z - P.z).toFixed(2), res, inNpcs:ENGINE.npcs.some(n => n === U.mesh || (n && n.mesh === U.mesh)),
       obstacle:ENGINE.obstacles.some(o => U.mesh.position.x > o.minX && U.mesh.position.x < o.maxX && U.mesh.position.z > o.minZ && U.mesh.position.z < o.maxZ),
-      crowd:(ENGINE._marketCrowd || []).includes(U.mesh), optional:U.it.optional, range:U.it.range, verb:U.it.verb, poi:MINIMAP.pois.some(p => p === U.poi && p.color === '#5dd07a') };
+      crowd:(ENGINE._marketCrowd || []).includes(U.mesh), optional:U.it.optional, range:U.it.range, verb:U.it.verb, poi:MINIMAP.pois.some(p => p === U.poi && p.color === '#5dd07b') };
   });
+  // his dot is not the van's: the minimap draws each POI as a circle keyed by its fill; compare what paper.css + tac_market.css
+  // make of them (B-MIN-9), and the market's marks apply only under body.tac-m2 (B-MIN-8)
+  const dots = await h.ev(() => {
+    WAY.minimap();
+    const cs = sel => { const c = document.querySelector('#minimap-pois circle[fill="' + sel + '"]'); if (!c) return null; const st = getComputedStyle(c); return { fill:st.fill, stroke:st.stroke }; };
+    const van = MINIMAP.pois.find(p => p.color === '#5dd07a');
+    return { cls:document.body.classList.contains('tac-m2'), uche:cs('#5dd07b'), van:cs('#5dd07a'), vanAt:van && [van.x, van.z], nGreen:MINIMAP.pois.filter(p => p.color === '#5dd07a').length };
+  });
+  h.log('minimap dots', JSON.stringify(dots));
   h.log('spawn', JSON.stringify(s0));
   h.assert(s0.near !== 'Post Sgt. Uche' && s0.d > 2.4, 'Uche is out of reach at the spawn (' + s0.d + ' m)');
   h.assert(s0.res.every(l => l !== 'Post Sgt. Uche'), 'never a WAY.resolve target: ' + s0.res.join(' / '));
   h.assert(!s0.inNpcs && !s0.obstacle && !s0.crowd && s0.optional && s0.range === 2.4 && s0.verb === 'talk', 'not in ENGINE.npcs, not an obstacle, not crowd; talk, range 2.4, optional');
-  h.assert(s0.poi, 'his minimap dot (#5dd07a)');
+  h.assert(s0.poi, 'his minimap dot (#5dd07b, his own fill)');
+  h.assert(dots.cls && dots.uche && dots.van && (dots.uche.fill !== dots.van.fill || dots.uche.stroke !== dots.van.stroke), 'Uche\'s dot is styled apart from the van\'s green dot next to it: ' + JSON.stringify(dots));
 
   // ---- gated on Tunde ----
   await M.boot(h, { seed:31 });
@@ -44,10 +54,13 @@ module.exports = async h => {
   const talk = await h.ev(() => {
     const U = TAC.m2.uche(), P = ENGINE.player.position; P.x = U.mesh.position.x - 1.2; P.z = U.mesh.position.z;
     const it = nearestInteractable(); tryInteract();
-    return { lbl:it && it.label, key:DLG.scriptKey, yaw:U.mesh.rotation.y, want:Math.atan2(P.x - U.mesh.position.x, P.z - U.mesh.position.z), prompt:__rl.find(r => /Tell me where you want me/.test(r[1])) };
+    return { lbl:it && it.label, key:DLG.scriptKey, yaw:U.mesh.rotation.y, want:Math.atan2(P.x - U.mesh.position.x, P.z - U.mesh.position.z),
+      prompt:__rl.filter(r => r[0] === 'SGT. UCHE'), advice:__rl.filter(r => /Tell me where|before you move|want me/.test(r[1])), recruit:S.game.difficulty === 'recruit', hints:Object.keys(S.game._hints || {}) };
   });
   h.log('talk', JSON.stringify(talk));
-  h.assert(talk.prompt && talk.prompt[0] === 'SGT. UCHE', 'after Tunde, unposted: "I\'m with the van, sir. Tell me where you want me…"');
+  // Senior Agent hears where he is, not what to do: the advice to post him first is the Recruit chip tac_m2_post (B-BLK-1)
+  h.assert(!talk.recruit && talk.prompt.length === 1 && talk.prompt[0][1] === "I'm with the van, sir." && talk.advice.length === 0, 'after Tunde, unposted (Senior Agent): "I\'m with the van, sir." and no advice on the radio: ' + JSON.stringify(talk.prompt));
+  h.assert(!talk.hints.some(k => /^tac_m2_/.test(k)), 'Senior Agent: no tac_m2_* chip');
   h.assert(talk.key === 'market_uche' && Math.abs(talk.yaw - talk.want) < 1e-6, 'TALK opens market_uche, and he turns to Kelechi');
   const r1 = await T.finishDialogue(h);
   const ch = await h.ev(() => [...document.querySelectorAll('#dlg-choices button')].map(b => { const r = b.getBoundingClientRect(); return { t:b.textContent, top:r.top, bottom:r.bottom, h:r.height, w:r.width }; }));

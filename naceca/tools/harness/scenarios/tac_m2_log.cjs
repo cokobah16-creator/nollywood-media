@@ -61,6 +61,7 @@ module.exports = async h => {
     secs:'number', bumps:'number', bumpsLane:'number', trust:'number', cutReached:'boolean', ribbon:'string', prep:'object', uche:'object' }, 'enc m2_kc');
   want(kc.prep, { tip:'boolean', habit:'boolean', post:'string', posted:'boolean', pursuit:'boolean', tier:'number', greyman:'boolean', sources:'boolean' }, 'enc m2_kc.prep');
   want(kc.uche, { post:'string', arrived:'boolean', role:'string|null' }, 'enc m2_kc.uche');
+  h.assert(['tackle', 'box', 'veer', 'callout', null].includes(kc.uche.role), 'enc m2_kc.uche.role is in the contract (market.md §4): ' + kc.uche.role);
   h.assert(kc.approach === 'cold' && kc.intent === 'stealth' && kc.how === 'cold' && kc.outcome === 'caught' && kc.side === 'side' && kc.ribbon === 'off' && kc.trust === 2, 'enc m2_kc values');
   h.assert(kc.prep.tip && kc.prep.post === 'corner' && kc.prep.posted && kc.uche.arrived, 'enc m2_kc.prep / uche');
   want(sm, { kc:'string', how:'string', approach:'string', scanSeen:'boolean', alarms:'number', notices:'number', suspPeak:'number', eyeSecs:'number', crouchNearSecs:'number', watchSecs:'number',

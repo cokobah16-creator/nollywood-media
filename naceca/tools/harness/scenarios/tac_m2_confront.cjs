@@ -43,13 +43,14 @@ module.exports = async h => {
   const sc = await M.scan(h, { at:[7.5, 2.1], phase:'phone' });
   h.log('(a) scan', JSON.stringify(sc));
   h.assert(sc.label === 'Scan suspect phone' && sc.mini && sc.after.scanned && !sc.after.pending, '(a) the phone, from beside him, through the field skill and the document');
+  await h.ev(() => { for (const k of Object.keys(_ach)) delete _ach[k]; try { localStorage.removeItem(ACH_KEY); } catch (e) {} });
   const a = await h.ev(() => {
     __wf.run(1.2);
     const st = TAC.m2.kc().state, trust0 = S.player.reputation.publicTrust, it = nearestInteractable();
     const lbl = it && it.label; tryInteract();
     const K = ENGINE._marketKC.userData;
     return { lbl, susp:st.susp, level:st.level, chase:!!CHASE.active, dlg:!!document.querySelector('#screen-dialogue.show') && DLG.scriptKey, how:S.game.flags.m2_how,
-      dTrust:S.player.reputation.publicTrust - trust0, arms:[K.armL.rotation.x, K.armR.rotation.x], stagger:ENGINE._stagger,
+      dTrust:S.player.reputation.publicTrust - trust0, arms:[K.armL.rotation.x, K.armR.rotation.x], stagger:ENGINE._stagger, ach:{ faster:!!_ach.faster, not_one:!!_ach.not_one }, bumps:S.game._opBumps || 0,
       toast:(document.querySelector('#toast .big') || {}).textContent, small:(document.querySelector('#toast .small') || {}).textContent };
   });
   h.log('(a) cold', JSON.stringify(a));
@@ -57,6 +58,7 @@ module.exports = async h => {
   h.assert(a.dTrust === 2 && a.arms[0] <= -1.6 && a.arms[1] <= -1.6, '(a) +2 Public Trust, hands up');
   h.assert(a.stagger === 0, '(a) _stagger is 0 after a cold grab');
   h.assert(a.toast === 'CAUGHT COLD' && a.small === 'He never saw you coming. Quiet arrest · +2 Public Trust', '(a) the CAUGHT COLD toast');
+  h.assert(a.bumps === 0 && a.ach.faster && a.ach.not_one, '(a) a cold grab with nobody knocked over unlocks what a tackle does: faster and not_one (B-MAJ-2) ' + JSON.stringify(a.ach));
   await h.step(500);
   let ev = await T.events(h);
   const encA = ev.filter(e => e[0] === 'enc' && e[1].enc === 'm2_kc');
@@ -103,7 +105,7 @@ module.exports = async h => {
   ev = await T.events(h, 'interact_result');
   const ir = ev.find(e => e[1].label === 'Confront teen suspect');
   h.log('(c) soft', JSON.stringify(c), JSON.stringify(ir && ir[1].toast));
-  h.assert(c.row === 'soft' && c.stagger === 0 && c.big === "HE'S RUNNING" && /no time to grab a tray/.test(c.small), '(c) soft: no tray shove (_stagger 0), the toast says why');
+  h.assert(c.row === 'soft' && c.stagger === 0 && c.big === "HE'S RUNNING" && c.small === "He'd clocked you — no time to grab a tray.", '(c) soft: no tray shove (_stagger 0), the toast says why and nothing else (B-MIN-10): ' + c.small);
   h.assert(ir && /no time to grab a tray/.test(ir[1].toast.small), '(c) interact_result.toast.small is the rewritten one');
 
   // ---- (d) scan seen: lifting his phone at the counter front → HE SAW YOU, then the bolt 0.8 s later, today's opening ----
@@ -150,7 +152,7 @@ module.exports = async h => {
     return cfg;
   });
   h.log('(e) range bolt', JSON.stringify(e));
-  h.assert(e && e.row === 'bolt' && e.burst == null && e.head === 0 && e.stagger === 0 && /He made you from his counter\. Sprint\./.test(e.small), '(e) the range bolt: no dash, no head start, no shove');
+  h.assert(e && e.row === 'bolt' && e.burst == null && e.head === 0 && e.stagger === 0 && e.small === 'He made you from his counter.', '(e) the range bolt: no dash, no head start, no shove; the toast says why and nothing else (B-MIN-10)');
   const encE = (await h.ev(() => { stopChase(); return true; }), null);
 
   // ---- (f) a fumble in his view: susp ≥ 60, no chase, the phone still there; the forensic bypass is noise ----

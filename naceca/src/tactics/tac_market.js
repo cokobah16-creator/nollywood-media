@@ -56,11 +56,14 @@ const CFG = {
        calmAfter:4.0, calmTo:50, boltRange:6.0, scanBolt:0.8, legacy:1.0, seenAtt:0.9, exposedDist:3.0 },
   open:{ gap:2.5, soft:20 },
   tunde:{ meet:3.0, range:15, bark:4.0, body:0.3, seen:40, loud:20 },
-  uche:{ start:[-2.4, 11.6], yaw:2.3, range:2.4, jog:3.0, run:3.6, veer:4.5, veerCos:0.5, grab:1.9, boxR:5, boxScore:-1,
+  uche:{ start:[-2.4, 11.6], yaw:2.3, range:2.4, jog:3.0, run:3.6, veer:4.5, veerCos:0.5, sameWay:0.5, grab:1.9, boxR:5, boxScore:-1,
          calls:4, callLos:14, beat:1.4, beatFar:6, place:1.6, crouch:0.8, kneel:0.9, near:4 },
   cut:{ r:3.5, cos:Math.cos(40 * PI / 180), vmax:1.0, win:0.2, t0:1.5 },
   gate:[12.6, -20.5],
 };
+// the minimap fills tac_market.css keys on (scoped to body.tac-m2): Uche's own dot (not the van's #5dd07a), his post ring,
+// the back gate Tunde named
+const UCHE_DOT = '#5dd07b', POST_RING = '#0b6e4f', GATE_RING = '#6b6b63';
 // Uche's chain: the van → round the north end → down the back lane → the corner → the back gate (DESIGN §5.3).
 // Every post is a point on it, so a re-post (even mid-jog) just walks the chain forward or back.
 const CHAIN = [[-2.4, 11.6], [-2.0, 17.2], [7.6, 17.5], [11.43, 17.5], [11.43, 11.4], [12.6, 7.4], [13.3, -2.0], [13.3, -6.4], [12.6, -7.5],
@@ -82,6 +85,9 @@ const T_ARRIVAL = "I'm at my spot across the road from him.";
 const BARK = { pg:'Oga, the boy fit see you for road.', en:'Sir, the boy can see you out in the road.' };
 const WHY_TUNDE = 'He saw you talking to Tunde in the road';
 const WHY_SCAN = "He saw you lift his phone. He's running.";
+// the opening toasts say why he ran, not what to do (today's canon toast keeps its own "Sprint")
+const TOAST_SOFT = "He'd clocked you — no time to grab a tray.";
+const TOAST_BOLT = 'He made you from his counter.';
 const T = {
   seenLine:{ speaker:'INFORMANT — TUNDE', mood:'afraid', text:'He dey look this way, oga! E don see us. But e no fit hear wetin we dey talk.',
              textEn:"He's looking this way, sir! He's seen us. He can't hear what we're saying, though.", _tac:'seen' },
@@ -104,6 +110,7 @@ const DLG_NEW = {
     ] },
   ],
 };
+const UCHE_AT_VAN = "I'm with the van, sir.";
 const POST_ANSWER = { corner:"Back-lane corner. He'll see me if he comes down that lane.", back:"Back gate. He won't see me till he's on top of me.",
   van:"I'll stay on the van and call it." };
 const PURSUIT_LINE = "I'm cutting through the back — push him towards me!";
@@ -142,7 +149,7 @@ function freshRun(){
     press:null, approach:null, how:null, outcome:null,
     tunde:{ mesh:null, tested:false, side:'far', seen:false, dist:null, ang:null, crowd:false, bark:false, choice:null, tip:false, habit:false, wary:false },
     uche:{ mesh:null, it:null, poi:null, ring:null, post:'van', posted:false, s:0, target:0, moving:false, arrived:true, crouched:false,
-      orderT:null, pursue:false, role:null, goal:null, poiT:0, kneel:false,
+      orderT:null, pursue:false, role:null, goal:null, poiT:0, kneel:false, dir:null, lastCall:null, veerMoving:false,
       tasks:{ arrive:0, veer:0, act:0, callout:0 } },
     chase:null, stats:{ alarms:0, notices:0, suspPeak:0, eyeSecs:0, crouchNear:0, trust0:trust() },
     logged:{ kc:false, sum:false, tunde:false }, hint:{ post:false, side:false, bump:false }, text:false,
@@ -195,8 +202,15 @@ function setup(){
   R = freshRun();
   const run = R;
   R.awake = !fresh;                               // a run restored after Tunde: awake, calm, no history
-  if(R.awake){ R.awakeAt = 0; startPhase('phone'); places(); }
+  if(R.awake){
+    // ...but what the meeting decided is kept: seen there, he stays wary for the rest of the run (DESIGN M-M8)
+    const met = FL().m2_met || {}, tu = R.tunde;
+    R.wary = tu.wary = !!met.seen;
+    tu.choice = FL().m2_tunde || null; tu.tip = tu.choice === 'quiet'; tu.habit = !!met.habit;
+    R.awakeAt = 0; startPhase('phone'); places();
+  }
   if(K.userData) K.userData._idle = 'idle';      // art_pass_v8.js:2019 randomises it to 'talk'
+  try{ document.body.classList.add('tac-m2'); }catch(err){}      // tac_market.css's minimap marks apply in the market only
   R.tunde.mesh = ((e.interactables || []).find(i => i.label === 'Speak with Informant Tunde') || {}).mesh || null;
   // the watcher (DESIGN §5.3)
   const traders = (e._marketCrowd || []).filter(m => m && !(m.userData && m.userData.target));
@@ -242,6 +256,7 @@ function places(){
 }
 function teardown(run){
   if(!run) return;
+  try{ document.body.classList.remove('tac-m2'); }catch(e){}
   for(const off of run.subs) try{ off(); }catch(e){}
   run.subs.length = 0;
   if(run.beat){ clearTimeout(run.beat); run.beat = null; }
@@ -261,7 +276,7 @@ function buildUche(fresh){
   U.mesh = m;
   U.it = { mesh:m, label:'Post Sgt. Uche', verb:'talk', range:CFG.uche.range, optional:true, onInteract:() => ucheTalk() };
   e.interactables.push(U.it);
-  U.poi = { x:m.position.x, z:m.position.z, color:'#5dd07a', r:1.2 };
+  U.poi = { x:m.position.x, z:m.position.z, color:UCHE_DOT, r:1.2 };
   if(typeof MINIMAP !== 'undefined' && Array.isArray(MINIMAP.pois)) MINIMAP.pois.push(U.poi);
   // a run restored after posting him: he is at his post at once
   const p = !fresh ? FL().m2_post : null;
@@ -270,7 +285,7 @@ function buildUche(fresh){
 function placeAt(s, post){
   const U = R.uche, q = chainAt(s);
   U.s = U.target = s; U.mesh.position.x = q.x; U.mesh.position.z = q.z;
-  U.moving = false; U.arrived = true; U.mesh.rotation.y = POST_YAW[post] != null ? POST_YAW[post] : U.mesh.rotation.y;
+  U.moving = false; U.arrived = true; U.dir = null; U.mesh.rotation.y = POST_YAW[post] != null ? POST_YAW[post] : U.mesh.rotation.y;
   setCrouch(post === 'back');
   syncPoi(true);
 }
@@ -286,12 +301,12 @@ function postRing(post){
   if(U.ring){ const i = MINIMAP.pois.indexOf(U.ring); if(i >= 0) MINIMAP.pois.splice(i, 1); U.ring = null; }
   if(post === 'van') return;
   const q = CHAIN[POST_AT[post]];
-  U.ring = { x:q[0], z:q[1], color:'#0b6e4f', r:1.6 };
+  U.ring = { x:q[0], z:q[1], color:POST_RING, r:1.6 };
   MINIMAP.pois.push(U.ring);
 }
 function gateRing(){
   if(R.gatePoi || typeof MINIMAP === 'undefined' || !Array.isArray(MINIMAP.pois)) return;
-  R.gatePoi = { x:CFG.gate[0], z:CFG.gate[1], color:'#6b6b63', r:1.4 };
+  R.gatePoi = { x:CFG.gate[0], z:CFG.gate[1], color:GATE_RING, r:1.4 };
   MINIMAP.pois.push(R.gatePoi);
 }
 function ucheTalk(){
@@ -315,7 +330,7 @@ function post(p, o){
   if(changed) log('order', { who:'uche', order:'post', post:p, prev, withTip:FL().m2_tunde === 'quiet', src:o.src || 'talk', ok:true, def:false, obj:curObj(), t:r1(R.clock) });
   postRing(p);
   if(o.arrive){ placeAt(ARC[POST_AT[p]], p); return true; }
-  U.target = ARC[POST_AT[p]]; U.orderT = R.clock; U.arrived = Math.abs(U.target - U.s) < 1e-6; U.moving = !U.arrived;
+  U.target = ARC[POST_AT[p]]; U.orderT = R.clock; U.arrived = Math.abs(U.target - U.s) < 1e-6; U.moving = !U.arrived; U.dir = null;
   setCrouch(false);
   if(o.quiet !== true) sayUche(POST_ANSWER[p]);
   if(U.arrived) arrive();
@@ -402,7 +417,8 @@ function tundeEnd(){
   }
   if(!R.uche.posted){
     const run = R;
-    setTimeout(() => { if(run === R && !R.uche.posted && isM2() && !MC().market_runner) sayUche("I'm with the van, sir. Tell me where you want me before you move on him.", undefined, { pri:1 }); }, 1500);
+    // a report of where he is, on every difficulty; the advice to post him first is the Recruit chip (tac_m2_post)
+    setTimeout(() => { if(run === R && !R.uche.posted && isM2() && !MC().market_runner) sayUche(UCHE_AT_VAN, undefined, { pri:1 }); }, 1500);
   }
 }
 
@@ -485,10 +501,15 @@ function coldGrab(it, self){
   try{ applyEffect({ publicTrust:+2 }); }catch(e){ TAC._err(e); }
   hapt([40, 30, 80]);
   kcResolved({ how:'cold', by:'player', bumps:0, tac:{ row:'cold', t0:R.clock, trust0:trust() - 2, lane:0 } }, 'caught');
+  kcUnlock(G()._opBumps || 0);                     // no chase: nobody was knocked over unless an earlier chase did it
   if(typeof cfg.onCaught === 'function') cfg.onCaught();      // market.js:162-170: KC turns by π; market_runner opens at once
 }
 
 /* ---------- KC resolved: written once, logged once ---------- */
+// the KC achievements: every catch unlocks what today's tackle unlocks (pressure.js:181): "Faster Than Computer Village",
+// and "Not One Bystander" with nobody knocked over. Today every catch is a tackle; here a cold grab, CUT HIM OFF, UCHE HAS HIM
+// and BOXED IN are catches too, so none of them may cost the player an achievement the tackle gives.
+function kcUnlock(bumps){ try{ if(typeof unlock === 'function'){ unlock('faster'); if(!bumps) unlock('not_one'); } }catch(e){ TAC._err(e); } }
 function kcResolved(c, outcome){
   if(!R || R.logged.kc) return;
   R.logged.kc = true;
@@ -566,6 +587,7 @@ function frame(dt){
 /* ---------- Uche's legs: the chain at 3.0 m/s (3.6 in a chase), or the lanes with Pursuit Lines ---------- */
 function moveUche(dt){
   const U = R.uche, m = U.mesh; if(!m || U.kneel) return;
+  if(U.moving && (R.resolving || MC().market_runner)){ U.moving = false; U.dir = null; }     // KC is in custody: he stops
   const c = (typeof CHASE !== 'undefined' && CHASE.active && CHASE.active.tac) ? CHASE.active : null;
   const sp = (c ? CFG.uche.run : CFG.uche.jog) * dt;
   let moved = 0;
@@ -577,7 +599,7 @@ function moveUche(dt){
     U.s = done ? U.target : s1;
     const q = chainAt(U.s), x0 = m.position.x, z0 = m.position.z;
     m.position.x = q.x; m.position.z = q.z; moved = hyp(q.x - x0, q.z - z0);
-    if(moved > 1e-4) m.rotation.y = Math.atan2(q.x - x0, q.z - z0);
+    if(moved > 1e-4){ m.rotation.y = Math.atan2(q.x - x0, q.z - z0); U.dir = { x:(q.x - x0) / moved, z:(q.z - z0) / moved }; }
     if(done) arrive();
   }
   // the fallback rig has no clips: swing its limbs while he moves
@@ -646,7 +668,7 @@ function chaseBegin(c, row){
   // Uche's chase role: Pursuit Lines runs the lanes (the gate post holds the gate); a posted Uche keeps going at 3.6 m/s
   const U = R.uche;
   U.pursue = has('pursuit') && !!U.mesh && U.post !== 'back';
-  if(U.pursue){ U.moving = false; setCrouch(false); U.role = U.role || 'pursuit'; }
+  if(U.pursue){ U.moving = false; U.dir = null; setCrouch(false); }        // the role is what he does (§4): tackle, box, veer, callout
 }
 function chasePre(c, dt){
   c._tacT = (c._tacT || 0) + dt;
@@ -684,19 +706,28 @@ function endCut(c){
   raiseHands(c.runner); faceKC();
   toast('CUT HIM OFF', 'You got in front of him. No tackle, nobody hurt · +2 Public Trust', 2600);
   try{ applyEffect({ publicTrust:+2 }); }catch(e){ TAC._err(e); }
-  try{ if(typeof unlock === 'function'){ unlock('faster'); if(!c.bumps) unlock('not_one'); } }catch(e){ TAC._err(e); }
+  kcUnlock(c.bumps);
   hapt([40, 30, 80]);
   if(typeof cb === 'function') cb(c);              // synchronously: the caught scene opens at once (wayfind_catch reads it)
 }
 function ucheChase(c, opened){
-  const U = R.uche, m = U.mesh; if(!m || !opened) return false;
+  const U = R.uche, m = U.mesh; if(!m) return false;
   const K = c.runner.position, Up = m.position, d = hyp(K.x - Up.x, K.z - Up.z);
-  if(ucheGround() && d <= CFG.uche.grab){ takedown(c); return true; }
+  // the grab: from the end of the head start, as the player's catch (market.md §1.7), so a dash can't pass through him
+  if(c.headStart <= 0 && ucheGround() && d <= CFG.uche.grab){ takedown(c); return true; }
+  if(!opened) return false;
   if(!c.ended && !c.tac.veered && canVeer() && d <= CFG.uche.veer){
     const h = headingOf(c);
-    if(h && ((Up.x - K.x) * h.x + (Up.z - K.z) * h.z) / Math.max(d, 1e-3) > CFG.uche.veerCos) veer(c);
+    if(h && ((Up.x - K.x) * h.x + (Up.z - K.z) * h.z) / Math.max(d, 1e-3) > CFG.uche.veerCos && !sameWay(h)) veer(c);
   }
   return false;
+}
+// the moving-Uche rule (DESIGN M-M4): a Uche jogging to his post, ahead of KC and going KC's way, shows KC his back. KC
+// doesn't turn off for him: he runs on, gains on him (4.1 against 3.6 m/s) and runs into the grab. Coming towards KC (a
+// re-post back up the lane), or standing at the corner, Uche turns him as before.
+function sameWay(h){
+  const U = R.uche;
+  return !!(U.moving && !U.pursue && U.dir && U.dir.x * h.x + U.dir.z * h.z > CFG.uche.sameWay);
 }
 // he sees Uche ahead and takes the lanes: no DOUBLING BACK pause (c.ended is set before his path runs out)
 function veer(c){
@@ -704,6 +735,7 @@ function veer(c){
   c.tac.veered = true; c.ended = true;
   c.path.length = c.seg + 1; c.path.push([K.x, K.z]);
   c.gNode = null; c.gPrev = null;
+  U.veerMoving = !!U.moving;                       // (tests: the veer came from a Uche still on his way)
   U.role = U.role || 'veer';
   if(U.tasks.veer < 1){ U.tasks.veer++; log('ally_done', { who:'uche', task:'veer', outcome:'done', post:U.post, secs:r1(c._tacT), d:r1(hyp(K.x - U.mesh.position.x, K.z - U.mesh.position.z)) }); }
 }
@@ -734,6 +766,7 @@ function takedown(c){
   try{ applyEffect({ publicTrust:+2 }); }catch(e){ TAC._err(e); }
   hapt([40, 30, 80]);
   sayUche('Got him! ' + pl[1] + ', sir.');
+  kcUnlock(c.bumps);
   U.role = 'tackle';
   if(U.tasks.act < 1){ U.tasks.act++; log('ally_done', { who:'uche', task:'tackle', outcome:'done', post:U.post, secs:r1(c._tacT), d:r1(d) }); }
   R.resolving = true;
@@ -786,6 +819,7 @@ function endBoxed(c){
   raiseHands(c.runner); faceKC();
   toast('BOXED IN', 'Nowhere left to run. He puts his hands up · +2 Public Trust', 2600);
   try{ applyEffect({ publicTrust:+2 }); }catch(e){ TAC._err(e); }
+  kcUnlock(c.bumps);
   hapt([40, 30, 80]);
   U.role = U.role === 'tackle' ? U.role : 'box';
   if(U.tasks.act < 1){ U.tasks.act++; log('ally_done', { who:'uche', task:'box', outcome:'done', post:U.post, secs:r1(c._tacT), d:r1(dU) }); }
@@ -857,6 +891,8 @@ function callout(c){
   }
   const h = headingOf(c) || { x:0, z:0 };
   const l = laneOf(K.x, K.z, h.x, h.z);
+  if(U.lastCall && U.lastCall.lane === l.lane && U.lastCall.text === l.text) return;
+  U.lastCall = { lane:l.lane, text:l.text };
   U.tasks.callout++;
   U.role = U.role || 'callout';
   try{ TAC.radio.say('SGT. UCHE', l.text, { pri:3, ttl:3000, key:'uche_call' }); }catch(e){ TAC._err(e); }
@@ -933,8 +969,8 @@ wrap('toast', orig => function(big, small){
       if(R.capture && b === "HE'S RUNNING") return;            // the cold grab: no chase to announce
       if(R.opening && b === "HE'S RUNNING"){
         const a = Array.prototype.slice.call(arguments);
-        if(R.opening === 'soft') a[1] = "He'd clocked you — no time to grab a tray. Sprint, and mind the traders.";
-        else if(R.opening === 'bolt') a[1] = 'He made you from his counter. Sprint.';
+        if(R.opening === 'soft') a[1] = TOAST_SOFT;
+        else if(R.opening === 'bolt') a[1] = TOAST_BOLT;
         else if(R.opening === 'scan'){ a[0] = 'HE SAW YOU'; a[1] = 'He saw you lift his phone. He shoves a tray and runs.'; }
         return orig.apply(this, a);
       }
@@ -1019,7 +1055,7 @@ TAC.m2 = {
     const n = freshRun(); runN--;
     Object.assign(old, n, keep);
     old.tunde.mesh = tm;
-    Object.assign(U, { pursue:false, kneel:false, goal:null, role:null, orderT:null, tasks:{ arrive:0, veer:0, act:0, callout:0 } });
+    Object.assign(U, { pursue:false, kneel:false, goal:null, role:null, orderT:null, dir:null, lastCall:null, veerMoving:false, tasks:{ arrive:0, veer:0, act:0, callout:0 } });
     old.uche = U;
     if(U.mesh && !o.keepUche){ U.post = 'van'; U.posted = false; placeAt(0, 'van'); postRing('van'); }
     else if(U.mesh) U.mesh.scale.y = U.crouched ? CFG.uche.crouch : 1;
