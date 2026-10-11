@@ -1,0 +1,12 @@
+/* =========================================================================
+   NACECA · src/tactics/tac_market.css — Team B: the market's minimap marks. Paper UI: palette vars only;
+   no gradient, shadow, blur or filter. The dots are the existing #minimap-pois circles (keyed by their fill).
+   ========================================================================= */
+
+/* Uche's post: a green ring, not a dot (the dot itself is Uche, #5dd07a, styled green by paper.css) */
+#minimap-pois circle[fill="#0b6e4f"]{fill:none;stroke:var(--green,#0B6E4F);stroke-width:.9}
+/* the back gate Tunde named: a dashed ring in manila, readable on the ink disc */
+#minimap-pois circle[fill="#6b6b63"]{fill:none;stroke:var(--manila,#E9DCC0);stroke-width:.7;stroke-dasharray:1.1 .7}
+
+/* colour-blind mode: the post ring is told apart by its dash, not its hue */
+body.cb #minimap-pois circle[fill="#0b6e4f"]{stroke:var(--manila,#E9DCC0);stroke-dasharray:.4 .5}
