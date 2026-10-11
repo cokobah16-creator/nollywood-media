@@ -911,3 +911,21 @@ All are under `design/stubs/`:
   without them failed `visual_touch` on its own touch check, and both pass with them.
 - So the base commit is safe to fork from: on its own, the kernel changes no behaviour (its wraps are pass-through until
   something registers).
+
+---
+
+## 13 · Integration decisions (the lead, after the four branches merged)
+- **Event values added** (emitters stay the source of truth): `chase_end.how:'escaped'` with `by:null` when KC gets
+  away (B); `enc m3_obi` with timers off logs `outcome:'cornered', by:null, timers:'off'` (Obi puts his hands up and
+  doesn't run; no new enum value); `seen_read` is not logged when the frozen line never reached the screen (D-5).
+- **T-M5 dedupe key** is now the whole event `(sid, t, type, m, d)`, counted per export (D-1): two different events in
+  one millisecond both stay, and two exports of the same event count once.
+- **Internal accessors** used behind guards (`TAC._ms`, `TAC._err`, `TAC._radio`, `TAC.player._reset`) are not part
+  of §3; nothing may depend on them unguarded.
+- **Radio:** `_radioNext` now gives a line said on an idle radio its pending options before the expiry check (C-1's
+  root cause in tac_radio.js), so keyed lines keep their key, priority and ttl for every team. C's local workaround
+  stays harmless (it does nothing once the line already has its options).
+- **Why-line:** a still player in an open zone reads "out on <place>"; an owner's or the alarm's line clears once
+  the watcher is calm again (B's notes on tac_sight.js).
+- **Kept:** D's START AT M2 (facilitator-only: needs a player label or `?pt=1`), local ISO time on `pt_export`,
+  and the `ov_dwell` cut (menus and flow screens skipped). Grey Man reads "they're slower to notice you".

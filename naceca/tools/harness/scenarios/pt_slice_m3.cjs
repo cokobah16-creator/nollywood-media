@@ -13,19 +13,17 @@ const T = P.T;
 module.exports = async h => {
   let out;
   try {
-    await T.deviceMansion(h, { seed:51 });
+    const L = require('./tac_m3_lib.cjs');
+    await L.v8(h, { seed:51 });
     const hasC = await P.hasC(h), full = await h.ev(() => !!(TAC.sight && TAC.sight.full));
     await h.ev(() => { localStorage.removeItem('naceca_pt_v1'); V12.ptKit.clear(); V12.ptKit.player('S3'); });
     await T.capture(h);
     await P.eyeProbe(h);
     const t0 = await P.mark(h);
-    // the briefing / plan / entry card: take the defaults
-    for (let k = 0; k < 4; k++) {
-      for (let i = 0; i < 8; i++) { const r = await T.finishDialogue(h); if (r === 'choice') { await T.choose(h, 0); continue; } break; }
-      const btn = await h.ev(() => { const b = [...document.querySelectorAll('.overlay.show button.primary, .overlay.show .cw-btn.primary, .overlay.show [data-act="go"]')].find(x => x.offsetParent); if (b) { b.click(); return b.textContent.trim().slice(0, 30); } return null; });
-      await h.step(400);
-      if (!btn) break;
-    }
+    // the raid plan, the way a player gets there (the Lagos sheet filed, PLAN THE RAID): a quiet front entry, Uche with you
+    const hasPlan = await h.ev(() => ENGINE.interactables.some(i => /^Plan the raid/.test(i.label || '')));
+    if (hasC && hasPlan) await L.breach(h, { entry:'quiet', power:'leave', uche:'with' });
+    else h.log('no PLAN THE RAID in this build: the drive starts on site without the plan');
     await h.ev(() => { showOverlay(null); ENGINE.movementEnabled = true; });
     // 30 s on site: walk up the living room towards Obi's desk (alarms him if he can see it), interacting on the way
     const n0 = (await T.events(h)).length, w0 = await h.ev(() => __wf.t);

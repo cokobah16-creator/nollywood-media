@@ -151,8 +151,10 @@ wrap('_radioNext', orig => function(){
       }
     }
     const q = Q();
-    while(q.length){ const m = meta(q[0]); if(m.exp && t > m.exp){ const it = q.shift(); log(it, 'dropped'); if(ms()) ms().radio.dropped++; } else break; }
+    // a line said on an idle radio reaches here before radioLine's wrap returns: give it its pending opts first,
+    // or the expiry check below would stamp default metadata on it (no key, pri or ttl)
     if(q[0] && !q[0]._tac && R.pend) q[0]._tac = R.pend;
+    while(q.length){ const m = meta(q[0]); if(m.exp && t > m.exp){ const it = q.shift(); log(it, 'dropped'); if(ms()) ms().radio.dropped++; } else break; }
   }catch(e){ TAC._err(e); }
   const head = Q()[0];
   const r = orig.apply(this, arguments);

@@ -124,7 +124,7 @@ function whyLine(w, s, past){
   if(s.cause === 'sight'){
     let verb = '';
     if(moving) verb = s.open ? 'crossing' : s.gait === 'sprint' ? 'running' : s.gait === 'sneak' ? 'creeping' : 'walking';   // desktop jog and touch walk read the same
-    const place = s.place || (Math.round(s.dist) + ' m away');
+    const place = s.place ? ((s.open && !verb) ? 'out on ' + s.place : s.place) : (Math.round(s.dist) + ' m away');   // a still player in an open zone: 'out on the road'
     const posture = s.crouch ? 'crouched in the open' : s.cover ? 'standing behind ' + s.cover : 'standing';
     return `${He} ${past ? 'saw' : 'can see'} you ${verb ? verb + ' ' : ''}${place}, ${posture}`;
   }
@@ -235,7 +235,7 @@ function step(w, dt){
   } else if(w._whyMode && clock >= w._frozenUntil){
     if(st.susp <= 0){ st.why = ''; w._whyMode = null; }
     else if(clock - w._causeAt >= WHY_HOLD - 1e-6){ st.why = lostLine(w, s, w._lastCause); w._whyMode = 'lost'; }
-  }
+  } else if(!w._whyMode && st.why && st.susp <= 0 && clock >= w._frozenUntil){ st.why = ''; }   // an owner's or the alarm's line ends when he is calm again
   const lv = levelFrom(w, st.susp, prev);
   if(lv !== prev){
     st.level = lv;
