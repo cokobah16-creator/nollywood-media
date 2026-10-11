@@ -25,12 +25,17 @@ T.start = async (h, id, o = {}) => {
   const seed = o.seed == null ? null : (o.seed >>> 0);
   const user = o.state ? `(${o.state.toString()})(S);` : '';
   // runs inside h.start's evaluate, right before loadMission
+  // the scene (and the market crowd) is built by beginMission, which h.start calls in a second evaluate after
+  // 600 ms of frames that draw from Math.random: reseed once more, right before it runs, so the build is repeatable
   const src = `${SEED_SRC}
-    ${seed == null ? '' : `window.__tacSeed(${seed});`}
+    ${seed == null ? '' : `window.__tacSeed(${seed});
+    (function(){ const bm = window.beginMission; const f = function(){ window.beginMission = bm; window.__tacSeed(${seed}); return bm.apply(this, arguments); };
+      f.__tacOnce = true; f.__tacOrig = bm; window.beginMission = f; })();`}
     ENGINE.clock = { getDelta(){ return 0; } };
     if (typeof V12 !== 'undefined' && V12.mem) { const m = V12.mem(); m.hubs = m.hubs || {}; ['h1','h2','h3','h4','h5','h6','h7'].forEach(k => { m.hubs[k] = true; }); }
     ${user}`;
   await h.start(id, Object.assign({}, o, { completed:o.completed || defaultCompleted(id), state:new Function('S', src) }));
+  await h.ev(() => { const f = window.beginMission; if (f && f.__tacOnce) window.beginMission = f.__tacOrig; });
   await lib.frozenClock(h);
   await lib.stepper(h);
 };
@@ -105,12 +110,19 @@ T.walk = (h, pts, o = {}) => h.ev(({ pts, o }) => {
   let i = 0, stuck = 0;
   const n = __wf.run(o.maxT || 60, () => {
     if (i >= pts.length) return true;
-    const [tx, tz] = pts[i], dx = tx - P.x, dz = tz - P.z, d = Math.hypot(dx, dz);
-    if (d < 0.05) { i++; return false; }
-    const s = Math.min(d, v * __wf.dt), nx = P.x + dx / d * s, nz = P.z + dz / d * s, x0 = P.x, z0 = P.z;
-    if (!blockedAt(nx, P.z)) P.x = nx; if (!blockedAt(P.x, nz)) P.z = nz;
-    ENGINE.player.rotation.y = Math.atan2(dx, dz);
-    if (Math.hypot(P.x - x0, P.z - z0) < 1e-4) { if (++stuck > 30) return true; } else stuck = 0;
+    // a full step every frame: what is left after reaching a point carries on toward the next one
+    let rem = v * __wf.dt, moved = 0;
+    while (rem > 1e-9 && i < pts.length) {
+      const [tx, tz] = pts[i], dx = tx - P.x, dz = tz - P.z, d = Math.hypot(dx, dz);
+      if (d < 1e-4) { i++; continue; }
+      const s = Math.min(d, rem), nx = P.x + dx / d * s, nz = P.z + dz / d * s, x0 = P.x, z0 = P.z;
+      if (!blockedAt(nx, P.z)) P.x = nx; if (!blockedAt(P.x, nz)) P.z = nz;
+      ENGINE.player.rotation.y = Math.atan2(dx, dz);
+      const m = Math.hypot(P.x - x0, P.z - z0); moved += m; rem -= s;
+      if (m < s - 1e-6) break;                                  // blocked: stop here this frame
+      if (s >= d - 1e-9) i++;
+    }
+    if (moved < 1e-4 && i < pts.length) { if (++stuck > 30) return true; } else stuck = 0;
     if (o.until && (new Function('return (' + o.until + ')'))()) return true;
   });
   if (!o.keep) { ENGINE.keys.KeyC = false; ENGINE.keys.ShiftLeft = false; }
@@ -118,8 +130,11 @@ T.walk = (h, pts, o = {}) => h.ev(({ pts, o }) => {
 }, { pts, o:Object.assign({}, o, { until:o.until ? String(o.until) : null }) });
 
 // the chase pursuer (scout's matrix sim, m2_lib.cjs): strategy 'follow' | 'intercept' {pt, pastSeg} | 'stand'
+// o.seed (optional): reseed Math.random inside this evaluate, so paired runs share the random stream from here on
+// (the page's own frame loop draws from it between evaluates)
 T.pursue = (h, o = {}) => h.ev(o => {
   const c = CHASE.active, P = ENGINE.player.position, b = ENGINE.bounds; if (!c) return null;
+  if (o.seed != null && window.__tacSeed) window.__tacSeed(o.seed);
   const v = o.v || 4.42, delay = o.delay || 0;
   let minGap = 1e9, mode = 'chase', reachedPt = null, ptHold = 0;
   const moveTo = (ax, az) => { const dx = ax - P.x, dz = az - P.z, d = Math.hypot(dx, dz); if (d < 0.05) return;

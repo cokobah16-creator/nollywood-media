@@ -1,0 +1,48 @@
+/* =========================================================================
+   NACECA · src/tactics/tactics.css — Team A: the chip row, the crouch chip, the eye restyle and
+   its why-line, the head marker. Paper UI: palette vars only; no gradient, shadow, blur or filter.
+   ========================================================================= */
+
+/* ---------- the desktop chip row, bottom left (TAC.ui.chipRow(); hidden on touch) ---------- */
+#tac-chips{position:absolute;left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));
+  display:flex;flex-direction:column;align-items:flex-start;gap:6px;z-index:40;pointer-events:none;width:auto;height:auto}
+.touch-active #tac-chips{display:none}
+.tac-chip{display:none;align-items:center;gap:8px;min-height:32px;box-sizing:border-box;padding:6px 12px;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--manila,#E9DCC0);border-radius:2px;
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.16em;text-transform:uppercase;line-height:1.2}
+.tac-chip.show{display:flex}
+.tac-chip .ico{width:18px;height:18px;flex:0 0 18px}
+.tac-chip-k{letter-spacing:.08em;text-transform:none;font-family:var(--font-body,inherit);font-size:12px}
+
+/* ---------- the eye: the paper palette always (the courier and the car too) ---------- */
+#eye-ind svg > path{fill:var(--ink,#1C1C1A);stroke:var(--manila,#E9DCC0)}
+#eye-ind #eye-fill{fill:var(--red,#B3261E)}
+#eye-ind svg > circle{stroke:var(--manila,#E9DCC0)}
+#eye-ind #eye-pupil{fill:var(--manila,#E9DCC0);stroke:none}
+/* reduced motion: no blink; a static red rim says "he is looking" */
+.reduce-motion #eye-ind.watching svg{animation:none}
+.reduce-motion #eye-ind.watching svg > path{stroke:var(--red,#B3261E);stroke-width:3.4}
+/* the why-line (DOM contract §3.6): only while a TAC watcher drives the eye */
+#eye-ind .eye-why{display:none;box-sizing:border-box;max-width:min(260px,calc(100vw - 32px));padding:3px 8px;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--manila,#E9DCC0);border-radius:2px;
+  font-size:11px;line-height:1.35;letter-spacing:.02em;text-align:center}
+body.tac-eye #eye-ind .eye-why:not(:empty){display:block}
+body.tac-eye #eye-ind #eye-dist:empty{display:none}
+/* placed by measured rects (tac_sight.js): left/top are written inline */
+body.tac-eye #eye-ind.tac-placed{transform:none}
+/* a phone on its side: the eye and its line side by side, so the pair fits above the radio strip */
+@media (orientation:landscape) and (max-height:520px){
+  body.tac-eye.touch-active #eye-ind{flex-direction:row;align-items:center;gap:6px}
+  body.tac-eye.touch-active #eye-ind svg{width:48px;height:28px;flex:0 0 48px}
+  body.tac-eye.touch-active #eye-ind .eye-why{max-width:280px;text-align:left}
+}
+
+/* ---------- the head marker: .tac-mark[data-who] = icon + a 44 × 6 bar (ink outline, red fill) ---------- */
+.tac-mark{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none;z-index:2}
+.tac-mark-ico{display:flex;align-items:center;justify-content:center;width:22px;height:22px;box-sizing:border-box;border-radius:50%;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--manila,#E9DCC0)}
+.tac-mark-ico:empty{display:none}
+.tac-mark-ico .ico{width:14px;height:14px}
+.tac-mark[data-level="alarm"] .tac-mark-ico{background:var(--red,#B3261E);border-color:var(--red,#B3261E);color:var(--manila,#E9DCC0)}
+.tac-mark-bar{display:block;width:44px;height:6px;box-sizing:border-box;border:1px solid var(--ink,#1C1C1A);background:var(--manila,#E9DCC0);overflow:hidden}
+.tac-mark-bar i{display:block;height:100%;width:0;background:var(--red,#B3261E)}
