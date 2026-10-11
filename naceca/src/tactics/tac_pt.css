@@ -1,0 +1,49 @@
+/* =========================================================================
+   NACECA · src/tactics/tac_pt.css — the playtest kit (Team D)
+   The facilitator's summary sheet (#screen-pt-report) and the two-tap arm
+   on the PLAYTEST rows. Paper UI: palette colours only, no gradient,
+   shadow, glow, blur or filter; 44 px targets on touch.
+   ========================================================================= */
+#screen-pt-report{z-index:120;padding:16px;box-sizing:border-box}
+#screen-pt-report .overlay-bg{background:var(--ink,#1C1C1A)}
+#screen-pt-report .pt-sheet{position:relative;z-index:1;width:min(640px,100%);max-height:100%;overflow:auto;margin:auto;padding:18px 20px 0;box-sizing:border-box;-webkit-overflow-scrolling:touch;box-shadow:none}
+#screen-pt-report .cw-title{overflow-wrap:anywhere}
+#screen-pt-report .pt-lead{font-size:13px;line-height:1.45;margin:4px 0 10px;color:var(--ink,#1C1C1A)}
+#screen-pt-report .pt-scope{display:flex;flex-wrap:wrap;gap:0}
+#screen-pt-report .pt-scope button{background:transparent;border:1px solid var(--ink,#1C1C1A);color:var(--ink,#1C1C1A);min-height:36px;padding:6px 14px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:13px;letter-spacing:.1em;cursor:pointer;box-shadow:none}
+#screen-pt-report .pt-scope button + button{border-left:0}
+#screen-pt-report .pt-scope button.on{background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0)}
+.touch-active #screen-pt-report .pt-scope button{min-height:44px;min-width:44px}
+#screen-pt-report .pt-sec{border-top:1px solid var(--ink,#1C1C1A);padding:10px 0 8px}
+#screen-pt-report .cw-head + .pt-sec, #screen-pt-report .cw-head + .pt-empty + .pt-sec{border-top:0}
+#screen-pt-report .pt-sec h3{display:flex;align-items:center;gap:8px;margin:0 0 4px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:15px;font-weight:600;letter-spacing:.04em;color:var(--ink,#1C1C1A)}
+#screen-pt-report .pt-sec h3 svg{width:18px;height:18px;flex:0 0 18px}
+#screen-pt-report .pt-v{margin:0 0 6px;font-size:14px;font-weight:600;line-height:1.4;color:var(--ink,#1C1C1A);overflow-wrap:anywhere}
+#screen-pt-report .pt-stamp{display:inline-block;margin-left:8px;padding:1px 6px;border:1px solid currentColor;border-radius:2px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;vertical-align:1px;white-space:nowrap}
+#screen-pt-report .pt-stamp.ask{color:var(--red,#B3261E)}
+#screen-pt-report .pt-stamp.likely{color:var(--green,#0B6E4F)}
+#screen-pt-report .pt-stamp.none{color:var(--ink,#1C1C1A)}
+#screen-pt-report ul{margin:0;padding:0;list-style:none}
+#screen-pt-report li{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:12px;line-height:1.45;padding:3px 0 3px 10px;border-left:2px solid var(--ink,#1C1C1A);margin:3px 0;color:var(--ink,#1C1C1A);overflow-wrap:anywhere}
+#screen-pt-report li.pt-more{border-left-style:dashed}
+#screen-pt-report .pt-quote{font-size:13px;line-height:1.45;margin:4px 0;color:var(--ink,#1C1C1A);overflow-wrap:anywhere}
+#screen-pt-report .pt-empty{font-size:13px;color:var(--ink,#1C1C1A);margin:4px 0}
+#screen-pt-report .pt-acts{position:sticky;bottom:0;z-index:2;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin:8px -20px 0;padding:10px 20px 14px;background:var(--manila,#E9DCC0);border-top:1px solid var(--ink,#1C1C1A)}
+#screen-pt-report .pt-acts .cw-btn svg{width:16px;height:16px}
+@media (max-width:480px){
+  #screen-pt-report .pt-sheet{padding:14px 14px 0}
+  #screen-pt-report .pt-acts{margin:8px -14px 0;padding:10px 14px 12px}
+  #screen-pt-report .pt-acts .cw-btn{flex:1 1 0}
+  #screen-pt-report .cw-title{font-size:24px}
+}
+@media (max-height:480px){
+  #screen-pt-report{padding:8px 16px}
+  #screen-pt-report .cw-head{padding-bottom:6px;margin-bottom:6px}
+  #screen-pt-report .cw-title{font-size:20px}
+  #screen-pt-report .pt-lead{margin:2px 0 6px}
+  #screen-pt-report .pt-acts{padding:6px 20px 8px}
+}
+/* Settings › PLAYTEST: the second tap of NEW PLAYER / CLEAR */
+#settings-body .seg button.pt-armed{background:var(--red,#B3261E);border-color:var(--red,#B3261E);color:var(--manila,#E9DCC0)}
+#settings-body .pt-row .seg button{white-space:normal}
+.touch-active #settings-body .pt-row .seg button, .touch-active #settings-body #pt-clear{min-height:44px;min-width:44px}
