@@ -1,0 +1,17 @@
+/* =========================================================================
+   NACECA · src/tactics/tac_market.css — Team B: the market's minimap marks. Paper UI: palette vars only;
+   no gradient, shadow, blur or filter. The dots are the existing #minimap-pois circles (keyed by their fill).
+   Every rule is scoped to body.tac-m2 (set by tac_market.js while the Ikeja market is the scene), so a dot in the same
+   fill in any other mission keeps paper.css's styling.
+   ========================================================================= */
+
+/* Uche's post: a green ring, not a dot */
+body.tac-m2 #minimap-pois circle[fill="#0b6e4f"]{fill:none;stroke:var(--green,#0B6E4F);stroke-width:.9}
+/* the back gate Tunde named: a dashed ring in manila, readable on the ink disc */
+body.tac-m2 #minimap-pois circle[fill="#6b6b63"]{fill:none;stroke:var(--manila,#E9DCC0);stroke-width:.7;stroke-dasharray:1.1 .7}
+/* Uche himself: a manila dot ringed in green, told apart from the van and Tunde (green dots ringed in manila) */
+body.tac-m2 #minimap-pois circle[fill="#5dd07b"]{fill:var(--manila,#E9DCC0);stroke:var(--green,#0B6E4F);stroke-width:.9}
+
+/* colour-blind mode: the post ring is told apart by its dash, Uche by his solid manila ring (the van is a manila dot) */
+body.cb.tac-m2 #minimap-pois circle[fill="#0b6e4f"]{stroke:var(--manila,#E9DCC0);stroke-dasharray:.4 .5}
+body.cb.tac-m2 #minimap-pois circle[fill="#5dd07b"]{fill:var(--ink,#1C1C1A);stroke:var(--manila,#E9DCC0);stroke-width:.9}
