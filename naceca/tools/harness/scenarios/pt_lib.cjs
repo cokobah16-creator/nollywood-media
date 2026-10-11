@@ -232,8 +232,10 @@ P.driveM2 = async (h, o = {}) => {
   standIns.includes('document solved') || standIns.push('document solved');
   await P.play(h, sneaky ? 40 : 25);
   // the alarm and its read (KC's watcher)
-  if (sneaky) await P.kcAlarm(h, 'He saw you crossing the open road, standing', 2.6);
-  else { await P.kcAlarm(h, 'He saw you crossing the open road, standing', 0.7); await h.step(300); await P.kcAlarm(h, 'He saw you crossing the open road, standing', 0.6); }
+  let own;
+  if (sneaky) own = await P.kcAlarm(h, 'He saw you crossing the open road, standing', 2.6);
+  else { own = await P.kcAlarm(h, 'He saw you crossing the open road, standing', 0.7); await h.step(300); await P.kcAlarm(h, 'He saw you crossing the open road, standing', 0.6); }
+  if (own) standIns.push('KC alarm (a scripted reset on the kernel fallback watcher, its line shown under the eye)');
   // P1: the scanned phone keeps stealing the press at the counter (wrong target ×3)
   if (sneaky) { await at(h, 5.8, 4.6); for (let i = 0; i < 3; i++) await press(h, 450); }
   // the confront: from the side (P1) or the front (P2); today's chase, then a tackle
