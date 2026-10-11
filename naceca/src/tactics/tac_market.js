@@ -195,7 +195,7 @@ function setup(){
   R = freshRun();
   const run = R;
   R.awake = !fresh;                               // a run restored after Tunde: awake, calm, no history
-  if(R.awake){ R.awakeAt = 0; startPhase('phone'); }
+  if(R.awake){ R.awakeAt = 0; startPhase('phone'); places(); }
   if(K.userData) K.userData._idle = 'idle';      // art_pass_v8.js:2019 randomises it to 'talk'
   R.tunde.mesh = ((e.interactables || []).find(i => i.label === 'Speak with Informant Tunde') || {}).mesh || null;
   // the watcher (DESIGN §5.3)
@@ -205,15 +205,6 @@ function setup(){
       hearing:CFG.kc.hearing, surface:'on the street', crowd:() => traders, facing, attention, active:() => run === R && watchedActive(),
       onLevel:(lv) => { if(run !== R) return; if(lv === 'notice' && R.lastLevel === 'calm') R.stats.notices++; if(lv === 'alarm') R.stats.alarms++; R.lastLevel = lv; },
       logExtra:() => ({ phase:run.phase, scanned:!!G()._marketScanned, post:run.uche.post }) });
-    TAC.sight.zones([
-      { name:'by the van', rect:[-2, 3.5, 9, 17] },
-      { name:"at Tunde's spot", rect:[-9, -4, -5, 1] },
-      { name:'the open road', rect:[-4, 4, -23.5, 23.5], open:true },
-      { name:'by his counter', rect:[5.2, 9.2, 2.2, 5.8] },
-      { name:'on the stall fronts', rect:[4, 9, -23.5, 23.5] },
-      { name:'in the back lane', rect:[11.2, 14.6, -23.5, 23.5] },
-    ]);
-    TAC.sight.lights({ ambient:'lit' });
   }
   // the confront router replaces KC's onInteract; the original stays as origConfront
   const it = (e.interactables || []).find(i => i.label === 'Confront teen suspect' && i.mesh === K);
@@ -233,6 +224,21 @@ function setup(){
   R.subs.push(TAC.onFrame(dt => { if(run === R) frame(dt); }, { order:5 }));
   R.subs.push(TAC.onScene(() => teardown(run), { order:10 }));
   if(!fresh && FL().m2_tunde === 'quiet') gateRing();
+}
+// the why-line's places (market.md §3.1), set when KC wakes: he is the only watcher in the market, and until Tunde has
+// pointed him out nobody is watching. The zone name carries its preposition (the grammar puts it straight after the verb);
+// the road is not an `open` zone, so a player standing still on it reads "He can see you on the open road, standing".
+function places(){
+  if(!TAC.sight || !TAC.sight.zones) return;
+  TAC.sight.zones([
+    { name:'by the van', rect:[-2, 3.5, 9, 17] },
+    { name:"at Tunde's spot", rect:[-9, -4, -5, 1] },
+    { name:'on the open road', rect:[-4, 4, -23.5, 23.5] },
+    { name:'by his counter', rect:[5.2, 9.2, 2.2, 5.8] },
+    { name:'on the stall fronts', rect:[4, 9, -23.5, 23.5] },
+    { name:'in the back lane', rect:[11.2, 14.6, -23.5, 23.5] },
+  ]);
+  if(TAC.sight.lights) TAC.sight.lights({ ambient:'lit' });
 }
 function teardown(run){
   if(!run) return;
@@ -376,6 +382,7 @@ function barkCheck(){
 function tundeEnd(){
   const tu = R.tunde, w = R.kcW;
   R.awake = true; R.awakeAt = R.clock; R.cyc = 0;
+  places();
   tu.choice = FL().m2_tunde || null; tu.tip = tu.choice === 'quiet'; tu.habit = tu.tested && !tu.seen;
   if(tu.tested && tu.seen){ R.wary = true; tu.wary = true; }
   startPhase('phone');                              // the first look-up comes 4.6 s after the conversation (×0.75 when wary)
@@ -463,7 +470,7 @@ function confront(it, self, o){
   R.opening = row;
   try{ return origCall(it, self); } finally { R.opening = null; }
 }
-function autoBolt(){ if(R && R.kcIt && !R.resolving) confront(R.kcIt, R.kcIt, { auto:true }); }
+function autoBolt(){ if(R && R.kcIt && !R.resolving && !CFG.off) confront(R.kcIt, R.kcIt, { auto:true }); }
 function fireBolt(){ R.bolt = null; if(R.kcIt) confront(R.kcIt, R.kcIt, { scan:true }); }
 // CAUGHT COLD: the original confront runs in capture mode (no chase, no HE'S RUNNING, no chase music), then the canon onCaught
 function coldGrab(it, self){
@@ -491,7 +498,7 @@ function kcResolved(c, outcome){
   FL().m2_how = how;
   const t = c.tac || {}, p = R.press || {}, U = R.uche, tu = R.tunde;
   t.end = R.clock;
-  log('enc', { enc:'m2_kc', approach:R.approach || 'legacy', intent:intent(), susp:p.susp != null ? p.susp : null, level:p.level || null,
+  log('enc', { enc:'m2_kc', approach:R.approach || 'legacy', intent:intent(), wary:R.wary, susp:p.susp != null ? p.susp : null, level:p.level || null,
     exposed:!!p.exposed, gap:p.gap != null ? p.gap : null, scanSeen:R.scanSeen, side:p.side || null, outcome, how,
     secs:how === 'cold' ? 0 : r1(R.clock - (t.t0 != null ? t.t0 : R.clock)), bumps:c.bumps || 0, bumpsLane:t.lane || 0,
     trust:trust() - (t.trust0 != null ? t.trust0 : trust()), cutReached:false, ribbon:CFG.ribbonCut,
@@ -549,7 +556,7 @@ function frame(dt){
     if(R.scan && !miniOpen() && !puzzleOpen()) scanResolve();
   }
   // KC is ours while he is watched: rotation = his facing + the module's glance; head down on his phone
-  if(K && w && w.state.active){
+  if(K && w && w.state.active && watchedActive()){
     K.rotation.y = facing() + (w.state.glance || 0);
     setArms(K, null, R.phase === 'phone' ? -2.0 : 0);
   }
@@ -635,7 +642,7 @@ function chaseBegin(c, row){
   R.bolt = null;
   const oc = c.onCaught, oe = c.onEscaped;
   c.onCaught = function(){ try{ kcResolved(c, 'caught'); }catch(e){ TAC._err(e); } return typeof oc === 'function' ? oc.apply(this, arguments) : undefined; };
-  c.onEscaped = function(){ try{ kcResolved(c, 'escaped'); }catch(e){ TAC._err(e); } return typeof oe === 'function' ? oe.apply(this, arguments) : undefined; };
+  c.onEscaped = function(){ c.how = 'escaped'; c.by = null; try{ kcResolved(c, 'escaped'); }catch(e){ TAC._err(e); } return typeof oe === 'function' ? oe.apply(this, arguments) : undefined; };
   // Uche's chase role: Pursuit Lines runs the lanes (the gate post holds the gate); a posted Uche keeps going at 3.6 m/s
   const U = R.uche;
   U.pursue = has('pursuit') && !!U.mesh && U.post !== 'back';
@@ -909,6 +916,11 @@ wrap('updateChase', orig => function(dt){
   const r = orig.apply(this, arguments);
   if(ours){ try{ chasePost(c); }catch(e){ TAC._err(e); } }
   return r;
+});
+// an escape carries its how before any onEscaped wrapper runs (pressure.js:117 calls c.onEscaped itself)
+wrap('chaseEscape', orig => function(c){
+  try{ if(isKCChase(c) && c.tac){ c.how = 'escaped'; c.by = null; } }catch(e){ TAC._err(e); }
+  return orig.apply(this, arguments);
 });
 wrap('chaseExtend', orig => function(c){
   if(!(isKCChase(c) && c.tac && ucheGround() && c.lanes && c.lanes.nodes && c.lanes.nodes.length)) return orig.apply(this, arguments);

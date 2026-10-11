@@ -183,5 +183,20 @@ module.exports = async h => {
     return { ry:K.rotation.y, want:-Math.PI / 2 + 0.15 * Math.sin(2 * Math.PI * (1 - R.phaseT / R.phaseLen)) + w.state.glance, idle:K.userData._idle };
   });
   h.assert(Math.abs(k.ry - k.want) < 0.02 && k.idle === 'idle', 'KC renders facing() + glance while watched, idle "idle": ' + JSON.stringify(k));
+  // ---- the Recruit chips (TAC.hint): none on Senior; on Recruit tac_m2_post after 20 s unposted, tac_m2_side within 6 m in his cone ----
+  const senior = await h.ev(() => Object.keys(S.game._hints || {}).filter(k => /^tac_m2_/.test(k)));
+  h.assert(senior.length === 0, 'Senior Agent: no tac_m2_* chip, though he stood in KC\'s cone within 6 m and never posted Uche: ' + senior.join());
+  await M.boot(h, { seed:6, state:S => { S.game.difficulty = 'recruit'; } });
+  await M.tunde(h, { at:[-8, -2], choice:0 });
+  const rc = await h.ev(() => {
+    const P = ENGINE.player.position; P.x = -12; P.z = -12; TAC.player._reset();
+    __wf.run(19.5); const early = !!(S.game._hints || {}).tac_m2_post;
+    __wf.run(1.0); const post = !!(S.game._hints || {}).tac_m2_post, chip1 = (document.querySelector('#hint-chip .hc-text') || {}).textContent;
+    P.x = 4; P.z = 4.5; TAC.player._reset(); __wf.run(0.3);
+    return { early, post, chip1, side:!!(S.game._hints || {}).tac_m2_side, chip2:(document.querySelector('#hint-chip .hc-text') || {}).textContent, shown:TAC.hintsShown.slice() };
+  });
+  h.log('recruit chips', JSON.stringify(rc));
+  h.assert(!rc.early && rc.post && /Post Sgt\. Uche before you move/.test(rc.chip1), 'Recruit: tac_m2_post after 20 s unposted');
+  h.assert(rc.side && rc.shown.includes('tac_m2_side'), 'Recruit: tac_m2_side the first time within 6 m in his cone');
   h.assert(!h.errors.length, 'no page errors: ' + h.errors.join(' | '));
 };
