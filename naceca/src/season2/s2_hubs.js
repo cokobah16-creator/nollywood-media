@@ -119,7 +119,7 @@ function hostLines(h){
   if(H.host === 'hauwa'){
     const say = text => L.push({ speaker:'BARRISTER DANLADI', text });
     if(h === 'h12') say('Every exhibit you bring me is a promise you made to a judge you haven\'t met yet. Tonight I count the promises.');
-    if(h === 'h13'){ say('Court 5, Justice Bakare. He reads everything. Olaniran-Cole SAN is for the first defendant. He will be charming. Do not be charmed.'); say('Before the trial: certificates, certified copies, the bank. Anything we don\'t fix, he will find. Start one today — we\'ll do the rest on Friday.'); }
+    if(h === 'h13'){ say('Court 5, Justice Bakare. He reads everything. Olaniran-Cole SAN is for the first defendant. He will be charming. Do not be charmed.'); say('Before the trial: certificates, certified copies, the bank. Anything we don\'t fix, he will find. Start one today — we\'ll do the rest at the conference, the Friday before the trial.'); }
   }
   return L;
 }
@@ -153,8 +153,8 @@ for(const h in V13.HUBS){
         const fixes = h === 'h13' && V13.court && V13.court.openFixes;
         if(lines.length) V13.talk(R.host, H.host === 'osagie' ? 'Talk to Commander Okundaye' : fixes ? 'Prepare the exhibits with Barrister Danladi' : 'Talk to Barrister Danladi', it => {
           if(fixes){
-            if(it._done){ V13.court.openFixes(1, ()=>{}, { kicker:'A BORROWED DESK', note:'One thing you can put right today. The rest waits for the conference on Friday.' }); return; }
-            V13.run('hub2_host_run', [lines], ()=>V13.court.openFixes(1, ()=>{ it._done = true; V13.used(it); V13.done('hb_fix'); }, { kicker:'A BORROWED DESK', note:'One thing you can put right today. The rest waits for the conference on Friday.' }));
+            if(it._done){ V13.court.openFixes(1, ()=>{}, { kicker:'A BORROWED DESK', note:'One thing you can put right today. The rest waits for the conference in January.' }); return; }
+            V13.run('hub2_host_run', [lines], ()=>V13.court.openFixes(1, ()=>{ it._done = true; V13.used(it); V13.done('hb_fix'); }, { kicker:'A BORROWED DESK', note:'One thing you can put right today. The rest waits for the conference in January.' }));
             return;
           }
           V13.run('hub2_host_run', [lines], ()=>V13.used(it));

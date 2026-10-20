@@ -64,6 +64,23 @@ module.exports = async function (T) {
   r = await T.ev(() => { const k = Object.keys(DIALOGUE).filter(k => !/^(m9|m10|m11|m12|m13|m13b|m14|m15|h9|h1[0-4]|hub2|s2|core_x|pw|cert|court|epi)/.test(k));
     let n = 0; for (const key of k) for (const l of DIALOGUE[key] || []) if (l && (l.rec != null || l.sr != null || l.cond != null)) n++; return n; });
   C.check('LINES Season 1 dialogue carries none of the fields', r === 0, 'lines=' + r);
+  // V13.lineText: the same fields for a line that is radioed, texted or toasted (CORE-01)
+  r = await T.ev(() => {
+    const ls = [{ text: 'T plain' }, { text: 'T rec', rec: 1 }, { text: 'T cond', cond: 'false' }, { text: 'T err', cond: 'nope.nope' },
+      { text: 'T rec text', textEn: 'T rec en', sr: 'T sr', srEn: 'T sr en' }, { text: 'T only', sr: 'T sr only' }, 'a string', null];
+    const run = () => ls.map(l => V13.lineText(l));
+    const d0 = S.game.difficulty, l0 = SETTINGS.lang, out = {};
+    S.game.difficulty = 'senior'; SETTINGS.lang = 'pidgin'; out.sr = run(); SETTINGS.lang = 'english'; out.srEn = run();
+    S.game.difficulty = 'recruit'; SETTINGS.lang = 'pidgin'; out.rec = run(); SETTINGS.lang = 'english'; out.recEn = run();
+    S.game.difficulty = d0; SETTINGS.lang = l0; return out;
+  });
+  T.log('lineText', JSON.stringify(r));
+  C.check('CORE-01 V13.lineText on Senior: rec/cond skipped (\'\'), sr; srEn in English (sr when there is none)',
+    JSON.stringify(r.sr) === JSON.stringify(['T plain', '', '', '', 'T sr', 'T sr only', 'a string', '']) &&
+    JSON.stringify(r.srEn) === JSON.stringify(['T plain', '', '', '', 'T sr en', 'T sr only', 'a string', '']), { sr: r.sr, srEn: r.srEn });
+  C.check('CORE-01 V13.lineText on Recruit: rec lines play, text; textEn in English',
+    JSON.stringify(r.rec) === JSON.stringify(['T plain', 'T rec', '', '', 'T rec text', 'T only', 'a string', '']) &&
+    JSON.stringify(r.recEn) === JSON.stringify(['T plain', 'T rec', '', '', 'T rec en', 'T only', 'a string', '']), { rec: r.rec, recEn: r.recEn });
   // ---------- 2. Case 10 on Senior: toasts, radio lines, wayfinding (rt_tac) ----------
   await L.capture(T);
   await L.senior(T);
@@ -84,9 +101,26 @@ module.exports = async function (T) {
   await T.wait(1200);
   let radio = await L.got(T, 'radio');
   C.check('R11 m10_x_warn on Senior', radio.includes('Sir, people are looking at you.'), radio.slice(-3));
-  // the changer arrives
+  // the changer arrives. His radio lines go through the line fields (CORE-01): text gives line 2 an sr
+  // (s2_dlg_a.js, wf_e40648b1-140-6); on a page without it the probe gives the same sr, and adds a Recruit-only
+  // line and a cond-false line that must not be radioed.
+  const arr = await T.ev(() => {
+    const A = DIALOGUE.m10_lucky_arrives, had = A.some(l => l && l.sr != null);
+    if (!had) A[1].sr = "Don't look up, sir. Look at your phone like you're losing at football.";
+    A.push({ speaker: 'SGT. UCHE', text: 'PROBE recruit-only radio', rec: 1 }, { speaker: 'SGT. UCHE', text: 'PROBE cond-false radio', cond: 'false' });
+    return { had, lines: A.map(l => ({ text: l.text, sr: l.sr == null ? null : l.sr, rec: !!l.rec, cond: l.cond || null })) };
+  });
+  const r0 = (await L.got(T, 'radio')).length;
   await T.ev(() => { V13.rt.time = 400; });
   await T.until(() => V13.rt.phase !== 'explore', 15000); await T.wait(600);
+  const arrRadio = (await L.got(T, 'radio')).slice(r0);
+  await T.ev(() => { const A = DIALOGUE.m10_lucky_arrives; while (A.length && /^PROBE /.test(A[A.length - 1].text || '')) A.pop(); });
+  T.log('arrival radio', JSON.stringify({ sr_from_text: arr.had, radio: arrRadio }));
+  const want = arr.lines.filter(l => !l.rec && !l.cond).map(l => l.sr != null ? l.sr : l.text);
+  const srLines = arr.lines.filter(l => l.sr != null);
+  C.check('CORE-01 Case 10 arrival radio on Senior: each line\'s sr, not its Recruit text; rec and cond-false lines not radioed',
+    want.every(t => arrRadio.includes(t)) && srLines.length > 0 && !srLines.some(l => arrRadio.includes(l.text)) && !arrRadio.some(t => /^PROBE /.test(t)) &&
+    !arrRadio.some(t => /Straight for the blue kiosk/.test(t)), { want, got: arrRadio });
   toasts = await L.got(T, 'toast');
   C.check('R12 the changer\'s toast on Senior', toasts.some(t => /SOMEONE ARRIVES — Rice sacks on a boy's head/.test(t)) && !toasts.some(t => /Watch him from 4 to 10/.test(t)), toasts.slice(-3));
   // the Recruit pointer is as before
@@ -114,14 +148,32 @@ module.exports = async function (T) {
   const hints = await L.got(T, 'hint');
   const ch = hints.find(h => h[0] === 'c11_crouch');
   C.check('R20 crouch hint on desktop follows the crouch mode', !!ch && (await T.ev(() => TAC.crouch.mode())) === 'hold' ? /^Hold <b>C<\/b>/.test(ch[1]) : !!ch && /^Press <b>C<\/b>/.test(ch[1]), ch);
-  // the head marker over a boy who can see you
+  // the head marker over a boy who can see you. The stub camera projects every point as behind the camera, so an
+  // on-screen point stands in for the projection (beta/wayfind.js WAY._testProject); the camp is kept from waking.
   const mk = await T.ev(async () => {
-    const w = V13.rt.eyes.watchers.find(x => x && x.visible); const P = ENGINE.player;
-    P.position.set(w.position.x + Math.sin(w.rotation.y) * 2.2, 0, w.position.z + Math.cos(w.rotation.y) * 2.2);
-    await new Promise(r => setTimeout(r, 900));
-    return V13.c11mark ? V13.c11mark() : null;
+    const e = V13.rt.eyes, rate0 = e.rate; e.rate = 0.0001; e.v = 0.3;
+    WAY._testProject = () => ({ x: 640, y: 300, behind: false });
+    const w = e.watchers.find(x => x && x.visible); const P = ENGINE.player, out = [];
+    try {
+      for (let k = 0; k < 6; k++) {
+        P.position.set(w.position.x + Math.sin(w.rotation.y) * 3.0, 0, w.position.z + Math.cos(w.rotation.y) * 3.0);
+        await new Promise(r => setTimeout(r, 300));
+        const m = V13.c11mark ? V13.c11mark() : null, el = document.querySelector('.c11-mark');
+        out.push({ phase: V13.rt.phase, m, tf: el ? el.style.transform : null });
+      }
+      // and away from every boy: hidden again
+      P.position.set(w.position.x + Math.sin(w.rotation.y) * 40, 0, w.position.z + Math.cos(w.rotation.y) * 40);
+      await new Promise(r => setTimeout(r, 600));
+      out.push({ away: true, m: V13.c11mark ? V13.c11mark() : null });
+    } finally { delete WAY._testProject; e.rate = rate0; }
+    return out;
   });
-  C.check('R16 Case 11 marker: the tactics head marker with icon(eye)/icon(alert), no glyph sprite', !!(mk && mk.el && mk.el.ico && !mk.sprite), mk);
+  T.log('marker', JSON.stringify(mk));
+  const on = mk.filter(s => !s.away && s.phase === 'sneak' && s.m && s.m.el && s.m.el.shown);
+  C.check('R16 Case 11 marker shown over the boy who can see you: the tactics head marker with icon(eye)/icon(alert), placed, no glyph sprite',
+    on.length > 0 && on.every(s => s.m.el.ico && !s.m.sprite && /translate\(640px, 300px\)/.test(s.tf || '')), mk.slice(-3));
+  const away = mk[mk.length - 1];
+  C.check('R16 Case 11 marker hidden when no boy can see you', !!(away && away.m && away.m.el && away.m.el.shown === false), away);
   // R13: Senior casework on Relaxed pace: two misses fail the waybill book (the document's own rule), so it is weak
   await T.ev(() => { SETTINGS.difficulty = 'story'; V13.setFlag('s2_samples', 'sealed'); V13.done('o11_samples'); if (V13.rt.eyes) { V13.rt.eyes.v = 0; V13.rt.eyes.rate = 0; } });
   await C11.use(T, 'Read the waybill book');

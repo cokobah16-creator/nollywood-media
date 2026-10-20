@@ -56,5 +56,28 @@ module.exports = async function (T) {
   // the mission select's subtitle (index.html's "Vertical slice…" line) is true with Season 2 present
   const desc = await T.ev(() => (document.querySelector('#screen-missions .desc') || {}).textContent || '');
   C.check('RT12 the mission select subtitle', !/Vertical slice/.test(desc) && /Season 2, Operation Upstream/.test(desc), desc);
+  // ---------- 5. a replayed M8 whose trial was cut off mid-sitting (The Case File's I().courtRun), no Season 2 state ----------
+  // (CORE-04) its trial and epilogue come back on Continue, as they do without Season 2 (v13_court.js ctFinalePending)
+  await T.ev(code => { (new Function(code))(); S.game.currentMission = 'm8'; I().court = { w:{}, proven:['c1'], admitted:[], struck:[], cred:60, finale:'contested' }; I().reviewShown = true;
+    I().courtRun = { finale:'contested', ex:[], admitted:[], struck:[] }; showOverlay(null); saveGame(true); }, L.S1FRESH);
+  await reload(T);
+  const pend = await T.ev(() => { loadGame(); return { pending: typeof ctFinalePending === 'function' ? ctFinalePending() : 'n/a', next: nextPlayableMission() }; });
+  const c5 = await cards(T);
+  T.log('cut-off M8 trial', JSON.stringify(pend), c5);
+  C.check('CORE-04 a cut-off M8 trial: nextPlayableMission offers no Season 2 case, the trial is pending', pend.pending === true && pend.next === null, pend);
+  C.check('CORE-04 the mission select still shows Case 09 playable', /m9:PLAYABLE/.test(c5), c5);
+  await T.ev(() => { document.getElementById('btn-missions-back') && document.getElementById('btn-missions-back').click(); });
+  r = await cont(T);
+  T.log('cut-off M8 trial, Continue', JSON.stringify(r));
+  C.check('CORE-04 a cut-off M8 trial resumes on Continue (Court, m8), not Case 09', /screen-court/.test(r.ov) && r.cur === 'm8', r);
+  // ---------- 6. the same cut-off M8 replay once Season 2 has begun (Case 09 and the Benin office done) ----------
+  // Continue goes on with Season 2, as ctFinalePending does whenever a case is next; the replay is in the mission select
+  await T.ev(code => { (new Function(code))(); S.game.completedMissions.push('m9'); V13.s2().hubs = { h9: Date.now() }; S.game.currentMission = 'h9';
+    I().court = { w:{}, proven:['c1'], admitted:[], struck:[], cred:60, finale:'contested' }; I().reviewShown = true;
+    I().courtRun = { finale:'contested', ex:[], admitted:[], struck:[] }; showOverlay(null); saveGame(true); }, 'S = defaultState();' + L.S1FRESH);
+  await reload(T);
+  r = await cont(T);
+  T.log('Season 2 begun, cut-off M8 trial, Continue', JSON.stringify(r));
+  C.check('CORE-04 once Season 2 has begun, a cut-off M8 replay does not take Continue: Case 10', r.cur === 'm10' && !/screen-court/.test(r.ov), r);
   C.done();
 };

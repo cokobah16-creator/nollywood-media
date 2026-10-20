@@ -32,6 +32,28 @@ module.exports = async function (T) {
   await T.ev(() => { skipTypewriter(); const c = document.querySelector('#dlg-choices .dialogue-choice'); if (c) { c.click(); if (c.dataset.armed) c.click(); } else advanceDialogue(); }); await T.wait(600);
   const a3 = await look(T);
   C.check('D3 Court 5: the conversation advances after RESUME', a3.court && (a3.idx !== a2.idx || a3.dlgKey !== a2.dlgKey || /screen-courtfix|screen-dialogue/.test(a3.ov)), a3);
+  // (CORE-03) a LOAD that finds no save (a private window, blocked storage): "NO SAVE", the pause stays, RESUME still works
+  const toastTxt = () => T.ev(() => { const t = document.getElementById('toast'); return t && t.classList.contains('show') ? t.textContent.replace(/\s+/g, ' ').trim() : ''; });
+  const a4 = await look(T);
+  await L.esc(T); await T.wait(500);
+  await T.ev(() => { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} });
+  await T.ev(() => document.getElementById('btn-load').click()); await T.wait(600);
+  const l1 = Object.assign(await look(T), { toast: await toastTxt(), pz: await T.ev(() => !!V13._pz) });
+  await resume(T); await T.wait(1000);
+  const l2 = await look(T);
+  T.log('[a] LOAD without a save', JSON.stringify({ a4, l1, l2 }));
+  C.check('D3/CORE-03 Court 5: LOAD with no save keeps the pause (and its hold)', /screen-pause/.test(l1.ov) && /NO SAVE/.test(l1.toast) && l1.pz, l1);
+  C.check('D3/CORE-03 Court 5: then RESUME brings the conversation back', /screen-dialogue/.test(l2.ov) && l2.dlgKey === a4.dlgKey && l2.idx === a4.idx && l2.hud === 'none', { before: a4, after: l2 });
+  // a LOAD that works (stood in: loadGame answers true, resumeCampaign does nothing) closes the pause and puts nothing back
+  await L.esc(T); await T.wait(500);
+  const l3 = await T.ev(async () => {
+    const lg = window.loadGame, rc = window.resumeCampaign; window.loadGame = () => true; window.resumeCampaign = () => {};
+    try { document.getElementById('btn-load').click(); await new Promise(r => setTimeout(r, 600)); }
+    finally { window.loadGame = lg; window.resumeCampaign = rc; }
+    return { ov: [...document.querySelectorAll('.overlay.show')].map(o => o.id).join(','), pz: !!V13._pz };
+  });
+  T.log('[a] LOAD that works', JSON.stringify(l3));
+  C.check('D3 Court 5: a LOAD that works drops the hold (no conversation over the loaded game)', !/screen-pause|screen-dialogue/.test(l3.ov) && !l3.pz, l3);
   // quit to title and leave the court (Season 1 after it is screens' D4 check)
   await L.esc(T); await T.wait(500); await T.ev(() => document.getElementById('btn-quit').click()); await T.wait(1200);
   // (screens' D4 adds V13.court.abort for this; until then end the court the way the trial's own end does)

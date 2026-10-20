@@ -40,8 +40,9 @@ Object.assign(DIALOGUE, {
 });
 const rec = ()=>V13.rec ? V13.rec() : (typeof isRecruit === 'function' && isRecruit());
 const tobiAlive = ()=>V13.tobiAlive ? V13.tobiAlive() : (m => m.asaba === 'rescue' || (m.asaba === 'chase' && !S.game._asabaHostageLost))(MC());
-// a radioed line: its Senior text (sr) on Senior Agent
-const X = k => { const l = DIALOGUE[k] && DIALOGUE[k][0]; if(!l) return ''; return (!rec() && l.sr) ? l.sr : (l.text || ''); };
+// a radioed line, with the line fields (rec, cond, sr/srEn; s2_core.js V13.lineText): '' when it doesn't play
+const lineTxt = l => V13.lineText ? V13.lineText(l) : ((l && l.text) || '');
+const X = k => lineTxt(DIALOGUE[k] && DIALOGUE[k][0]);
 /* our wayfinding (beta/wayfind.js): on Senior, "Find terminal SPL-WSM-T4" and "Learn who uses it" would fall back to
    the one required kiosk of four. Senior gets the objective text only; Recruit keeps the pointer (a null row). */
 if(window.WAY && WAY.OBJ_TARGETS){
@@ -505,7 +506,7 @@ function susStep(dt, p){
 function arrive(){
   const R = RT(); if(R.phase !== 'explore') return;
   R.phase = 'arrive';
-  for(const l of DIALOGUE.m10_lucky_arrives || []) V13.radio('SGT. UCHE', l.text, Math.max(3800, l.text.length * 55));
+  for(const l of DIALOGUE.m10_lucky_arrives || []){ const t = lineTxt(l); if(t) V13.radio('SGT. UCHE', t, Math.max(3800, t.length * 55)); }
   if(rec()) V13.toast('THE CHANGER', 'Watch him from 4 to 10 metres, and keep him in view. Don\'t stare from close.', 3600);
   else V13.toast('SOMEONE ARRIVES', 'Rice sacks on a boy\'s head.', 3600);
   const person = (look, x, z, rot, clip)=>V13.person(look, { x, z, rot }, { clip:clip || 'walk', solid:false });

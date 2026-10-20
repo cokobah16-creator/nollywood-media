@@ -639,6 +639,7 @@ function samples(it){
     // the camp is taken: nobody at the far drum now
     const L = DIALOGUE.m11_samples || [];
     const ask = Object.assign({}, L[2] || {}, { text:X.m11_x_samples_late, choices:((L[2] || {}).choices || []).map(c => { const o = Object.assign({}, c); delete o.next; return o; }) });
+    delete ask.sr; delete ask.srEn; delete ask.textEn;                // the old line's other texts would replace this one
     run('m11_x_samples_late', [L[0], L[1], ask], ()=>{
       const v = decided('m11_x_samples_late', 's2_samples', 'grabbed');
       const S_ = DIALOGUE.m11_samples_sealed || [];

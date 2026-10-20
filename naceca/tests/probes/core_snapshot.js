@@ -42,12 +42,21 @@ module.exports = async function (T) {
   await sc.talk(T);
   await sc.use(T, 'Report to Commander (Okundaye|Osagie)'); await sc.talk(T, [0]);
   await sc.use(T, 'Sign for exhibit 14'); await sc.talk(T, ['Sign it out']);
+  // text writes m9_tobi_bench; on a page without it, a one-line stand-in exercises the same path
+  const textHas = await T.ev(() => { const had = !!DIALOGUE.m9_tobi_bench; if (!had) DIALOGUE.m9_tobi_bench = [{ speaker: 'TOBI ONUOHA', portrait: 'tobi', text: 'Probe: Tobi says hello at the bench.' }]; return had; });
+  T.log('m9_tobi_bench from text:', textHas, textHas ? '' : '(probe stand-in)');
   await sc.use(T, 'Examine the drive'); await T.wait(600);
+  const first = await T.ev(() => document.getElementById('screen-dialogue').classList.contains('show') ? DLG.scriptKey : null);
+  // through the hello and the bench conversation (a gap between them ends one talk(): then talk again)
+  for (let k = 0; k < 3; k++) {
+    await sc.talk(T, ['Write-blocker']); await T.wait(900);
+    if ((await L.got(T, 'dlg')).includes('m9_forensic_igbinosa') && !(await T.ev(() => document.getElementById('screen-dialogue').classList.contains('show')))) break;
+  }
   const dlg = await L.got(T, 'dlg');
-  const hasKey = await T.ev(() => !!DIALOGUE.m9_tobi_bench);
-  T.log('dialogue keys', dlg.slice(-4).join(' '), 'm9_tobi_bench present:', hasKey);
-  C.check('CN06 the bench conversation is Igbinosa\'s (after Tobi\'s hello when he is alive)', dlg.includes('m9_forensic_igbinosa') && !dlg.some(k => /^m9_forensic_tobi/.test(k)) && (!hasKey || dlg.indexOf('m9_tobi_bench') >= 0 && dlg.indexOf('m9_tobi_bench') < dlg.indexOf('m9_forensic_igbinosa')), dlg.slice(-4));
-  await sc.talk(T, ['Write-blocker']);
+  T.log('dialogue keys', dlg.slice(-4).join(' '), 'first:', first);
+  const iB = dlg.indexOf('m9_tobi_bench'), iF = dlg.indexOf('m9_forensic_igbinosa');
+  C.check('CN06 a chase-alive Tobi says hello at the bench, then the bench conversation is Igbinosa\'s', first === 'm9_tobi_bench' && iB >= 0 && iF > iB && !dlg.some(k => /^m9_forensic_tobi/.test(k)), { first, keys: dlg.slice(-4) });
+  C.check('CN06 the write-blocker was chosen', await T.ev(() => S.game.moralChoices.s2_method === 'image'), '');
   await sc.waitCards(T); await sc.solve(T, 'm9_hash'); await sc.talk(T);
   await sc.solve(T, 'm9_ledger'); await T.wait(500);
   const d2 = await L.got(T, 'dlg');

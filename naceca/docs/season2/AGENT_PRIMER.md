@@ -124,6 +124,11 @@ The integrated kit lives in `naceca/src/season2/s2_*.js` (the `ROOT/src13/v13_*.
 - Because of the copy, never compare `DLG.script === DIALOGUE.x`. `DLG.scriptKey` is the key the conversation started
   with (a choice's `next` does not change it); `V13.dlgKey()` is the key of the script or choice branch on screen now.
   `V13.picked(key)` works on both.
+- A line that is radioed, texted or toasted instead of played (`V13.radio(who, l.text)`) goes through
+  `V13.lineText(line)`: `''` when the line does not play (`rec`, `cond`: `V13.lineOn(line)` is false), its `sr` on
+  Senior (`srEn` in English), else its `text` (`textEn` in English). Never radio `l.text` directly: on Senior that
+  gives the Recruit line. Skip the radio when the result is `''`. A copied line given a new `text` (Case 11's late
+  samples ask) drops the old line's `sr`, `srEn` and `textEn`.
 - Phone texts and tips keep their own `cond` (evaluated the same way).
 
 **Documents, evidence, the pause**
@@ -133,7 +138,8 @@ The integrated kit lives in `naceca/src/season2/s2_*.js` (the `ROOT/src13/v13_*.
 - `V13.ev(id, name, q, xp)` collects (and logs) an exhibit once per operation: after a document's `onCorrect` has
   collected it, it only sets the quality.
 - The pause menu over a Season 2 conversation, document, minigame or phone: RESUME puts that overlay and the HUD's state
-  back (`s2_core.js` `togglePause` wrap; LOAD does not). `V13.ovShown(id)` is true while `id` is shown or held under the
+  back (`s2_core.js` `togglePause` wrap; a LOAD that works does not, and QUIT and ERASE drop the hold; a LOAD that finds
+  no save keeps it, so RESUME still brings the conversation back). `V13.ovShown(id)` is true while `id` is shown or held under the
   pause menu: a case's "the document closed without an answer" watcher must use it, or it reads a pause as a back-off.
   Season 2's own screens register with `v13Modal` (v13_intel.js) instead.
 
@@ -141,6 +147,11 @@ The integrated kit lives in `naceca/src/season2/s2_*.js` (the `ROOT/src13/v13_*.
 - `V13.s1Done()` is `S.game.seasonOneComplete` (set when Season 1's epilogue starts, after the trial has sat).
 - `V13.syncCards()` makes the Season 2 cards' `playable` current; the mission select and Continue
   (`nextPlayableMission`) both call it, so Continue after a reload goes on with the season (an owed office first).
+  Except: before Season 2 has begun (no `s2.started`, no Season 2 case done), while a replayed M8's trial is cut off
+  mid-sitting (The Case File's `ctRunFor(finale)`), Continue offers no Season 2 card, so the trial and its epilogue
+  resume first (v13_court.js `ctFinalePending`). Once Season 2 has begun, Continue goes on with Season 2.
+- At the end of Season 1 with Season 2 on: the last epilogue slide → The Case File's case review (if not yet shown) →
+  the `season_one` award and the OPERATION UPSTREAM card → Case 09. The award never comes while the review is open.
 - `mission_start` / `mission_end` are logged by v12 (once per case, with the grade; once per office start). Season 2
   logs only an office's own `mission_end` (offices have no aftermath). New event types need a row in
   docs/tactics/DESIGN-tactics.md §4 (`source`, `seal15`, `accuse15` are there).

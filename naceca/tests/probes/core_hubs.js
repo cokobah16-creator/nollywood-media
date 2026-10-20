@@ -69,6 +69,10 @@ module.exports = async function (T) {
   await sc.use(T, 'Prepare the exhibits with Barrister Danladi'); await sc.talk(T); await T.wait(600);
   h = await runText(T, 'hub2_host_run');
   C.check('CN15 h13: "Olaniran-Cole SAN"', /Olaniran-Cole SAN is for the first defendant/.test(h) && !/Coker/.test(h), h.slice(0, 200));
+  // CN03 residue (CORE-05): the conference is four weeks away, the Friday before the trial, not "on Friday"
+  const fixNote = await T.ev(() => { const o = document.querySelector('#screen-courtfix.show'); return o ? o.textContent.replace(/\s+/g, ' ') : null; });
+  C.check('CN03 h13 Danladi: the rest at the conference, the Friday before the trial', /Start one today — we'll do the rest at the conference, the Friday before the trial\./.test(h) && !/on Friday/.test(h), h.slice(-200));
+  C.check('CN03 h13 fix board: the rest waits for the conference in January', !!fixNote && /The rest waits for the conference in January\./.test(fixNote) && !/on Friday/.test(fixNote), (fixNote || 'no #screen-courtfix').slice(0, 300));
   await T.ev(() => { const x = document.querySelector('#screen-courtfix.show .cf-close, #screen-courtfix.show [data-close]'); if (x) x.click(); showOverlay(null); });
   // ---------- h14: the barge seized in Case 11, the original kept in Case 09 ----------
   T.log('h14', await office(T, 'h14', { s2_original:'kept', s2_barge:'seized' }, "V13.s2().trial = { d1:'guilty' };"));

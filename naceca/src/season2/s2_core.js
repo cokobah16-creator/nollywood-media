@@ -78,6 +78,16 @@ V13.lineOn = function(line){
   }
   return true;
 };
+/* the text a line shows now, for a line that is radioed, texted or toasted instead of played as a conversation
+   (the same three fields): '' when V13.lineOn(line) is false; else its sr on Senior (srEn in English), else its
+   text (textEn in English). A plain string is returned as it is. */
+V13.lineText = function(line){
+  if(typeof line === 'string') return line;
+  if(!line || typeof line !== 'object' || !V13.lineOn(line)) return '';
+  const en = typeof SETTINGS !== 'undefined' && SETTINGS.lang === 'english';
+  if(line.sr != null && !V13.rec()) return (en && line.srEn) ? line.srEn : String(line.sr);
+  return (en && line.textEn) ? line.textEn : (line.text || '');
+};
 function scriptKeyOf(arr){
   if(!arr) return null;
   if(arr._s2key) return arr._s2key;
@@ -178,7 +188,19 @@ V13.wrap('renderMissionSelect', orig => function(){
 });
 // Continue after a reload: the Season 2 cards are current before resumeCampaign looks for the next case
 // (an office that is owed still opens first: loadMission → V13.hubBefore)
+// Before Season 2 has begun, a replayed M8 whose trial was cut off mid-sitting (The Case File's I().courtRun,
+// v13_court.js ctRunFor) comes first: its ctFinalePending only resumes the trial and its epilogue when no case is next,
+// so no Season 2 card is offered then. Once Season 2 has begun, Continue goes on with Season 2 (the M8 replay is in
+// the mission select), as ctFinalePending does whenever a case is next.
 V13.wrap('nextPlayableMission', orig => function(){
+  try{
+    const g = S.game || {}, o = (g.moralChoices || {}).finale, done = g.completedMissions || [];
+    const s2begun = !!s2peek().started || V13.S2_IDS.some(id => done.includes(id));
+    if(!s2begun && typeof ctRunFor === 'function' && done.includes('m8') && ctRunFor(o)){
+      for(const m of MISSIONS) if(m.season === 2) m.playable = false;
+      return orig.apply(this, arguments);
+    }
+  }catch(e){ console.warn('[v13] cards (trial)', e); }
   try{ V13.syncCards(); }catch(e){ console.warn('[v13] cards', e); }
   return orig.apply(this, arguments);
 });
@@ -640,10 +662,12 @@ V13.wrap('advanceEpilogue', orig => function(){
   if(typeof EPI !== 'undefined' && EPI.slides && EPI.i >= EPI.slides.length - 1 && !V13._s2Epi && S.game.seasonOneComplete && !V13.s2().started){
     showOverlay(null);
     if(typeof saveGame === 'function') saveGame(true);
-    // Season 1's award, as its own last slide gives it (systems/finale.js advanceEpilogue)
-    if(typeof unlock === 'function') try{ unlock('season_one'); }catch(e){}
-    // the slide before this one is Season 1's own SEASON 2 card
-    const go = ()=>titleCard(['OPERATION UPSTREAM', 'Six weeks later'], 3200, ()=>loadMission('m9'));
+    // the slide before this one is Season 1's own SEASON 2 card. Season 1's award comes as its own last slide gives
+    // it (systems/finale.js advanceEpilogue: with the title), so after the case review: here, with the next title card
+    const go = ()=>{
+      if(typeof unlock === 'function') try{ unlock('season_one'); }catch(e){}
+      titleCard(['OPERATION UPSTREAM', 'Six weeks later'], 3200, ()=>loadMission('m9'));
+    };
     if(V13.reviewThenS2) V13.reviewThenS2(go); else go();      // The Case File's case review comes first
     return;
   }
@@ -694,7 +718,10 @@ V13.wrap('togglePause', orig => function(){
   }
   return r;
 });
-document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-load, #btn-erase')) V13._pz = null; }catch(err){} }, true);
+// QUIT and ERASE drop what the pause holds. LOAD does not: a load that finds no save ("NO SAVE") leaves the pause up,
+// and RESUME must still bring the conversation back; a load that works reaches togglePause from the #btn-load click
+// (viaLoad above: nothing is put back) and then loadMission, which clears the hold too.
+document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-erase')) V13._pz = null; }catch(err){} }, true);
 
 /* ---------- which choice was picked (for choices that carry no flag) ----------
    V13.picked('m10_karo_source') → index of the choice taken the last time that
