@@ -3,11 +3,11 @@
 // The helpers of the core contract (V13.tobiAlive, V13.tobiTestifies, V13.s1fate) are polyfilled with their
 // exact semantics when the page doesn't have them yet; cond strings are evaluated the way the hub does
 // (new Function('S', ...) in try/catch: an error is false). Checks that need another team print SKIP.
-// (an ES module: this repo's package.json says "type":"module"; the kit's harness loads it with require(esm))
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-const HERE = path.dirname(fileURLToPath(import.meta.url));
+// (CommonJS, like every probe: tests/package.json says "type":"commonjs")
+const fs = require('node:fs');
+const path = require('node:path');
+const { fileURLToPath } = require('node:url');
+const HERE = path.dirname(__filename);
 // the DIALOGUE keys the text team's files define (the old-name check is about those; other keys are reported)
 const MY_KEYS = (() => { const out = new Set(); for (const f of ['s2_dlg_a.js', 's2_dlg_b.js', 's2_dlg_c.js']) {
   let src = ''; try { src = fs.readFileSync(path.resolve(HERE, '..', '..', 'src', 'season2', f), 'utf8'); } catch (e) {}
@@ -313,4 +313,4 @@ const probe = async function (T) {
 
   console.log(`CHECKS ${pass}/${total}` + (skip ? ` (${skip} skipped)` : ''));
 };
-export { probe as 'module.exports' };
+module.exports = probe;

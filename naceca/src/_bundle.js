@@ -8801,7 +8801,9 @@ function showAftermath(){
 function renderMissionSelect(){
   const grid = $('#mission-grid');
   grid.innerHTML = MISSIONS.map(m=>{
-    const completed = S.game.completedMissions.includes(m.id);
+    // a Season 2 teaser card stays locked whatever the save says: a save from a Season 2 run, loaded with that
+    // layer removed, lists m9+ as completed (the layer marks its own unlocked and completed cards playable)
+    const completed = S.game.completedMissions.includes(m.id) && !(m.season === 2 && !m.playable);
     const locked = !m.playable && !completed;
     let stamp = 'PLAYABLE';
     if(completed) stamp = 'COMPLETED';

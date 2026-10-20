@@ -1,11 +1,11 @@
 // text team: every string the Season 2 canvas painters (MTEX in src/season2/s2_mtex_*.js) paint, on the built page.
 // CanvasRenderingContext2D.prototype.fillText / strokeText are wrapped while each painter runs once.
 // Run: run_probe.sh <build> text_paint desktop <log>
-// (an ES module: this repo's package.json says "type":"module"; the kit's harness loads it with require(esm))
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-const HERE = path.dirname(fileURLToPath(import.meta.url));
+// (CommonJS, like every probe: tests/package.json says "type":"commonjs")
+const fs = require('node:fs');
+const path = require('node:path');
+const { fileURLToPath } = require('node:url');
+const HERE = path.dirname(__filename);
 const probe = async function (T) {
   let pass = 0, total = 0;
   const check = (id, ok, detail) => { total++; if (ok) pass++; console.log(`CHECK ${id} ${ok ? 'PASS' : 'FAIL'} ${detail}`.slice(0, 700)); };
@@ -48,4 +48,4 @@ const probe = async function (T) {
   check('TX6/cause-list', any(/FRN v\. ADEJO-IKIME HAULAGE LTD$/).length === 1 && any(/KESTREL/i).length === 0, JSON.stringify(any(/^\d\.\s+FRN v\./)));
   console.log(`CHECKS ${pass}/${total}`);
 };
-export { probe as 'module.exports' };
+module.exports = probe;

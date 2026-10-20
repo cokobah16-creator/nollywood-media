@@ -131,4 +131,4 @@ const probe = async function (T) {
 
   console.log(`CHECKS ${pass}/${total}` + (skip ? ` (${skip} skipped)` : ''));
 };
-export { probe as 'module.exports' };
+module.exports = probe;

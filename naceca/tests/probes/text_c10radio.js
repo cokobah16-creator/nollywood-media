@@ -5,8 +5,8 @@
 // reaches the radio. Run: run_probe.sh <build> text_c10radio desktop <log> (about 4 minutes on the stub).
 // It drives the case with the kit's c10_lib.js, loaded from the harness that runs it (t_s2.js's own probes/ folder).
 // (An ES module: the repo's package.json says "type":"module".)
-import { createRequire } from 'node:module';
-import path from 'node:path';
+const { createRequire } = require('node:module');
+const path = require('node:path');
 const kitRequire = createRequire(path.resolve(process.argv[1] || '.'));
 const probe = async function (T) {
   let pass = 0, total = 0;
@@ -41,4 +41,4 @@ const probe = async function (T) {
   check('R12/uche-radio-senior', kiosk.length === 0, kiosk.length ? 'Senior still hears: ' + kiosk.join(' | ') : 'no kiosk in the radio: ' + arrive.join(' | '));
   console.log(`CHECKS ${pass}/${total}`);
 };
-export { probe as 'module.exports' };
+module.exports = probe;
