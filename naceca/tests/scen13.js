@@ -76,7 +76,7 @@ module.exports = {
     T.log('m9 started', ok, JSON.stringify(await state(T)));
     await T.shot('m9_start');
     await talk(T);                                  // intro
-    await use(T, 'Report to Commander Osagie'); await talk(T, [0]);
+    await use(T, 'Report to Commander (Okundaye|Osagie)'); await talk(T, [0]);
     await use(T, 'Sign for exhibit 14'); await T.shot('m9_ikpe'); await talk(T, ['Sign it out']);
     await use(T, 'Examine the drive'); await talk(T, ['Write-blocker']);
     await waitCards(T); await solve(T, 'm9_hash'); await talk(T);
@@ -115,7 +115,7 @@ module.exports.s2h9 = async function (T) {
   await use(T, 'Check your sources'); await T.shot('h9_sources');
   await T.ev(() => { const b = document.querySelector('#screen-sources .src-corr'); if (b) b.click(); }); await T.wait(300); await T.shot('h9_sources_checked');
   await T.ev(() => document.querySelector('#screen-sources .src-done').click()); await T.wait(400);
-  await use(T, 'Talk to Commander Osagie'); await talk(T);
+  await use(T, 'Talk to Commander (Okundaye|Osagie)'); await talk(T);
   T.log('h9 objs', JSON.stringify(await state(T)));
   await use(T, 'Drive to Sapele');
   await T.until(() => S.game.currentMission === 'm10', 15000);
