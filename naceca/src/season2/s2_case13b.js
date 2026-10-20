@@ -37,8 +37,26 @@ const SAYS = {
   caught:"Come away, sir. Slowly. Sit with the tea seller — the car comes before eleven.",
   made:"He saw you, sir. A man at a tea stand — that's all he saw. But we've got no face.",
   got:"Got him? Good. Godwin Ereba, at the gate of No. 19, on the second Friday.",
+  // the book objective dropped because you sat down first (explaining why is allowed on Senior)
+  book:"The book stays behind his glass tonight.",
 };
-const radio = (t, ms)=>V13.radio(UCHE, t, ms);
+/* Senior Agent: Uche says what happened, not what to do next (null: the line is Recruit only) */
+const SAYS_SR = {
+  intro2:"In Maitama a stranger at night is a driver, a gateman or a problem, sir.",
+  round:"He's walking his round, sir.",
+  back:"He's back in his box.",
+  wait:null,
+  caught:"Come away, sir. Slowly.",
+};
+/* casework mode and the countdown rate (V13.rec / V13.timeRate from s2_core.js when present, else the same rule) */
+const rec = ()=>typeof V13.rec === 'function' ? !!V13.rec() : (typeof isRecruit === 'function' && isRecruit());
+const rate = ()=>{ const r = typeof V13.timeRate === 'function' ? V13.timeRate() : (typeof timerRate === 'function' ? timerRate() : 1); return (typeof r === 'number' && isFinite(r) && r >= 0) ? r : 1; };
+const line = k => (!rec() && Object.prototype.hasOwnProperty.call(SAYS_SR, k)) ? SAYS_SR[k] : SAYS[k];
+const radio = (t, ms)=>{ if(t) V13.radio(UCHE, t, ms); };
+/* what a replay clears (as Case 12 does): this case's flag, its exhibits, its documents' attempts */
+const FLAGS = ['s2_bitrus'];
+const EVIDS = ['visitor_book', 'visitor_book_photo', 'ereba_photo'];
+const DOCKEYS = ['m13b_book', 'm13b_book_photo'];
 
 /* ---------- looks ---------- */
 const plainUche = { torso:'#2a6a8a', armA:'#2a6a8a', armB:'#2a6a8a', armC:'#2a6a8a', gear:[], vest:null, text:null, hips:'#2a2622', thigh:'#2a2622', shin:'#2a2622' };
@@ -106,15 +124,16 @@ function css(){
   s.textContent = `
 #c13b-vf{position:absolute;left:50%;top:44%;width:min(34vw,300px);height:min(22vw,190px);transform:translate(-50%,-50%);pointer-events:none;z-index:7;display:none}
 #c13b-vf.show{display:block}
-#c13b-vf i{position:absolute;width:26px;height:26px;border:2px solid rgba(240,240,240,.55)}
+#c13b-vf i{position:absolute;width:26px;height:26px;border:2px solid var(--manila,#E9DCC0)}
 #c13b-vf i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}#c13b-vf i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
 #c13b-vf i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}#c13b-vf i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
-#c13b-vf.on i{border-color:#f0c878}
-#c13b-vf b{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;border:1.5px solid rgba(240,240,240,.6)}
-#c13b-vf.on b{border-color:#f0c878;background:rgba(240,200,120,.35)}
-#c13b-vf em{position:absolute;left:0;right:0;bottom:-22px;text-align:center;font-family:'JetBrains Mono',monospace;font-style:normal;font-size:10px;letter-spacing:.18em;color:#e8e2d4}
-#c13b-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:95;transition:opacity .35s ease-out}
-#c13b-flash.go{opacity:.75;transition:none}`;
+#c13b-vf.on i{border-color:var(--green,#0B6E4F)}
+#c13b-vf b{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;border:1.5px solid var(--manila,#E9DCC0)}
+#c13b-vf.on b{border-color:var(--green,#0B6E4F);background:var(--green,#0B6E4F)}
+#c13b-vf em{position:absolute;left:0;right:0;bottom:-22px;text-align:center;font-family:var(--font-mono,'JetBrains Mono',monospace);font-style:normal;font-size:10px;letter-spacing:.18em;color:var(--manila,#E9DCC0)}
+#c13b-flash{position:absolute;inset:0;background:var(--manila,#E9DCC0);opacity:0;pointer-events:none;z-index:95;transition:opacity .35s ease-out}
+#c13b-flash.go{opacity:.35;transition:none}
+body.reduce-motion #c13b-flash.go{opacity:0}`;
   document.head.appendChild(s);
 }
 function flash(){
@@ -240,6 +259,16 @@ function unseat(to){
 }
 
 /* ---------- vehicles ---------- */
+/* without the vehicle library (any device where the art failed: ART.failed) the Prado is a plain dark box of its
+   size, so its arrival, the driver and the photograph (ereba_photo, a finale exhibit) still happen */
+function standInCar(color, at, rot){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.8, 4.8), new THREE.MeshStandardMaterial({ color:color || '#1e2125', roughness:0.6, metalness:0.2 }));
+  body.position.set(0, 0.9, 0); g.add(body);
+  g.position.set(at[0], 0, at[1]); g.rotation.y = rot || 0; g.userData.standIn = true;
+  ENGINE.scene.add(g);
+  return g;
+}
 function car(type, color, at, rot, lights){
   if(typeof VEH === 'undefined' || !VEH.ready) return null;
   const v = VEH.spawn(type, { color, lights:lights ? 'on' : 'off', glow:!!lights });
@@ -332,6 +361,18 @@ function afterNinthPhone(){
   return ((V13.PHONE && V13.PHONE.after_m13) || []).find(m => m.who === 'MUM');
 }
 
+/* Wayfinding (RT04). After a lie the beta's last-resort pointer skips the optional "Knock on the glass" and lands on
+   the bench, which drops the book (D18), and during his round it still prefers the bench to the glass. So: on Senior
+   the book and the photo objectives point at nothing; on Recruit the photo objective points at the glass, and the
+   book objective on the cold branch points at nothing (there is nothing to do there until his round). The tea, the
+   gatehouse and the gate objectives only ever point at the next required spot. */
+if(window.WAY && WAY.OBJ_TARGETS){
+  WAY.OBJ_TARGETS.m13b = Object.assign(WAY.OBJ_TARGETS.m13b || {}, {
+    o13b_book:()=>(!rec() || MC().s2_bitrus === 'cold') ? { ui:true } : null,
+    o13b_photo:()=>rec() ? 'Photograph the book through the glass' : { ui:true },
+  });
+}
+
 /* ======================================================================
    THE CASE
    ====================================================================== */
@@ -343,7 +384,14 @@ V13.defCase('m13b', {
     { id:'o13b_book', text:'Get a look at the visitor book' },
     { id:'o13b_gate', text:'Watch the gate of No. 19' },
   ],
-  reset(){ delete MC().s2_bitrus; if(S.game.flags) delete S.game.flags.s2_bitrus; },
+  reset(){
+    const m = MC(), f = S.game.flags || {};
+    for(const k of FLAGS){ delete m[k]; delete f[k]; }
+    // a replay is judged on the replay: this case's exhibits and document attempts start clean
+    S.game.evidence = (S.game.evidence || []).filter(e => !e || !EVIDS.includes(e.id));
+    if(S.game.evQ) for(const id of EVIDS) delete S.game.evQ[id];
+    for(const store of ['_docMiss', '_docFree', '_docLocked']) if(S.game[store]) for(const k of DOCKEYS) delete S.game[store][k];
+  },
   build(){
     css();
     V13.scene(KEY, { start:'start', player:()=>V13.plainClothes() });
@@ -391,7 +439,7 @@ V13.defCase('m13b', {
 function endIntro(){
   const R = RT(); if(!R.intro) return; R.intro = false;
   freeCam(); ENGINE.movementEnabled = true; showHUD(true);
-  radio(SAYS.intro1, 4200); radio(SAYS.intro2, 4200);
+  radio(line('intro1'), 4200); radio(line('intro2'), 4200);
   const mum = afterNinthPhone();
   if(mum) later(R, 12000, ()=>V13.text('MUM', mum.text, 6000));
 }
@@ -401,7 +449,7 @@ function tea(){
   const R = RT();
   endIntro();
   // at the kiosk already: Uche's "go and drink tea" is moot if it hasn't been said yet (the engine's radio queue)
-  try{ if(typeof RADIO !== 'undefined' && RADIO.queue) for(let i = RADIO.queue.length - 1; i >= 0; i--){ const q = RADIO.queue[i]; if(q && (q.text === SAYS.intro1 || q.text === SAYS.intro2)) RADIO.queue.splice(i, 1); } }catch(e){}
+  try{ if(typeof RADIO !== 'undefined' && RADIO.queue) for(let i = RADIO.queue.length - 1; i >= 0; i--){ const q = RADIO.queue[i]; if(q && [SAYS.intro1, SAYS.intro2, SAYS_SR.intro2].includes(q.text)) RADIO.queue.splice(i, 1); } }catch(e){}
   ENGINE.movementEnabled = false;
   const P = ENGINE.player;
   P.position.set(4.85, 0, 4.12); V13.face(P, R.shayi.position.x, R.shayi.position.z);
@@ -448,7 +496,6 @@ function bitrus(){
     else shutWindow();
   });
 }
-const allowedMisses = ()=>(typeof SETTINGS !== 'undefined' && SETTINGS.difficulty === 'story') ? 3 : 2;
 /* the book: read under his lamp (witness), photographed with his blessing (photo), or through the glass (cold) */
 function readBook(mode){
   const R = RT();
@@ -459,7 +506,7 @@ function readBook(mode){
   shot('book', true);
   if(mode !== 'witness') flash();
   later(R, mode === 'witness' ? 500 : 900, ()=>{
-    S.game._docMiss = S.game._docMiss || {}; S.game._docMiss[key] = 0;
+    S.game.evQ = S.game.evQ || {}; delete S.game.evQ[id];                    // the document marks a failed read itself
     R.docOpen = true;
     R.onDocGone = ()=>{                                                      // backed off: the book is still there to read
       freeCam(); ENGINE.movementEnabled = true;
@@ -468,15 +515,16 @@ function readBook(mode){
     };
     V13.doc(key, ()=>{
       R.docOpen = false; R.onDocGone = null;
-      const failed = (S.game._docMiss[key] || 0) >= allowedMisses();
+      // the document's own outcome (its misses follow casework: Recruit 3, Senior 2), as Case 12 reads it
+      const failed = (S.game.evQ || {})[id] === 'weak';
       S.game.evQ = S.game.evQ || {};
       V13.ev(id, ((PUZZLES[key] || {}).onCorrect || {}).evidenceName || 'The Maitama visitor book', failed ? 'weak' : good, 40);
       S.game.evQ[id] = failed ? 'weak' : good;
       V13.done('o13b_book');
       freeCam(-PI / 2 + 0.6); ENGINE.movementEnabled = true;
       if(mode === 'witness') later(R, 600, ()=>{ V13.play(R.bitrus, 'idle'); V13.toast('A WITNESS', 'Sgt. (rtd.) Bitrus Gyang will bring his book to court — in uniform.', 3000); });
-      if(mode === 'cold'){ R.watch = null; V13.eyesOff(); later(R, 800, ()=>radio(SAYS.wait, 4200)); }
-      else later(R, 1200, ()=>radio(SAYS.wait, 4200));
+      if(mode === 'cold'){ R.watch = null; V13.eyesOff(); later(R, 800, ()=>radio(line('wait'), 4200)); }
+      else later(R, 1200, ()=>radio(line('wait'), 4200));
       toTheBench();
     });
   });
@@ -505,7 +553,7 @@ function theRound(){
     R.bitrus.visible = false;
     later(R, 2200, ()=>{
       R.bitrus.visible = true; R.bitrus.position.set(-6.75, 0, 3.45);
-      radio(SAYS.round, 4600);
+      radio(line('round'), 4600);
       objAdd('o13b_photo', 'Optional: photograph the book through the glass', 'o13b_book');
       if(R.itShut){ V13.drop(R.itShut); R.itShut = null; }
       R.itPhoto = V13.spot({ x:-6.3, y:1.2, z:-3.2 }, 'Photograph the book through the glass', ()=>startPhoto(), { verb:'inspect', range:1.7 });
@@ -598,7 +646,7 @@ function caughtAtWindow(){
     shot('gatehouse', true);
     V13.say('m13b_x_caught', ()=>{
       freeCam(); ENGINE.movementEnabled = true;
-      radio(SAYS.caught, 4000);
+      radio(line('caught'), 4000);
       endRound(true);
     });
   });
@@ -609,7 +657,7 @@ function endRound(wasCaught){
   if(R.itPhoto){ V13.drop(R.itPhoto); R.itPhoto = null; }
   if(!R.photoDone){
     S.game.objectives = (S.game.objectives || []).filter(o => o.id !== 'o13b_photo' && o.id !== 'o13b_book'); if(typeof renderObjectives === 'function') renderObjectives();
-    if(!wasCaught) radio(SAYS.back, 4400);
+    if(!wasCaught) radio(line('back'), 4400);
   }
   // back into his box, back on his chair
   walk(R.bitrus, [[-6.75, 3.45]], { speed:1.1 }).then(()=>{
@@ -626,23 +674,26 @@ function toTheBench(quiet){
 }
 function benchWait(){
   const R = RT(); if(R.carComing) return;
+  let bookLeft = false;
   if(R.round && !R.roundDone){ R.roundDone = true; R.round = false; V13.eyesOff(); if(R.itPhoto){ V13.drop(R.itPhoto); R.itPhoto = null; }
-    if(!R.photoDone){ S.game.objectives = (S.game.objectives || []).filter(o => o.id !== 'o13b_photo' && o.id !== 'o13b_book'); if(typeof renderObjectives === 'function') renderObjectives(); } }
+    if(!R.photoDone){ S.game.objectives = (S.game.objectives || []).filter(o => o.id !== 'o13b_photo' && o.id !== 'o13b_book'); if(typeof renderObjectives === 'function') renderObjectives(); bookLeft = true; } }
   if(MC().s2_bitrus === 'cold' && !R.photoDone && !R.roundDone){
     // left before his round: the book stays behind the glass
     S.game.objectives = (S.game.objectives || []).filter(o => o.id !== 'o13b_book'); if(typeof renderObjectives === 'function') renderObjectives();
+    bookLeft = true;
   }
   R.carComing = true;
   if(R.itBench){ V13.drop(R.itBench); R.itBench = null; }
   if(R.itShut){ V13.drop(R.itShut); R.itShut = null; }
   if(R.itBookAgain){ V13.drop(R.itBookAgain); R.itBookAgain = null; }
   seat({ x:5.48, z:3.22, rot:0 }, { release:()=>{ unseat([5.45, 3.9]); } });
-  V13.skip(['22:58', 'THE SECOND FRIDAY'], ()=>theCar(), 2200);
+  // Uche says why the book objective went (after the card, while the Prado comes up the crescent)
+  V13.skip(['22:58', 'THE SECOND FRIDAY'], ()=>{ if(bookLeft) radio(SAYS.book, 3600); theCar(); }, 2200);
   // during the card: Bitrus back on his chair, the gate shut, the SUV at the top of the crescent
   later(R, 900, ()=>{
     stop(R.bitrus); R.bitrus.visible = true; R.bitrus.position.set(-7.55, 0, -3.1); R.bitrus.rotation.y = PI / 2; V13.play(R.bitrus, 'sit');
     const sa = A('suv_arrive') || { x:2, z:26 };
-    R.suv = car('suv', '#1e2125', [sa.x, sa.z + 6], 0, true);
+    R.suv = car('suv', '#1e2125', [sa.x, sa.z + 6], 0, true) || standInCar('#1e2125', [sa.x, sa.z + 6], 0);
   });
 }
 
@@ -698,7 +749,7 @@ function photoWindow(){
     const S_ = R.shot; if(!S_) { viewfinder(false); return false; }
     if(!playing) return;
     look -= dt; if(look <= 0 && !(R.movers || []).some(m => m.ch === R.ereba)){ look = 1.6 + Math.random() * 1.4; faceTo(R.ereba, streetSide() + (Math.random() - 0.5) * 1.8); }
-    S_.left -= dt;
+    S_.left -= dt * rate();                                                    // Action pace (0 = timed sequences off: no limit)
     const d = V13.dist(R.ereba), inRange = d < 19, aim = inRange && aimed(R.ereba, 0.2), behind = aim && hidden(R.ereba), on = aim && !behind;
     // the third-person camera always looks down a little: aim is left-right only, and the frame follows him up and down
     let top = null;
@@ -765,14 +816,14 @@ function endWindow(how){
   });
 }
 
-/* ---------- 23:14: the grey saloon, the book, the end ---------- */
+/* ---------- 23:14: the green Peugeot, the book, the end ---------- */
 function afterCar(){
   const R = RT();
   V13.done('o13b_gate');
   ENGINE.movementEnabled = false;
   if(R.seat){ R.seat.locked = true; }
   const sa = A('suv_arrive') || { x:2, z:26 };
-  R.saloon = car('sedan', '#8a8e92', [sa.x, sa.z + 4], 0, true);
+  R.saloon = car('sedan', '#2f5a3c', [sa.x, sa.z + 4], 0, true);              // the DG's small green Peugeot
   shot('street', true);
   R.onLine = l => {
     const t = l.text || '';
