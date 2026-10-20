@@ -74,6 +74,8 @@ async function phoneRun(T) {
   // back off the docket and stay at the desk until he walks in
   await T.ev(() => { const x = document.getElementById('v12-doc-x'); if (x) x.click(); });
   await T.until(() => !document.querySelector('#screen-puzzle.show'), 10000);
+  // stand at the desk, where he will find you (the stub's lean over the desk doesn't move the player there)
+  await T.ev(() => { ENGINE.player.position.set(-1.62, 0, 4.6); });
   if (slow) await T.ev(() => { if (V13.rt.win) V13.rt.win.t = Math.min(V13.rt.win.t, 6.5); });
   await T.until(() => !V13.rt.win, 200000); await T.wait(800); await hurry(T, slow);
   await T.until(() => document.getElementById('screen-dialogue').classList.contains('show'), 150000);
