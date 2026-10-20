@@ -37,9 +37,55 @@ module.exports = async function (T) {
   C.ok('CN13-migrate', fate.migrated.finale === 'contested' && fate.migrated.flag === 'contested' && fate.migrated.s1fate === 'proven' && fate.migrated.cond, JSON.stringify(fate.migrated));
   C.ok('CN13-discharged', fate.discharged.finale === 'proven' && fate.discharged.s1fate === 'unproven' && fate.discharged.discharged === 1 && fate.discharged.cond, JSON.stringify(fate.discharged));
 
+  // ---------------- CN12: nobody Season 1's charge sheet wrongly held comes back as a source ----------------
+  const src = await T.ev(() => {
+    const run = (acc, mc) => { delete S.game.s2; S.game.accusations = acc; Object.assign(S.game.moralChoices, mc); V13._quietRecruit = true; V13.s1Sources(); V13._quietRecruit = false; return V13.srcList().join(','); };
+    const fair = { market_runner:'caught', choice:'flip' };
+    const out = {
+      clean:run({}, fair),
+      tundeHeld:run({ lagos:{ suspect:'tunde', ok:{ suspect:false }, settled:'m3' } }, fair),
+      kcHeld:run({ lagos:{ suspect:'kc', ok:{ suspect:false }, settled:'m3' } }, fair),
+      kcForced:run({}, { market_runner:'caught', choice:'force' }),
+    };
+    delete S.game.s2; S.game.accusations = {}; S.game.moralChoices.choice = 'flip';
+    return out;
+  });
+  C.ok('CN12-sources', src.clean === 'KC,TUNDE' && src.tundeHeld === 'KC' && src.kcHeld === 'TUNDE' && src.kcForced === 'TUNDE', JSON.stringify(src));
+
+  // ---------------- small things this team's files say: S2_EV, the badge, the styles block, the renames, motion ----------------
+  const misc = await T.ev(() => {
+    const cur = S.game.currentMission; S.game.currentMission = 'm15'; const next = nextMissionPreview(); S.game.currentMission = cur;
+    const o = (V13.CASES.m15.objectives() || [])[0] || {};
+    const cands = (V13.S2_CANDIDATES || []).map(c => c.name).join(' | ');
+    return { ev:(V13.S2_EV || []).length, evHas:['drive_image', 'barge_cash', 'senator_words', 'ereba_photo'].every(id => (V13.S2_EV || []).includes(id)),
+      badge:/class="s2-badge"/.test(next) && !/style=/.test(next), c15css:!!document.getElementById('c15-css'), obj:o.text, cands };
+  });
+  C.ok('RT14-S2_EV', misc.ev === 23 && misc.evHas, JSON.stringify({ n:misc.ev, has:misc.evHas }));
+  C.ok('R25-badge', misc.badge, 'SEASON 3 badge is .s2-badge with no inline style');
+  C.ok('R08-c15css-moved', !misc.c15css, 'no injected #c15-css block (its rules live in s2.css)');
+  C.ok('CN10-names', /Okundaye/.test(misc.obj) && /Cdr\. Itohan Okundaye/.test(misc.cands) && /Barr\. Zainab Danladi/.test(misc.cands) && !/Osagie|Grace|Hauwa/.test(misc.obj + misc.cands), JSON.stringify(misc));
+  const motion = await T.ev(() => new Promise(res => {
+    document.body.classList.add('reduce-motion', 'cb');
+    V13.court.stamp('REJECTED', 'bad');
+    const d = document.querySelector('#court-bar .cb-delta') || (V13.court.bar(true), V13.court.credMeter(true), V13.court.showCred(50, -4), document.querySelector('#court-bar .cb-delta'));
+    setTimeout(() => {
+      const s = document.getElementById('court-stamp'), cs = getComputedStyle(s);
+      const out = { stampAnim:cs.animationName, stampOpacity:cs.opacity, stampBorder:cs.borderTopStyle, deltaAnim:d ? getComputedStyle(d).animationName : 'no delta' };
+      document.body.classList.remove('reduce-motion', 'cb'); V13.court.credMeter(false); V13.court.bar(false); res(out);
+    }, 300);
+  }));
+  C.ok('R19-motion-cb', motion.stampAnim === 'none' && +motion.stampOpacity === 1 && motion.stampBorder === 'dashed', JSON.stringify(motion));
+
   // ---------------- D4: quit to the title in the middle of the trial ----------------
   const pre = "S.game.completedMissions.push('m9','m10','m11','m12','m13','m13b'); V13.s2().hubs = { h9:1, h10:1, h11:1, h12:1, h13:1 };";
+  await T.ev(() => { window.__cards = []; window.__toasts = []; const tc = window.titleCard, to = V13.toast;
+    window.titleCard = function(lines){ window.__cards.push((lines || []).join(' / ')); return tc.apply(this, arguments); };
+    V13.toast = function(a, b){ window.__toasts.push(a + ': ' + b); return to.apply(this, arguments); }; });
   T.log('m14', await sc.s2start(T, 'm14', pre));
+  await T.until(() => (window.__toasts || []).some(t => /FEDERAL HIGH COURT/.test(t)), 15000);
+  const start = await T.ev(() => ({ cards:window.__cards.slice(), toasts:window.__toasts.filter(t => /FEDERAL HIGH COURT/.test(t)) }));
+  C.ok('CN03-start-card', start.cards.some(c => c === 'COURT 5 / FRIDAY 8 JANUARY · 18:40'), JSON.stringify(start.cards));
+  C.ok('RT06-no-save-notice', start.toasts.some(t => /can't be saved part-way/.test(t)), JSON.stringify(start.toasts));
   // a Season 2 load: Season 1's verdict untouched, Season 2's reading stored
   const loaded = await T.ev(() => ({ finale:S.game.moralChoices.finale, fateDone:V13.s2().fateDone }));
   C.ok('CN13-load', loaded.finale === 'contested' && loaded.fateDone === 1, JSON.stringify(loaded));
