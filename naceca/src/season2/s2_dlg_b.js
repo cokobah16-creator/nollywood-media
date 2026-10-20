@@ -75,7 +75,7 @@ Object.assign(DIALOGUE, {
     { speaker:'NACECA SYSTEM',
       text:"The smell arrives before the camp does: burnt diesel, rotten eggs, wet ash. Then the glow, orange through the mangrove roots, like a town on fire with no town in it." },
     { speaker:'SGT. UCHE', portrait:'sergeant',
-      text:"Three drums burning. A barge at the far jetty. Count the boys, sir. Then count them again." },
+      text:"Forty-odd drums, three of them on the fire. A barge at the far jetty. Count the boys, sir. Then count them again." },
   ],
 
   // the cooling drums
@@ -208,7 +208,7 @@ Object.assign(DIALOGUE, {
       text:"Oga, abeg. My mama dey sell fish for landing. If I no work, who go buy net for her?",
       textEn:"Sir, please. My mother sells fish at the landing. If I don't work, who'll buy her a net?" },
     { speaker:'PA TIMI',
-      text:"That is Tari. His father fished beside me for twenty years. The creek fed his father. It does not feed him." },
+      text:"That is Preye. His father fished beside me for twenty years. The creek fed his father. It does not feed him." },
     { speaker:'SGT. UCHE', portrait:'sergeant',
       text:"Your call, sir.",
       choices:[
@@ -302,7 +302,7 @@ Object.assign(DIALOGUE, {
     { speaker:'NACECA SYSTEM',
       text:"Riverstone's tanks stand white behind razor wire. Outside the gate, a woman in a black suit is eating bole and fish out of a sheet of newspaper." },
     { speaker:'BARRISTER DANLADI',
-      text:"Agent Kelechi. Hauwa Danladi, NACECA Legal. Have some bole. The fish is from the woman by the gate, and she knows more about this place than either of us." },
+      text:"Agent Kelechi. Zainab Danladi, NACECA Legal. Have some bole. The fish is from the woman by the gate, and she knows more about this place than either of us." },
     { speaker:'BARRISTER DANLADI',
       text:"Your problem is that gate. Private property. You go through it with a search warrant, or with a very good story for a judge." },
     { speaker:'BARRISTER DANLADI',
@@ -501,7 +501,7 @@ Object.assign(DIALOGUE, {
     { speaker:'BARRISTER DANLADI',
       text:"I can't promise you an outcome, Mrs. Jumbo. I can promise to tell the judge exactly what you did tonight, and when you did it." },
     { speaker:'SOTONYE JUMBO', mood:'relieved',
-      text:"Glovebox. The grey Corolla by the generator house. The envelope says 'INSURANCE'. I labelled it. Of course I labelled it." },
+      text:"Glovebox. The red Kia by the generator house. The envelope says 'INSURANCE'. I labelled it. Of course I labelled it." },
     { speaker:'SGT. UCHE', portrait:'sergeant',
       text:"Of course she did." },
   ],
@@ -519,31 +519,38 @@ Object.assign(DIALOGUE, {
     { speaker:'SOTONYE JUMBO', mood:'afraid',
       text:"You people are the same. Exactly the same. They also ask me about my children." },
     { speaker:'SOTONYE JUMBO', mood:'afraid',
-      text:"Glovebox. The grey Corolla. An envelope that says 'INSURANCE'. Take it. Take it and go." },
+      text:"Glovebox. The red Kia. An envelope that says 'INSURANCE'. Take it. Take it and go." },
     { speaker:'BARRISTER DANLADI',
       text:"Agent. A witness who talks because she's afraid of us is a witness her lawyer will adore." },
   ],
 
-  // phone: the CAC search (Tobi if alive, else Igbinosa)
+  // phone: the CAC search (Tobi if V13.tobiAlive(), else Igbinosa). R11: on Senior the call
+  // only says the records are pulled (sr); reading them is the m12_cac document's job (rec:1).
   m12_tobi_cac: [
     { speaker:'TOBI',
-      text:"Kelechi — sorry. Agent. I pulled the CAC record on Riverstone Marine Services. Ninety-five percent: one Godwin Ereba." },
+      text:"Kelechi — sorry. Agent. I pulled the CAC record on Riverstone Marine Services. Ninety-five percent: one Godwin Ereba.",
+      sr:"Kelechi — sorry. Agent. I pulled the CAC record on Riverstone Marine Services, and the BVN of the man on it." },
     { speaker:'TOBI',
-      text:"Then I ran his BVN. One salary. ₦180,000 a month, from the Douglas-Akpan Foundation. Job title: driver." },
-    { speaker:'TOBI',
+      text:"Then I ran his BVN. One salary. ₦180,000 a month, from the Douglas-Akpan Foundation. Job title: driver.",
+      sr:"Records sent, Agent. Read them yourself." },
+    { speaker:'TOBI', rec:1,
       text:"I kept books for companies like this for six months before I understood them. This one doesn't even try. Somebody never expected anyone to look." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Send it all to Barrister Danladi. And Tobi — thank you." },
-    { speaker:'TOBI', mood:'relieved',
+    { speaker:'TOBI', mood:'relieved', cond:"V13.tobiTestifies()",
       text:"You came back for me in Asaba. I'll be pulling records for you until I'm sixty." },
+    { speaker:'TOBI', mood:'relieved', cond:"!V13.tobiTestifies()",
+      text:"Sergeant Uche carried me out of Asaba because you sent him in. I'll be pulling records for you until I'm sixty." },
   ],
   m12_igbinosa_cac: [
     { speaker:'MR. IGBINOSA',
-      text:"Agent. Igbinosa. The CAC search is back. Riverstone Marine Services Limited: ninety-five percent held by one Godwin Ereba." },
+      text:"Agent. Igbinosa. The CAC search is back. Riverstone Marine Services Limited: ninety-five percent held by one Godwin Ereba.",
+      sr:"Agent. Igbinosa. The CAC search on Riverstone Marine Services is back, with the shareholder's BVN." },
     { speaker:'MR. IGBINOSA',
-      text:"His BVN shows one income. One hundred and eighty thousand naira monthly, from the Douglas-Akpan Foundation. Designation: driver." },
-    { speaker:'MR. IGBINOSA',
-      text:"Twenty-two years in forensics. I have never seen a driver buy a tank farm. Perhaps he saves very carefully." },
+      text:"His BVN shows one income. One hundred and eighty thousand naira monthly, from the Douglas-Akpan Foundation. Designation: driver.",
+      sr:"Records sent, Agent. Read them yourself. Slowly." },
+    { speaker:'MR. IGBINOSA', rec:1,
+      text:"Nineteen years in forensics. I have never seen a driver buy a tank farm. Perhaps he saves very carefully." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Send it to Barrister Danladi." },
     { speaker:'MR. IGBINOSA',
@@ -596,7 +603,7 @@ Object.assign(DIALOGUE, {
       text:"She wasn't, sir." },
   ],
 
-  // Hauwa: where Riverstone's money goes (code collects 'bank_trail')
+  // Barrister Danladi: where Riverstone's money goes (code collects 'bank_trail')
   m12_bank: [
     { speaker:'BARRISTER DANLADI',
       text:"Riverstone's bank finally answered. Thirty-six transfers in three years, never once late, all to one company: Maitama Haven Properties Limited." },
@@ -615,7 +622,7 @@ Object.assign(DIALOGUE, {
     { speaker:'MR. KUTI',
       text:"The Director-General will see you in Abuja. Tomorrow. Ten o'clock." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
-      text:"Does Commander Osagie know?" },
+      text:"Does Commander Okundaye know?" },
     { speaker:'MR. KUTI',
       text:"The Director-General's diary is not copied to Zonal Commands. He has followed your work with great interest. Ten o'clock, Agent." },
     { speaker:'NACECA SYSTEM',
@@ -708,8 +715,8 @@ THE LEAVES · product AGO · each signed "G.E. for R.M.S."
 ─────────────────────────────────────
 No. 0389 · 24 FEB · Jetty 2 · AGO 180,000 L · TEKENA 2
 No. 0397 · 17 MAR · Jetty 2 · AGO 180,000 L · TEKENA 2
-No. 0458 · 22 SEP · Jetty 2 · AGO 180,000 L · TEKENA 2
-No. 0462 · 29 SEP · Jetty 2 · AGO 180,000 L · TEKENA 2
+No. 0458 · 24 NOV · Jetty 2 · AGO 180,000 L · TEKENA 2
+No. 0462 · 01 DEC · Jetty 2 · AGO 180,000 L · TEKENA 2
 No. 0466 · date blank · Jetty 2 · AGO 180,000 L · TEKENA 2 · ink still wet
 Leaves 0390 to 0396 torn out
 Every leaf stamped "LOADED · DELTA BAY DEPOT" · vessel's port of registry WARRI
@@ -734,20 +741,20 @@ Every leaf stamped "LOADED · DELTA BAY DEPOT" · vessel's port of registry WARR
 
 OFFICIAL INTAKE LOG · office copy, signed S. Jumbo
 ─────────────────────────────────────
-17 SEP · TANK 1 · AGO 2,400,000 L · imported · MT CAPE ORIEL · customs C-1184
-24 SEP · TANK 3 · AGO 180,000 L · "imported AGO" · vessel: — · customs: —
-01 OCT · TANK 3 · AGO 180,000 L · "imported AGO" · vessel: — · customs: —
+19 NOV · TANK 1 · AGO 2,400,000 L · imported · MT CAPE ORIEL · customs C-1184
+26 NOV · TANK 3 · AGO 180,000 L · "imported AGO" · vessel: — · customs: —
+03 DEC · TANK 3 · AGO 180,000 L · "imported AGO" · vessel: — · customs: —
 
 REAL LOADING LOG · the USB
 ─────────────────────────────────────
-17 SEP 11:20 · T1 in from MT CAPE ORIEL · 2,400,000 L · customs C-1184
-24 SEP 04:10 · T3 in from barge TEKENA 2 · 180,000 L · "Ethiope" · cash on discharge
-01 OCT 03:55 · T3 in from barge TEKENA 2 · 180,000 L · "Ethiope" · cash on discharge
+19 NOV 11:20 · T1 in from MT CAPE ORIEL · 2,400,000 L · customs C-1184
+26 NOV 04:10 · T3 in from barge TEKENA 2 · 180,000 L · "Ethiope" · cash on discharge
+03 DEC 03:55 · T3 in from barge TEKENA 2 · 180,000 L · "Ethiope" · cash on discharge
 
 OTHER PAPER
 ─────────────────────────────────────
-Camp waybills: TEKENA 2 left the Ethiope 22 SEP and 29 SEP · AGO 180,000 L each
-Gate register: 25 SEP · T3 out · 5 tankers × 33,000 L · consignee "various"
+Camp waybills: TEKENA 2 left the Ethiope 24 NOV and 01 DEC · AGO 180,000 L each
+Gate register: 27 NOV · T3 out · 5 tankers × 33,000 L · consignee "various"
 `,
     prompt:`Where did Tank 3's diesel <b>really</b> come from?`,
     options:[
@@ -805,7 +812,7 @@ THE COMPANY
 Incorporated 14 AUG 2019 · share capital ₦10,000,000
 Shareholder  GODWIN EREBA · 9,500,000 shares · 95%
 Shareholder  BLESSING EREBA · 500,000 shares · 5%
-Director     GODWIN EREBA · 4B Harbour Close (BQ), Old GRA, Port Harcourt
+Director     GODWIN EREBA · 11B Harbour Close (BQ), Old GRA, Port Harcourt
 Secretary    T. Ikiriko &amp; Co., legal practitioners
 Bank inflows, 2025: ₦4.1 billion
 
@@ -816,14 +823,14 @@ No other income · no landed property · one car loan, 2021
 
 THE LETTERHEAD
 ─────────────────────────────────────
-Founder: Sen. Tamuno Douglas-Akpan · 4 Harbour Close, Old GRA, Port Harcourt
+Founder: Sen. Tonye Douglas-Akpan · 11 Harbour Close, Old GRA, Port Harcourt
 `,
     prompt:`The paper says one name. Who <b>really</b> owns Riverstone?`,
     options:[
       { text:'Godwin Ereba, 95% on the CAC record', hint:'On paper. A driver on ₦180,000 a month with no other income doesn\'t own a ₦4 billion tank farm.', correct:false },
       { text:'Blessing Ereba', hint:'Five percent, and the same problem as her husband: no money of her own in this.', correct:false },
       { text:'The Douglas-Akpan Foundation', hint:'The foundation pays the driver\'s wage. It holds no shares. Follow it to the man whose name is on it.', correct:false },
-      { text:'Senator Tamuno Douglas-Akpan, through his driver', hint:'His foundation pays the "owner" a driver\'s wage, and the "owner" lives in the boys\' quarters of his house.', correct:true },
+      { text:'Senator Tonye Douglas-Akpan, through his driver', hint:'His foundation pays the "owner" a driver\'s wage, and the "owner" lives in the boys\' quarters of his house.', correct:true },
     ],
     onCorrect:{ intel:+26, integrity:+3, agencyFavour:+4, evidenceId:'cac_record', evidenceName:'CAC record — Riverstone Marine', xp:130 },
     onWrong:{ integrity:-1 },
@@ -851,13 +858,13 @@ Object.assign(V12.DOCS, {
     fail:{ mode:'continue', note:'The USB goes into a bag with nobody able to say what it proves. The defence will call it "a manager\'s private spreadsheet".' },
   },
   m12_sample: {
-    ask:'What does the bench test show? Pick it, then tap the result <b>no refinery could produce</b>.',
+    ask:'What does the bench test show? Pick it, then tap the result that settles it.',
     proof:['tan foam', 'black grit'],
     look:['tan foam', 'black grit', 'black-brown', 'spec: min 66', 'no crackle', 'Refinery diesel'],
     fail:{ mode:'continue', note:'You bottle Tank 3 without saying what the bench showed. A defence chemist will call it "off-spec import, poorly stored".' },
   },
   m12_cac: {
-    ask:'Who <b>really</b> owns Riverstone? Pick it, then tap the line that gives the nominee away.',
+    ask:'Who <b>really</b> owns Riverstone? Pick it, then tap the line that proves it.',
     proof:['₦180,000', 'Harbour Close'],
     look:['₦180,000', 'Harbour Close', '95%', '₦4.1 billion', 'No other income'],
     fail:{ mode:'continue', note:'You file the printout as it reads: a driver owns a tank farm. Barrister Danladi reads it twice. "Then we prove the obvious the long way."' },
@@ -894,7 +901,7 @@ V13.AFTER = Object.assign(V13.AFTER || {}, {
   },
   m12:{
     headline:(state)=>{
-      const m = mcOf(state), pub = 'PORT HARCOURT TIDE';
+      const m = mcOf(state), pub = 'THE WATERFRONT HERALD';
       const list = m.s2_inventory === 'skipped' ? ' Company lawyers say they were given no list of what was taken.' : '';
       if(m.s2_search === 'self') return { pub, head:'Tank-Farm Manager Says Male NACECA Officer Searched Her',
         ded:'The agency says it is "reviewing the procedure". Her lawyer says he is reviewing the agency.' + list };
@@ -916,18 +923,17 @@ V13.PHONE = Object.assign(V13.PHONE || {}, {
   after_m11:[
     { who:'UCHE', text:"Kerosene, then bar soap, then kerosene again. My hands are still black. Yours?" },
     { who:'HAUWA', cond:"S.game.moralChoices.s2_samples!=='grabbed'",
-      text:"Agent Kelechi, Hauwa Danladi, NACECA Legal. Zonal says you're coming to Port Harcourt. Before you touch a single door at Riverstone, call me. Before. Not after." },
+      text:"Agent Kelechi, Zainab Danladi, NACECA Legal. Zonal says you're coming to Port Harcourt. Before you touch a single door at Riverstone, call me. Before. Not after." },
     { who:'HAUWA', cond:"S.game.moralChoices.s2_samples==='grabbed'",
-      text:"Agent Kelechi, Hauwa Danladi, NACECA Legal. I've seen your camp sample: a water bottle, no label, no seal. I've seen better chains of custody on a Christmas hamper. Call me before you touch a door at Riverstone." },
+      text:"Agent Kelechi, Zainab Danladi, NACECA Legal. I've seen your camp sample: a water bottle, no label, no seal. I've seen better chains of custody on a Christmas hamper. Call me before you touch a door at Riverstone." },
     { who:'PA TIMI', cond:"S.game.moralChoices.s2_timi==='source' && S.game.moralChoices.s2_camp==='felix_only'",
-      text:"This is Ebi, Pa Timi's grandson, typing for him. Grandpa says: 'The boys slept at home. The nets are still black. Both things are true.'" },
+      text:"This is Tonbra, Pa Timi's grandson, typing for him. Grandpa says: 'The boys slept at home. The nets are still black. Both things are true.'" },
     { who:'PA TIMI', cond:"S.game.moralChoices.s2_timi==='source' && S.game.moralChoices.s2_camp==='navy'",
-      text:"This is Ebi, typing for Pa Timi. The Navy fire burned for two days. Grandpa says to tell you he is not angry with you. He says he is angry." },
+      text:"This is Tonbra, typing for Pa Timi. The Navy fire burned for two days. Grandpa says to tell you he is not angry with you. He says he is angry." },
     { who:'PA TIMI', cond:"S.game.moralChoices.s2_timi==='source' && S.game.moralChoices.s2_camp==='mass'",
-      text:"This is Ebi, typing for Pa Timi. Three mothers came to our house asking where their sons are. Grandpa gave them your name." },
-    { who:'TOBI', cond:"S.game.moralChoices.asaba==='rescue' && S.game.moralChoices.s2_barge==='tagged'",
-      text:"Your tracker is ALIVE. TEKENA 2 passed Forcados at 05:40, six knots, heading east. If she holds this course she's in the Bonny River by Thursday." },
-    { who:'OSAGIE', cond:"S.game.moralChoices.asaba!=='rescue' && S.game.moralChoices.s2_barge==='tagged'",
+      text:"This is Tonbra, typing for Pa Timi. Three mothers came to our house asking where their sons are. Grandpa gave them your name." },
+    // CN06: Mr. Igbinosa watches the tracker in every save (the Tobi version is retired)
+    { who:'OSAGIE', cond:"S.game.moralChoices.s2_barge==='tagged'",
       text:"Igbinosa says your tracker is moving east past Forcados. He says he hasn't been this excited since 2009. He did not look excited." },
     { who:'EJIRO', cond:"S.game.moralChoices.s2_ejiro==='source'",
       text:"Oga, Thursday nobody come with sack. Market quiet like Sunday. But two men for black T-shirt dey ask who get T4.",
@@ -961,10 +967,10 @@ addTips('NETS', [
   { after:'m11', true:false, text:"The barge turned back up the creek before dawn. She is hiding by the old dredge in Ogho channel." },
   { after:'m12', true:true,  text:"Men in a speedboat came to the landing asking which fisherman brought NACECA. Not creek men. They had Abuja in their mouths." },
   { after:'m12', true:false, text:"The Riverstone people have gone quiet. The barge men say the big men have left the creek business for good." },
-  { after:'m13', true:true,  text:"The barge men drink at Koko on Saturdays. They say the Senator's driver pays them himself now, in cash, from a black jeep." },
+  { after:'m13', true:true,  text:"The barge men drink at Koko on Saturdays. They say the Senator's driver pays them himself now, in cash, from a black Prado." },
   { after:'m13', true:false, text:"The barge men say the money goes to Lagos now. A man in Ikoyi counts it." },
-  { after:'m13b', true:true, text:"Two boys from Felix's camp were given money to say NACECA beat them. Tari refused. He says he will tell the court the truth if you need him." },
-  { after:'m13b', true:false, text:"Tari says Felix paid the men at the creek checkpoint every month, and he will swear to it. Put him in front of the judge." },
+  { after:'m13b', true:true, text:"Two boys from Felix's camp were given money to say NACECA beat them. Preye refused. He says he will tell the court the truth if you need him." },
+  { after:'m13b', true:false, text:"Preye says Felix paid the men at the creek checkpoint every month, and he will swear to it. Put him in front of the judge." },
   { after:'m14', true:true,  text:"TEKENA 2 went down to the sea riding high, her tanks empty. But four men carried bags into the back cabin. Heavy bags. They held them like babies." },
   { after:'m14', true:false, text:"TEKENA 2 has gone to Escravos for repairs. She will not move for a month." },
 ]);

@@ -110,7 +110,7 @@
       pos.forEach(([n,bg,fg,ac],i)=>{ const X=i*256, Y=128; board(x,X,Y,256,128,bg,fg); fit(x,'POS',X+96,Y+82,130,72,fg); fit(x,n,X+200,Y+82,70,50,ac);
         fit(x,'CASH OUT · TRANSFER · AIRTIME',X+128,Y+112,220,17,fg,'600'); weather(x,X,Y,256,128,3160+i,0.8); });
       // row 2 (y 256..384): buka board 512x128 + charging board 512x128
-      board(x,0,256,512,128,'#f2ead6','#b02a20'); fit(x,'MAMA EFE KITCHEN',256,320,440,52,'#b02a20'); fit(x,'BOLE · FISH · PEPPER SOUP · RICE',256,362,440,26,'#1d3a6a','600'); weather(x,0,256,512,128,3170,0.8);
+      board(x,0,256,512,128,'#f2ead6','#b02a20'); fit(x,'MAMA TEGA KITCHEN',256,320,440,52,'#b02a20'); fit(x,'BOLE · FISH · PEPPER SOUP · RICE',256,362,440,26,'#1d3a6a','600'); weather(x,0,256,512,128,3170,0.8);
       board(x,512,256,512,128,'#141414','#f0c020'); fit(x,'PHONE CHARGING',768,324,440,54,'#f0c020'); fit(x,'₦100 · ALL PHONES · SAFE',768,362,440,28,'#ffffff','600'); weather(x,512,256,512,128,3171,0.6);
       // row 3 (y 384..512): fuel board 256x128, esusu 256x128, banner 512x128
       board(x,0,384,256,128,'#e8d050','#1a1a1a'); fit(x,'FUEL',128,438,200,44,'#a01818',null,'hand'); fit(x,'KERO · 2T OIL',128,470,210,22,'#1a1a1a',null,'hand'); fit(x,'₦ PER LITRE',128,498,210,20,'#1a1a1a',null,'hand'); weather(x,0,384,256,128,3172,1);
@@ -118,10 +118,10 @@
       x.fillStyle='#1d3a6a'; x.fillRect(512,384,512,128); x.fillStyle='#f0c020'; x.fillRect(512,384,512,10); x.fillRect(512,502,512,10);
       fit(x,'SAPELE WATERSIDE NIGHT MARKET',768,458,470,40,'#ffffff'); fit(x,'WELCOME · BUY · SELL · GOD DEY',768,492,440,20,'#f0c020','600'); weather(x,512,384,512,128,3174,0.5);
       // rows 4-11 (y 512..1024): sixteen shop signs 512x64
-      const shops=[['OGHENE TEGA PROVISIONS','#c8382a','#fff4d0'],['EFE & SONS ELECTRICALS','#1a4aa0','#ffffff'],['OVIE PHONE WORLD','#f0c020','#1a1a1a'],['DIVINE MERCY PATENT MEDICINE','#e8e8e0','#1a6a2a'],
+      const shops=[['OGHENE TEGA PROVISIONS','#c8382a','#fff4d0'],['IGHO & SONS ELECTRICALS','#1a4aa0','#ffffff'],['OVIE PHONE WORLD','#f0c020','#1a1a1a'],['DIVINE MERCY PATENT MEDICINE','#e8e8e0','#1a6a2a'],
                    ['JEHOVAH JIREH FABRICS','#8a2a8a','#ffffff'],['NO SHAKING BARBING SALON','#141414','#f0c040'],['ETHIOPE BOAT ENGINE SPARES','#1a6a6a','#ffffff'],['GOD’S TIME PLASTICS','#e0d0a0','#5a2a1a'],
                    ['ONOME COLD ROOM · FROZEN FISH','#2a4a8a','#ffffff'],['BLESSED HANDS TAILORING','#f2efe6','#a01818'],['UNITY PHARMACY & STORE','#1d6a3a','#ffffff'],['OKIEMUTE HOTEL · BAR','#3a1a1a','#ffd27a'],
-                   ['GRACE PURE WATER','#3a8ad0','#ffffff'],['ROTIMI BOOKS & STATIONERY','#e8a830','#1a1a1a'],['BRIGHT FUTURE SCHOOL · ADMISSION','#f2f0ea','#1d3a8a'],['TOP STAR MUSIC & DVD','#141414','#40d0ff']];
+                   ['CLEAR DROP PURE WATER','#3a8ad0','#ffffff'],['ROTIMI BOOKS & STATIONERY','#e8a830','#1a1a1a'],['BRIGHT FUTURE SCHOOL · ADMISSION','#f2f0ea','#1d3a8a'],['TOP STAR MUSIC & DVD','#141414','#40d0ff']];
       shops.forEach(([sg,bg,fg],i)=>{ const X=(i%2)*512, Y=512+(i>>1)*64; x.fillStyle=bg; x.fillRect(X,Y,512,64); x.strokeStyle='rgba(0,0,0,0.35)'; x.lineWidth=3; x.strokeRect(X+2,Y+2,508,60);
         fit(x,sg,X+256,Y+46,470,36,fg); weather(x,X,Y,512,64,3180+i,0.9); });
       return T(c,false); },
@@ -297,7 +297,7 @@
       x.fillStyle='#f2f2ea'; x.fillRect(0,256,256,128); x.strokeStyle='#c01818'; x.lineWidth=10; x.beginPath(); x.arc(64,320,44,0,7); x.stroke(); x.beginPath(); x.moveTo(33,289); x.lineTo(95,351); x.stroke(); fit(x,'NO',178,312,140,36,'#c01818'); fit(x,'PARKING',178,350,140,28,'#1a1a1a');
       x.fillStyle='#f0c020'; x.fillRect(256,256,256,128); fit(x,'BEWARE',384,306,220,36,'#1a1a1a'); fit(x,'OF DOGS',384,350,220,32,'#1a1a1a');
       x.fillStyle='#ecebe2'; x.fillRect(512,256,512,128); x.fillStyle='#2a3a6a'; x.fillRect(512,256,512,16); x.strokeStyle='rgba(40,60,120,0.35)'; x.lineWidth=1; for(let k=0;k<7;k++){ x.beginPath(); x.moveTo(520,288+k*14); x.lineTo(1016,288+k*14); x.stroke(); }
-      x.save(); x.font=hand(11); x.fillStyle='rgba(20,30,70,0.8)'; x.textAlign='left'; ['21/09  A. BELLO   ELECTRICIAN  09:10','02/10  ROSE (CLEANER)   11:00','07/10  —  DELIVERY   15:40'].forEach((t,i)=>x.fillText(t,524,298+i*14)); x.restore();
+      x.save(); x.font=hand(11); x.fillStyle='rgba(20,30,70,0.8)'; x.textAlign='left'; ['23/11  A. BELLO   ELECTRICIAN  09:10','04/12  ROSE (CLEANER)   11:00','09/12  —  DELIVERY   15:40'].forEach((t,i)=>x.fillText(t,524,298+i*14)); x.restore();
       x.fillStyle='rgba(120,20,20,0.6)'; x.fillRect(764,256,2,128);
       // row 3 (384..512): a dim lit-window texture (curtained) 512x128 + a dark window 512x128
       const gw=x.createLinearGradient(0,384,0,512); gw.addColorStop(0,'#f4d8a0'); gw.addColorStop(1,'#d8a860'); x.fillStyle=gw; x.fillRect(0,384,512,128);

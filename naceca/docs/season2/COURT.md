@@ -12,14 +12,17 @@ calls your text. Begin the file with `(function(){ const V13 = window.V13 = wind
 
 ## The case
 FRN v. Lucky Edafe & 2 Ors · Charge No. FHC/ABJ/CR/214/2026 · Federal High Court, Abuja Division, Court 5 ·
-Hon. Justice T. O. Bakare. Prosecution: Hauwa Danladi (NACECA Legal; "H. Danladi Esq. with A. Okoro Esq.").
-Defence: Femi Coker-Odusote SAN (for the 1st defendant; elegant, devastating, lawful — never a cartoon) and a Legal
+Hon. Justice T. O. Bakare. Prosecution: Zainab Danladi (NACECA Legal; "Z. Danladi Esq. with A. Okoro Esq.").
+Defence: Femi Olaniran-Cole SAN (for the 1st defendant; elegant, devastating, lawful — never a cartoon) and a Legal
 Aid counsel for the others where needed.
+Dates (CASES.md section 6): the pre-trial conference is Fri 8 Jan 2027; the trial opens Mon 11 Jan 2027, 9 a.m.,
+after the court's Christmas vacation; the counts run "between March and December, 2026".
 Defendants: D1 Lucky Edafe (currency changer), D2 Felix Ugbekile (camp manager), D3 Sotonye Jumbo (tank-farm manager).
 Counts:
 - Count 1 (D1): money laundering — Money Laundering (Prevention and Prohibition) Act 2022, s.18 — dealing with
   (withdrawing, converting, transferring) funds he knew or reasonably ought to have known were proceeds of unlawful
-  activity (crude-oil theft; ransom).
+  activity: the theft of crude oil, and nothing else. The Season 1 kidnapping was about silencing evidence, not
+  ransom, and its money never reaches UPSTREAM ("EKO money stays OUT of this book"); the count does not name it.
   Elements: E1a he dealt with the funds; E1b the funds were proceeds of unlawful activity; E1c he knew or ought
   reasonably to have known.
 - Count 2 (D2): dealing in crude oil / petroleum products without lawful authority — Miscellaneous Offences Act s.1(17).
@@ -57,11 +60,13 @@ the jetty).
 Fixes (done between hearings): cert_pos (s.84 certificate from the POS provider's compliance officer for the T4 log),
 bank_cert (a bank officer certifies the account statements and BVN records — banker's books + s.84),
 ctc_cac (certified true copy of the CAC record), search_record (written record of the search for the missing original
-drive, letters to HQ and their replies), cert_tracker (s.84 certificate for the tracker log, from Tobi/Igbinosa).
+drive, letters to HQ and their replies), cert_tracker (s.84 certificate for the tracker log, from Mr. Igbinosa in
+every save; the Tobi `lines` are retired).
 
 ## Schema of V13.COURT_DATA
 All `lines` arrays are `[{ who, text }]`, `who` one of: 'REGISTRAR', 'JUDGE', 'DANLADI', 'SAN', 'LEGAL AID',
-'KELECHI', 'LUCKY', 'FELIX', 'SOTONYE', 'EJIRO', 'TOBI', 'IGBINOSA', 'IKPE', 'USHER', 'NACECA SYSTEM' (narration).
+'KELECHI', 'LUCKY', 'FELIX', 'SOTONYE', 'EJIRO', 'TOBI' (retired lines only), 'IGBINOSA', 'IKPE', 'USHER',
+'NACECA SYSTEM' (narration).
 Keep each line under ~200 characters. Use real courtroom register ("My Lord", "I most humbly apply", "Objection,
 my Lord", "Overruled", "Sustained", "The document is admitted and marked Exhibit P5", "tendered and rejected",
 "This matter is adjourned to …"). Number prosecution exhibits P1, P2… in the order the engine admits them — so in text
@@ -110,15 +115,15 @@ V13.COURT_DATA = {
   ],
   reexam: [ { id, fixes: ['cross id', …], ask: lines, answer: lines, cred: n } ],   // the player picks one to repair
   witnesses: {                // short testimony scenes (exam + 1–2 cross questions, 6–10 lines each)
-    pw_tobi, pw_igbinosa,     // forensic analyst: the s.84 certificate, the image, the hash
-    pw_ikpe,                  // the custodian: the register (if signed) — or the gap (if unsigned): write pw_ikpe and pw_ikpe_gap
+    pw_igbinosa,              // PW2 in every save, by method: the s.84 certificate, the image, the hash (pw_tobi* retired, unused)
+    pw_ikpe,                  // the custodian (22 years): the register (if signed, 23:04) — or the gap (if unsigned): write pw_ikpe and pw_ikpe_gap
     pw_ejiro,                 // accomplice (only if ejiro_source)
     pw_sotonye,               // only if her plea bargain was taken: she names TEKENA 2, Riverstone, Godwin Ereba, and who Ereba drives for
     pw_felix                  // only if his plea bargain was taken
   },
   twt: {                      // trial-within-trial on Lucky's statement (only if the defence challenges it)
     proper: lines,            // challenged but recorded on video with his lawyer present → admitted (Omoha: a mere denial goes to weight)
-    car: lines,               // no video, no lawyer → rejected (FRN v Akaeze)
+    car: lines,               // no video, no lawyer → rejected (the Supreme Court has held ss.15(4), 17(2) mandatory; no case name)
     threat: lines             // oppression alleged; Uche/Kelechi testify; the court finds oppression not disproved → excluded (s.29)
   },
   nocase: {                   // SAN's no-case submission and the ruling, per defendant still on trial
@@ -153,8 +158,8 @@ cac_record, bank_trail, gate_register.
 Rules to encode (from the brief): s.84 certificate or oral foundation (Kubor v Dickson; Dickson v Sylva) for computer
 output (drive image, ledger printout, POS log, tracker log, phone extraction, loading log USB); public documents only
 by certified true copy (CAC record: ss.89(e), 90(1)(c), 104); banker's books (statements, BVN records: ss.89(h), 90(1)(e));
-secondary evidence of a lost original after all possible search (s.89(c)); confessions (ACJA ss.15(4), 17(2);
-FRN v Akaeze; Evidence Act s.29); evidence from a search without a warrant or with ACJA breaches (ss.9(3), 10) weighed
+secondary evidence of a lost original after all possible search (s.89(c)); confessions (ACJA ss.15(4), 17(2), which
+the Supreme Court has held mandatory — the game names no case; Evidence Act s.29); evidence from a search without a warrant or with ACJA breaches (ss.9(3), 10) weighed
 under Evidence Act ss.14–15 (deliberate shortcut → likely excluded; inadvertent → admitted with reduced weight);
 broken chain of custody → doubt to the defendant; accomplice evidence → s.198 warning; source identity protected
 (s.189) but their information is hearsay (ss.37–38).
@@ -167,5 +172,19 @@ the crude stolen, did you?"). In each, the truthful answer must be the best long
 in the moment; lies must be catchable by documents the SAN plausibly holds.
 
 Hand-in: the file, and a short note listing anything the engine must know (e.g. a `when` you introduced).
+
+## Decisions of the Season 2 fix pass (binding, 20 Oct 2026)
+- PW2 is Mr. Igbinosa in every save; Tobi, a civilian payroll reader, never certifies or testifies about the bench.
+- The cross-examination on Adaeze (`adaeze_*`): Season 1 tried her on the payroll folder only, so the SAN says "the
+  same drive", never "the same ledger". The exposed lie on `adaeze_unproven` is the witness's written report to Benin
+  Zonal on the night of Ekosodin (Season 1's sealed report is optional). The posting letter is "signed by Commander
+  Adaeze" ("C." is her rank, never an initial). The hearsay answer about the drive: "nobody had opened it since it came
+  back from the registry".
+- `ninth_bury`: "Head of Lagos Cyber and Financial Crimes"; promoted the day he met the DG in private; the letter is
+  dated the day before that meeting. `ninth_refuse` / `rx_suspension`: suspended the morning he refused; before noon
+  he had left his ID card at the desk.
+- `camp_mass`: nine arrests (eight boys and the escort), one charged. Sgt. Ikpe: 22 years. Sotonye: a mother of two.
+- The opening words that `fateText()` (s2_merge.js) matches stay: the cross item `adaeze_unproven`, its `q[0]` and
+  `answers[0]`.
 Write with craft: tension, dry wit from the bench, a SAN who is a joy to watch, Kelechi under pressure. Nigerian
 courtroom texture (the registrar's cadence, counsel announcing appearances, "My Lord, we are ready to proceed").

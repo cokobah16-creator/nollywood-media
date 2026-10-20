@@ -97,7 +97,7 @@
       // a framed portrait-free notice: "CAUSE LIST"
       x.fillStyle = '#f2eee2'; x.fillRect(512, 544, 512, 224); x.strokeStyle = '#3a3a3a'; x.lineWidth = 4; x.strokeRect(520, 552, 496, 208);
       txt(x, 'CAUSE LIST  ·  COURT 5', 768, 586, font(28), '#1a1a1a');
-      const cases = ['FRN v. LUCKY EDAFE & 2 ORS', 'FRN v. B. ADEOLA', 'FRN v. KESTREL LOGISTICS LTD', 'FRN v. I. MOMOH & 1 OR'];
+      const cases = ['FRN v. LUCKY EDAFE & 2 ORS', 'FRN v. B. ADEOLA', 'FRN v. ADEJO-IKIME HAULAGE LTD', 'FRN v. I. MOMOH & 1 OR'];
       cases.forEach((s, i)=>txt(x, `${i + 1}.  ${s}`, 540, 636 + i * 30, font(18, '500'), '#2a2a2a', 'left'));
       N(x, W, H, 16000, 0.035, 5202, 1.2);
       return T(c, false); },

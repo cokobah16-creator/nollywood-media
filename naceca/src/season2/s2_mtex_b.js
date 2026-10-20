@@ -202,7 +202,7 @@
       board(x,0,896,512,64,'#f2f0ea','#c8201a',4); fit(x,'HIGHLY INFLAMMABLE',256,942,470,40,'#c8201a','bold',FONT);
       board(x,0,960,512,64,'#f2f0ea'); fit(x,'RIVERSTONE HAULAGE',256,1004,470,38,'#1d3f7a','bold',FONT);
       { const X=512, Y=896; x.fillStyle='#f4f2ec'; x.fillRect(X+8,Y+4,112,120); const g=x.createLinearGradient(0,Y+8,0,Y+56); g.addColorStop(0,'#6aa0d0'); g.addColorStop(1,'#d8b070'); x.fillStyle=g; x.fillRect(X+12,Y+8,104,48); x.fillStyle='#2a5a2a'; x.beginPath(); x.moveTo(X+12,Y+56); x.lineTo(X+40,Y+36); x.lineTo(X+70,Y+50); x.lineTo(X+116,Y+30); x.lineTo(X+116,Y+56); x.fill();
-        fit(x,'OCTOBER 2026',X+64,Y+70,100,11,'#c8201a','bold',SANS); x.fillStyle='#3a3a3a'; for(let k=0;k<35;k++){ x.fillRect(X+16+(k%7)*14,Y+76+((k/7)|0)*9,8,5); } x.strokeStyle='#c8201a'; x.lineWidth=1.5; x.strokeRect(X+16+3*14-2,Y+76+9-2,12,9); }
+        fit(x,'DECEMBER 2026',X+64,Y+70,100,11,'#c8201a','bold',SANS); x.fillStyle='#3a3a3a'; for(let k=0;k<35;k++){ x.fillRect(X+16+(k%7)*14,Y+76+((k/7)|0)*9,8,5); } x.strokeStyle='#c8201a'; x.lineWidth=1.5; x.strokeRect(X+16+3*14-2,Y+76+9-2,12,9); }
       { const X=640, Y=896; x.fillStyle='#5a3a24'; x.fillRect(X+4,Y+8,120,112); x.fillStyle='#f4ecd8'; x.fillRect(X+12,Y+16,104,96); fit(x,'CERTIFICATE',X+64,Y+40,90,13,'#2a3a5a','bold',SERIF); fit(x,'OF OPERATION',X+64,Y+54,90,9,'#2a3a5a','bold',SERIF);
         x.fillStyle='#8a8a8a'; for(let k=0;k<4;k++) x.fillRect(X+26,Y+64+k*8,76,2); x.fillStyle='#c8a030'; x.beginPath(); x.arc(X+96,Y+98,9,0,7); x.fill(); x.fillStyle='#c8201a'; x.fillRect(X+92,Y+104,3,10); x.fillRect(X+98,Y+104,3,10); }
       { const X=768+64, Y=896+64; x.fillStyle='#1a1a1a'; x.beginPath(); x.arc(X,Y,60,0,7); x.fill(); x.fillStyle='#f4f2ec'; x.beginPath(); x.arc(X,Y,54,0,7); x.fill(); x.fillStyle='#1a1a1a';
@@ -226,7 +226,7 @@
       fit(x,'LIFE JACKET A MUST!',384,244,220,15,'#f08060','bold',HAND); wear(x,256,0,256,256,7503,1.5);
       // the manager's whiteboard: tank stock (a little story in marker)
       x.fillStyle='#f6f6f2'; x.fillRect(512,0,256,256); x.fillStyle='#b8b8b8'; x.fillRect(512,0,256,5); x.fillRect(512,251,256,5);
-      fit(x,'TANK STOCK  08/10',640,30,220,20,'#1a3a8a','bold',HAND);
+      fit(x,'TANK STOCK  10/12',640,30,220,20,'#1a3a8a','bold',HAND);
       [['T1','AGO','612'],['T2','PMS','498'],['T3','AGO','941'],['T4','DPK','210']].forEach(([t,p,v],k)=>{ const Y=64+k*30; fit(x,t,540,Y,40,18,'#1a1a1a','bold',HAND,'left'); fit(x,p,592,Y,50,18,'#1a1a1a','bold',HAND,'left'); fit(x,v+' m3',740,Y,90,18,'#1a1a1a','bold',HAND,'right'); });
       x.strokeStyle='#c8201a'; x.lineWidth=2; x.beginPath(); x.ellipse(716,118,34,13,0,0,7); x.stroke();
       fit(x,'Gate register -> me only',640,196,220,14,'#1a3a8a','bold',HAND); fit(x,'TEKENA 2 - THURS',640,226,220,17,'#c8201a','bold',HAND);
@@ -499,7 +499,7 @@
     // ---- flags: Nigeria (hoist at the left) and the agency's flag
     ab_flags(){ const W=1024,H=512,[c,x]=_cv(W,H), r=_rng(8181), w=512, h=341; x.fillStyle='#202020'; x.fillRect(0,0,W,H);
       x.fillStyle='#008751'; x.fillRect(0,0,w/3,h); x.fillStyle='#f6f6f2'; x.fillRect(w/3,0,w/3,h); x.fillStyle='#008751'; x.fillRect(2*w/3,0,w/3,h);
-      x.fillStyle='#16224a'; x.fillRect(512,0,512,h); shield(x,768,150,190,'#d8b050'); fit(x,'NATIONAL ANTI-CYBERCRIME & ECONOMIC CRIMES AGENCY',768,300,470,18,'#d8b050','bold',SANS);
+      x.fillStyle='#16224a'; x.fillRect(512,0,512,h); shield(x,768,150,190,'#d8b050'); fit(x,'NATIONAL ANTI-CORRUPTION & ECONOMIC CRIMES AGENCY',768,300,470,18,'#d8b050','bold',SANS);
       x.fillStyle='#d8b050'; x.fillRect(512,h-10,512,10); x.fillRect(0,h-10,512,10);
       for(let k=0;k<1024;k+=1){ const s=Math.sin(k/1024*Math.PI*14)*0.5+0.5; x.fillStyle=`rgba(${s>0.5?255:0},${s>0.5?255:0},${s>0.5?255:0},${Math.abs(s-0.5)*0.12})`; x.fillRect(k,0,1,h); }
       N(x,W,h,20000,0.05,8182,1.5); return T(c,false); },

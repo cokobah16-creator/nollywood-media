@@ -20,7 +20,7 @@ const V13 = window.V13 = window.V13 || {};
 
 /* ---------------- speakers (exactly as cast in CASES.md) ---------------- */
 const KEL = 'AGENT KELECHI', UCHE = 'SGT. UCHE', SYS = 'NACECA SYSTEM', DG = 'DIRECTOR-GENERAL FASHINA',
-      KUTI = 'MR. KUTI', OSA = 'COMMANDER OSAGIE', HAU = 'BARRISTER DANLADI', SEN = 'SENATOR DOUGLAS-AKPAN',
+      KUTI = 'MR. KUTI', OSA = 'COMMANDER OKUNDAYE', HAU = 'BARRISTER DANLADI', SEN = 'SENATOR DOUGLAS-AKPAN',
       BIT = 'SGT. (RTD.) BITRUS', SHAYI = 'BABA SHAYI', GATE = 'GATEMAN', TFC = 'TASK FORCE COMMANDER',
       IBI = 'CHAIRMAN IBINABO', KARO = 'MAMA KARO', TOBI = 'TOBI';
 const say = (speaker, text, o) => Object.assign({ speaker, text }, o || {});
@@ -73,20 +73,21 @@ Object.assign(DIALOGUE, {
 
   /* ===================== CASE 13 · THE NINTH FLOOR ===================== */
 
-  // hub, the night before. Choice 0 = wear it, 1 = don't. (Osagie: always available.)
+  // hub, the night before. Choice 0 = wear it, 1 = don't. Okundaye, on the video call from Benin, in every save
+  // (V13.C.wireOffer() always returns this key: CN06).
   m13_wire_offer: [
-    say(SYS, "21:20. Commander Osagie closes the door and sets a black pen on the table between you. It is heavier than a pen should be."),
+    say(SYS, "22:10. On the video call from Benin, Commander Okundaye nods at the parcel her driver brought you: a black pen, heavier than a pen should be."),
     say(OSA, "Audio recorder. Four hours on one charge. Click once, it records; click again, it stops. That's all the technology you need to understand."),
     say(OSA, "It's your own conversation, so it isn't interception. In court it's computer evidence: whoever pulls the file off it signs a section 84 certificate."),
     say(OSA, "Kuti will take your phone at reception. He won't take a pen. Nobody ever takes a pen.", { mood:'evasive' }),
     say(OSA, "And if he finds it, you're finished by lunch and I'm in Maiduguri by dinner. So decide like a grown man, not a brave one.", { mood:'angry', choices:WIRE_CHOICES }),
     say(OSA, "Then go and sleep. He'll read your file twice tonight. Zonal's file on him is one page long. That's what worries me."),
   ],
-  // the same offer when Tobi is alive (asaba === 'rescue'): he built the pen
+  // RETIRED (CN06): Tobi no longer builds the pen or certifies the audio. Unused; kept so old references resolve.
   m13_wire_offer_tobi: [
     say(TOBI, "Sir — sorry, sir — I made you something. It's a pen. It's also a recorder. Four hours, and the battery is in better shape than I am."),
     say(TOBI, "Click once, it records. Click again, it stops. When you come back I pull the file, hash it, and sign the section 84 certificate myself."),
-    say(TOBI, "It's your own conversation, so it isn't interception. Commander Osagie checked with Barrister Danladi. Twice. I asked her to."),
+    say(TOBI, "It's your own conversation, so it isn't interception. Commander Okundaye checked with Barrister Danladi. Twice. I asked her to."),
     say(TOBI, "Sir… the last time people found out what I knew, they locked me in an office and poured petrol on the floor. Please don't let him find it.", { mood:'afraid', choices:WIRE_CHOICES }),
     say(TOBI, "Okay. Okay. Whichever one — just come back down from that floor. That's the main thing."),
   ],
@@ -114,13 +115,13 @@ Object.assign(DIALOGUE, {
     say(SYS, "10:41. The Director-General's office: law reports to the ceiling, a draughts game half played, and a highlife record turning with the volume low."),
     say(DG, "Agent Kelechi. Sit, sit. Kuti — the good tea, not the one we give the Board."),
     say(DG, "You like highlife? No — your generation has its own music. Highlife is for people who have lost something. Give it time."),
-    say(DG, "I read your file last night. Unilag, Computer Science. Two years in a bank. Then us. And at the Academy, Inspector Bassey Okon."),
-    say(DG, "Bassey retired to Calabar. He grows plantain now. His pension is processed by this office — I sign it myself, every month. He has never missed one.", { mood:'evasive', choices:[
-      { text:"Inspector Okon taught me to write everything down, sir.", tag:'lawful', effect:{ integrity:+1 } },
+    say(DG, "I read your file last night. Unilag, Computer Science. Two years in a bank. Then us. And at the Academy, Inspector Effiong Asuquo."),
+    say(DG, "Effiong retired to Calabar. He grows plantain now. His pension is processed by this office — I sign it myself, every month. He has never missed one.", { mood:'evasive', choices:[
+      { text:"Inspector Asuquo taught me to write everything down, sir.", tag:'lawful', effect:{ integrity:+1 } },
       { text:"That's a lot of reading for one agent, sir.", tag:'savvy', effect:{ intel:+2 } },
       { text:"Is that meant to be a threat, sir?", tag:'harsh', effect:{ agencyFavour:-1 } },
     ] }),
-    say(DG, "Bassey said you'd answer like that. The only cadet who read the oath twice. I keep a file on everyone, Kelechi. Most of them are boring."),
+    say(DG, "Effiong said you'd answer like that. The only cadet who read the oath twice. I keep a file on everyone, Kelechi. Most of them are boring."),
     say(DG, "Your Sergeant Uche turned down a promotion from this office. I don't punish a man for saying no to me. I just remember him."),
     say(DG, "And your mother still wants you home for Christmas. Ofe onugbu, isn't it? Go. Bitter leaf is good for the blood.", { mood:'evasive' }),
     k("(Mum's text. He has read my messages.)", { mood:'afraid' }),
@@ -135,11 +136,11 @@ Object.assign(DIALOGUE, {
     k("(He said it out loud. And nothing in this room heard it but me.)", { mood:'afraid' }),
     say(DG, "Do you play draughts? A piece that reaches the far side is crowned — and then it can move backwards. Nobody needs to be a hero, Kelechi.", { mark:'offer' }),
     k("(Nobody needs to be a hero. The Voice said that. Adaeze said that. She learned it in this room.)", { mood:'afraid' }),
-    say(DG, "Superintendent. Lagos Cybercrime — your own unit, your own budget, Uche if you want him. And the Upstream file comes home to headquarters, where files belong.", { choices:OFFER_CHOICES }),
+    say(DG, "Superintendent, and command of Lagos Cyber & Financial Crimes — your old unit, your own budget, Uche if you want him. And the Upstream file comes home to headquarters, where files belong.", { choices:OFFER_CHOICES }),
   ],
   m13_dg_accept: [
     say(SYS, "He comes around the desk to shake your hand. His grip is dry and very gentle."),
-    say(DG, "Good. Good man. I'll call Bassey myself — he'll be proud. Kuti has your letter at his desk.", { mood:'relieved' }),
+    say(DG, "Good. Good man. I'll call Effiong myself — he'll be proud. Kuti has your letter at his desk.", { mood:'relieved' }),
     say(DG, "Give him the Upstream file on your way out: the images, the copies, the notes on your phone. Especially the notes on your phone."),
     say(DG, "And Kelechi — the fly that has no one to advise it follows the corpse into the grave. You had someone to advise you today. Remember who.", { mood:'evasive' }),
     say(SYS, "The promotion letter is waiting on Kuti's desk, signed and sealed. It is dated yesterday."),
@@ -147,8 +148,8 @@ Object.assign(DIALOGUE, {
   ],
   m13_dg_refuse: [
     say(SYS, "He moves one piece on the draughts board. Then he looks at you as if you were the board."),
-    say(DG, "Hm. Bassey said you'd say that too."),
-    say(DG, "Then you're suspended, pending an inquiry into Ekosodin: a commander arrested without this office's authority, a student's drive opened without mine.", { mood:'evasive' }),
+    say(DG, "Hm. Effiong said you'd say that too."),
+    say(DG, "Then you're suspended, pending an inquiry into Ekosodin: a commander relieved of command without this office's authority, a student's drive opened without mine.", { mood:'evasive' }),
     k("With respect, sir, the file is already in a Zonal register. Inquiries read registers."),
     say(DG, "So do I. Leave your ID card on Kuti's desk. He'll give you a receipt. We are a lawful agency."),
     say(DG, "The child who won't let his mother sleep will not sleep either, Kelechi. Sleep well.", { mood:'angry' }),
@@ -161,9 +162,9 @@ Object.assign(DIALOGUE, {
   m13_dg_wire: [
     say(SYS, "10:41. The Director-General's office: a draughts game half played, a highlife record on low — and a pen in your breast pocket, recording."),
     say(DG, "Agent Kelechi. Sit, sit. Kuti — the good tea, not the one we give the Board.", { trace:2 }),
-    say(DG, "I read your file last night. Unilag, Computer Science. Two years in a bank. Then us. And at the Academy, Inspector Bassey Okon.", { trace:2 }),
-    say(DG, "Bassey retired to Calabar. He grows plantain now. His pension is processed by this office — I sign it myself, every month.", { trace:2, mood:'evasive', choices:[
-      { text:"Inspector Okon always said you never forget a name, sir.", tag:'savvy', trace:24, next:'m13_dg_wire_2' },
+    say(DG, "I read your file last night. Unilag, Computer Science. Two years in a bank. Then us. And at the Academy, Inspector Effiong Asuquo.", { trace:2 }),
+    say(DG, "Effiong retired to Calabar. He grows plantain now. His pension is processed by this office — I sign it myself, every month.", { trace:2, mood:'evasive', choices:[
+      { text:"Inspector Asuquo always said you never forget a name, sir.", tag:'savvy', trace:24, next:'m13_dg_wire_2' },
       { text:"You must know every officer in the agency, sir.", tag:'kind', trace:19, next:'m13_dg_wire_2' },
       { text:"Is that meant to be a threat, sir?", tag:'harsh', trace:-10, next:'m13_dg_wire_2_cold' },
     ] }),
@@ -200,17 +201,17 @@ Object.assign(DIALOGUE, {
     say(DG, "A child may own as many clothes as an elder. He cannot own as many rags.", { choices:W_SILENCE }),
   ],
   m13_dg_wire_5_cold: [
-    say(DG, "Initials are cheap, Agent. My own driver signs 'D.G.O.' — Daniel Gbenga Oke. Shall we arrest him too?", { mood:'evasive' }),
+    say(DG, "Initials are cheap, Agent. My own driver signs 'D.G.O.' — Daniel Gbenga Olayemi. Shall we arrest him too?", { mood:'evasive' }),
     say(DG, "A child may own as many clothes as an elder. He cannot own as many rags.", { choices:W_SILENCE }),
   ],
   // every wire path ends here. Inserts (V13.C.ninth): Lekki bribe and registered sources before mark 'offer'.
   m13_dg_offer_wire: [
     say(DG, "Do you play draughts? A piece that reaches the far side is crowned — and then it can move backwards. Nobody needs to be a hero, Kelechi.", { mark:'offer' }),
     k("(Nobody needs to be a hero. The Voice said that. Adaeze said that. She learned it in this room.)", { mood:'afraid' }),
-    say(DG, "Superintendent. Lagos Cybercrime, your own unit, Uche if you want him. And the Upstream file comes home: the drive, the images, the notes on your phone. Everything.", { choices:OFFER_CHOICES }),
+    say(DG, "Superintendent, and command of Lagos Cyber & Financial Crimes — your old unit, your own budget, Uche if you want him. And the Upstream file comes home: the drive, the images, the notes on your phone. Everything.", { choices:OFFER_CHOICES }),
   ],
 
-  // Adaeze's fate (S1 moralChoices.finale), inserted after mark 'adaeze' in either version
+  // Adaeze's fate (Season 1's verdict as Season 2 reads it: V13.s1fate()), inserted after mark 'adaeze' in either version
   m13_dg_adaeze_proven: [
     say(DG, "Four counts, and not one word from her about anyone else. Loyalty is rare, Kelechi. I notice it. I reward it — even late.", { mood:'evasive' }),
   ],
@@ -220,7 +221,7 @@ Object.assign(DIALOGUE, {
   m13_dg_adaeze_unproven: [
     say(DG, "Relieved of command and never charged. The inquiry into her sits again next month. I chair it.", { mood:'evasive' }),
   ],
-  // S1: Kelechi took money from Chief Obi's drawer (moralChoices.arrest === 'bribe'); inserted before mark 'offer'
+  // S1: Kelechi took money from Chief Obi's drawer (V13.s1snap().bribe: moralChoices.arrest === 'bribe'); inserted before mark 'offer'
   m13_dg_bribe: [
     say(DG, "And Chief Obi's drawer in Lekki. Adaeze kept a note of what you took from it. Her files are my files now.", { mood:'evasive' }),
     k("(Lekki. I'd almost taught myself to forget.)", { mood:'afraid' }),
@@ -235,7 +236,7 @@ Object.assign(DIALOGUE, {
     k("(Ejiro. I told him nobody would ever know his name.)", { mood:'afraid' }),
   ],
   m13_dg_register_nets: [
-    say(DG, "NETS. An old fisherman who doesn't like smoke on his creek. Your register entries are very thorough. Bassey taught you that too.", { mood:'evasive' }),
+    say(DG, "NETS. An old fisherman who doesn't like smoke on his creek. Your register entries are very thorough. Effiong taught you that too.", { mood:'evasive' }),
     k("(Pa Timi's name is in a register on this floor. And now it's in his mouth.)", { mood:'afraid' }),
   ],
   m13_dg_register_tide: [
@@ -249,7 +250,7 @@ Object.assign(DIALOGUE, {
     u("Two hours, sir. Kuti came down twice to look at me. I waved both times."),
     k("He knew my trainer's name, Uche. My mother's soup. He knows you turned him down once."),
     u("Then he knows I'd do it again.", { mood:'evasive', mark:'wire' }),
-    u("Hauwa's bank trail ends at a house in Maitama — No. 19 Kainji Crescent. Nobody lives there, and the lights burn all night. I know a tea seller on that street."),
+    u("Zainab's bank trail ends at a house in Maitama — No. 19 Kainji Crescent. Nobody lives there, and the lights burn all night. I know a tea seller on that street."),
   ],
   m13_end_bury: [
     say(SYS, "11:58. The car park. Uche looks at the envelope in your hand, then at your face, then at the envelope again."),
@@ -257,7 +258,7 @@ Object.assign(DIALOGUE, {
     k("Don't, Uche."),
     u("I'm not doing anything, sir. I'm standing in a car park."),
     u("Did you mean it?", { mood:'evasive', mark:'wire' }),
-    k("Ask me on Monday. Tonight, Hauwa's bank trail ends at a house in Maitama — No. 19 Kainji Crescent. I want to see who visits it."),
+    k("Ask me on Monday. Tonight, Zainab's bank trail ends at a house in Maitama — No. 19 Kainji Crescent. I want to see who visits it."),
     u("Then I'll drive. That's all I'll say about it."),
   ],
   m13_end_refuse: [
@@ -265,7 +266,7 @@ Object.assign(DIALOGUE, {
     u("Where's your card, sir?"),
     k("On Kuti's desk. With a receipt. We're a lawful agency."),
     u("Hm. Then tonight you're a civilian with a very good memory, and I'm a sergeant on his day off.", { mark:'wire' }),
-    u("Hauwa's bank trail ends at a house in Maitama — No. 19 Kainji Crescent. I know a tea seller on that street. Bring cash. He doesn't do transfers."),
+    u("Zainab's bank trail ends at a house in Maitama — No. 19 Kainji Crescent. I know a tea seller on that street. Bring cash. He doesn't do transfers."),
   ],
   // what the pen got (inserted after mark 'wire' by V13.C.end13(pct))
   m13_wire_full: [
@@ -294,23 +295,25 @@ Object.assign(DIALOGUE, {
   ],
   m13b_shayi_treat: [
     k("Sannu da aiki, Baba! Tea for me — and for everyone on this bench.", { textEn:"Well done with the work, Baba! Tea for me — and for everyone on this bench." }),
-    say(SHAYI, "Yawwa! Sannu kadai! This one has manners and money. Move up, Danjuma — let the man sit.", { mood:'relieved', textEn:"Thank you! And to you too! This one has manners and money. Move up, Danjuma — let the man sit." }),
+    say(SHAYI, "Yawwa! Sannu kadai! This one has manners and money. Move up, Garba — let the man sit.", { mood:'relieved', textEn:"Thank you! And to you too! This one has manners and money. Move up, Garba — let the man sit." }),
     say(GATE, "For this street nobody dey buy tea for maigadi. Oga, you be politician?", { textEn:"On this street nobody buys tea for gatemen. Sir, are you a politician?" }),
     k("Worse. Civil servant."),
     say(GATE, "Ehen! Then make we drink am quick, before your salary finish.", { textEn:"Aha! Then let's drink it quickly, before your salary runs out." }),
     say(GATE, "That No. 19 — light every night, generator dey run like hospital, nobody inside. Only Friday people dey come.", { textEn:"That No. 19 — lights every night, the generator runs like a hospital's, nobody inside. Only Friday people come." }),
-    say(SHAYI, "Second Friday. A big black car at eleven, then a small grey one with one man driving himself. In Maitama! A big man who drives himself is hiding from his own driver.", { effect:{ intel:+4 } }),
+    say(SHAYI, "Second Friday. A big black car at eleven, then a small green Peugeot with one man driving himself. In Maitama! A big man who drives himself is hiding from his own driver.", { effect:{ intel:+4 } }),
     say(GATE, "Their maigadi na soldier — Sergeant Bitrus. E no dey drink our tea, e carry him own flask. And e get one book. E dey write every car.", { textEn:"Their gateman is a soldier — Sergeant Bitrus. He won't drink our tea; he brings his own flask. And he has a book. He writes down every car." }),
-    say(SHAYI, "Bitrus is a good man. Too correct. If you lie to him, he will write your lie in the book. Go and greet him — and greet him well."),
+    say(SHAYI, "Bitrus is a good man. Too correct. If you lie to him, he will write your lie in the book. Go and greet him — and greet him well.",
+      { sr:"Bitrus is a good man. Too correct. Every car, every visitor, every word at that gate — he writes it all in his book." }),
   ],
   m13b_shayi_greet: [
     k("Sannu da aiki. Just tea, Baba. So — who's winning the argument?", { textEn:"Well done with the work. Just tea, Baba. So — who's winning the argument?" }),
     say(GATE, "Me! This one say him team go win the league this year. Which year? Since I born, dem never win anything!", { textEn:"Me! This one says his team will win the league this year. Which year? They haven't won anything since I was born!" }),
     say(SHAYI, "Every night the same argument, every night the same tea. Sit. You have the face of a man who works late."),
     say(GATE, "Like Bitrus for No. 19. Every night e dey work, and nobody dey that house.", { textEn:"Like Bitrus at No. 19. He works every night, and nobody lives in that house." }),
-    say(GATE, "Only Friday people dey come. Second Friday — black car first, small grey car after. Bitrus dey write everything for him book.", { effect:{ intel:+3 }, textEn:"Only Friday people come. The second Friday — a black car first, then a small grey one. Bitrus writes everything in his book." }),
+    say(GATE, "Only Friday people dey come. Second Friday — black car first, small green car after. Bitrus dey write everything for him book.", { effect:{ intel:+3 }, textEn:"Only Friday people come. The second Friday — a black car first, then a small green one. Bitrus writes everything in his book." }),
     say(SHAYI, "Bitrus won't drink my tea. He brings a flask from home. I have forgiven him. Almost."),
-    say(SHAYI, "Be straight with him, my son. Thirty years in the army — Bitrus can smell a lie before you open your mouth."),
+    say(SHAYI, "Be straight with him, my son. Thirty years in the army — Bitrus can smell a lie before you open your mouth.",
+      { sr:"Thirty years in the army, my son, and he still writes like a clerk. Every car that stops at that gate goes in his book." }),
   ],
   m13b_shayi_ask: [
     k("Evening. I'm looking for whoever runs No. 19."),
@@ -385,12 +388,12 @@ Object.assign(DIALOGUE, {
     k("Second Friday. Right on time."),
   ],
   m13b_end: [
-    say(SYS, "23:14. A second car — a plain grey saloon, one man at the wheel, no driver, no escort. It goes in without slowing down."),
+    say(SYS, "23:14. A second car — a plain green Peugeot, one man at the wheel, no driver, no escort. It goes in without slowing down."),
     u("Don't turn your head, sir.", { mood:'evasive' }),
     k("I don't need to. I had tea with him this morning."),
     say(SYS, "In the gatehouse window, an old soldier licks his pencil and writes down the time."),
-    u("Hauwa called. FRN versus Edafe and two others — Monday, nine o'clock, Court 5. She says to iron your shirt."),
-    k("Then on Monday a judge hears what a ledger, a creek and a tank farm have to say."),
+    u("Zainab called. FRN versus Edafe and two others — fixed for Monday the eleventh of January, nine o'clock, Court 5. She says to iron your shirt."),
+    k("Then in January a judge hears what a ledger, a creek and a tank farm have to say."),
   ],
 
   /* ===================== CASE 15 · THE BARGE ===================== */
@@ -398,7 +401,7 @@ Object.assign(DIALOGUE, {
   // core brief. Inserts (V13.C.brief15) go before mark 'end': standing, trial result, sources.
   m15_brief: [
     say(SYS, "Port Harcourt waterfront, 23:30. Rain on the Bonny River. Across the water the Riverstone jetty is lit like a stage, and TEKENA 2 is riding low."),
-    say(HAU, "The Federal High Court hears our application for an interim forfeiture order at nine tomorrow: every account and asset of Riverstone and Maitama Haven."),
+    say(HAU, "The Federal High Court hears our application for an interim forfeiture order at two on Monday afternoon: every account and asset of Riverstone and Maitama Haven."),
     say(HAU, "Somebody in the registry has already told the Senator. So tonight he empties the strongroom onto that barge and sends it down to Bonny before the order lands.", { mood:'evasive' }),
     say(OSA, "And he's coming himself. A man like that trusts nobody with the last of the money — not even Ereba."),
     u("Kuti has called Zonal four times today asking where you are, sir. I told them you'd gone to church."),
@@ -496,10 +499,10 @@ Object.assign(DIALOGUE, {
 
   m15_dg_call: [
     say(DG, "Kelechi. Don't speak — listen. You're standing on a jetty in the rain, about to make a mistake that will outlive both of us.", { phone:true }),
-    say(DG, "Stand down. Let ACP Lawal's men secure the barge. On Monday you're Zonal Commander — Benin, the whole command. Grace has always wanted to see Maiduguri.", { phone:true }),
+    say(DG, "Stand down. Let ACP Lawal's men secure the barge. On Monday you're Zonal Commander — Benin, the whole command. Itohan has always wanted to see Maiduguri.", { phone:true }),
     say(DG, "And your uncle in Enugu. The headmaster. One phone call took his whole pension. I know who made that call, Kelechi. I know where the money went.", { phone:true, mood:'evasive' }),
-    say(DG, "Monday, you get the name, and the men to go and fetch him. Your uncle sees him in a dock before Christmas. Isn't that why you joined?", { phone:true }),
-    say(DG, "Or arrest a Senator tonight and watch the Court of Appeal hand him back to me by Easter. Everyone who helped you this season has a name and an address. I have both.", { phone:true, mood:'evasive' }),
+    say(DG, "Monday, you get the name, and the men to go and fetch him. Your uncle sees him in a dock before Easter. Isn't that why you joined?", { phone:true }),
+    say(DG, "Or arrest a Senator tonight and watch the Court of Appeal hand him back to me before the rains. Everyone who helped you this season has a name and an address. I have both.", { phone:true, mood:'evasive' }),
     say(SYS, "Uche is watching you from the cash-room door. He says nothing. The Senator holds out his wrists, smiling, as if it's a joke between friends."),
     say(DG, "Nobody needs to be a hero tonight, my son. The pot that cooks the pepper soup must sit in the fire — don't sit in the fire for nothing.", { phone:true, choices:[
       { text:"I'm arresting the Senator, sir.", tag:'lawful', flag:{ s2_end:'truth' }, effect:{ integrity:+8, agencyFavour:-6, publicTrust:+6 }, next:'m15_end_truth' },
@@ -509,12 +512,12 @@ Object.assign(DIALOGUE, {
   m15_end_truth: [
     say(DG, "Then God help you, Kelechi. I won't.", { phone:true, mood:'angry' }),
     k("(He knew who robbed my uncle. He's always known. He kept that man too.)", { mood:'angry' }),
-    k("Senator Tamuno Douglas-Akpan, you're under arrest for money laundering, and for dealing in crude oil without lawful authority."),
+    k("Senator Tonye Douglas-Akpan, you're under arrest for money laundering, and for dealing in crude oil without lawful authority."),
     k("You have the right to remain silent, and to a lawyer of your choice before you answer anything. If you can't get one, Legal Aid will provide one."),
     say(SEN, "Legal Aid! Godwin — call my lawyers. All of them. Wake the ones in London.", { mood:'angry' }),
     u("Hands in front, Senator. You're an old man. I'll be gentle."),
     say(SYS, "00:12. The Senator is walked off his own jetty, past forty men of a special task force who have suddenly found somewhere else to be."),
-    say(OSA, "The forfeiture order lands at nine, and the money's already in our inventory. Now we finish it — the one who kept her."),
+    say(OSA, "The forfeiture order lands on Monday, and the money's already in our inventory. Now we finish it — the one who kept her."),
   ],
   m15_end_career: [
     say(DG, "Good. Good man. Monday, then.", { phone:true, mood:'relieved' }),
@@ -522,7 +525,7 @@ Object.assign(DIALOGUE, {
     say(SEN, "Sensible boy. Godwin — the umbrella. The young man is getting wet.", { mood:'relieved' }),
     say(SYS, "ACP Lawal's men come up the jetty at a jog. The cash room is 'secured'. Nobody writes down a single number."),
     u("Your car keys, sir. You drive tonight. I'll take a bus.", { mood:'evasive' }),
-    say(HAU, "I'll still move the forfeiture application at nine. There'll be nothing left to forfeit.", { mood:'angry' }),
+    say(HAU, "I'll still move the forfeiture application on Monday. There'll be nothing left to forfeit.", { mood:'angry' }),
     say(SYS, "00:40. TEKENA 2 slips her lines and slides down the Bonny River without lights."),
     k("(Zonal Commander by Monday. A name from Enugu. I keep telling myself the price was fair.)", { mood:'afraid' }),
   ],
@@ -556,7 +559,7 @@ Object.assign(DIALOGUE, {
   ],
   m15_reveal_unproven: [
     say(SYS, "09:05. The ninth floor. The tea is already poured — two cups."),
-    say(DG, "Sit, Kelechi. You've brought me a story. Stories are for children; courts are for evidence. Bassey taught you the difference, I think.", { mark:'dg' }),
+    say(DG, "Sit, Kelechi. You've brought me a story. Stories are for children; courts are for evidence. Effiong taught you the difference, I think.", { mark:'dg' }),
     k("Someone protected her for twenty years, sir."),
     say(DG, "Someone always does. That is what a country is. Drink your tea — it's the good one. I don't give it to everyone.", { mood:'evasive' }),
     say(SYS, "He is still Director-General. The file stays open, and so does his door."),
@@ -577,7 +580,7 @@ const DOCKET_HEAD =
 
 ITEM     Exhibit 14 · flash drive (O. Ehigie) · sealed evidence bag
 FROM     Benin Zonal Command · evidence cage
-ORDER    "Transfer to HQ for safe custody" · signed for the DG: K.
+ORDER    "Transfer to HQ for safe custody" · signed for the DG: A.K.
 `;
 const BOOK_SCREEN =
 `<span class="label">[ VISITOR BOOK · No. 19 KAINJI CRESCENT, MAITAMA · SECURITY POST ]</span>
@@ -585,24 +588,24 @@ const BOOK_SCREEN =
 
 DATE  DAY   IN     VISITOR · VEHICLE                                 OUT
 ───────────────────────────────────────────────────────────────
-10/07 <span class="red">FRI</span>  22:56  Black Prado ABJ-418KD · "CHAIRMAN" +1 · drv. EREBA    01:42
-10/07 <span class="red">FRI</span>  23:11  Hon. K.F. (NACECA) · own car, no driver           01:30
-29/07 WED  14:20  Generator service · 2 men · diesel, 400 litres          15:05
-14/08 <span class="red">FRI</span>  22:58  Black Prado ABJ-418KD · "CHAIRMAN" +1 · drv. EREBA    01:36
-14/08 <span class="red">FRI</span>  23:15  Hon. K.F. (NACECA) · own car, no driver           01:28
-11/09 <span class="red">FRI</span>  22:54  Black Prado ABJ-418KD · "CHAIRMAN" +1 · drv. EREBA    01:51
-11/09 <span class="red">FRI</span>  23:09  Hon. K.F. (NACECA) · own car, no driver           01:44
-21/09 MON  09:10  A. BELLO · electrician · security lights               11:30
-25/09 <span class="red">FRI</span>  21:40  Hon. Member (Reps) · wrong house · turned back at gate  21:42
-02/10 <span class="red">FRI</span>  11:00  ROSE (cleaner) · monthly                              15:00
-07/10 WED  15:40  — DELIVERY · 6 cartons, drinks · signed for by EREBA    15:55
+11/09 <span class="red">FRI</span>  22:56  Black Prado ABJ-260XR · "CHAIRMAN" +1 · drv. EREBA    01:42
+11/09 <span class="red">FRI</span>  23:11  Hon. K.F. (NACECA) · own car, no driver           01:30
+30/09 WED  14:20  Generator service · 2 men · diesel, 400 litres          15:05
+09/10 <span class="red">FRI</span>  22:58  Black Prado ABJ-260XR · "CHAIRMAN" +1 · drv. EREBA    01:36
+09/10 <span class="red">FRI</span>  23:15  Hon. K.F. (NACECA) · own car, no driver           01:28
+13/11 <span class="red">FRI</span>  22:54  Black Prado ABJ-260XR · "CHAIRMAN" +1 · drv. EREBA    01:51
+13/11 <span class="red">FRI</span>  23:09  Hon. K.F. (NACECA) · own car, no driver           01:44
+23/11 MON  09:10  A. BELLO · electrician · security lights               11:30
+27/11 <span class="red">FRI</span>  21:40  Hon. Member (Reps) · wrong house · turned back at gate  21:42
+04/12 <span class="red">FRI</span>  11:00  ROSE (cleaner) · monthly                              15:00
+09/12 WED  15:40  — DELIVERY · 6 cartons, drinks · signed for by EREBA    15:55
 
 <span class="green">NB</span>  The Honourable signs his own initials and says "write nothing". I write everything. — B.G.`;
 const BOOK_OPTIONS = [
   { text:'No. 19 is a party house — drinks, generators and guests at weekends', hint:'One delivery of drinks in three months and no weekends at all. The visits follow the calendar, not a party diary.', correct:false },
-  { text:'"CHAIRMAN", driven by Ereba, and K.F. of NACECA meet at No. 19 on the second Friday of every month', hint:'10/07, 14/08, 11/09 — the second Friday each month: the Prado, then K.F. fifteen minutes later, both gone after one in the morning.', correct:true },
+  { text:'"CHAIRMAN", driven by Ereba, and K.F. of NACECA meet at No. 19 on the second Friday of every month', hint:'11/09, 09/10, 13/11 — the second Friday each month: the Prado, then K.F. fifteen minutes later, both gone after one in the morning.', correct:true },
   { text:'K.F. owns No. 19 — he signs himself in', hint:'Owners don\'t sign a visitor book. The book shows who comes, not who owns — that is the bank trail\'s job.', correct:false },
-  { text:'Every Friday visitor is the same "Honourable"', hint:'The Honourable on 25/09 was a Rep at the wrong house, turned back in two minutes. Only the second Fridays repeat.', correct:false },
+  { text:'Every Friday visitor is the same "Honourable"', hint:'The Honourable on 27/11 was a Rep at the wrong house, turned back in two minutes. Only the second Fridays repeat.', correct:false },
 ];
 const BOOK_PROMPT = 'Sgt. Bitrus writes down everyone. Read his book: <b>what does it prove</b> about No. 19?';
 
@@ -615,14 +618,14 @@ MOVEMENT
 ────────────────────────────────────────────
 05:14  Released at Benin Zonal to the HQ escort (3 officers)
 06:00  Benin → Abuja, scheduled flight · landed 07:02
-07:40  Received, ninth floor · Mr. K. Kuti, PA to the DG
-07:42  Placed in the DG's personal safe, on the DG's instruction · signed: K.
+07:40  Received, ninth floor · Mr. A. Kuti, PA to the DG
+07:42  Placed in the DG's personal safe, on the DG's instruction · signed: A.K.
 07:55  Lab request FL/311 (image + hash) · <span class="red">CANCELLED</span> by the DG's office
 
 CROSS-CHECKS
 ────────────────────────────────────────────
 HQ exhibit store · reference allocated: <span class="red">none — not logged</span>
-Zonal register copy · "not required" — K.`,
+Zonal register copy · "not required" — A.K.`,
     prompt:'Exhibit 14 left Benin on the 06:00 flight. <b>Where is it now?</b>',
     options:[
       { text:'In the HQ exhibit store, logged like any other exhibit', hint:'The store never allocated it a reference. It was never logged.', correct:false },
@@ -642,23 +645,23 @@ Zonal register copy · "not required" — K.`,
 MOVEMENT
 ────────────────────────────────────────────
 05:10  HQ escort at Benin Zonal · item requested
-05:40  Item withheld · Zonal retention order RO/BZ/14 · Cdr. G. Osagie
+05:40  Item withheld · Zonal retention order RO/BZ/14 · Cdr. I. Okundaye
 07:40  <span class="red">NOT RECEIVED</span> — Zonal retention order · escort returned empty-handed
 
 CLIPPED TO THE DOCKET
 ────────────────────────────────────────────
 Posting order PO/2026/0912 · drafted yesterday, 18:40 · awaiting the DG's signature
-Cdr. G. Osagie · Benin Zonal → Maiduguri Zonal · "with immediate effect"
+Cdr. I. Okundaye · Benin Zonal → Maiduguri Zonal · "with immediate effect"
 Reason given: "exigencies of service" · Benin tour served: 14 of 36 months
 Filed under: exhibit 14 docket · cross-ref. retention order RO/BZ/14`,
-    prompt:'Exhibit 14 never left Benin. A posting order is clipped to its docket. <b>Why is Commander Osagie being moved?</b>',
+    prompt:'Exhibit 14 never left Benin. A posting order is clipped to its docket. <b>Why is Commander Okundaye being moved?</b>',
     options:[
       { text:'A routine rotation — every commander moves eventually', hint:'Fourteen months into a thirty-six-month tour is not a rotation.', correct:false },
       { text:'Because she kept exhibit 14 in Benin', hint:'The posting is filed under the exhibit 14 docket and cross-referenced to her own retention order.', correct:true },
       { text:'A promotion — Maiduguri is a bigger command', hint:'Same rank, "with immediate effect", for "exigencies of service". That is not how a reward reads.', correct:false },
       { text:'She asked for it', hint:'No request on file. The reason is "exigencies of service" — the phrase that explains nothing.', correct:false },
     ],
-    onCorrect:{ intel:+22, integrity:+2, evidenceId:'transfer_docket', evidenceName:'Exhibit 14 docket — Osagie\'s posting order', xp:120 },
+    onCorrect:{ intel:+22, integrity:+2, evidenceId:'transfer_docket', evidenceName:'Exhibit 14 docket — Okundaye\'s posting order', xp:120 },
     onWrong:{ integrity:-1 },
     toastWrongTitle:'NOT THAT LINE',
     toastWrong:'Read what the posting is filed under.',
@@ -699,7 +702,7 @@ if(window.V12){
       fail:{ mode:'continue', note:'Footsteps in the corridor. You photograph the page without reading it properly. It\'s in the file — and the defence will ask how you came by it.', effect:{ integrity:-1 } },
     },
     m13_docket_kept:{
-      ask:'A posting order is clipped to the exhibit 14 docket. <b>Why is Commander Osagie being moved?</b> Pick it, then tap the line that proves it.',
+      ask:'A posting order is clipped to the exhibit 14 docket. <b>Why is Commander Okundaye being moved?</b> Pick it, then tap the line that proves it.',
       proof:['Filed under'], look:['Filed under', 'NOT RECEIVED', 'Maiduguri', 'exigencies', 'tour served'],
       fail:{ mode:'continue', note:'Kuti\'s footsteps. You photograph the posting order and go. It\'s in the file, but nothing on your copy says why.', effect:{ integrity:-1 } },
     },
@@ -720,6 +723,8 @@ const G = state => (state && state.game) ? state.game : (state && state.moralCho
 const MC = state => G(state).moralChoices || {};
 const S2 = state => G(state).s2 || {};
 const TRIAL = state => S2(state).trial || {};
+/* Season 1's verdict as Season 2 reads it (CN13): V13.s1fate() (core), else moralChoices.finale */
+const S1FATE = state => { try{ if(typeof V13.s1fate === 'function'){ const f = V13.s1fate(); if(f) return f; } }catch(e){} return MC(state).finale || null; };
 
 /* ======================================================================
    EPILOGUE — where everyone ended up
@@ -727,7 +732,7 @@ const TRIAL = state => S2(state).trial || {};
 V13.epilogueS2 = function(){
   const st = ST(), g = st.game || {}, m = g.moralChoices || {}, s2 = g.s2 || {}, tr = s2.trial || {};
   const rep = (st.player && st.player.reputation) || {};
-  const fin = s2.finale || null, end = m.s2_end || null, s1 = m.finale || null;
+  const fin = s2.finale || null, end = m.s2_end || null, s1 = S1FATE();
   const has = id => Array.isArray(g.evidence) && g.evidence.some(e => e && e.id === id);
   const q = id => (g.evQ && g.evQ[id]) || 'good';
   const out = [];
@@ -767,7 +772,7 @@ V13.epilogueS2 = function(){
   add('timi_neutral', 'PA TIMI',
     (m.s2_camp === 'navy' ? "The Navy burned the camp, and the creek burned with it for two days. His nets came up black all season. He says the fire was louder than the crime."
     : m.s2_camp === 'felix_only' ? "The camp boys went home as witnesses. Two of them fish with Pa Timi now. The nets come up grey instead of black. He says grey is a start."
-    : m.s2_camp === 'mass' ? "Forty-one arrests from one camp; most of the boys are still on remand. Their mothers come to his landing to ask why. He tells them. It doesn't help."
+    : m.s2_camp === 'mass' ? "Nine arrests from one camp; most of the boys are still on remand. Their mothers come to his landing to ask why. He tells them. It doesn't help."
     : "Pa Timi still fishes below the second bend. Some mornings the nets come up clean, and he sits with them a while before he says anything.") + timiBoat);
 
   // SOTONYE JUMBO
@@ -791,29 +796,31 @@ V13.epilogueS2 = function(){
   add('bitrus_neutral', 'SGT. (RTD.) BITRUS GYANG',
     m.s2_bitrus === 'witness' ? "He read his own book aloud in court — every date, every plate, every 'write nothing'. The defence asked him one question, then sat down."
     : m.s2_bitrus === 'photo' ? "The owner's agent 'audited' his book and it never came back. Bitrus keeps a new one now — and a photocopy of the new one, at home."
-    : "Nobody ever asked Bitrus about his book. He still keeps it. One entry from a Friday in October reads only: 'NACECA. Came the wrong way.'");
+    : "Nobody ever asked Bitrus about his book. He still keeps it. One entry from a Friday in December reads only: 'NACECA. Came the wrong way.'");
 
-  // BARRISTER HAUWA DANLADI
-  add('hauwa_neutral', 'BARRISTER HAUWA DANLADI',
-    fin === 'proven' ? "The Attorney-General's office asked Hauwa Danladi to lead the prosecution of her own Director-General. She said yes before they finished the sentence."
+  // BARRISTER ZAINAB DANLADI
+  add('hauwa_neutral', 'BARRISTER ZAINAB DANLADI',
+    fin === 'proven' ? "The Attorney-General's office asked Zainab Danladi to lead the prosecution of her own Director-General. She said yes before they finished the sentence."
     : fin === 'contested' ? "She leads the prosecution in FRN v. Fashina. The defence has filed eleven motions. She has answered eleven."
     : end === 'career' ? "She went back to the legal office on the eighth floor, one floor below him. She hasn't spoken to Kelechi since the jetty."
     : "She went back to the legal office on the eighth floor, one floor below him. She keeps a copy of everything at home now.");
 
-  // COMMANDER GRACE OSAGIE
-  add('osagie_neutral', 'COMMANDER GRACE OSAGIE',
+  // COMMANDER ITOHAN OKUNDAYE
+  add('osagie_neutral', 'COMMANDER ITOHAN OKUNDAYE',
     m.s2_original === 'kept' ? (fin === 'proven' ? "The Maiduguri posting was withdrawn the morning the DG was arrested. She didn't unpack her boxes in Benin for a month, just in case."
                                                  : "She went to Maiduguri. In her third week her new command arrested two customs officers. She texts Kelechi once a month: 'Still here.'")
     : fin === 'proven' ? "Named acting Director-General until a substantive appointment. On her first morning she had the draughts board carried out of the office."
     : fin === 'contested' ? "Benin Zonal is still hers. She signs every exhibit register herself now, and checks the seals twice."
     : "Still Benin Zonal Commander. The DG's office has 'reviewed her posting' four times. She framed the fourth letter.");
 
-  // TOBI ONUOHA (alive only if Kelechi brought him out in Season 1)
-  if(m.asaba === 'rescue'){
-    add('tobi_neutral', 'TOBI ONUOHA',
-      (m.s2_wire === true && has('dg_recording') && q('dg_recording') === 'good')
-        ? "Tobi printed the hash of the ninth-floor recording and framed it above his desk. Sixty-four characters. He says it's the most beautiful thing he has ever read."
-        : "Tobi signed every section 84 certificate in the Upstream case himself. He keeps the hashes in a notebook, in pencil, in case the computers lie.");
+  // TOBI ONUOHA: alive iff rescued, or carried out in the chase with the hostage not lost (CN05).
+  // He reads and decodes; Mr. Igbinosa certifies (CN06). A dead Tobi gets no slide.
+  const tobiAlive = V13.tobiAlive ? V13.tobiAlive() : (mm => mm.asaba === 'rescue' || (mm.asaba === 'chase' && !g._asabaHostageLost))(m);
+  const tobiTestifies = V13.tobiTestifies ? V13.tobiTestifies() : m.asaba === 'rescue';
+  if(tobiAlive){
+    add('tobi_neutral', 'TOBI ONUOHA', tobiTestifies
+      ? "Tobi decoded every line of UPSTREAM for the prosecution, from SPL-WSM-T4 to D.G.O. He keeps the codes in a notebook, in pencil, in case the computers lie."
+      : "Sgt. Uche carried Tobi out of Asaba, and this season he read UPSTREAM line by line for Barrister Danladi from a desk at Zonal. His doctors still keep him out of the witness box. He asked for nothing.");
   }
 
   // SGT. UCHE
@@ -826,10 +833,10 @@ V13.epilogueS2 = function(){
   add('dg_neutral', 'DIRECTOR-GENERAL KOLAWOLE FASHINA',
     fin === 'proven' ? "Arraigned at the FCT High Court for abuse of office and taking gratification. In Kuje he asked for his records. They gave him a radio."
     : fin === 'contested' ? "Suspended by the Presidency and out on bail, his trial listed for March. He has been seen at the draughts tables in Area 11, winning."
-    : "Still Director-General. At Christmas, Kelechi's mother received a hamper from 'a friend of your son'. Inside: a bottle of wine and a folder. She didn't open the folder.");
+    : "Still Director-General. At Easter, Kelechi's mother received a hamper from 'a friend of your son'. Inside: a bottle of wine and a folder. She didn't open the folder.");
 
-  // SENATOR TAMUNO DOUGLAS-AKPAN
-  add('senator_neutral', 'SENATOR TAMUNO DOUGLAS-AKPAN',
+  // SENATOR TONYE DOUGLAS-AKPAN
+  add('senator_neutral', 'SENATOR TONYE DOUGLAS-AKPAN',
     end === 'truth' ? (fin === 'proven' ? "Charged at the Federal High Court with money laundering and dealing in crude oil without authority. A trust runs his foundation's schools now. The fans still work."
                                         : "Charged, bailed, and still a Senator; his case moves one adjournment at a time. He cut a ribbon in Bonny last month. The applause was thinner.")
     : end === 'career' ? "He flew out on Saturday 'for medical checks' and hasn't come back. The Senate still pays his salary. His foundation still opens classrooms on television."
@@ -840,7 +847,7 @@ V13.epilogueS2 = function(){
     fin === 'proven' ? "When the DG's photograph ran on the front page, Adaeze asked for a pen. Her statement is eleven pages long. The first line is his name."
     : fin === 'contested' ? "She still says nothing. Her lawyers stopped coming the week the DG was suspended. She has started reading the newspapers."
     : s1 === 'proven' ? "Serving her sentence. She has still never said who she answered to. Nobody has made her."
-    : s1 === 'contested' ? "Still on remand, her trial listed again for January. Witnesses are getting tired. Exhibits are getting lost."
+    : s1 === 'contested' ? "Still on remand, her trial listed again for May. Witnesses are getting tired. Exhibits are getting lost."
     : s1 === 'unproven' ? "Still uncharged. The inquiry into her has sat a fourth time. The chairman hasn't changed."
     : "Commander Adaeze has said nothing about the twenty years. Nobody has made her.");
 
@@ -864,16 +871,40 @@ V13.epilogueS2 = function(){
 /* ======================================================================
    SEASON 3 STINGER
    ====================================================================== */
-V13.STINGER_S2 = {
-  place:'KANO · 05:40',
-  lines:[
-    'Dawn at the cooperative yard on the Zaria road. Musa ties down the tarp on his new truck — blue, the cooperative\'s colour — and checks every knot twice, the way he does now.',
-    'A man in a pressed white kaftan is waiting by the cab. "Twelve cartons for Lagos, Malam. Printer paper." He pays for the space in new notes, still in their bank bands.',
-    'Musa lifts the corner of one carton. It isn\'t paper. The man doesn\'t stop smiling.',
-    '"Don\'t worry, Malam. The Senator was only a customer. We are the bank."',
-  ],
-  card:{ title:'SEASON 3', sub:'Someone banks for all of them.' },
+/* CN11: a getter, read at render time (s2_case15.js). Musa drives the cooperative truck only if he
+   talked in Season 1 (finale.js: flags.musa_tip or checkpoint 'flip_driver'); otherwise he served eight
+   months, and the cooperative's newest driver takes the cartons. Assigning V13.STINGER_S2 overrides it.
+   It reads the Season 1 snapshot (V13.s1snap().musaTalked), as Musa's after_m14 text does; core computes
+   that value with V12.who.musaTalked() (src/v12/v12_mem.js; V12.mem() is the plain memory store). */
+const STINGER_PLACE = 'KANO · 05:40', STINGER_CARD = { title:'SEASON 3', sub:'Someone banks for all of them.' };
+const STINGER_LINE2 = 'A man in a pressed white kaftan is waiting by the cab. "Twelve cartons for Lagos, Malam. Printer paper." He pays for the space in new notes, still in their bank bands.';
+const STINGER_LINE4 = '"Don\'t worry, Malam. The Senator was only a customer. We are the bank."';
+const musaTalked = ()=>{
+  try{ const sn = V13.s1snap && V13.s1snap(); if(sn && typeof sn.musaTalked === 'boolean') return sn.musaTalked; }catch(e){}
+  // no snapshot on this page: Season 1's own rule
+  try{ if(typeof V12 !== 'undefined' && V12.who && typeof V12.who.musaTalked === 'function') return !!V12.who.musaTalked(); }catch(e){}
+  const g = ST().game || {};
+  return !!(g.flags || {}).musa_tip || (g.moralChoices || {}).checkpoint === 'flip_driver';
 };
+let stingerOverride = null;
+Object.defineProperty(V13, 'STINGER_S2', { configurable:true, enumerable:true,
+  get(){
+    if(stingerOverride) return stingerOverride;
+    const talked = musaTalked();
+    return { place:STINGER_PLACE, card:Object.assign({}, STINGER_CARD), lines: talked ? [
+      'Dawn at the cooperative yard on the Zaria road. Musa ties down the tarp on his new truck — blue, the cooperative\'s colour — and checks every knot twice, the way he does now.',
+      STINGER_LINE2,
+      'Musa lifts the corner of one carton. It isn\'t paper. The man doesn\'t stop smiling.',
+      STINGER_LINE4,
+    ] : [
+      'Dawn at the cooperative yard on the Zaria road. The cooperative\'s newest driver ties down the tarp on a new truck — blue, the cooperative\'s colour — and checks every knot twice.',
+      STINGER_LINE2,
+      'The driver lifts the corner of one carton. It isn\'t paper. The man doesn\'t stop smiling.',
+      STINGER_LINE4,
+    ] };
+  },
+  set(v){ stingerOverride = v || null; },
+});
 
 /* ======================================================================
    AFTERMATH — the front page, a real-world safety tip, the next case
@@ -884,7 +915,7 @@ V13.AFTER = Object.assign(V13.AFTER || {}, {
       const m = MC(state);
       if(m.s2_ninth === 'refuse') return { pub:'THE LAGOS LEDGER', head:'NACECA Suspends Ekosodin Officer Days Before Crude-Theft Trial',
         ded:'The agency cites "an inquiry into the Ekosodin operation". Defence lawyers in the Sapele case call the timing "remarkable".' };
-      if(m.s2_ninth === 'bury') return { pub:'NATIONAL DISPATCH', head:'Ekosodin Officer Promoted, Posted to Lagos Cybercrime',
+      if(m.s2_ninth === 'bury') return { pub:'NATIONAL DISPATCH', head:'Ekosodin Officer Promoted to Head Lagos Cyber & Financial Crimes',
         ded:'The Director-General praised "a rare young talent". The Upstream inquiry "moves to headquarters for coordination", the agency says.' };
       return { pub:'WAVE24 NEWS', head:'NACECA Chief Meets Officer at Centre of Sapele Crude Probe',
         ded:'Neither side would comment on the meeting on the ninth floor. It lasted more than an hour.' };
@@ -923,22 +954,22 @@ V13.AFTER = Object.assign(V13.AFTER || {}, {
     headline:(state)=>{
       const m = MC(state), fin = S2(state).finale || null, end = m.s2_end || null;
       if(end === 'truth' && fin === 'proven') return { pub:'THE LAGOS LEDGER', head:'Senator Held on Bonny Jetty; NACECA Director-General Arrested',
-        ded:'Investigators say an oil-theft network paid for twenty years of protection inside the anti-fraud agency. Cash from the barge TEKENA 2 is still being counted.' };
+        ded:'Investigators say an oil-theft network paid for twenty years of protection inside the anti-corruption agency. Cash from the barge TEKENA 2 is still being counted.' };
       if(end === 'truth' && fin === 'contested') return { pub:'NATIONAL DISPATCH', head:'Senator Arrested With Barge of Cash; NACECA DG Suspended',
         ded:'The Director-General denies wrongdoing and is on bail. The Senator\'s lawyers call the jetty arrest "theatre".' };
-      if(end === 'truth') return { pub:'PORT HARCOURT TIDE', head:'Senator Douglas-Akpan Arrested on Riverstone Jetty',
+      if(end === 'truth') return { pub:'THE WATERFRONT HERALD', head:'Senator Douglas-Akpan Arrested on Riverstone Jetty',
         ded:'Cash seized from the barge TEKENA 2. In Abuja, NACECA\'s Director-General praised "the officers involved" and declined further comment.' };
       if(end === 'career' && fin === 'proven') return { pub:'THE DAILY GONG', head:'NACECA Director-General Arrested — Senator Abroad',
         ded:'Senator Douglas-Akpan flew out on Saturday "for medical checks". A barge raid in Port Harcourt was called off at midnight.' };
       if(end === 'career' && fin === 'contested') return { pub:'WAVE24 NEWS', head:'NACECA DG Suspended Pending Trial; Port Harcourt Raid "Stood Down"',
         ded:'A special task force secured the Riverstone jetty overnight. No cash was recovered.' };
-      if(end === 'career') return { pub:'PORT HARCOURT TIDE', head:'Task Force "Secures" Riverstone Jetty; NACECA Raid Called Off',
+      if(end === 'career') return { pub:'THE WATERFRONT HERALD', head:'Task Force "Secures" Riverstone Jetty; NACECA Raid Called Off',
         ded:'Boat drivers say a barge left without lights after midnight. NACECA announces a new Zonal Commander for Benin.' };
       return { pub:'DELTA CHRONICLE', head:'Creek Communities Ask: Who Bought the Stolen Crude?',
         ded:'From Sapele to the Bonny River, the Upstream case has named the sellers. The buyers are another matter.' };
     },
     tip:'"Cheap" diesel from illegal refineries wrecks engines and generators, poisons the creeks it comes from and funds crude theft. Buy from licensed stations and keep the receipt.',
-    next:'That\'s Season 2. In Kano, at dawn, a cattle truck is about to carry something that isn\'t cattle.',
+    next:'That\'s Season 2. In Kano, at dawn, a cooperative truck is about to carry something that isn\'t printer paper.',
   },
 });
 
@@ -948,25 +979,25 @@ V13.AFTER = Object.assign(V13.AFTER || {}, {
 V13.PHONE = Object.assign(V13.PHONE || {}, {
   after_m13:[
     { who:'MUM', text:"Kelechi, a very polite man called from your office in Abuja. He said they are 'updating your next of kin'. He knew your father's name and our street. I told him nothing else. Did I do well?" },
-    { who:'UCHE', cond:"S.game.moralChoices.s2_ninth !== 'bury'", text:"Card or no card, I'm driving tonight. A grey saloon has been parked across from our hotel since noon. Wave if you like. I did." },
+    { who:'UCHE', cond:"S.game.moralChoices.s2_ninth !== 'bury'", text:"Card or no card, I'm driving tonight. A silver Camry has been parked across from our hotel since noon. Wave if you like. I did." },
     { who:'UCHE', cond:"S.game.moralChoices.s2_ninth === 'bury'", text:"Superintendent. I'll still drive tonight, sir. That's all I'll say about it." },
-    { who:'TOBI', cond:"S.game.moralChoices.s2_wire === true && S.game.moralChoices.asaba === 'rescue'", text:"Pulled the audio off the pen. Hashed, sealed, two copies — one of them somewhere I won't text you about. I'll sign the s.84 certificate whenever Barrister Danladi wants it." },
-    { who:'OSAGIE', cond:"S.game.moralChoices.s2_wire === true && S.game.moralChoices.asaba !== 'rescue'", text:"Igbinosa has the pen. Hashed and sealed before he'd taken his cap off. He says the DG's voice is 'very clear, unfortunately for him'." },
+    // CN06: Mr. Igbinosa pulls and certifies the audio in every save (the Tobi text is dropped)
+    { who:'OSAGIE', cond:"S.game.moralChoices.s2_wire === true", text:"Igbinosa has the pen. Hashed and sealed before he'd taken his cap off. He says the DG's voice is 'very clear, unfortunately for him'." },
     { who:'OSAGIE', cond:"S.game.moralChoices.s2_original === 'kept'", text:"My posting order was signed at noon. Maiduguri, 'with immediate effect'. I asked for seven days to hand over. They gave me three. Use them well." },
     { who:'PA TIMI', cond:"S.game.moralChoices.s2_timi === 'source'", text:"My grandson is typing for me. The nets came up grey this morning. Not black — grey. I am telling you because you will understand." },
     { who:'HAUWA', text:"Maitama Haven Properties Ltd: two directors. One died in 2019. The other is ninety-one and lives in a village with no road. Annual returns filed on time, every year. Somebody loves that company." },
   ],
   after_m13b:[
-    { who:'BITRUS', cond:"S.game.moralChoices.s2_bitrus === 'witness'", text:"Sgt. (rtd.) Gyang. Last night's entries are complete. 22:58, the Prado. 23:14, the grey saloon, the Honourable driving himself. The book is where even I cannot find it without my glasses." },
+    { who:'BITRUS', cond:"S.game.moralChoices.s2_bitrus === 'witness'", text:"Sgt. (rtd.) Gyang. Last night's entries are complete. 22:58, the Prado. 23:14, the green Peugeot, the Honourable driving himself. The book is where even I cannot find it without my glasses." },
     { who:'BITRUS', cond:"S.game.moralChoices.s2_bitrus === 'photo'", text:"This morning a man from the owner's agent came to 'audit' my book. He took it and gave me a new one. Your photographs are all that is left of the old one. I have started writing in the new." },
     { who:'BITRUS', cond:"S.game.moralChoices.s2_bitrus === 'cold'", text:"You are in my book also, young man. 22:31. I have not crossed you out." },
-    { who:'HAUWA', text:"Trial fixed: Monday, 9 a.m., Federal High Court Abuja, Court 5. The 1st defendant has briefed Femi Coker-Odusote, SAN. He is very good. Iron your shirt, and answer only what you're asked." },
+    { who:'HAUWA', text:"Trial fixed: Monday 11 January, 9 a.m., Federal High Court Abuja, Court 5. The 1st defendant has briefed Femi Olaniran-Cole, SAN. He is very good. Iron your shirt, and answer only what you're asked." },
     { who:'MUM', text:"The polite man called again. I told him you are a good boy and hung up. Your uncle says if they call a third time he will report them to 'the BVN people'. Hm." },
     { who:'UCHE', text:"Baba Shayi says his tea is still the best in Maitama and that you didn't finish your egg. He's offended on behalf of the egg." },
-    { who:'KC', cond:"S.game.moralChoices.market_runner === 'caught' && S.game.moralChoices.choice !== 'force'", text:"Oga, na KC. That man wey wear NACECA lanyard come Benin phone market again. E dey ask the SIM boys who be the agent wey dey work Sapele. Dem no know say I know you.", textEn:"Sir, it's KC. The man with the NACECA lanyard came to the Benin phone market again, asking the SIM boys who the agent working Sapele is. They don't know I know you." },
+    { who:'KC', cond:"!!V13.s1snap().kcFair && !V13.s1snap().kcWrong", text:"Oga, na KC. My guy for Benin phone market talk say that man wey wear NACECA lanyard don come again, dey ask the SIM boys who be the agent wey dey work Sapele. Dem no know say I know you.", textEn:"Sir, it's KC. My guy at the Benin phone market says the man with the NACECA lanyard came again, asking the SIM boys who the agent working Sapele is. They don't know I know you." },
   ],
   after_m14:[
-    { who:'MUSA', cond:"S.game.moralChoices.checkpoint !== 'arrest_driver'", text:"Oga Kelechi! Na Musa, from Kano. Cooperative don give me new truck — blue one. One man come yesterday wan rent space for back. Cash, no papers. I tell am no. E smile say another driver go say yes.", textEn:"Officer Kelechi! It's Musa, from Kano. The cooperative gave me a new truck — a blue one. A man came yesterday wanting to rent space in the back. Cash, no papers. I said no. He smiled and said another driver will say yes." },
+    { who:'MUSA', cond:"!!V13.s1snap().musaTalked", text:"Oga Kelechi! Na Musa, from Kano. Cooperative don give me new truck — blue one. One man come yesterday wan rent space for back. Cash, no papers. I tell am no. E smile say another driver go say yes.", textEn:"Officer Kelechi! It's Musa, from Kano. The cooperative gave me a new truck — a blue one. A man came yesterday wanting to rent space in the back. Cash, no papers. I said no. He smiled and said another driver will say yes." },
     { who:'HAUWA', cond:"!!(S.game.s2 && S.game.s2.trial) && S.game.s2.trial.d1 === 'guilty'", text:"Conviction entered on Count 1. The Senator's lawyers sat in the back row all three days, taking notes on you. Tonight we give them something worth writing down." },
     { who:'HAUWA', cond:"!!(S.game.s2 && S.game.s2.trial) && S.game.s2.trial.d1 === 'notguilty'", text:"I've read the judgment twice. It's fair. We weren't careful enough, and the court said so. That ends tonight — every bag numbered, every number signed." },
     { who:'OSAGIE', text:"The Senator's people are moving cash tonight, before the freeze order lands. Port Harcourt waterfront, 23:30. Wear something you can swim in." },
@@ -988,15 +1019,15 @@ V13.TIPS.GATE.push(
   { after:'m14', true:false, text:"Sgt. Gyang. The driver says the Chairman has flown to London for medical treatment. He will not be back this month." }
 );
 V13.TIPS.KC.push(
-  { after:'m9', true:true, text:"Oga, na KC. One man wey wear NACECA lanyard buy ten SIM for Benin phone market — cash, no NIN. E no resemble person wey dey buy SIM for himself.", textEn:"Sir, it's KC. A man wearing a NACECA lanyard bought ten SIMs at the Benin phone market — cash, no NIN. He didn't look like someone buying SIMs for himself." },
-  { after:'m10', true:true, text:"Oga, Lucky boys dey buy SIM for Benin too — five, six at once. Dem dey register am with other people NIN. Na so dem take open all those account.", textEn:"Sir, Lucky's boys buy SIMs in Benin too — five or six at once, registered with other people's NINs. That's how they opened all those accounts." },
-  { after:'m12', true:true, text:"Oga, the lanyard man come back. E dey ask the SIM boys who be the agent wey dey Sapele. Dem no know say I know you. Shine your eye.", textEn:"Sir, the lanyard man came back, asking the SIM boys who the agent working Sapele is. They don't know I know you. Keep your eyes open." },
+  { after:'m9', true:true, text:"Oga, na KC. My guy for Benin phone market talk say one man wey wear NACECA lanyard buy ten SIM there — cash, no NIN. E no resemble person wey dey buy SIM for himself.", textEn:"Sir, it's KC. My guy at the Benin phone market says a man wearing a NACECA lanyard bought ten SIMs there — cash, no NIN. He didn't look like someone buying SIMs for himself." },
+  { after:'m10', true:true, text:"Oga, my guy for Benin phone market talk say Lucky boys dey buy SIM there too — five, six at once. Dem dey register am with other people NIN. Na so dem take open all those account.", textEn:"Sir, my guy at the Benin phone market says Lucky's boys buy SIMs there too — five or six at once, registered with other people's NINs. That's how they opened all those accounts." },
+  { after:'m12', true:true, text:"Oga, my guy for Benin phone market talk say the lanyard man don come back. E dey ask the SIM boys who be the agent wey dey Sapele. Dem no know say I know you. Shine your eye.", textEn:"Sir, my guy at the Benin phone market says the lanyard man came back, asking the SIM boys who the agent working Sapele is. They don't know I know you. Keep your eyes open." },
   { after:'m12', true:false, text:"Oga, I hear say the barge people don carry everything go Calabar. Port Harcourt don close.", textEn:"Sir, I hear the barge people have moved everything to Calabar. Port Harcourt is finished." },
   { after:'m14', true:true, text:"Oga, Sapele boys dey buy Ghana-must-go and big padlock since morning. Dem talk say na 'last load'.", textEn:"Sir, the Sapele boys have been buying Ghana-must-go bags and big padlocks since morning. They say it's the 'last load'." },
   { after:'m14', true:false, text:"Oga, my uncle hear for motor park say Senator money don cross go Cotonou since last week. Nothing remain for Port Harcourt.", textEn:"Sir, my uncle heard at the motor park that the Senator's money crossed to Cotonou last week. Nothing is left in Port Harcourt." }
 );
 V13.TIPS.TUNDE.push(
-  { after:'m10', true:true, text:"Oga, Tunde here. Lagos bloggers dey collect fifty thousand each to write say the Sapele arrest na 'political witch-hunt'. The money dey come from one foundation account.", textEn:"Sir, it's Tunde. Lagos bloggers are being paid fifty thousand each to call the Sapele arrest a 'political witch-hunt'. The money comes from a foundation's account." },
+  { after:'m10', true:true, text:"Oga, Tunde here. Lagos bloggers dey collect fifty thousand each to write say the Sapele arrest na 'political witch-hunt'. The money dey come from one Port Harcourt foundation account.", textEn:"Sir, it's Tunde. Lagos bloggers are being paid fifty thousand each to call the Sapele arrest a 'political witch-hunt'. The money comes from a Port Harcourt foundation's account." },
   { after:'m11', true:true, text:"Oga, the BDC boys for Lagos Island talk say one Sapele changer dey sell naira bundle with Delta bank band every Monday. Big bundle.", textEn:"Sir, the bureau de change boys on Lagos Island say a Sapele changer sells naira bundles in Delta bank bands every Monday. Big bundles." },
   { after:'m13', true:true, text:"Oga, Abuja people dey ask for Ikeja who be your people. Dem ask about me too. I don change my SIM. This na my new number.", textEn:"Sir, people from Abuja have been asking around Ikeja who your people are. They asked about me too. I've changed my SIM. This is my new number." },
   { after:'m13', true:false, text:"Oga, the Senator money don move go one church for Warri. Na pastor dey keep am now. Forget Port Harcourt.", textEn:"Sir, the Senator's money has moved to a church in Warri. A pastor keeps it now. Forget Port Harcourt." },
@@ -1010,8 +1041,8 @@ V13.S2_CANDIDATES = [
   { id:'dg',      name:'DG Kolawole Fashina',    role:'Director-General, NACECA',        art:'dg_neutral' },
   { id:'senator', name:'Sen. Douglas-Akpan',     role:'Senator; oil-services magnate',   art:'senator_neutral' },
   { id:'kuti',    name:'Mr. Kuti',               role:'The DG\'s personal assistant',     art:'kuti_neutral' },
-  { id:'osagie',  name:'Cdr. Grace Osagie',      role:'Benin Zonal Commander',           art:'osagie_neutral' },
-  { id:'danladi', name:'Barr. Hauwa Danladi',    role:'NACECA prosecutor',               art:'hauwa_neutral' },
+  { id:'osagie',  name:'Cdr. Itohan Okundaye',   role:'Benin Zonal Commander',           art:'osagie_neutral' },
+  { id:'danladi', name:'Barr. Zainab Danladi',   role:'NACECA prosecutor',               art:'hauwa_neutral' },
 ];
 
 /* what ties the Director-General to protecting Adaeze, given what this player actually holds */
@@ -1032,7 +1063,7 @@ V13.S2_STRONG = function(){
       : 'His voice offering a badge to bury the file. The defence will fight the gaps.';
   if(ok('transfer_docket'))
     out.transfer_docket = m.s2_original === 'kept'
-      ? 'Osagie\'s posting is filed under the exhibit 14 docket — punishment for keeping the drive. His office files everything as "DGO".'
+      ? 'Okundaye\'s posting is filed under the exhibit 14 docket — punishment for keeping the drive. His office files everything as "DGO".'
       : 'Exhibit 14 — the drive that names "C.A." — went into his personal safe, on his order. His office files everything as "DGO".';
   if(book) out.visitor_book = m.s2_bitrus === 'witness'
       ? '"Hon. K.F. (NACECA)" meets "CHAIRMAN" every second Friday — and the man who wrote it will swear to it.'
@@ -1081,8 +1112,8 @@ V13.S2_WHY_NOT = {
 V13.S2_WRONG = {
   senator:'You were watching the man with the money, Kelechi. Money is loud. Protection is quiet.',
   kuti:'Kuti? Kuti signs what I tell him to sign. You came for the pen and left the hand.',
-  osagie:'Grace Osagie kept your drive in Benin when I asked for it. You accused the one officer who stood in my way.',
-  danladi:'Hauwa Danladi prosecuted your case with her own hands. You accused your own lawyer.',
+  osagie:'Itohan Okundaye kept your drive in Benin when I asked for it. You accused the one officer who stood in my way.',
+  danladi:'Zainab Danladi prosecuted your case with her own hands. You accused your own lawyer.',
 };
 
 /* ======================================================================
@@ -1100,16 +1131,17 @@ const insertAt = (lines, mark, extra, after) => {
 const NINTH_WIRE = ['m13_dg_wire', 'm13_dg_wire_2', 'm13_dg_wire_2_cold', 'm13_dg_wire_3', 'm13_dg_wire_3_cold',
                     'm13_dg_wire_4', 'm13_dg_wire_4_cold', 'm13_dg_wire_5', 'm13_dg_wire_5_cold', 'm13_dg_offer_wire'];
 V13.C = {
-  /* the hub, the night before: Tobi builds the pen if he's alive */
-  wireOffer(){ return MC().asaba === 'rescue' ? 'm13_wire_offer_tobi' : 'm13_wire_offer'; },
+  /* the hub, the night before: Commander Okundaye's pen, in every save (CN06) */
+  wireOffer(){ return 'm13_wire_offer'; },
   /* the docket on Kuti's desk */
   docket(){ return MC().s2_original === 'kept' ? 'm13_docket_kept' : 'm13_docket'; },
   /* the ninth-floor meeting. registered: source codenames the DG can read, e.g. ['HERBS','TIDE'] (max 2 used) */
   ninth(registered){
-    const m = MC();
-    const fate = m.finale && DIALOGUE['m13_dg_adaeze_' + m.finale] ? DIALOGUE['m13_dg_adaeze_' + m.finale] : [];
+    const m = MC(), f1 = S1FATE();
+    const fate = f1 && DIALOGUE['m13_dg_adaeze_' + f1] ? DIALOGUE['m13_dg_adaeze_' + f1] : [];
     const pre = [];
-    if(m.arrest === 'bribe') pre.push(...DIALOGUE.m13_dg_bribe);
+    // Season 1's Lekki drawer, as the snapshot holds it (live moralChoices.arrest only before a snapshot exists)
+    if(V13.s1snap ? !!V13.s1snap().bribe : m.arrest === 'bribe') pre.push(...DIALOGUE.m13_dg_bribe);
     (registered || []).slice(0, 2).forEach(c => { const key = 'm13_dg_register_' + String(c).toLowerCase(); if(DIALOGUE[key]) pre.push(...DIALOGUE[key]); });
     if(m.s2_wire !== true){
       const L = base('m13_dg');
@@ -1155,6 +1187,7 @@ V13.C = {
     if(s.karo) add.push(...DIALOGUE.m15_brief_karo);
     if(s.felix) add.push(...DIALOGUE.m15_brief_felix);
     if(s.ibinabo) add.push(...DIALOGUE.m15_brief_ibinabo);
+    if(m.s2_barge === 'seized') add.push(say(HAU, "TEKENA 2 — the barge we seized in the creek. A judge released her to Riverstone on a bond. Tonight we find out what the bond was for.", { mood:'evasive' }));
     const L = insertAt(base('m15_brief'), 'end', add, false);
     DIALOGUE.m15_brief_run = L; return 'm15_brief_run';
   },

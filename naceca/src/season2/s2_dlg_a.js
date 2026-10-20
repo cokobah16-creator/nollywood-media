@@ -10,10 +10,15 @@
      the night of Ekosodin. Signed out (if signed) at 23:04 by Kelechi.
    - SHA-256 of exhibit 14 / EX14.E01: 1e1d6d411699…99a2d003fd49.
    - The ledger: hidden folder \PAYROLL\_old\u.xlsx, sheet UPSTREAM, last saved
-     12 Sep 2026. TEKENA 2 sails every other Tuesday (≈640,000 L AGO);
-     SPL-WSM-T4 cash-out two days later, a Thursday (≈ ₦9.5m); C.A. ₦4.8m on
-     the 10th of each month; D.G.O. ₦24m a quarter, on a second Friday
-     (12 Jun, 11 Sep). R.M.S. is the payer of both.
+     12 Sep 2026. TEKENA 2 sails every other Tuesday (≈178,000 L AGO);
+     SPL-WSM-T4 cash-out two days later, a Thursday (≈ ₦9.5m); C.A. ₦4.8m in
+     cash on the 10th of each month (her second paymaster, beside Season 1's
+     Foundation retainer of ₦10M on the 1st); D.G.O. ₦24m a quarter, on a
+     second Friday (12 Jun, 11 Sep). R.M.S. is the payer of both.
+   - Season 1's trial used only the payroll folder, on certified printouts.
+     Nobody imaged the whole drive or opened the _old folder before Case 09.
+   - Mr. Igbinosa runs the bench in every save. Tobi (alive iff V13.tobiAlive())
+     is a civilian payroll reader Zonal took on; he reads, he never certifies.
    - SPL-WSM-T4 is the market's POS permit for kiosk 4 (Ejiro's). The kiosk has
      four machines registered as four agents (his mother, sister, cousin, him),
      each under the ₦1.2m daily agent cap. Lucky makes four ₦1,195,000
@@ -23,6 +28,11 @@
 (function(){
 'use strict';
 const V13 = window.V13 = window.V13 || {};
+/* line conds (core's line fields): did Season 1 put Adaeze on trial? A 'proven' or 'contested' finale went to
+   trial; an 'unproven' one never charged her (the inquiry read the payroll), unless the trial sat and discharged
+   her (s2_merge's adaptS1Fate sets s2.adaezeDischarged and reads her fate as 'unproven'). */
+const S1_TRIED = "V13.s1fate() !== 'unproven' || !!(S.game.s2 || {}).adaezeDischarged";
+const S1_UNTRIED = '!(' + S1_TRIED + ')';
 const V12 = window.V12 = window.V12 || {};
 V12.DOCS = V12.DOCS || {};
 
@@ -52,19 +62,19 @@ Object.assign(DIALOGUE, {
 
   /* ---------- the Zonal Commander ---------- */
   m9_osagie: [
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Agent Kelechi. Sergeant. Sit — those chairs are older than both of you, but they hold." },
-    { speaker:'COMMANDER OSAGIE',
-      text:"I've read your sealed report on Ekosodin. Twice. The second time, I locked the door first." },
-    { speaker:'COMMANDER OSAGIE',
-      text:"Adaeze is the court's business now. That drive is mine. Six weeks in Sergeant Ikpe's cage, and nobody in Abuja asked about it once." },
-    { speaker:'COMMANDER OSAGIE', mood:'evasive',
+    { speaker:'COMMANDER OKUNDAYE',
+      text:"I've read your report on Ekosodin. Twice. The second time, I locked the door first." },
+    { speaker:'COMMANDER OKUNDAYE',
+      text:"Adaeze's trial took what it needed from that drive: the payroll folder, on certified printouts. The drive itself came back from the registry to Sergeant Ikpe's cage, and in six weeks nobody in Abuja asked about it once." },
+    { speaker:'COMMANDER OKUNDAYE', mood:'evasive',
       text:"Then this, at six this evening: 'Exhibit 14 to be conveyed to Headquarters by the 06:00 flight.' Signed for the Director-General — by his PA, a Mr. Kuti." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Not by the DG himself." },
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"An order signed 'for' him is still an order. At six, it goes. Until then it's an exhibit in my custody, in an open Zonal case. You have the night." },
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Do it by the book, or don't do it in my building.",
       choices:[
         { text:"By the book, ma. Every seal, every signature, every minute written down.", tag:'lawful', effect:{ integrity:+1 }, next:'m9_osagie_book' },
@@ -72,21 +82,21 @@ Object.assign(DIALOGUE, {
         { text:"With respect, ma — if that drive gets on a plane, we never see it again.", tag:'harsh', next:'m9_osagie_blunt' },
       ] },
   ],
-  /* the same meeting when Adaeze was never charged (moralChoices.finale === 'unproven') */
+  /* the same meeting when Adaeze was never charged (V13.s1fate() === 'unproven') */
   m9_osagie_unproven: [
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Agent Kelechi. Sergeant. Sit — those chairs are older than both of you, but they hold." },
-    { speaker:'COMMANDER OSAGIE',
-      text:"I've read your sealed report on Ekosodin. Twice. The second time, I locked the door first." },
-    { speaker:'COMMANDER OSAGIE', mood:'angry',
+    { speaker:'COMMANDER OKUNDAYE',
+      text:"I've read your report on Ekosodin. Twice. The second time, I locked the door first." },
+    { speaker:'COMMANDER OKUNDAYE', mood:'angry',
       text:"Six weeks. Adaeze sits in her house in Ikoyi on full pay. The inquiry has met twice. Twice. Nobody has charged her with so much as a parking offence." },
-    { speaker:'COMMANDER OSAGIE', mood:'angry',
+    { speaker:'COMMANDER OKUNDAYE', mood:'angry',
       text:"And at six this evening Abuja asks for the one exhibit that could: 'Exhibit 14 to the 06:00 flight.' Signed for the Director-General — by his PA, a Mr. Kuti." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Not by the DG himself." },
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"An order signed 'for' him is still an order. At six, it goes. Until then it's an exhibit in my custody, in an open Zonal case. You have the night." },
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Do it by the book, or don't do it in my building.",
       choices:[
         { text:"By the book, ma. Every seal, every signature, every minute written down.", tag:'lawful', effect:{ integrity:+1 }, next:'m9_osagie_book' },
@@ -95,21 +105,21 @@ Object.assign(DIALOGUE, {
       ] },
   ],
   m9_osagie_book: [
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Good. Sergeant Ikpe has the cage; forensics is on the second floor. I have the Governor's people at seven, so I'm going home to sleep for four hours." },
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Use my office for the paperwork. If the phone on that desk rings tonight, Agent, write down every word." },
   ],
   m9_osagie_kuti: [
-    { speaker:'COMMANDER OSAGIE', mood:'evasive',
+    { speaker:'COMMANDER OKUNDAYE', mood:'evasive',
       text:"Kuti signs everything. Postings, leave letters, condolence cards. The DG hasn't put his own name on paper in two years." },
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"That's a very busy man or a very careful one. Use my office tonight. If the phone on that desk rings, write down every word." },
   ],
   m9_osagie_blunt: [
-    { speaker:'COMMANDER OSAGIE', mood:'angry',
+    { speaker:'COMMANDER OKUNDAYE', mood:'angry',
       text:"Then make sure whatever is on it is on paper in my building before it leaves. Lawfully. I won't lose one case to save another." },
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Ikpe has the cage. Use my office. And Agent — if the phone on that desk rings tonight, write down every word." },
   ],
 
@@ -145,7 +155,25 @@ Object.assign(DIALOGUE, {
       text:"Sir. That's a gap a defence lawyer can drive a lorry through." },
   ],
 
-  /* ---------- the forensic bench: Tobi (alive if asaba === 'rescue') ---------- */
+  /* ---------- the forensic bench: Tobi, the payroll reader (CN04, CN06) ----------
+     Mr. Igbinosa runs the bench, the image and the certificate in every save. When Tobi
+     is alive (V13.tobiAlive()), the code seats him at the bench and plays m9_tobi_bench
+     before m9_forensic_igbinosa. */
+  m9_tobi_bench: [
+    { speaker:'TOBI', cond:S1_TRIED,
+      text:"Kelechi! — Agent. Agent Kelechi. Sorry. Zonal took me on to read the payroll for the trial, and I've cleaned this bench three times." },
+    { speaker:'TOBI', cond:S1_UNTRIED,
+      text:"Kelechi! — Agent. Agent Kelechi. Sorry. Zonal took me on to read the payroll for the inquiry, and I've cleaned this bench three times." },
+    { speaker:'TOBI', mood:'evasive',
+      text:"I'm fine. I sleep with the light on, that's all. Mr. Igbinosa does the machine. I read what comes off it." },
+    { speaker:'TOBI', cond:S1_TRIED,
+      text:"Eleven days on the payroll folder for the prosecution, and I never once opened _old. I didn't know it was there." },
+    { speaker:'TOBI', cond:S1_UNTRIED,
+      text:"Eleven days on the payroll folder for the inquiry, and I never once opened _old. I didn't know it was there." },
+  ],
+  /* RETIRED (CN06): Tobi no longer runs the bench. m9_forensic_tobi, its three method
+     keys and m9_cert_tobi stay in the file, unused, so old saves and references resolve.
+     No code plays them. */
   m9_forensic_tobi: [
     { speaker:'TOBI',
       text:"Kelechi! — Agent. Agent Kelechi. Sorry. They said you were coming, and I've cleaned this bench three times." },
@@ -187,10 +215,14 @@ Object.assign(DIALOGUE, {
       text:"It isn't the drive, you know. It's pictures of pictures. But it's something nobody can put on a plane." },
   ],
 
-  /* ---------- the forensic bench: Mr. Igbinosa (when Tobi did not survive) ---------- */
+  /* ---------- the forensic bench: Mr. Igbinosa (every save) ---------- */
   m9_forensic_igbinosa: [
     { speaker:'MR. IGBINOSA',
       text:"Agent. Sit. Don't touch anything blue — the blue things on this bench cost more than my car." },
+    { speaker:'MR. IGBINOSA', cond:S1_TRIED,
+      text:"It took this bench three weeks to unlock the payroll folder for the case against her. We printed what the prosecution asked for and sealed the drive again. Nobody has imaged the whole of it. Tonight we do." },
+    { speaker:'MR. IGBINOSA', cond:S1_UNTRIED,
+      text:"It took this bench three weeks to unlock the payroll folder for the inquiry into her. We printed what the inquiry asked for and sealed the drive again. Nobody has imaged the whole of it. Tonight we do." },
     { speaker:'MR. IGBINOSA',
       text:"There are three ways to read a drive. Two of them are fast. In nineteen years, nobody has ever accused me of fast." },
     { speaker:'MR. IGBINOSA',
@@ -230,6 +262,7 @@ Object.assign(DIALOGUE, {
   ],
 
   /* ---------- the section 84 certificate (method 'image' only) ---------- */
+  /* RETIRED (CN06): unused. Mr. Igbinosa signs every certificate (m9_cert_igbinosa). */
   m9_cert_tobi: [
     { speaker:'TOBI',
       text:"Section 84 certificate. 'The workstation was in regular use and operating properly throughout. EX14.E01 is a true copy of exhibit 14.' Both hashes, in full." },
@@ -256,23 +289,23 @@ Object.assign(DIALOGUE, {
     { speaker:'TOBI', mood:'afraid',
       text:"SPL-WSM-T4. Town, place, terminal — Sapele, Waterside Market, kiosk four. I used to write codes exactly like that for Ifeanyi's books." },
     { speaker:'TOBI',
-      text:"Whoever built this learned from the same people I did. And Kelechi — a barge carries fifty times what Sapele cashes out. The rest has a bank account somewhere." },
+      text:"Whoever built this learned from the same people I did. And Kelechi — a barge carries twenty times what Sapele cashes out. The rest has a bank account somewhere." },
   ],
   m9_ledger_igbinosa: [
     { speaker:'MR. IGBINOSA',
       text:"SPL: Sapele. WSM: Waterside Market. T4: kiosk four. My wife buys crayfish there. Thursday nights, she says, the POS boys run out of cash by ten." },
     { speaker:'MR. IGBINOSA',
-      text:"Nine and a half million a run, in cash. A barge carries fifty times that. The rest is somewhere with a bank account, Agent. Money likes a roof." },
+      text:"Nine and a half million a run, in cash. A barge carries twenty times that. The rest is somewhere with a bank account, Agent. Money likes a roof." },
   ],
 
   /* ---------- D.G.O. ---------- */
   m9_dgo: [
     { speaker:'AGENT KELECHI', portrait:'kelechi',
-      text:"C.A.: four point eight million on the tenth of every month. Just under the five-million cash limit. She was careful even with her bribes." },
+      text:"C.A. again. Not the Foundation's retainer on the first — this is cash, four point eight million on the tenth, from R.M.S. Just under the five-million cash limit. She had two paymasters, and she was careful with both." },
     { speaker:'SGT. UCHE', portrait:'sergeant',
       text:"D.G.O. isn't careful. Twenty-four million a quarter — on a second Friday, both times. Whoever that is doesn't need to be careful." },
     { speaker:'SGT. UCHE', portrait:'sergeant', mood:'evasive',
-      text:"'Delta Gas Operations.' 'Divine Grace Oil' — my cousin in Onitsha has a shop called that. Sells palm oil." },
+      text:"'Delta Gas Operations.' 'Daily Gold Oil' — my cousin in Onitsha has a shop called that. Sells palm oil." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Uche." },
     { speaker:'SGT. UCHE', portrait:'sergeant',
@@ -282,9 +315,9 @@ Object.assign(DIALOGUE, {
   /* ---------- 02:30, the Commander's desk phone ---------- */
   m9_call_kuti: [
     { speaker:'NACECA SYSTEM',
-      text:"02:30. The phone on Commander Osagie's desk lights up. The display reads: NACECA HQ · DG OFFICE." },
+      text:"02:30. The phone on Commander Okundaye's desk lights up. The display reads: NACECA HQ · DG OFFICE." },
     { speaker:'MR. KUTI',
-      text:"Commander Osagie? …No. You'd be Agent Kelechi. How nice. Kuti, from the Director-General's office. Forgive the hour — the Director-General doesn't sleep, so neither do I." },
+      text:"Commander Okundaye? …No. You'd be Agent Kelechi. How nice. Kuti, from the Director-General's office. Forgive the hour — the Director-General doesn't sleep, so neither do I." },
     { speaker:'MR. KUTI',
       text:"A small thing, for the transfer paperwork. Since exhibit 14 was sealed, has anyone accessed it? Anyone at all?",
       choices:[
@@ -292,7 +325,7 @@ Object.assign(DIALOGUE, {
           effect:{ integrity:+3, agencyFavour:-2 }, flag:{ s2_abuja_call:'truth' }, next:'m9_call_kuti_truth' },
         { text:"Sealed, sir. Untouched.", tag:'harsh',
           effect:{ integrity:-4 }, flag:{ s2_abuja_call:'lie' }, next:'m9_call_kuti_lie' },
-        { text:"You'll want Commander Osagie for that, sir.", tag:'savvy',
+        { text:"You'll want Commander Okundaye for that, sir.", tag:'savvy',
           flag:{ s2_abuja_call:'deflect' }, next:'m9_call_kuti_deflect' },
       ] },
   ],
@@ -322,12 +355,12 @@ Object.assign(DIALOGUE, {
       text:"The line goes dead. Somewhere in Benin, a phone is about to wake a Zonal Commander." },
   ],
 
-  /* ---------- 05:10, the escort — Osagie will NOT back a retention order ---------- */
+  /* ---------- 05:10, the escort — Okundaye will NOT back a retention order ---------- */
   m9_transfer: [
     { speaker:'NACECA SYSTEM',
       text:"05:10. Headlights in the yard, fifty minutes early: two pickups with Abuja plates. The Commander's office is dark." },
     { speaker:'ESCORT INSPECTOR',
-      text:"Good morning, sir. Inspector Danjuma, HQ transfer team. Exhibit 14, the original, for the six o'clock. Mr. Kuti said you'd be expecting us." },
+      text:"Good morning, sir. Inspector Yakubu, HQ transfer team. Exhibit 14, the original, for the six o'clock. Mr. Kuti said you'd be expecting us." },
     { speaker:'ESCORT INSPECTOR', mood:'evasive',
       text:"I'm told there's no need for any copies, sir. Just the original." },
     { speaker:'SGT. UCHE', portrait:'sergeant', mood:'evasive',
@@ -339,17 +372,17 @@ Object.assign(DIALOGUE, {
           effect:{ agencyFavour:+3 }, flag:{ s2_original:'handed' }, next:'m9_transfer_handed' },
       ] },
   ],
-  /* ---------- 05:10, the escort — Osagie backs him with a retention order ---------- */
+  /* ---------- 05:10, the escort — Okundaye backs him with a retention order ---------- */
   m9_transfer_backed: [
     { speaker:'NACECA SYSTEM',
-      text:"05:10. Headlights in the yard, fifty minutes early. Commander Osagie is already on the steps, in yesterday's uniform." },
+      text:"05:10. Headlights in the yard, fifty minutes early. Commander Okundaye is already on the steps, in yesterday's uniform." },
     { speaker:'ESCORT INSPECTOR',
-      text:"Good morning, madam. Inspector Danjuma, HQ transfer team. Exhibit 14, the original, for the six o'clock flight." },
-    { speaker:'COMMANDER OSAGIE',
+      text:"Good morning, madam. Inspector Yakubu, HQ transfer team. Exhibit 14, the original, for the six o'clock flight." },
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Good morning, Inspector. Before you sign anything — a Zonal retention order. An exhibit in an active Zonal investigation stays in Benin." },
     { speaker:'ESCORT INSPECTOR', mood:'evasive',
       text:"Madam… my order is signed for the Director-General." },
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Yours is signed 'for' him. Mine is signed by me. Agent — it's your exhibit tonight. Say it so the Inspector can write it down.",
       choices:[
         { text:"Hand it over, ma. The order stands.", tag:'savvy',
@@ -369,11 +402,11 @@ Object.assign(DIALOGUE, {
   m9_transfer_kept: [
     { speaker:'NACECA SYSTEM',
       text:"The Inspector reads the order twice, photographs it, and makes a call from the yard. He leaves with an empty bag." },
-    { speaker:'COMMANDER OSAGIE', mood:'evasive',
+    { speaker:'COMMANDER OKUNDAYE', mood:'evasive',
       text:"They'll answer this with a posting. Maiduguri, if I know them. I hear it's lovely in the harmattan." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Ma, I'm sorry—" },
-    { speaker:'COMMANDER OSAGIE',
+    { speaker:'COMMANDER OKUNDAYE',
       text:"Don't be. I signed it. You only said it out loud." },
   ],
 
@@ -400,7 +433,8 @@ Object.assign(DIALOGUE, {
 Object.assign(DIALOGUE, {
 
   /* m10_intro works for every save; m10_intro_tobi / m10_intro_igbinosa are
-     the same scene with a personal text — use them if you pick by asaba */
+     the same scene with a personal text — pick by V13.tobiAlive().
+     R11: on Senior (sr) the text gives the permit, never the kiosk's place. */
   m10_intro: [
     { speaker:'NACECA SYSTEM',
       text:"Thursday, 20:30. Sapele Waterside Night Market: generators, frying fish, and a gospel song fighting a highlife song from two speakers." },
@@ -413,7 +447,8 @@ Object.assign(DIALOGUE, {
     { speaker:'SGT. UCHE', portrait:'sergeant',
       text:"Sergeants are invisible, sir. It's our gift." },
     { speaker:'TEXT · ZONAL FORENSICS',
-      text:"SPL-WSM-T4 = market permit for kiosk 4, Sapele Waterside — blue board, beside an herb stall. Thursdays it pays out more than the bank on the corner. Be careful." },
+      text:"SPL-WSM-T4 = market permit for kiosk 4, Sapele Waterside — blue board, beside an herb stall. Thursdays it pays out more than the bank on the corner. Be careful.",
+      sr:"SPL-WSM-T4 = the market's permit for kiosk 4, Sapele Waterside. Thursdays it pays out more than the bank on the corner. Be careful." },
   ],
   m10_intro_tobi: [
     { speaker:'NACECA SYSTEM',
@@ -427,7 +462,8 @@ Object.assign(DIALOGUE, {
     { speaker:'SGT. UCHE', portrait:'sergeant',
       text:"Sergeants are invisible, sir. It's our gift." },
     { speaker:'TEXT · TOBI',
-      text:"SPL-WSM-T4 is the market's permit for kiosk 4 — blue board, next to an herb stall. Thursdays it pays out more than a bank branch. Please be careful. Please. — T." },
+      text:"SPL-WSM-T4 is the market's permit for kiosk 4 — blue board, next to an herb stall. Thursdays it pays out more than a bank branch. Please be careful. Please. — T.",
+      sr:"SPL-WSM-T4 is the market's permit for kiosk 4, Sapele Waterside. Thursdays it pays out more than a bank branch. Please be careful. Please. — T." },
   ],
   m10_intro_igbinosa: [
     { speaker:'NACECA SYSTEM',
@@ -441,7 +477,8 @@ Object.assign(DIALOGUE, {
     { speaker:'SGT. UCHE', portrait:'sergeant',
       text:"Sergeants are invisible, sir. It's our gift." },
     { speaker:'TEXT · MR. IGBINOSA',
-      text:"T4 is kiosk 4: blue board, beside the herb stall. My wife says the bole at the far end of the market is excellent. Do not get shot before you try it. — Igbinosa" },
+      text:"T4 is kiosk 4: blue board, beside the herb stall. My wife says the bole at the far end of the market is excellent. Do not get shot before you try it. — Igbinosa",
+      sr:"T4 is the market's permit for kiosk 4. My wife says the bole at the far end of the market is excellent. Do not get shot before you try it. — Igbinosa" },
   ],
 
   /* ---------- Mama Karo's stall ---------- */
@@ -583,8 +620,8 @@ Object.assign(DIALOGUE, {
   /* ---------- the market: two innocent decoys and dinner ---------- */
   m10_esusu: [
     { speaker:'MAMA ESUSU · THRIFT COLLECTOR', portrait:'street:esusu',
-      text:"Two hundred, five hundred, one thousand… Mama Oke, your card! You miss Tuesday o — I no go carry your matter for my head!",
-      textEn:"Two hundred, five hundred, one thousand… Mama Oke, your card! You missed Tuesday — I won't carry your problem for you!" },
+      text:"Two hundred, five hundred, one thousand… Mama Ufuoma, your card! You miss Tuesday o — I no go carry your matter for my head!",
+      textEn:"Two hundred, five hundred, one thousand… Mama Ufuoma, your card! You missed Tuesday — I won't carry your problem for you!" },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"That's a lot of cash for one bag, ma." },
     { speaker:'MAMA ESUSU · THRIFT COLLECTOR', portrait:'street:esusu',
@@ -607,12 +644,12 @@ Object.assign(DIALOGUE, {
       textEn:"Bush-refined fuel? Me? That stuff kills engines. Shake it and it foams like palm wine, then grit settles at the bottom. Ask any boatman." },
   ],
   m10_buka: [
-    { speaker:'MAMA EFE · BUKA', portrait:'street:buka',
+    { speaker:'MAMA TEGA · BUKA', portrait:'street:buka',
       text:"Bole and fish? Pepper soup? You get the face of man wey never chop since morning.",
       textEn:"Roast plantain and fish? Pepper soup? You've got the face of a man who hasn't eaten since morning." },
     { speaker:'AGENT KELECHI', portrait:'kelechi',
       text:"Bole and fish, two. And pepper soup for my friend by the charging stand — he's shy." },
-    { speaker:'MAMA EFE · BUKA', portrait:'street:buka',
+    { speaker:'MAMA TEGA · BUKA', portrait:'street:buka',
       text:"Shy man no dey watch POS like hawk. Seven thousand five hundred. Siddon, make dem no think say una be police.",
       textEn:"A shy man doesn't watch the POS like a hawk. Seven thousand five hundred. Sit down, so nobody thinks you're police." },
   ],
@@ -621,8 +658,10 @@ Object.assign(DIALOGUE, {
   m10_lucky_arrives: [
     { speaker:'SGT. UCHE', portrait:'sergeant',
       text:"Road side. Blue kaftan, gold watch, two rice sacks on a wheelbarrow boy's head. He's greeting the whole market like he's running for councillor." },
+    // R12: s2_case10.js radios these lines' plain text in every mode (no rec / sr / cond on the radio path),
+    // so neither line says which kiosk he walks to.
     { speaker:'SGT. UCHE', portrait:'sergeant',
-      text:"Straight for the blue kiosk. Don't look up, sir. Look at your phone like you're losing at football." },
+      text:"He's coming in. Don't look up, sir. Look at your phone like you're losing at football." },
   ],
   m10_obs_cashouts: [
     { speaker:'NACECA SYSTEM',
@@ -807,7 +846,7 @@ Object.assign(DIALOGUE, {
       text:"Okay! Okay! Felix — for the creek, Ekre side! Riverstone people dey pay! Abeg, abeg, make him no touch me!",
       textEn:"Okay! Okay! Felix — in the creek, Ekre side! The Riverstone people pay! Please, please, don't let him touch me!" },
     { speaker:'SGT. UCHE', portrait:'sergeant', mood:'angry',
-      text:"Twenty years in uniform, sir, and I've never had to do that. I'd like to finish my career without doing it again." },
+      text:"Twenty-two years in uniform, sir, and I've never had to do that. I'd like to finish my career without doing it again." },
     { speaker:'AGENT KELECHI', portrait:'kelechi', mood:'evasive',
       text:"(Evidence Act, section 29: a threat is oppression, and oppression kills a confession. Every word of that is already dead.)" },
   ],
@@ -901,15 +940,15 @@ TIME   WHAT WAS HASHED                     ALGO     READOUT
 DATE         ENTRY                                   AMOUNT
 ──────────────────────────────────────────────────────────────────
 Fri 12 Jun   D.G.O. — quarterly · paid by R.M.S.     − ₦24,000,000
-Tue 07 Jul   TEKENA 2 — sailed (Ethiope) · 640,000 L AGO
+Tue 07 Jul   TEKENA 2 — sailed (Ethiope) · 176,000 L AGO
 Thu 09 Jul   SPL-WSM-T4 — cash-out                   + ₦9,560,000
 Fri 10 Jul   C.A. — monthly · paid by R.M.S.         − ₦4,800,000
-Tue 21 Jul   TEKENA 2 — sailed (Ethiope) · 610,000 L AGO
+Tue 21 Jul   TEKENA 2 — sailed (Ethiope) · 171,000 L AGO
 Thu 23 Jul   SPL-WSM-T4 — cash-out                   + ₦9,520,000
-Tue 04 Aug   TEKENA 2 — sailed (Ethiope) · 655,000 L AGO
+Tue 04 Aug   TEKENA 2 — sailed (Ethiope) · 180,000 L AGO
 Thu 06 Aug   SPL-WSM-T4 — cash-out                   + ₦9,580,000
 Mon 10 Aug   C.A. — monthly · paid by R.M.S.         − ₦4,800,000
-Tue 01 Sep   TEKENA 2 — sailed (Ethiope) · 645,000 L AGO
+Tue 01 Sep   TEKENA 2 — sailed (Ethiope) · 178,000 L AGO
 Thu 03 Sep   SPL-WSM-T4 — cash-out                   + ₦9,600,000
 Thu 10 Sep   C.A. — monthly · paid by R.M.S.         − ₦4,800,000
 Fri 11 Sep   D.G.O. — quarterly · paid by R.M.S.     − ₦24,000,000
@@ -939,7 +978,7 @@ T4 PAY-OUTS TONIGHT
 21:53  machine 2  card ••2290  ATUFE G.   ₦1,195,000
 21:55  machine 3  card ••7714  IMAH P.    ₦1,195,000
 21:56  machine 4  card ••3308  OGBE S.    ₦1,195,000
-BVN CHECK  all four accounts → 22•••••4471 → EDAFE, LUCKY O.
+BVN CHECK  all four accounts → 22•••••4471<span class="cw-hint"> → EDAFE, LUCKY O.</span>
 
 YOUR NOTES
 ──────────────────────────────────────────────────────────────────
@@ -986,17 +1025,22 @@ Object.assign(V12.DOCS, {
 /* ======================================================================
    AFTERMATH — headline(state) accepts S, S.game, or nothing
    ====================================================================== */
+/* Season 1's verdict as Season 2 reads it (CN13): V13.s1fate() (core), else moralChoices.finale */
+function S1FATE(st){
+  try{ if(typeof V13.s1fate === 'function'){ const f = V13.s1fate(); if(f) return f; } }catch(e){}
+  return MC(st).finale || null;
+}
 V13.AFTER = Object.assign(V13.AFTER || {}, {
   m9:{
     headline:(st)=>{
-      const m = MC(st);
+      const m = MC(st), fin = S1FATE(st);
       if(m.s2_original === 'kept') return { pub:'THE LAGOS LEDGER',
         head:'Benin Zonal refuses HQ order, keeps Ekosodin flash drive',
         ded:'A retention order signed at dawn kept "exhibit 14" in Benin. NACECA headquarters called it "an internal administrative matter".' };
-      if(m.finale === 'contested') return { pub:'NATIONAL DISPATCH',
+      if(fin === 'contested') return { pub:'NATIONAL DISPATCH',
         head:'Key exhibit in Adaeze trial flown to Abuja at dawn',
         ded:'Defence lawyers say nobody told them the flash drive was moving. Headquarters says it is "in safe hands".' };
-      if(m.finale === 'unproven') return { pub:'THE DAILY GONG',
+      if(fin === 'unproven') return { pub:'THE DAILY GONG',
         head:'Ekosodin evidence moved to Abuja as Adaeze inquiry stalls',
         ded:'Six weeks on, no charges. The drive recovered with the freed UNIBEN student left Benin on the first flight.' };
       return { pub:'NATIONAL DISPATCH',
@@ -1037,14 +1081,16 @@ V13.PHONE = Object.assign(V13.PHONE || {}, {
       text:"Your messages have no full stops again. That means you haven't slept. Eat something before you go anywhere o. And don't eat fish from those Delta rivers — your uncle says the oil has entered them." },
     { who:'UCHE',
       text:"Bought you a shirt for Thursday. Market shirt, parrots on it. It was the only one in your size. Don't argue." },
-    { who:'TOBI', cond:"(S.game.moralChoices||{}).asaba==='rescue'",
-      text:"I can't stop reading it. Every sailing is a Tuesday. Every T4 cash-out is a Thursday. Every C.A. payment is the 10th. Somebody ran this like a church harvest committee." },
-    { who:'UCHE', cond:"(S.game.moralChoices||{}).asaba!=='rescue'",
+    { who:'TOBI', cond:"V13.tobiAlive() && (" + S1_TRIED + ")",
+      text:"Eleven days on that payroll for the trial and I never opened _old. Now I can't stop reading it. Every sailing is a Tuesday. Every T4 cash-out is a Thursday. Every C.A. line in this sheet is the 10th — cash, not the Foundation's 1st. Somebody ran this like a church harvest committee." },
+    { who:'TOBI', cond:"V13.tobiAlive() && " + S1_UNTRIED,
+      text:"Eleven days on that payroll for the inquiry and I never opened _old. Now I can't stop reading it. Every sailing is a Tuesday. Every T4 cash-out is a Thursday. Every C.A. line in this sheet is the 10th — cash, not the Foundation's 1st. Somebody ran this like a church harvest committee." },
+    { who:'UCHE', cond:"!V13.tobiAlive()",
       text:"Igbinosa says to tell you every T4 cash-out in that book is a Thursday. He also says his tea is better than mine. One of those is true." },
     { who:'OSAGIE', cond:"(S.game.moralChoices||{}).s2_original==='kept'",
-      text:"Abuja has 'acknowledged' my retention order. One word, no signature. Go to Sapele, Agent. I'll be here. For now. — G.O." },
+      text:"Abuja has 'acknowledged' my retention order. One word, no signature. Go to Sapele, Agent. I'll be here. For now. — I.O." },
     { who:'OSAGIE', cond:"(S.game.moralChoices||{}).s2_original==='handed'",
-      text:"The escort signed for exhibit 14 at 05:14. I've asked HQ to confirm it arrived. No reply. I've asked again, in writing, and kept a copy. — G.O." },
+      text:"The escort signed for exhibit 14 at 05:14. I've asked HQ to confirm it arrived. No reply. I've asked again, in writing, and kept a copy. — I.O." },
     { who:'OSAGIE', cond:"(S.game.moralChoices||{}).s2_abuja_call==='deflect'",
       text:"Mr. Kuti called my house at 02:41. He asked after my daughters by name. I have never told him their names." },
   ],
@@ -1065,10 +1111,10 @@ V13.PHONE = Object.assign(V13.PHONE || {}, {
     { who:'UCHE', cond:"(S.game.moralChoices||{}).s2_jetty==='follow'",
       text:"Warri Area Command lifted Lucky at a filling station on the Effurun road. He asked for his lawyer and his phone charger, in that order." },
     { who:'OSAGIE', cond:"(S.game.moralChoices||{}).s2_jetty==='both'",
-      text:"The boatman's family came to Sapele Area Command at dawn. Thirty of them. He has four children. I've arranged for them to see him. — G.O." },
-    { who:'TOBI', cond:"(S.game.moralChoices||{}).asaba==='rescue'",
+      text:"The boatman's family came to Sapele Area Command at dawn. Thirty of them. He has four children. I've arranged for them to see him. — I.O." },
+    { who:'TOBI', cond:"V13.tobiAlive()",
       text:"The four accounts behind Lucky's cards were opened at the same Warri branch on the same afternoon, eighteen months ago, by the same bank officer. Writing it up." },
-    { who:'TUNDE',
+    { who:'TUNDE', cond:"!V13.s1snap().tundeWrong && !(V12.heat && V12.heat() >= 70)",
       text:"Oga Kelechi! Na Tunde. I hear say you don go Delta. Ikeja boys dey ask for you. Abeg no forget us for Lagos o.",
       textEn:"Officer Kelechi! It's Tunde. I hear you've gone to Delta. The Ikeja boys are asking after you. Please don't forget us in Lagos." },
     { who:'MUM',
@@ -1092,7 +1138,7 @@ V13.TIPS.HERBS.push(
   { after:'m11', true:true,
     text:"Lucky's boys laughed at my stall today. They said the oil goes to Port Harcourt black and comes back with a receipt. 'Paper oil', they called it." },
   { after:'m12', true:true,
-    text:"A black jeep with Abuja plates came to Lucky's house. The driver brought rice and an envelope and did not stay to greet. Lucky's wife is wearing new gold." },
+    text:"A black Prado with Abuja plates came to Lucky's house. The driver brought rice and an envelope and did not stay to greet. Lucky's wife is wearing new gold." },
   { after:'m13b', true:true,
     text:"Somebody is telling the market women not to talk in court. They say, 'Remember, the river is long.' I am too old to be frightened. Tell your lawyer." },
   { after:'m14', true:true,
