@@ -211,7 +211,7 @@ const walking = P => ST.movers.some(m => m.P === P);
 const partner = P => ST.P[P.id === 'kelechi' ? (ST.mode === 'corridor' ? ST.corridorWith : 'danladi') : 'kelechi'];
 const NARR = [
   [/Justice|judge|bench|Bakare/i, ()=>{ const J = ST.P.judge; if(J && walking(J)) SH.benchWide(); else if(J && J.ch.visible) SH.judge(); else SH.bench(); }],
-  [/Coker-Odusote|Senior Advocate/i, ()=>frameP(ST.P.san)],
+  [/Olaniran-Cole|Senior Advocate/i, ()=>frameP(ST.P.san)],
   [/Danladi/i, ()=>frameP(ST.P.danladi)],
   [/\bUche\b/i, ()=>frameP(ST.P.uche)],
   [/\bLucky\b|first defendant/i, ()=>frameP(ST.P.lucky)],
@@ -505,9 +505,10 @@ V13.defCase('m14', {
   },
   start(){
     ENGINE.movementEnabled = false; showHUD(false);
-    titleCard(['COURT 5', 'FRIDAY · 18:40'], fast() ? 500 : 2400, ()=>{
+    titleCard(['COURT 5', 'FRIDAY 8 JANUARY · 18:40'], fast() ? 500 : 2400, ()=>{
       showHUD(true); ENGINE.movementEnabled = true;
-      V13.toast('FEDERAL HIGH COURT', 'Barrister Danladi is waiting for you at the bar.', 2600);
+      // (RT06) the trial has no save of its own: say so before it starts (a notice, not a hint)
+      V13.toast('FEDERAL HIGH COURT', 'Barrister Danladi is waiting for you at the bar. Court 5 can\'t be saved part-way. Leave time for it.', 4200);
     });
   },
 });
@@ -519,11 +520,14 @@ function conference(){
   place(D, { x:P0.confDan.x, y:0, z:P0.confDan.z, rot:faceTo(P0.confDan.x, P0.confDan.z, P0.conf.x, P0.conf.z) }, 'idle', 'conf');
   R.court = true; ST.mode = 'conf';
   twoShot();
-  V13.court.run(stage).then(()=>{
+  V13.court.run(stage).then(r => {
+    if(r === null) return;                         // the trial was left part-way (V13.court.abort): no finish
     ['o14_conf', 'o14_day1', 'o14_cross', 'o14_day2', 'o14_day3'].forEach(V13.done);
     end();
     V13.finish('m14');
-  }).catch(e => { console.error('[m14]', e); end(); V13.finish('m14'); });
+  }).catch(e => { console.error('[m14]', e); end(); if(S.game.currentMission === 'm14') V13.finish('m14'); });
 }
 V13.court.stageOf = ()=>stage;
+/* (D4) leaving the trial part-way ends the staging too: the interlude, the camera override, the court's frame loop */
+V13.court.onAbort = end;
 })();
