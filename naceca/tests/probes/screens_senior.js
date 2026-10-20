@@ -1,7 +1,7 @@
 // screens team: Senior Agent (the default) gets no answer-giving hints on the Season 2 screens; Recruit does.
 //   R09 the sources board's EXPOSURE and "Exposed sources get fed lies"; R10 the fix board's PROTECTS and
 //   "Nothing to do for"; R15 the case file's tier tooltips; R11 Case 15's radio and toasts; R20 the crouch hint;
-//   RT04 our arrow on Monday's name. Desktop.
+//   RT04 our arrow on Monday's name; SC3 the yard objective's direction (Recruit only). Desktop.
 const { L, sc, checks, OFFICE, setMode, c15 } = require('./screens_lib.js');
 module.exports = async function (T) {
   const C = checks(T);
@@ -64,11 +64,25 @@ module.exports = async function (T) {
   T.log('said', JSON.stringify(said));
   const gate = said.find(s => /^toast:THE GATE/.test(s)) || '', yard = said.find(s => /^toast:THE YARD/.test(s)) || '', low = said.find(s => /^radio:SGT\. UCHE: Three/.test(s)) || '', hint = said.find(s => /^hint:m15_low/.test(s)) || '';
   C.ok('R11-toasts-senior', gate && !/West along/.test(gate) && yard && !/north end/.test(yard), gate + ' | ' + yard);
+  // (SC3) the objective set in the same beat carries no direction on Senior either
+  const objOf = () => T.ev(() => ((S.game.objectives || []).find(o => o.id === 'o15_board') || {}).text || '(missing)');
+  const objS = await objOf();
+  C.ok('R11-objective-senior', objS !== '(missing)' && /TEKENA 2/.test(objS) && !/north end/.test(objS), objS);
   C.ok('R11-radio-low-said', low && !/Stay low/.test(low), low);
   C.ok('R20-crouch-hint', /^hint:m15_low: Press <b>C<\/b>/.test(hint), hint);
   await setMode(T, 'recruit');
   const rr = await T.ev(() => ({ kit:V13._c15.radio('kit'), low:V13._c15.radio('low'), wait:V13._c15.radio('wait') }));
   C.ok('R11-radio-recruit', /his lawyers will swear/.test(rr.kit) && /Stay low/.test(rr.low) && /Waiting for you/.test(rr.wait), JSON.stringify(rr));
+  // (SC3) Recruit, the same gate and stand-off: the yard's toast and the objective both say where the barge is
+  T.log('m15 recruit', await c15(T, "S.game.difficulty = 'recruit'; SETTINGS.crouch = 'toggle';"));
+  await setMode(T, 'recruit');
+  await T.ev(() => { window.__said = []; V13.setFlag('s2_raid_entry', 'gate'); V13._c15.byGate(); });
+  await T.wait(800);
+  await T.ev(() => { const P = ENGINE.player.position; P.set(0.3, 0, 27.0); });
+  await L.waitDialogue(T, 20000); await sc.talk(T);
+  await T.until(() => (window.__said || []).some(s => /^toast:THE YARD/.test(s)), 20000);
+  const yardR = await T.ev(() => (window.__said || []).find(s => /^toast:THE YARD/.test(s)) || ''), objR = await objOf();
+  C.ok('R11-yard-recruit', /north end/.test(yardR) && /north end of the yard/.test(objR), yardR + ' | ' + objR);
 
   // ---------- RT04: Monday's name is shown, not pointed at, on Senior; Recruit keeps the pointer ----------
   const way = mode => T.ev(m => { S.game.difficulty = m; if (typeof syncDifficultyClass === 'function') syncDifficultyClass();

@@ -30,9 +30,22 @@ module.exports = async function (T) {
   await T.ev(() => V13.openSources(() => {}));
   await audit('sources', '#screen-sources');
   await T.ev(() => document.querySelector('#screen-sources .src-done').click());
+  // (SC2) every WHY line on the fix board is there in full at this viewport (no line clamp): on Senior, with no
+  // PROTECTS, it is the only basis for choosing a fix
+  const whyRead = () => T.ev(() => { const w = [...document.querySelectorAll('#screen-courtfix .cf-why')];
+    return { n:w.length, cut:w.filter(e => e.scrollHeight > e.clientHeight + 1).map(e => e.textContent.slice(0, 36) + '… ' + e.scrollHeight + '/' + e.clientHeight),
+      clamp:w.filter(e => { const c = getComputedStyle(e).webkitLineClamp; return c && c !== 'none'; }).length, prot:document.querySelectorAll('#screen-courtfix .cf-prot').length }; });
+  const openFix = () => T.ev(() => { S.game.moralChoices.s2_original = 'handed'; V13.s2().fixes = {}; V13.court.openFixes(2, () => {}, { where:'h13', kicker:'A BORROWED DESK', note:'One thing you can put right today.' }); });
+  await setMode(T, 'senior');
+  await openFix(); await T.wait(400);
+  const ws = await whyRead();
+  C.ok(`R10-why-readable-senior-${tag}`, ws.n >= 4 && ws.cut.length === 0 && ws.clamp === 0 && ws.prot === 0, JSON.stringify(ws));
+  await T.ev(() => document.querySelector('#screen-courtfix .cf-close').click());
   await setMode(T, 'recruit');                                      // Recruit: the board also shows PROTECTS and "Nothing to do for"
-  await T.ev(() => { S.game.moralChoices.s2_original = 'handed'; V13.s2().fixes = {}; V13.court.openFixes(2, () => {}, { where:'h13', kicker:'A BORROWED DESK', note:'One thing you can put right today.' }); });
+  await openFix();
   await audit('courtfix', '#screen-courtfix');
+  const wr = await whyRead();
+  C.ok(`R10-why-readable-recruit-${tag}`, wr.n >= 4 && wr.cut.length === 0 && wr.prot > 0, JSON.stringify(wr));
   // R18: at 844x390 every card can be reached (the board wraps into rows and scrolls down; nothing is cut sideways)
   const fit = await T.ev(() => { const g = document.querySelector('#screen-courtfix .cf-grid'), cards = [...g.querySelectorAll('.cf-card')], gr = g.getBoundingClientRect();
     return { n:cards.length, sideways:g.scrollWidth > g.clientWidth + 1, cut:cards.filter(c => { const r = c.getBoundingClientRect(); return r.right > gr.right + 1 || r.left < gr.left - 1; }).length, scrollY:g.scrollHeight > g.clientHeight + 1 }; });

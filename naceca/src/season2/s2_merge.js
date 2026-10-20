@@ -118,18 +118,28 @@ const inS2 = ()=>{ const m = S.game && S.game.currentMission; return !!m && (V13
 const ico = n => (typeof icon === 'function' ? icon(n) : '');
 const rec = ()=>typeof isRecruit === 'function' && isRecruit();
 const hudOn = ()=>{ const h = document.getElementById('hud'); return !!h && h.style.display !== 'none'; };
-const CF = { open:false, hud:false };
-document.addEventListener('v13:navreset', ()=>{ CF.open = false; });
+const CF = { open:false, hud:false, pause:false };
+document.addEventListener('v13:navreset', ()=>{ CF.open = false; CF.pause = false; });
 const closeCF = ()=>{
   if(typeof v13ModalEnd === 'function') try{ v13ModalEnd('screen-s2case'); }catch(e){}
+  const wasHud = CF.hud, fromPause = CF.pause; CF.open = false; CF.pause = false;
+  // (SC1) opened from the pause menu (CASE FILE): BACK and Esc go back to the pause menu, as Season 1's Case Desk
+  // does, and its RESUME puts the HUD back. (The HUD was already hidden under the pause menu, so wasHud is false.)
+  const pa = document.getElementById('screen-pause');
+  if(fromPause && pa){
+    const ov = document.getElementById('screen-s2case'); if(ov) ov.classList.remove('show');
+    showOverlay('screen-pause');
+    return;
+  }
   showOverlay(null);
-  const wasHud = CF.hud; CF.open = false;
   if(wasHud && S.game && S.game.currentMission && typeof showHUD === 'function') showHUD(true);
 };
 V13.openCaseFileS2 = function(){
   let ov = document.getElementById('screen-s2case');
   if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-s2case'; document.getElementById('game-root').appendChild(ov); }
-  if(!CF.open){ CF.hud = hudOn(); CF.open = true; }
+  // what BACK returns to is read as the case file comes on screen: a re-render while it is shown (the pause menu's
+  // RESUME, TAB again) keeps it; one that something else closed (a scripted beat, showOverlay) is opened afresh
+  if(!CF.open || !ov.classList.contains('show')){ CF.hud = hudOn(); CF.pause = !!document.querySelector('#screen-pause.show'); CF.open = true; }
   const ev = S.game.evidence || [], q = S.game.evQ || {}, tr = V13.s2().trial || {}, ex = tr.exhibits || {};
   const cur = S.game.currentMission, card = V13.CARD(cur) || {}, hub = V13.HUBS && V13.HUBS[cur];
   const name = id => { const e = ev.find(x => x.id === id); return e ? e.name : id; };

@@ -843,7 +843,8 @@ function standoff(){
       if(R.lampHome) R.lampHome();
       go(R.osagie, [[-0.6, 24.6], [-0.2, 22.0]], { face:-PI / 2 - 0.3, end:'folded' });
       V13.done('o15_in');
-      objText('o15_board', 'Reach TEKENA 2\'s gangway — the north end of the yard — before they see a warrant');
+      // (SC3) where the barge lies is Recruit's, in the objective as in the toast below
+      objText('o15_board', rec() ? 'Reach TEKENA 2\'s gangway — the north end of the yard — before they see a warrant' : 'Reach TEKENA 2\'s gangway before they see a warrant');
       controls(true);
       trailReset(); R.tOsa.on = false; R.tHau.on = true; R.tUche.on = true;
       V13.toast('THE YARD', 'The task force steps aside. Okundaye stays with the ACP.' + (rec() ? ' The barge is at the north end.' : ''), 3200);

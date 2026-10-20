@@ -77,7 +77,10 @@ module.exports = async function (T) {
   C.ok('R19-motion-cb', motion.stampAnim === 'none' && +motion.stampOpacity === 1 && motion.stampBorder === 'dashed', JSON.stringify(motion));
 
   // ---------------- D4: quit to the title in the middle of the trial ----------------
-  const pre = "S.game.completedMissions.push('m9','m10','m11','m12','m13','m13b'); V13.s2().hubs = { h9:1, h10:1, h11:1, h12:1, h13:1 };";
+  // (SC4) the load must have something to rewrite: a contested Season 1 finale, convicted on one count at the trial,
+  // and no Season 2 record yet. The kit's first build turned that into finale 'proven'.
+  const pre = "delete S.game.s2; I().court = { proven:['c1'] }; S.game.flags = S.game.flags || {}; S.game.flags.finale = 'contested'; S.game.moralChoices.finale = 'contested';" +
+    "S.game.completedMissions.push('m9','m10','m11','m12','m13','m13b'); V13.s2().hubs = { h9:1, h10:1, h11:1, h12:1, h13:1 };";
   await T.ev(() => { window.__cards = []; window.__toasts = []; const tc = window.titleCard, to = V13.toast;
     window.titleCard = function(lines){ window.__cards.push((lines || []).join(' / ')); return tc.apply(this, arguments); };
     V13.toast = function(a, b){ window.__toasts.push(a + ': ' + b); return to.apply(this, arguments); }; });
@@ -87,8 +90,9 @@ module.exports = async function (T) {
   C.ok('CN03-start-card', start.cards.some(c => c === 'COURT 5 / FRIDAY 8 JANUARY · 18:40'), JSON.stringify(start.cards));
   C.ok('RT06-no-save-notice', start.toasts.some(t => /can't be saved part-way/.test(t)), JSON.stringify(start.toasts));
   // a Season 2 load: Season 1's verdict untouched, Season 2's reading stored
-  const loaded = await T.ev(() => ({ finale:S.game.moralChoices.finale, fateDone:V13.s2().fateDone }));
-  C.ok('CN13-load', loaded.finale === 'contested' && loaded.fateDone === 1, JSON.stringify(loaded));
+  const loaded = await T.ev(() => ({ finale:S.game.moralChoices.finale, flag:S.game.flags.finale, fateDone:V13.s2().fateDone, s1fate:V13.s2().s1fate,
+    read:V13.s1fate ? V13.s1fate() : null, cond:V13.court.cond('adaeze_proven') }));
+  C.ok('CN13-load', loaded.finale === 'contested' && loaded.flag === 'contested' && loaded.fateDone === 1 && loaded.s1fate === 'proven' && loaded.cond, JSON.stringify(loaded));
   await T.ev(() => { V13.court.fast = true; });
   await T.until(() => !document.querySelector('#title-card.show') && ENGINE.movementEnabled, 30000);
   await sc.use(T, 'Barrister Danladi');

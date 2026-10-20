@@ -2,6 +2,8 @@
 //   R02  the awards' descriptions say nothing about Season 1's answer
 //   R03  in Season 2 the "J · CASE DESK" pill is gone (TAB · CASE FILE does the job) and the pause button reads
 //        CASE FILE; in Season 1 both are back (J itself is routed by the guards team: SKIP until it lands)
+//   SC1  pause menu → CASE FILE → BACK or Esc lands on the pause menu again, RESUME brings the HUD back (SKIP while the
+//        pause button still opens Season 1's desk, before the guards' routing)
 //   R14  the water clock runs at the game's timer rate (0: timed sequences off, it never runs out)
 //   D9   Monday reaches the accusation without MONDAY_FALLBACK: with no art (the stub) at once, and after a hung
 //        decode within the 12 s timeout
@@ -24,6 +26,34 @@ module.exports = async function (T) {
   const j = await overlays(T);
   if (/screen-s2case/.test(j)) C.ok('R03-J-opens-casefile', true, j); else if (/screen-desk/.test(j)) C.skip('R03-J-opens-casefile', 'needs guards (v13_desk.js J → window.openDesk): J opened ' + j); else C.ok('R03-J-opens-casefile', false, j);
   await T.ev(() => { showOverlay(null); try { if (typeof closeDesk === 'function') closeDesk(); } catch (e) {} ENGINE.movementEnabled = true; showHUD(true); });
+  // SC1: pause menu → CASE FILE → BACK (and Esc) goes back to the pause menu, and its RESUME brings the HUD back (on touch
+  // the INTERACT, CASE FILE, sprint and pause buttons all live in #hud). Opened from the field, BACK puts the HUD back.
+  const pst = () => T.ev(() => { const h = document.getElementById('hud');
+    return { ov:[...document.querySelectorAll('.overlay.show')].map(o => o.id).join(','), hud:h ? getComputedStyle(h).display : 'missing', mv:ENGINE.movementEnabled }; });
+  await T.ev(() => togglePause()); await T.wait(400);
+  await T.ev(() => document.getElementById('btn-pause-desk').click()); await T.wait(800);
+  const p1 = await overlays(T);
+  if (/screen-desk/.test(p1)) {
+    for (const id of ['R03-S2-pause-casefile-back', 'R03-S2-pause-casefile-esc', 'R03-S2-pause-resume-hud']) C.skip(id, 'needs guards (v13_desk.js pause CASE DESK → window.openDesk): the button opened ' + p1);
+  } else {
+    C.ok('R03-S2-pause-opens-casefile', /screen-s2case/.test(p1), p1);
+    await T.ev(() => { const b = document.querySelector('#screen-s2case.show .s2c-done'); if (b) b.click(); }); await T.wait(1200);
+    const back = await pst();
+    C.ok('R03-S2-pause-casefile-back', back.ov === 'screen-pause', JSON.stringify(back));
+    await T.ev(() => { if (!document.querySelector('#screen-pause.show')) togglePause(); document.getElementById('btn-pause-desk').click(); }); await T.wait(800);
+    const open2 = await overlays(T);
+    await T.page.keyboard.press('Escape'); await T.wait(1000);
+    const esc = await pst();
+    C.ok('R03-S2-pause-casefile-esc', /screen-s2case/.test(open2) && esc.ov === 'screen-pause', JSON.stringify({ open2, esc }));
+    await T.ev(() => { const b = document.querySelector('#screen-pause.show #btn-resume'); if (b) b.click(); }); await T.wait(800);
+    const res = await pst();
+    C.ok('R03-S2-pause-resume-hud', res.ov === '' && res.hud !== 'none', JSON.stringify(res));
+  }
+  await T.ev(() => { showOverlay(null); try { if (typeof closeDesk === 'function') closeDesk(); } catch (e) {} ENGINE.movementEnabled = true; showHUD(true); });
+  await T.ev(() => V13.openCaseFileS2()); await T.wait(500);
+  await T.ev(() => { const b = document.querySelector('#screen-s2case.show .s2c-done'); if (b) b.click(); }); await T.wait(800);
+  const field = await pst();
+  C.ok('R03-S2-field-casefile-back', field.ov === '' && field.hud !== 'none', JSON.stringify(field));
   await T.ev(() => { showOverlay(null); loadMission('m1'); });
   await T.wait(1500); await T.ev(() => { if (document.querySelector('#screen-controls.show')) beginMission('m1'); });
   await T.until(() => S.game.currentMission === 'm1' && ENGINE.movementEnabled, 60000); await T.wait(1500);

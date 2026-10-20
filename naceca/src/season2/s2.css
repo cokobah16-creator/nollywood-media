@@ -165,6 +165,8 @@ body.s2-casefile #btn-desk{display:none}
 #screen-seal15 .acc-frame{width:min(760px,100%)}
 #screen-case15 .acc-frame{width:min(860px,100%)}
 :is(#screen-seal15,#screen-accuse15) .acc-card img{border-radius:2px}
+/* (SC5) a <button> does not inherit the page font: the card's role line (span) would be Arial */
+:is(#screen-seal15,#screen-accuse15) .acc-card:not(.cw-card){font-family:'Inter',sans-serif}
 :is(#screen-seal15,#screen-accuse15) .v12-step-h b{border-radius:2px}
 .acc-item .a15-q{font-style:normal;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:9px;letter-spacing:.14em;margin-left:6px;color:var(--red,#B3261E)}
 .acc-card.a15-sealed{border-bottom:3px solid var(--red,#B3261E)}
