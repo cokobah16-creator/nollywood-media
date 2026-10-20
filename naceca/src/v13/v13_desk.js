@@ -233,12 +233,18 @@ function deskOpsTable(){
   opsOpen(undefined, reshowDesk);
 }
 
+/* ---------- in-case entry points (J, the pause menu, the HUD pill) ----------
+   Guard for a later layer: these go through window.openDesk, so a layer that wraps it (Season 2's case file,
+   src/season2/s2_merge.js) is honoured in its own cases. Without such a layer window.openDesk IS openDesk, so
+   this is the same call. The mission select's CASE DESK and the ops-table return stay on this desk. */
+function deskEntry(){ const f = (typeof window.openDesk === 'function') ? window.openDesk : openDesk; return f(); }
+
 /* ---------- keys: J toggles the desk (desktop), Esc closes it ---------- */
 function onKey(e){
   if(e.code !== 'KeyJ' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   if(e.target && e.target.matches && e.target.matches('input, textarea, select')) return;
   if(DESK.open && shown('screen-desk')){ e.preventDefault(); closeDesk(); return; }
-  if(typeof ENGINE !== 'undefined' && ENGINE.movementEnabled && !(typeof isOverlayOpen === 'function' && isOverlayOpen())){ e.preventDefault(); openDesk(); }
+  if(typeof ENGINE !== 'undefined' && ENGINE.movementEnabled && !(typeof isOverlayOpen === 'function' && isOverlayOpen())){ e.preventDefault(); deskEntry(); }
 }
 // without the model's Esc registry: the desk and a table it opened handle Esc themselves
 function onEscFallback(e){
@@ -618,7 +624,7 @@ function deskInit(){
   const ms = document.getElementById('screen-missions');
   add(ms, 'btn-missions-desk', `${ico('folder')}CASE DESK`, 'btn ghost', () => openDesk(), document.getElementById('btn-missions-back'));
   const pa = document.querySelector('#screen-pause .title-actions');
-  add(pa, 'btn-pause-desk', `${ico('folder')}CASE DESK`, 'btn', () => openDesk(), document.getElementById('btn-save'));
+  add(pa, 'btn-pause-desk', `${ico('folder')}CASE DESK`, 'btn', () => deskEntry(), document.getElementById('btn-save'));
   // the case files screen offers the desk only when there is an investigation to show
   const sync = () => { const b = document.getElementById('btn-missions-desk'); if(!b) return;
     const any = !!(S && S.game && ((S.game.completedMissions || []).length || S.game.currentMission || (S.game.evidence || []).length));
@@ -630,7 +636,7 @@ function deskInit(){
   if(pills && !document.getElementById('btn-desk')){
     const p = document.createElement('span'); p.className = 'pill'; p.id = 'btn-desk'; p.setAttribute('role', 'button'); p.tabIndex = -1;
     p.innerHTML = '<span class="k">J · </span>CASE DESK';
-    p.addEventListener('click', e => { e.stopPropagation(); if(typeof ENGINE !== 'undefined' && ENGINE.movementEnabled) openDesk(); });
+    p.addEventListener('click', e => { e.stopPropagation(); if(typeof ENGINE !== 'undefined' && ENGINE.movementEnabled) deskEntry(); });
     const cf = document.getElementById('btn-casefile');
     cf && cf.parentNode === pills ? pills.insertBefore(p, cf.nextSibling) : pills.appendChild(p);
   }

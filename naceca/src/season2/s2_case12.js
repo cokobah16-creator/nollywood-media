@@ -49,14 +49,22 @@ V13.wrap('applyEffect', orig => function(eff, flag){
   SND.scene = function(mid){ return orig.call(this, mid === 'm12' ? 'm6' : mid); };
 })();
 const setQ = (id, q)=>{ S.game.evQ = S.game.evQ || {}; S.game.evQ[id] = q; };
+/* casework mode and the countdown rate (V13.rec / V13.timeRate from s2_core.js when present, else the same rule):
+   Recruit gets the next-step lines; every countdown advances by dt * the Action-pace rate (0 = timed sequences off) */
+const rec = ()=>typeof V13.rec === 'function' ? !!V13.rec() : (typeof isRecruit === 'function' && isRecruit());
+const rate = ()=>{ const r = typeof V13.timeRate === 'function' ? V13.timeRate() : (typeof timerRate === 'function' ? timerRate() : 1); return (typeof r === 'number' && isFinite(r) && r >= 0) ? r : 1; };
+/* Tobi is alive iff he was rescued, or chased and the hostage was not lost (STORY-CANON; V13.tobiAlive from s2_core.js) */
+const tobiAlive = ()=>typeof V13.tobiAlive === 'function' ? !!V13.tobiAlive() : (m => m.asaba === 'rescue' || (m.asaba === 'chase' && !S.game._asabaHostageLost))(S.game.moralChoices || {});
 const grade = id => { if(!V13.hasEv(id)) return; setQ(id, (RT().failed || {})[id] ? 'weak' : QUAL[id]()); };
 
 /* ---------- the few lines this file adds (radio and toasts, in the writers' voice) ---------- */
 const X = {
   m12_x_cold:"Shredder's cold, sir. Nobody had time.",
   m12_x_phone:"The guard is on his phone, sir. Whoever he's calling is coming. Papers first.",
+  m12_x_phone_sr:"The guard is on his phone, sir. Whoever he's calling is coming.",                  // Senior: no order of work
   m12_x_prado:"Black Prado at the gate, sir. Nobody got out. One phone call, and it's gone.",
   m12_x_beat:"Papers are in our car, sir. Let whoever he called come now.",
+  // Recruit only (the next step): m12_x_both, m12_x_union, m12_x_tank
   m12_x_both:"Tank 3 next, sir. And the boat drivers' shed by the jetty. Boat people see every barge that ties up.",
   m12_x_union:"The boat drivers' shed by the jetty, sir. Boat people see every barge that ties up.",
   m12_x_tank:"Tank 3 now, sir. A bottle from that valve, then the lab bench.",
@@ -315,14 +323,14 @@ const PAGE = { W:1000, H:620,
   cols:[96, 208, 304, 444, 506, 654, 918],
   heads:['DATE', 'TIME', 'TRUCK', 'TANK', 'LITRES', 'CONSIGNEE', 'GUARD'],
   rows:[
-    ['24 SEP', '21:10', 'RIV-07', 'T1', '33,000', 'ADAUGO F/S, ABA', 'E.B.'],
-    ['25 SEP', '05:40', 'RIV-11', 'T3', '33,000', '"various"', 'E.B.'],
-    ['25 SEP', '05:55', 'RIV-02', 'T3', '33,000', '"various"', 'E.B.'],
-    ['25 SEP', '06:10', 'RIV-14', 'T3', '33,000', '"various"', 'E.B.'],
-    ['25 SEP', '06:25', 'RIV-09', 'T3', '33,000', '"various"', 'E.B.'],
-    ['25 SEP', '06:40', 'RIV-05', 'T3', '33,000', '"various"', 'E.B.'],
-    ['26 SEP', '14:05', 'RIV-07', 'T1', '33,000', 'BRIGHTWAY, ONITSHA', 'E.B.'],
-    ['02 OCT', '05:30', 'RIV-11+4', 'T3', '5 × 33,000', '"various"', 'E.B.'],
+    ['26 NOV', '21:10', 'RIV-07', 'T1', '33,000', 'ADAUGO F/S, ABA', 'E.B.'],
+    ['27 NOV', '05:40', 'RIV-11', 'T3', '33,000', '"various"', 'E.B.'],
+    ['27 NOV', '05:55', 'RIV-02', 'T3', '33,000', '"various"', 'E.B.'],
+    ['27 NOV', '06:10', 'RIV-14', 'T3', '33,000', '"various"', 'E.B.'],
+    ['27 NOV', '06:25', 'RIV-09', 'T3', '33,000', '"various"', 'E.B.'],
+    ['27 NOV', '06:40', 'RIV-05', 'T3', '33,000', '"various"', 'E.B.'],
+    ['28 NOV', '14:05', 'RIV-07', 'T1', '33,000', 'BRIGHTWAY, ONITSHA', 'E.B.'],
+    ['04 DEC', '05:30', 'RIV-11+4', 'T3', '5 × 33,000', '"various"', 'E.B.'],
   ],
   top:156, dy:46, hl:[1, 2, 3, 4, 5, 7] };
 function rng(seed){ let s = seed >>> 0; return ()=>{ s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
@@ -337,7 +345,7 @@ function paintPage(cv){
   x.fillStyle = '#2a3550'; x.font = '700 34px Oswald, "Arial Narrow", Arial, sans-serif'; x.textBaseline = 'alphabetic'; x.textAlign = 'left';
   x.fillText('RIVERSTONE MARINE SERVICES LTD', 96, 54);
   x.fillStyle = '#4a5878'; x.font = '600 21px Oswald, "Arial Narrow", Arial, sans-serif';
-  x.fillText('GATE REGISTER  ·  TANKERS OUT  ·  SEP / OCT', 96, 88);
+  x.fillText('GATE REGISTER  ·  TANKERS OUT  ·  NOV / DEC', 96, 88);
   x.strokeStyle = '#2a3550'; x.lineWidth = 3; x.beginPath(); x.arc(908, 58, 34, 0, 2 * PI); x.stroke();
   x.fillStyle = '#2a3550'; x.font = '700 26px Oswald, "Arial Narrow", Arial, sans-serif'; x.textAlign = 'center'; x.fillText('114', 908, 68); x.textAlign = 'left';
   x.fillStyle = '#56648a'; x.font = '600 16px Oswald, "Arial Narrow", Arial, sans-serif';
@@ -459,15 +467,16 @@ if(typeof MG_TYPES !== 'undefined') MG_TYPES.m12_strips = stripsGame;
 #mg-frame.m12s .mg-timer{display:none}
 #mg-frame.m12s .mg-stage{min-height:0}
 .m12s-box{width:100%;display:flex;justify-content:center;padding:8px 0 2px}
-.m12s-wrap{position:relative;flex:0 0 auto;transition:box-shadow .4s ease,width .24s ease}
-.m12s-strip{position:absolute;top:0;display:block;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.55);transition:left .24s ease,transform .16s ease,box-shadow .16s ease;-webkit-tap-highlight-color:transparent;touch-action:none}
-.m12s-strip.sel{transform:translateY(-7px);box-shadow:0 0 0 2px var(--naceca-gold-bright,#f0c878),0 10px 18px rgba(0,0,0,.6);z-index:3}
-.m12s-strip.cur{outline:2px dashed rgba(240,200,120,.85);outline-offset:3px}
-.m12s-wrap.solved{box-shadow:0 0 0 2px var(--naceca-gold,#d8a64a),0 0 26px rgba(216,166,74,.45)}
-.m12s-wrap.solved .m12s-strip{box-shadow:none;cursor:default}
-.m12s-hl{position:absolute;background:rgba(240,200,120,.24);border-top:1px solid rgba(216,166,74,.75);border-bottom:1px solid rgba(216,166,74,.75);opacity:0;transition:opacity .6s ease .35s;pointer-events:none;z-index:4}
+.m12s-wrap{position:relative;flex:0 0 auto;transition:width .24s ease}
+.m12s-strip{position:absolute;top:0;display:block;cursor:pointer;transition:left .24s ease,transform .16s ease;-webkit-tap-highlight-color:transparent;touch-action:none}
+.m12s-strip.cur{outline:2px dashed var(--ink,#1C1C1A);outline-offset:-2px}
+.m12s-strip.sel{transform:translateY(-7px);outline:2px solid var(--ink,#1C1C1A);outline-offset:-2px;z-index:3}
+.m12s-wrap.solved{outline:2px solid var(--green,#0B6E4F);outline-offset:2px;box-shadow:none}
+.m12s-wrap.solved .m12s-strip{cursor:default}
+.m12s-hl{position:absolute;background:rgba(11,110,79,.18);border-top:1px solid var(--ink,#1C1C1A);border-bottom:1px solid var(--ink,#1C1C1A);opacity:0;transition:opacity .6s ease .35s;pointer-events:none;z-index:4}
 .m12s-wrap.solved .m12s-hl{opacity:1}
 .m12s-wrap.m12s-nt,.m12s-wrap.m12s-nt .m12s-strip{transition:none!important}
+body.reduce-motion .m12s-wrap,body.reduce-motion .m12s-strip,body.reduce-motion .m12s-hl{transition:none!important}
 .m12s-count{text-align:center;margin-top:8px}
 @media (max-height:560px){
   #screen-minigame.overlay:has(#mg-frame.m12s){padding:calc(8px + env(safe-area-inset-top,0px)) calc(8px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(8px + env(safe-area-inset-left,0px))}
@@ -492,6 +501,8 @@ if(typeof MG_TYPES !== 'undefined') MG_TYPES.m12_strips = stripsGame;
 /* =========================================================================
    THE CASE
    ========================================================================= */
+/* Wayfinding (RT04, Senior Agent): every interactable in this case is required (none is an optional decoy), so the
+   beta's last-resort pointer only ever names the next required spot. No WAY.OBJ_TARGETS rows are needed here. */
 V13.defCase('m12', {
   title:'Paper Oil', region:'Rivers', sub:'Riverstone Tank Farm · 17:40', evMax:5, xp:380, ambient:'checkpoint',
   objectives:()=>[
@@ -512,15 +523,15 @@ V13.defCase('m12', {
     for(const store of ['_docMiss', '_docFree', '_docLocked']) if(S.game[store]) for(const k of DOCKEYS) delete S.game[store][k];
   },
   build(){
-    // Sotonye's car is the grey Corolla the dialogue names
+    // Sotonye's car is the red Kia the dialogue names
     const meta = V13.A(K);
-    if(meta.SotonyeCar) meta.SotonyeCar.color = '#5d6268';
+    if(meta.SotonyeCar) meta.SotonyeCar.color = '#8a2a22';
     V13.scene(K, { start:'start' });
     const R = RT();
     R.failed = {}; R.docDone = {}; R.min = 0;
-    if(typeof addObstacle === 'function') addObstacle(-9.4, 10.8, 4.5, 1.9);               // the Corolla
+    if(typeof addObstacle === 'function') addObstacle(-9.4, 10.8, 4.5, 1.9);               // the Kia
     ENGINE.ceilingY = 3.0; ENGINE.inside = p => inOffice(p) || inLab(p);
-    // the gate: security and two guards inside, Hauwa and Uche on the pavement
+    // the gate: security and two guards inside, Barrister Danladi and Uche on the pavement
     R.uche = V13.person({}, A('uche_start'), { kind:'uche', solid:false });
     // Barrister Danladi in her black suit, a navy head-tie like her case-file photo
     R.hauwa = V13.person(V13.look('hauwa', { gear:['Gear_F_Gele'], gele:'#27314e', skirt:'#161616', hips:'#161616', thigh:'#161616' }), A('hauwa'), { id:'hauwa', solid:false });
@@ -581,13 +592,13 @@ function afterHauwa(){
     R.itGuard = addIt(V13.talk(R.guard, 'Order the gate open', gateTalk, { range:3.4 }), 0);
     return;
   }
-  // the warrant: Hauwa goes to the duty magistrate; the evening goes on without them
+  // the warrant: Barrister Danladi goes to the duty magistrate; the evening goes on without them
   objText('o12_gate', 'Wait for the warrant');
   walkTo(R.hauwa, [[3.5, 29.7], [10.5, 30.3]], { speed:1.7 });
   V13.after(1.4, ()=>{
     V13.skip(['18:30', 'FIFTY MINUTES LATER'], warrantBack, 2600);
     setTimeout(()=>{
-      // behind the card: the sun has gone, the office lights came on at minute twelve, Hauwa is back with Corporal Amina
+      // behind the card: the sun has gone, the office lights came on at minute twelve, Barrister Danladi is back with Corporal Amina
       stopWalk(R.hauwa); R.hauwa.position.set(-1.25, 0, 28.15); V13.play(R.hauwa, 'idle');
       R.amina = V13.person('amina', { x:-2.3, z:28.75, rot:PI / 2 }, { id:'amina', solid:false });
       faceTo(R.hauwa, ENGINE.player.position.x, ENGINE.player.position.z);
@@ -632,7 +643,7 @@ function openGate(){
   R.follow = { uche:{ ch:R.uche, h:V13.follow(R.uche, { dist:2.0 }) }, hauwa:{ ch:R.hauwa, h:tail(R.hauwa, -1.0, 2.3) } };
   if(R.amina) V13.after(1.6, ()=>walkTo(R.amina, [[0.6, 26.0], [0.6, 21.6], [-6.0, 15.8], [-10.8, 8.0], ...OFFICE.door.slice(1), OFFICE.amina.p], { speed:1.8, face:OFFICE.amina.f, end:'folded' }));
   yard();
-  if(wentIn()){ ownerStart(); V13.after(2.0, ()=>V13.radio('SGT. UCHE', X.m12_x_phone, 4200)); }
+  if(wentIn()){ ownerStart(); V13.after(2.0, ()=>V13.radio('SGT. UCHE', rec() ? X.m12_x_phone : X.m12_x_phone_sr, 4200)); }
 }
 
 /* ---------- inside the fence: the office, Tank 3, the union shed, all at once ---------- */
@@ -696,7 +707,7 @@ function shred(){
     const ok = miniPlay({ id:'m12_shred', type:'m12_strips', kicker:'CASE 12 · THE SHREDDER', title:'ONE PAGE, SEVEN STRIPS', noStrikes:true, xp:20,
       sub:'Every strip in the bin came from one page. <b>Tap two strips to swap them.</b> When the lines run straight across, the page reads.',
       startLabel:'TIP OUT THE BIN', winText:'THE PAGE READS', backNote:'The bin stays bagged',
-      winNote:'Gate register, page 114: five tankers out of Tank 3 on 25 September, 33,000 litres each. Consignee: "various".',
+      winNote:'Gate register, page 114: five tankers out of Tank 3 on 27 November, 33,000 litres each. Consignee: "various".',
       params:{ n:7, onSolved:()=>{ RT().page = true; } } }, res => {
       R.shredBusy = false;
       if(R.page || (res && res.ok)){ R.page = true; pageDone(); return; }
@@ -747,12 +758,15 @@ function afterSotonye(it){
   V13.play(R.sotonye, f === 'pressured' ? 'folded' : 'idle');
   V13.done('o12_office'); clock(5);
   objText('o12_log', 'Get the USB from Sotonye\'s car');
-  R.itCar = addIt(V13.spot(SPOT.car, 'Open the Corolla\'s glovebox', glovebox, { verb:'open', range:2.2 }), 12);
+  R.itCar = addIt(V13.spot(SPOT.car, 'Open the Kia\'s glovebox', glovebox, { verb:'open', range:2.2 }), 12);
 }
 function glovebox(it){
   const R = RT();
+  if(R.usbBusy) return;                       // the envelope is out, the stick is coming: a second press waits for it
   if(R.usb){ readUsb(it); return; }
   const go = ()=>{
+    if(R.usbBusy) return;
+    R.usbBusy = true;
     R.usb = true; if(typeof sfxEvidence === 'function') sfxEvidence();
     V13.toast('GLOVEBOX', 'An envelope marked INSURANCE. Inside: one USB stick.', 2400);
     setTimeout(()=>readUsb(it), 900);
@@ -763,6 +777,7 @@ function glovebox(it){
 }
 function readUsb(it){
   const R = RT();
+  R.usbBusy = false;
   it.label = 'Read the USB stick';
   docStep('m12_log', 'loading_log', it, ()=>{
     V13.drop(it); R.itCar = null;
@@ -773,11 +788,13 @@ function readUsb(it){
 /* the seizure: an inventory she signs and keeps, or none */
 function seize(it){
   const R = RT();
+  if(R.seizing || R.officeDone) return;       // one seizure, one inventory
+  R.seizing = true;
   meet(R.sotonye); roomShot(R.sotonye);
   V13.say('m12_inventory', ()=>{
-    unshot(); V13.drop(it); R.itSeize = null;
+    unshot(); V13.drop(it); R.itSeize = null; R.seizing = false;
     const signed = MC().s2_inventory === 'signed';
-    clock(signed ? 35 : 5); ownerAdd(signed ? 45 : 0);
+    clock(signed ? 35 : 5); ownerAdd(signed ? 45 : 0);              // (the owner's clock takes it at the Action-pace rate)
     V13.ev('gate_register', EVNAME.gate_register, QUAL.gate_register(), 50); grade('gate_register');
     grade('loading_log');
     V13.done('o12_seize'); R.officeDone = true; R.step = 'done';
@@ -822,11 +839,13 @@ function ibinabo(it){
    Backing off leaves the interactable where it was, so the player can come back to it. */
 function docStep(key, id, it, then){
   const R = RT();
-  if(R.docDone[key]){ if(then) then(); return; }
+  if(R.docDone[key]){ if(it) V13.drop(it); return; }                       // already on the record: a stale prompt goes, nothing runs twice
+  if(R.docOpen === key) return;                                            // already on screen (a second press inside the delay)
+  R.docOpen = key;
   S.game.evQ = S.game.evQ || {}; delete S.game.evQ[id];
   let fired = false;
   V13.doc(key, ok => {
-    fired = true; R.docDone[key] = true;
+    fired = true; R.docDone[key] = true; if(R.docOpen === key) R.docOpen = null;
     if(S.game.evQ[id] === 'weak') R.failed[id] = true;
     if(!V13.hasEv(id)) V13.ev(id, EVNAME[id], 'weak', 30);
     grade(id);
@@ -838,6 +857,8 @@ function docStep(key, id, it, then){
     const el = document.getElementById('screen-puzzle');
     if(Date.now() - t0 > 700 && !(el && el.classList.contains('show'))){
       clearInterval(iv);
+      if(R.docOpen === key) R.docOpen = null;
+      if(R.docDone[key]) return;
       if(it){ it._used = false; if(ENGINE.interactables.indexOf(it) < 0) ENGINE.interactables.push(it); }
       V13.toast('LATER', 'It will keep. Come back to it when you are ready.', 2000);
     }
@@ -852,10 +873,11 @@ function afterThread(which){
   if(R.officeDone && tank && union){ if(!R.cac){ R.cac = true; V13.after(2.0, cacCall); } return; }
   if(!R.officeDone || R.nudged) return;
   R.nudged = true;
+  if(!rec()) return;                                                       // Senior: nobody tells you what is next
   V13.after(wentIn() ? 5.5 : 1.4, ()=>V13.radio('SGT. UCHE', !tank && !union ? X.m12_x_both : !union ? X.m12_x_union : X.m12_x_tank, 4400));
 }
 function cacCall(){
-  const tobi = MC().asaba === 'rescue';
+  const tobi = tobiAlive();
   clock(10);
   ring(tobi ? 'Tobi' : 'Mr. Igbinosa', ()=>V13.call(tobi ? /^TOBI/ : /IGBINOSA/, tobi ? 'm12_tobi_cac' : 'm12_igbinosa_cac', readCac));
 }
@@ -913,11 +935,11 @@ function ownerStart(){
   R.owner.show = show; show();
   V13.every(dt => {
     const c = R.owner; if(!c || c.done) return false;
-    c.t += dt; if(c.t >= c.max){ ownerOut(); return false; }
+    c.t += dt * rate(); if(c.t >= c.max){ ownerOut(); return false; }        // Action pace: Relaxed 0.75, Hard 1.2, timed sequences off 0
     show();
   });
 }
-function ownerAdd(s){ const c = RT().owner; if(!c || c.done) return; c.t += s; if(c.t >= c.max) ownerOut(); else c.show(); }
+function ownerAdd(s){ const c = RT().owner; if(!c || c.done) return; c.t += s * rate(); if(c.t >= c.max) ownerOut(); else c.show(); }
 function ownerStop(beat){
   const c = RT().owner; if(!c || c.done) return;
   c.done = true; if(typeof hideMeter === 'function') hideMeter('m12owner'); V13.play(RT().guard, 'idle');

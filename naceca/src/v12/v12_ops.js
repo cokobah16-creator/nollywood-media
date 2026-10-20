@@ -846,7 +846,10 @@ const NOTE_ICON = { '🪪':'id', '✉️':'envelope', '✉':'envelope', '⚖️'
 const noteIco = s => { if(typeof s === 'string' && s.trim().startsWith('<svg')) return s; const k = (typeof ICONS !== 'undefined' && ICONS[s]) ? s : NOTE_ICON[s]; return k ? ic(k) : esc(s || ''); };
 function notesHTML(){
   const rows = [...CASE_ENTRIES_BASE];
-  for(const e of (S.game.evidence || [])) rows.push({ ico:'scan', nm:'EVIDENCE — ' + e.name, ds: V12.evQ(e.id) === 'weak' ? 'Logged, but contested: the defence will attack how it was obtained.' : 'Logged in chain of custody.' });
+  // Season 1's notes list Season 1's exhibits: a later layer's own evidence (Season 2 exports its ids as V13.S2_EV)
+  // stays in that layer's case file, also during a Season 1 replay. Without that layer the list is empty.
+  const later = (window.V13 && Array.isArray(window.V13.S2_EV)) ? window.V13.S2_EV : [];
+  for(const e of (S.game.evidence || [])) if(!later.includes(e.id)) rows.push({ ico:'scan', nm:'EVIDENCE — ' + e.name, ds: V12.evQ(e.id) === 'weak' ? 'Logged, but contested: the defence will attack how it was obtained.' : 'Logged in chain of custody.' });
   const mc = S.game.moralChoices || {};
   const ds = [
     mc.choice === 'detain' ? 'Detained KC.' : '', mc.choice === 'flip' ? 'Signed KC as an informant.' : '', mc.choice === 'force' ? 'Used force on KC.' : '',

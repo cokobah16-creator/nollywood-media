@@ -20,6 +20,14 @@ const RT = ()=>V13.rt;
 const A = n => V13.at(KEY, n);
 const KUTI = 'MR. KUTI', DG = 'DIRECTOR-GENERAL FASHINA', KEL = 'AGENT KELECHI';
 const kel = (text, o)=>Object.assign({ speaker:KEL, portrait:'kelechi', text }, o || {});
+/* casework mode and the countdown rate (V13.rec / V13.timeRate from s2_core.js when present, else the same rule) */
+const rec = ()=>typeof V13.rec === 'function' ? !!V13.rec() : (typeof isRecruit === 'function' && isRecruit());
+const rate = ()=>{ const r = typeof V13.timeRate === 'function' ? V13.timeRate() : (typeof timerRate === 'function' ? timerRate() : 1); return (typeof r === 'number' && isFinite(r) && r >= 0) ? r : 1; };
+const ico = n => typeof icon === 'function' ? icon(n) : '';
+/* what a replay clears (as Case 12 does): this case's flag, its exhibits, its documents' attempts */
+const FLAGS = ['s2_ninth'];
+const EVIDS = ['transfer_docket', 'dg_recording'];
+const DOCKEYS = ['m13_docket', 'm13_docket_kept'];
 
 /* ---------- the few lines the staging needs (gaps only; the case's dialogue is v13_dlg_c.js) ---------- */
 Object.assign(DIALOGUE, {
@@ -33,7 +41,7 @@ Object.assign(DIALOGUE, {
   m13_x_safe:[ kel("(An old safe in a new office. Whatever this floor keeps, it keeps in there.)"),
     { speaker:DG, text:"Older than you, Agent. Nobody has ever opened it but me. Come and sit." } ],
   // on the way out
-  m13_x_card:[ { speaker:KUTI, text:"Received: one identity card, NACECA. Signed: K. And your phone, Agent — quite safe, as I promised." } ],
+  m13_x_card:[ { speaker:KUTI, text:"Received: one identity card, NACECA. Signed: A.K. And your phone, Agent — quite safe, as I promised." } ],
   m13_x_letter:[ { speaker:KUTI, mood:'evasive', text:"Congratulations, Superintendent. Your phone. I've taken the liberty of copying your notes for the file — to save you the trouble." } ],
 });
 /* Kuti's call, heard through the records-room door */
@@ -124,19 +132,23 @@ function css(){
   const s = document.createElement('style'); s.id = 'c13-css';
   s.textContent = `
 #c13-over{position:absolute;left:50%;top:calc(96px + env(safe-area-inset-top,0px));transform:translate(-50%,-6px);width:min(92vw,500px);box-sizing:border-box;padding:8px 14px 9px;
-  background:rgba(6,10,20,.84);border-left:3px solid #d8a64a;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:40}
+  background:var(--hud-panel,rgba(28,28,26,.94));border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-left:3px solid var(--manila,#E9DCC0);border-radius:2px;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:40}
 #c13-over.show{opacity:1;transform:translate(-50%,0)}
-#c13-over .w{font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.22em;color:#d8a64a}
-#c13-over .t{font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.4;color:#e8edf5;font-style:italic;margin-top:2px}
+#c13-over .w{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:10.5px;letter-spacing:.22em;color:var(--manila,#E9DCC0)}
+#c13-over .t{font-family:'Inter',sans-serif;font-size:14px;line-height:1.4;color:var(--manila,#E9DCC0);font-style:italic;margin-top:2px}
 .touch-active #c13-over{top:calc(150px + env(safe-area-inset-top,0px))}
-.c13-chip{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#9fd8ff;border:1px solid rgba(64,192,255,.55);padding:4px 8px;margin-right:10px;white-space:nowrap}
-.c13-chip.hot{color:#ffb3bc;border-color:#e84a5c;animation:c13pulse .5s ease-in-out infinite alternate}
-@keyframes c13pulse{from{background:rgba(232,74,92,.05)}to{background:rgba(232,74,92,.28)}}
-#c13-inter{position:absolute;inset:0;z-index:85;display:flex;align-items:flex-start;justify-content:center;pointer-events:none;opacity:0;transition:opacity .6s ease;
-  background:radial-gradient(ellipse at 50% 35%,#1c2a40 0%,#0c121e 55%,#04070d 100%)}
+body.reduce-motion #c13-over{transition:none}
+.c13-row{display:flex;flex-wrap:wrap;flex:0 0 auto;margin:0 0 10px}
+.c13-chip{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;box-sizing:border-box;font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:.14em;line-height:1.3;
+  color:var(--ink,#1C1C1A);background:var(--manila,#E9DCC0);border:1px solid var(--ink,#1C1C1A);border-radius:var(--radius,3px);padding:4px 8px;white-space:nowrap}
+.c13-chip.hot{border:2px solid var(--red,#B3261E);padding:3px 7px}
+.c13-chip .ico{width:12px;height:12px;flex:0 0 12px}
+@media (max-width:420px){ .c13-chip{flex:1 0 100%;justify-content:center} }
+#c13-inter{position:absolute;inset:0;z-index:85;display:flex;align-items:flex-start;justify-content:center;pointer-events:none;opacity:0;transition:opacity .6s ease;background:var(--ink,#1C1C1A)}
 #c13-inter.show{opacity:1}
-#c13-inter .k{margin-top:15vh;padding:0 24px;font-family:'Oswald',sans-serif;font-size:20px;letter-spacing:.3em;line-height:1.6;color:#f0c878;text-align:center}
-#c13-inter .k small{display:block;font-size:12px;letter-spacing:.34em;color:#8fa0b8}
+#c13-inter .k{margin-top:15vh;padding:0 24px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:20px;letter-spacing:.3em;line-height:1.6;color:var(--manila,#E9DCC0);text-align:center}
+#c13-inter .k small{display:block;font-size:12px;letter-spacing:.34em;color:var(--manila-2,#A89F8A)}
+body.reduce-motion #c13-inter{transition:none}
 #c13-rec-host{position:absolute;left:50%;top:calc(92px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(340px,38vw);z-index:95;pointer-events:none}
 .touch-active #c13-rec-host{left:calc(12px + env(safe-area-inset-left,0px));top:calc(8px + env(safe-area-inset-top,0px));transform:none;width:min(230px,40vw)}
 @media(max-height:480px){ #c13-inter .k{margin-top:8vh;font-size:15px} }`;
@@ -373,12 +385,24 @@ function always(dt){
     if(R.win && (playing || doc)) windowStep(dt, doc);
     if(R.watch) R.watch(dt);
   }
-  if(R.docOpen && !doc){ R.docOpen = false; }
+  if(R.docOpen && !doc){ R.docOpen = false; dropChip(); }
   if(R.platter) R.platter.rotation.y -= dt * 3.49;
   if(!playing){
     if(V13.world && V13.world.update && (dlg || doc)) V13.world.update(dt);
     if(TPCAM.override && typeof updateCamera === 'function') updateCamera();
   }
+}
+
+/* Wayfinding (RT04, Senior Agent). During Kuti's call the beta's last-resort pointer skips the optional docket and
+   lands on the sofa, which is the "back to the sofa before he is" step, a Recruit-only line. On Senior the docket
+   objective, and the Director-General one while the call lasts, point at nothing. Recruit keeps the pointer. The
+   other objectives only ever point at the next required spot (Kuti, the sofa, the chair, the desk, the lift). */
+if(window.WAY && WAY.OBJ_TARGETS){
+  const inCall = ()=>{ const R = V13.rt; return !!(R && R.id === 'm13' && R.win); };
+  WAY.OBJ_TARGETS.m13 = Object.assign(WAY.OBJ_TARGETS.m13 || {}, {
+    o13_docket:()=>rec() ? null : { ui:true },
+    o13_dg:()=>(rec() || !inCall()) ? null : { ui:true },
+  });
 }
 
 /* ======================================================================
@@ -392,7 +416,14 @@ V13.defCase('m13', {
     { id:'o13_dg', text:'See the Director-General' },
     { id:'o13_out', text:'Go downstairs. Uche is in the car park' },
   ],
-  reset(){ delete MC().s2_ninth; if(S.game.flags) delete S.game.flags.s2_ninth; },
+  reset(){
+    const m = MC(), f = S.game.flags || {};
+    for(const k of FLAGS){ delete m[k]; delete f[k]; }
+    // a replay is judged on the replay: this case's exhibits and document attempts start clean
+    S.game.evidence = (S.game.evidence || []).filter(e => !e || !EVIDS.includes(e.id));
+    if(S.game.evQ) for(const id of EVIDS) delete S.game.evQ[id];
+    for(const store of ['_docMiss', '_docFree', '_docLocked']) if(S.game[store]) for(const k of DOCKEYS) delete S.game[store][k];
+  },
   build(){
     css();
     liftMeter(false);
@@ -485,18 +516,24 @@ function theCall(){
 }
 function openWindow(){
   const R = RT();
-  const tch = document.body.classList.contains('touch-active'), story = typeof SETTINGS !== 'undefined' && SETTINGS.difficulty === 'story';
-  const total = 28 + (tch ? 8 : 0) + (story ? 8 : 0);
+  // 28 s (+8 on touch); Action pace scales how fast it runs (windowStep), not how long it is
+  const tch = document.body.classList.contains('touch-active');
+  const total = 28 + (tch ? 8 : 0);
   R.win = { t:total, total, said:{}, step:0 };
   const kept = MC().s2_original === 'kept';
   objAdd('o13_docket', 'Optional: read the docket on Kuti\'s desk', 'o13_dg');
-  V13.toast('KUTI\'S DESK', 'A buff docket, "by hand". He\'s on the phone — read it, and be on the sofa before he is.', 3000);
+  if(rec()) V13.toast('KUTI\'S DESK', 'A buff docket, "by hand". He\'s on the phone — read it, and be on the sofa before he is.', 3000);
+  else V13.toast('KUTI\'S DESK', 'A buff docket, "by hand". He\'s on the phone in the records room.', 3000);
   R.itDocket = V13.spot({ x:-3.0, y:0.85, z:4.6 }, 'Read the docket on Kuti\'s desk', it => readDocket(it), { verb:'inspect', range:2.0, optional:true, labelY:0.35 });
   R.heard = kept ? [HEARD.a_kept, HEARD.b_kept] : [HEARD.a, HEARD.b];
 }
+/* The call window runs at the Action-pace rate (Relaxed 0.75, Hard 1.2, extended /1.6). It stands still while the
+   docket is open, in both casework modes: reading is never timed (the footsteps go on as sound only). With timed
+   sequences off it runs only while you sit on the sofa, so Kuti still comes back when you wait for him. */
+const winRate = R => { const r = rate(); return r > 0 ? r : (R.seat ? 1 : 0); };
 function windowStep(dt, docOpen){
   const R = RT(), W = R.win; if(!W) return;
-  W.t -= dt;
+  if(!docOpen) W.t -= dt * winRate(R);
   const since = W.total - W.t;
   if(since > 5 && !W.said.a){ W.said.a = 1; overhear(KUTI + ' · RECORDS ROOM', R.heard[0], 3600); }
   if(since > 14 && !W.said.b && W.t > 8){ W.said.b = 1; overhear(KUTI + ' · RECORDS ROOM', R.heard[1], 3000); }
@@ -505,23 +542,28 @@ function windowStep(dt, docOpen){
   const left = Math.max(0, W.t), frac = left / W.total;
   if(typeof showMeter === 'function') showMeter('c13win', W.t > 6 ? 'MR. KUTI — ON THE PHONE' : 'MR. KUTI — FOOTSTEPS', frac, W.t > 6 ? 'info' : 'danger', Math.ceil(left) + 's');
   chip(docOpen, left);
+  if(docOpen) return;
   // following him into the records room ends it
   const P = ENGINE.player.position;
   if(P.x > 6.3 && Math.abs(P.z - 6.0) < 1.6 && !W.seen){ W.seen = 1; overhear(KUTI, HEARD.door, 2400); W.t = 0; }
   if(W.t <= 0) kutiReturns();
 }
+/* the docket chip: its own row under the document's header (the header keeps its close button on screen at 390 px) */
 function chip(docOpen, left){
   if(!docOpen) return;
-  const head = document.querySelector('#screen-puzzle .v12-doc-head-r'); if(!head) return;
-  let c = head.querySelector('.c13-chip');
-  if(!c){ c = V13.el('span', 'c13-chip', ''); head.insertBefore(c, head.firstChild); }
+  const frame = document.querySelector('#screen-puzzle .puzzle-frame.v12-doc'), body = frame && frame.querySelector('.v12-doc-body'); if(!body) return;
+  let row = frame.querySelector('.c13-row');
+  if(!row){ row = V13.el('div', 'c13-row', '<span class="c13-chip"></span>'); frame.insertBefore(row, body); }
+  const c = row.querySelector('.c13-chip');
   const hot = !RT().win || left <= 6;
-  c.classList.toggle('hot', hot);
-  c.textContent = hot ? 'FOOTSTEPS · ' + Math.ceil(left) + 's' : 'KUTI ON THE PHONE · ' + Math.ceil(left) + 's';
+  const t = (hot ? 'FOOTSTEPS · ' : 'KUTI ON THE PHONE · ') + Math.ceil(Math.max(0, left)) + 's';
+  if(c._t === t) return;
+  c._t = t; c.classList.toggle('hot', hot);
+  c.innerHTML = (hot ? ico('clock') : '') + '<span>' + t + '</span>';
 }
+const dropChip = ()=>{ document.querySelectorAll('#screen-puzzle .c13-row').forEach(r => r.remove()); };
 
 /* ---------- the docket ---------- */
-const allowedMisses = ()=>(typeof SETTINGS !== 'undefined' && SETTINGS.difficulty === 'story') ? 3 : 2;
 const docketName = key => ((PUZZLES[key] || {}).onCorrect || {}).evidenceName || 'Exhibit 14 transfer docket';
 function readDocket(it){
   const R = RT(); if(R.docDone || R.docOpen || !R.win) return;
@@ -529,19 +571,20 @@ function readDocket(it){
   const P = ENGINE.player.position, east = P.x > -1.9 && P.z < 5.6;
   const open = ()=>{
     if(!alive(R) || !R.win) return;
-    S.game._docMiss = S.game._docMiss || {}; S.game._docMiss[key] = 0;            // a fresh read
     R.docOpen = true; R.docKey = key;
+    S.game.evQ = S.game.evQ || {}; delete S.game.evQ.transfer_docket;              // the document marks a failed read itself
     V13.doc(key, ()=>{
-      R.docOpen = false;
+      R.docOpen = false; dropChip();
       if(R.glimpsed) return;                                                       // Kuti took it out of your hands
-      const failed = (S.game._docMiss[key] || 0) >= allowedMisses();
+      // the document's own outcome (its misses follow casework: Recruit 3, Senior 2), as Case 12 reads it
+      const failed = (S.game.evQ || {}).transfer_docket === 'weak';
       R.docDone = true;
       S.game.evQ = S.game.evQ || {};
       V13.ev('transfer_docket', docketName(key), failed ? 'weak' : 'good', 40);       // logged for this operation (the screen may already have)
       S.game.evQ.transfer_docket = failed ? 'weak' : 'good';
       V13.done('o13_docket');
       if(it) V13.drop(it); R.itDocket = null;
-      if(R.win && !R.caught) V13.toast('NOW', 'Back to the sofa — before he is.', 2000);
+      if(R.win && !R.caught && rec()) V13.toast('NOW', 'Back to the sofa — before he is.', 2000);   // Recruit only: the next step
     });
     setTimeout(()=>chip(true, R.win ? R.win.t : 0), 30);
   };
@@ -626,7 +669,7 @@ function back(){
   twoShot(ENGINE.player, R.kuti);
   V13.say('m13_x_ready', ()=>{
     R.kutiAt = 'doors'; freeCam();
-    V13.skip(['10:40', 'FIFTY MINUTES ON THE SOFA'], ()=>toDoors(false), 2200);
+    V13.skip(['10:40', 'FIFTY MINUTES ON THE SOFA'], ()=>{ if(alive(R)) toDoors(false); }, 2200);   // (not into a replay started under the card)
     // during the card: everyone where the next beat wants them
     later(R, 900, ()=>{
       if(!R.seat) seat(R.seatAt, { release:standUp, camYaw:R.seatAt.rot + PI + 0.45 });
@@ -791,7 +834,7 @@ function deskBeat(kind){
   V13.once(R.kuti, 'interact', 'sit');
   touch([-3.0, 5.8], PI, [-2.7, 0.8, 4.9], ()=>{
     if(kind === 'card'){ idCard(); V13.done('o13_card'); V13.toast('SUSPENDED', 'Pending an inquiry into Ekosodin. Your ID card stays on the ninth floor.', 2800); }
-    else { if(R.envelope) R.envelope.visible = false; V13.done('o13_letter'); V13.toast('SUPERINTENDENT', 'Lagos Cybercrime. The letter is dated yesterday.', 2800); }
+    else { if(R.envelope) R.envelope.visible = false; V13.done('o13_letter'); V13.toast('SUPERINTENDENT', 'Lagos Cyber & Financial Crimes. The letter is dated yesterday.', 2800); }
   }, ()=>{
     V13.say(kind === 'card' ? 'm13_x_card' : 'm13_x_letter', ()=>{
       R.itLift = V13.spot({ x:0, y:1.2, z:9.3 }, 'Take the lift down', it => { V13.drop(it); downstairs(); }, { verb:'exit', range:2.6 });
