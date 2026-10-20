@@ -27,14 +27,14 @@ C.meta = {
   title: 'Federal Republic of Nigeria v. Lucky Edafe & 2 Ors',
   court: 'Federal High Court, Abuja Division, Court 5',
   judge: 'Hon. Justice T. O. Bakare',
-  prosecution: 'H. Danladi Esq. with A. Okoro Esq. (NACECA Legal)',
-  defence: 'Femi Coker-Odusote SAN, leading T. Akande Esq., O. Bello Esq. and C. Nwosu Esq., for the 1st defendant; N. Abara (Mrs.), Legal Aid Council of Nigeria, for the 2nd and 3rd defendants'
+  prosecution: 'Z. Danladi Esq. with A. Okoro Esq. (NACECA Legal)',
+  defence: 'Femi Olaniran-Cole SAN, leading T. Akande Esq., O. Bello Esq. and C. Nwosu Esq., for the 1st defendant; N. Abara (Mrs.), Legal Aid Council of Nigeria, for the 2nd and 3rd defendants'
 };
 
 C.charge = {
-  count1: "COUNT ONE. That you, LUCKY EDAFE, on diverse dates between March and August, 2026, at the Waterside Market, Sapele, Delta State, within the jurisdiction of this Honourable Court, did convert and transfer funds, to wit: cash withdrawn through POS terminal SPL-WSM-T4 from four bank accounts linked to one Bank Verification Number registered in your name, which funds you knew or reasonably ought to have known formed part of the proceeds of an unlawful act, to wit: the theft of crude oil and kidnapping for ransom, and thereby committed an offence contrary to section 18(2)(b) of the Money Laundering (Prevention and Prohibition) Act, 2022 and punishable under section 18(3) of the same Act.",
-  count2: "COUNT TWO. That you, FELIX UGBEKILE, on diverse dates between March and August, 2026, at a camp on the Ekre creek of the Ethiope River, Delta State, within the jurisdiction of this Honourable Court, without lawful authority or an appropriate licence, did deal in crude oil and petroleum products, to wit: by refining stolen crude oil in open drums, storing the product, and selling it for shipment on the barge TEKENA 2, and thereby committed an offence contrary to section 1(17)(a) of the Miscellaneous Offences Act, Cap. M17, Laws of the Federation of Nigeria, 2004, and punishable under the same section.",
-  count3: "COUNT THREE. That you, SOTONYE JUMBO, on diverse dates between March and August, 2026, at the tank farm of Riverstone Marine Services Ltd on the Port Harcourt waterfront, Rivers State, within the jurisdiction of this Honourable Court, without lawful authority, did receive, store and sell petroleum products, to wit: automotive gas oil discharged from the barge TEKENA 2, knowing it to have been refined from stolen crude oil, and did enter the said product in the official intake log of the said tank farm as 'imported AGO', which entry you knew to be false, and thereby committed an offence contrary to section 1(17)(a) of the Miscellaneous Offences Act, Cap. M17, Laws of the Federation of Nigeria, 2004, and punishable under the same section."
+  count1: "COUNT ONE. That you, LUCKY EDAFE, on diverse dates between March and December, 2026, at the Waterside Market, Sapele, Delta State, within the jurisdiction of this Honourable Court, did convert and transfer funds, to wit: cash withdrawn through POS terminal SPL-WSM-T4 from four bank accounts linked to one Bank Verification Number registered in your name, which funds you knew or reasonably ought to have known formed part of the proceeds of an unlawful act, to wit: the theft of crude oil, and thereby committed an offence contrary to section 18(2)(b) of the Money Laundering (Prevention and Prohibition) Act, 2022 and punishable under section 18(3) of the same Act.",
+  count2: "COUNT TWO. That you, FELIX UGBEKILE, on diverse dates between March and December, 2026, at a camp on the Ekre creek of the Ethiope River, Delta State, within the jurisdiction of this Honourable Court, without lawful authority or an appropriate licence, did deal in crude oil and petroleum products, to wit: by refining stolen crude oil in open drums, storing the product, and selling it for shipment on the barge TEKENA 2, and thereby committed an offence contrary to section 1(17)(a) of the Miscellaneous Offences Act, Cap. M17, Laws of the Federation of Nigeria, 2004, and punishable under the same section.",
+  count3: "COUNT THREE. That you, SOTONYE JUMBO, on diverse dates between March and December, 2026, at the tank farm of Riverstone Marine Services Ltd on the Port Harcourt waterfront, Rivers State, within the jurisdiction of this Honourable Court, without lawful authority, did receive, store and sell petroleum products, to wit: automotive gas oil discharged from the barge TEKENA 2, knowing it to have been refined from stolen crude oil, and did enter the said product in the official intake log of the said tank farm as 'imported AGO', which entry you knew to be false, and thereby committed an offence contrary to section 1(17)(a) of the Miscellaneous Offences Act, Cap. M17, Laws of the Federation of Nigeria, 2004, and punishable under the same section."
 };
 
 /* =========================================================================
@@ -47,7 +47,7 @@ C.conference = {
     D("Monday, nine o'clock, Court 5, Justice Bakare. Three defendants: the changer, the camp manager, the tank-farm manager. You are PW1. You'll be in that box longer than anyone."),
     K("And the people this was really about?"),
     D("Are not on the charge sheet. Not the Senator. Not anybody on the ninth floor. This trial is about what gets admitted, and who says what on oath. Win it properly and the rest has a floor to stand on."),
-    D("Lucky has a Senior Advocate. Femi Coker-Odusote. A SAN, for a man who changes money in a night market. Ask yourself who is paying."),
+    D("Lucky has a Senior Advocate. Femi Olaniran-Cole. A SAN, for a man who changes money in a night market. Ask yourself who is paying."),
     K("I have been asking."),
     D("He won't shout. He'll be courteous, and he'll take every exhibit apart at the seams. Anything off a computer without a section 84 certificate, gone. Kubor v Dickson."),
     D("Public records only by certified true copy. Bank records only if the bank's own officer proves them. A copy of a missing original only if we show we searched for the original."),
@@ -109,10 +109,10 @@ C.day1 = {
     N("Hon. Justice T. O. Bakare takes the bench, lays three pens side by side, and opens a hardback notebook. Everything said in this room will be written down by hand."),
     R("Charge number FHC/ABJ/CR/214/2026. Federal Republic of Nigeria versus Lucky Edafe and two others."),
     J("Appearances."),
-    D("May it please your Lordship. H. Danladi, with me A. Okoro, for the prosecution. My Lord, the defendants are in court."),
-    S("May it please my Lord. Femi Coker-Odusote, Senior Advocate of Nigeria, leading T. Akande, O. Bello and C. Nwosu, for the first defendant."),
+    D("May it please your Lordship. Z. Danladi, with me A. Okoro, for the prosecution. My Lord, the defendants are in court."),
+    S("May it please my Lord. Femi Olaniran-Cole, Senior Advocate of Nigeria, leading T. Akande, O. Bello and C. Nwosu, for the first defendant."),
     LA("May it please my Lord. N. Abara, of the Legal Aid Council of Nigeria, for the second and third defendants."),
-    J("That is a crowded bar for a currency changer, Mr. Coker-Odusote."),
+    J("That is a crowded bar for a currency changer, Mr. Olaniran-Cole."),
     S("Every citizen deserves a proper defence, my Lord."),
     J("So I am told. Rarely can they afford one. Yes, Counsel?"),
     D("My Lord, the matter is for arraignment. The prosecution is ready to proceed.")
@@ -210,7 +210,7 @@ C.day1 = {
         { text: "Headquarters ordered that drive flown to Abuja at six in the morning. Somebody there knew exactly what was on it.", kind: 'speculate', cred: -5,
           reply: [ S("Objection. The witness is now reading minds, my Lord. In Abuja. From Benin."),
                    J("Sustained, and struck out. Tell us what you did, Agent, not what others knew.") ] },
-        { text: "The custodian told me nobody had opened it since the night of the rescue.", kind: 'hearsay', cred: -3,
+        { text: "The custodian told me nobody had opened it since it came back from the registry.", kind: 'hearsay', cred: -3,
           reply: [ S("Hearsay, my Lord. If the custodian has something to say, let him come and say it."),
                    J("Sustained. The custodian can speak for himself.") ] }
       ],
@@ -220,7 +220,7 @@ C.day1 = {
       ask: [ D("What did you find on the drive?") ],
       answers: [
         { text: "A spreadsheet titled UPSTREAM. Dated rows, codes and sums. Against several dates: 'TEKENA 2 — sailed (Ethiope)'. About two days after each: 'SPL-WSM-T4 — cash-out', with an amount.", kind: 'good', cred: 3,
-          reply: [ N("Coker-Odusote writes one word on his pad and underlines it twice."),
+          reply: [ N("Olaniran-Cole writes one word on his pad and underlines it twice."),
                    J("'...cash-out, with an amount.' Yes, Counsel.") ] },
         { text: "Payments every quarter to 'D.G.O.' — the Director-General's Office, my Lord.", kind: 'speculate', cred: -8,
           reply: [ S("My Lord! The witness has just accused a public officer who is not before this court, on the strength of three letters of the alphabet."),
@@ -255,7 +255,7 @@ C.day1 = {
       answers: [
         { text: "Shortly after nine, the first defendant came to the kiosk. Within half an hour he made four withdrawals, back to back, each just under the limit, a different card each time. Then he carried two bags to the jetty and handed them to a boatman.", kind: 'good', cred: 3,
           reply: [ J("Four withdrawals. A different card each time. Two bags. A boatman."),
-                   N("The judge underlines something. Coker-Odusote notices.") ] },
+                   N("The judge underlines something. Olaniran-Cole notices.") ] },
         { text: "I watched him launder crude-oil money: four withdrawals, four cards, two sacks to a boatman.", kind: 'overclaim', cred: -4,
           reply: [ S("My Lord, 'launder' is the question this court sits to answer. The witness has kindly answered it for you."),
                    J("I'll answer it myself, thank you. Agent, describe. Don't conclude.") ] },
@@ -289,7 +289,7 @@ C.day1 = {
                    J("The document will speak for itself, Agent, if it is admitted. Not you.") ] },
         { text: "He was frightened, my Lord. Frightened men tell the truth.", kind: 'speculate', cred: -6,
           reply: [ S("Did the court hear that, my Lord? 'Frightened.' I will come back to that word."),
-                   J("It is written down, Mr. Coker-Odusote. Every word is.") ] }
+                   J("It is written down, Mr. Olaniran-Cole. Every word is.") ] }
       ],
       tender: 'lucky_statement' },
 
@@ -337,11 +337,11 @@ C.day1 = {
   ],
   adjourn: [
     D("My Lord, that concludes the evidence-in-chief of PW1."),
-    J("Mr. Coker-Odusote, you will want time to prepare your cross-examination."),
+    J("Mr. Olaniran-Cole, you will want time to prepare your cross-examination."),
     S("I am always ready, my Lord. But I should like the witness to have a weekend to think about his answers. It's only fair."),
     J("Generous of you. This matter is adjourned to Monday next for cross-examination of PW1 and continuation of trial. The defendants are to be produced."),
     U("Court!"),
-    N("In the corridor, Coker-Odusote stops beside Kelechi, unhurried, wig under his arm."),
+    N("In the corridor, Olaniran-Cole stops beside Kelechi, unhurried, wig under his arm."),
     S("Agent. A pleasure. Monday will be less pleasant, I'm afraid. Nothing personal."),
     K("It never is.")
   ]
@@ -354,7 +354,7 @@ C.day2 = {
     U("Court! All rise."),
     R("Charge number FHC/ABJ/CR/214/2026, FRN versus Lucky Edafe and two others. For continuation of trial."),
     D("My Lord, appearances as before. PW1 is in the box. The matter is for cross-examination."),
-    J("Agent, you are still on your oath. Mr. Coker-Odusote."),
+    J("Agent, you are still on your oath. Mr. Olaniran-Cole."),
     S("I'm obliged, my Lord.")
   ],
   adjourn: [
@@ -589,7 +589,7 @@ C.exhibits.upstream_ledger = {
   ],
   clean: [
     S("No objection to its admissibility, my Lord. A great deal to say, later, about its author. Whoever that is."),
-    J("Admitted and marked {EXH}. Anonymity goes to weight, Mr. Coker-Odusote."),
+    J("Admitted and marked {EXH}. Anonymity goes to weight, Mr. Olaniran-Cole."),
     S("I'm obliged, my Lord. It usually does.")
   ],
   objections: [
@@ -690,7 +690,7 @@ C.exhibits.evidence_register = {
 C.exhibits.pos_t4_log = {
   name: "the transaction log of POS terminal SPL-WSM-T4, Waterside Market, Sapele",
   apply: [
-    D("My Lord, I seek to tender through this witness the transaction log of POS terminal SPL-WSM-T4, March to August, forty-one pages.")
+    D("My Lord, I seek to tender through this witness the transaction log of POS terminal SPL-WSM-T4, March to December, sixty-two pages.")
   ],
   clean: [
     S("We have seen the provider's certificate, my Lord. No objection to the log. A log can't say who was holding the cards. We will."),
@@ -712,7 +712,7 @@ C.exhibits.pos_t4_log = {
         { text: "Kelechi: \"I watched the terminal print it myself.\"", ok: false, needs: null, cred: -2,
           reply: [
             K("I watched the terminal print it myself, my Lord."),
-            S("Did you see the server it came from, Agent? The one in Lagos that holds five months of transactions?"),
+            S("Did you see the server it came from, Agent? The one in Lagos that holds nine months of transactions?"),
             K("No."),
             J("Then you cannot vouch for it.")
           ] },
@@ -830,7 +830,7 @@ C.exhibits.lucky_statement = {
         { text: "Danladi: \"The prosecution withdraws the statement.\"", ok: false, needs: null,
           reply: [
             D("My Lord, having considered the position, the prosecution will not rely on this statement. We withdraw it."),
-            N("Coker-Odusote looks at her for a long second, then inclines his head. It is very nearly a bow."),
+            N("Olaniran-Cole looks at her for a long second, then inclines his head. It is very nearly a bow."),
             J("Withdrawn. The court records it.")
           ] }
       ],
@@ -841,13 +841,13 @@ C.exhibits.lucky_statement = {
     { when: 'statement_car',
       san: [
         S("My Lord, this statement was written in a car. No video recording, no lawyer, no one of the defendant's choosing. Sections 15(4) and 17(2) of the ACJA."),
-        S("In FRN v Akaeze the Supreme Court held both requirements mandatory for every federal agency. This statement cannot be admitted.")
+        S("The Supreme Court has held both requirements mandatory for every federal agency. This statement cannot be admitted.")
       ],
       responses: [
         { text: "Danladi: \"Section 15(4) says 'may'. It is permissive.\"", ok: false, needs: null,
           reply: [
             D("My Lord, section 15(4) says the statement 'may' be recorded electronically. The word is permissive."),
-            J("It was, Counsel, until the Supreme Court read it. Akaeze settled that word. I am bound.")
+            J("It was, Counsel, until the Supreme Court read it. That word is settled. I am bound.")
           ] },
         { text: "Kelechi: \"He spoke freely. Nobody forced him.\"", ok: false, needs: null, cred: -1,
           reply: [
@@ -863,7 +863,7 @@ C.exhibits.lucky_statement = {
       ],
       admitted: [ J("The statement is admitted and marked {EXH}.") ],
       rejected: [
-        J("No video, no counsel, no person of the defendant's choosing. FRN v Akaeze binds this court. Tendered and rejected."),
+        J("No video, no counsel, no person of the defendant's choosing. The Supreme Court's ruling binds this court. Tendered and rejected."),
         J("And for completeness: even if admitted, what one defendant says is not evidence against another. Section 29(4).")
       ],
       weight: 'reduced' },
@@ -1299,7 +1299,7 @@ C.cross = [
         reply: [
           N("Nobody in Court 5 moves. Even the fans seem to slow."),
           S("Thank you for your honesty, Agent. It must be new to you."),
-          J("Mr. Coker-Odusote."),
+          J("Mr. Olaniran-Cole."),
           S("I withdraw that, my Lord. The answer was enough.")
         ] },
       { text: "No, sir. I have never taken money from anyone.", kind: 'lie', cred: 1,
@@ -1574,8 +1574,8 @@ C.cross = [
 
   { id: 'ninth_bury', when: 'ninth_bury',
     q: [
-      S("Agent, congratulations are in order, I'm told. Superintendent. Lagos Cybercrime."),
-      S("You were promoted two days after a private meeting with the Director-General. Out of the cycle, with immediate effect. A reward, Agent?")
+      S("Agent, congratulations are in order, I'm told. Superintendent. Head of Lagos Cyber and Financial Crimes."),
+      S("You were promoted the day you met the Director-General in private. Out of the cycle, with immediate effect. A reward, Agent?")
     ],
     answers: [
       { text: "He offered it to me in that meeting. I accepted.", kind: 'truth', cred: -3, exposed: null,
@@ -1583,13 +1583,13 @@ C.cross = [
           S("In exchange for—"),
           N("He stops. A Senior Advocate who has never asked a question he didn't know the answer to, stopping one word short of one."),
           S("No further questions on that, my Lord."),
-          J("Are you sure, Mr. Coker-Odusote? You seemed on the verge of something."),
+          J("Are you sure, Mr. Olaniran-Cole? You seemed on the verge of something."),
           S("Quite sure, my Lord.")
         ] },
       { text: "It was a routine promotion, sir.", kind: 'lie', cred: 1,
         reply: [ S("Routine. I see.") ],
         exposed: [
-          S("My Lord, the letter, published in the Agency's own bulletin, is dated the very day of that meeting, signed by the Director-General personally: 'outside the promotion cycle, with immediate effect'."),
+          S("My Lord, the letter, published in the Agency's own bulletin, is dated the day before that meeting, signed by the Director-General personally: 'outside the promotion cycle, with immediate effect'."),
           S("Routine, Agent?")
         ] },
       { text: "My promotion isn't on trial.", kind: 'combative', cred: -5, exposed: null,
@@ -1604,10 +1604,10 @@ C.cross = [
       S("Suspended by your own Director-General, pending an inquiry into your conduct at Ekosodin. A man with a grievance against his agency, and every reason to make this case his vindication?")
     ],
     answers: [
-      { text: "I was suspended the afternoon I refused to hand this file to headquarters. I have no grievance, sir. I have a case.", kind: 'truth', cred: -2, exposed: null,
+      { text: "I was suspended the morning I refused to hand this file to headquarters. I have no grievance, sir. I have a case.", kind: 'truth', cred: -2, exposed: null,
         reply: [
           S("My Lord, I'd ask that the answer be confined to the question."),
-          J("It answered your question very fully, Mr. Coker-Odusote. You asked about his reasons. It stays."),
+          J("It answered your question very fully, Mr. Olaniran-Cole. You asked about his reasons. It stays."),
           J("Agent, the Director-General is not before me. Keep to what you know.")
         ] },
       { text: "I'm on leave, sir.", kind: 'lie', cred: 1,
@@ -1632,20 +1632,20 @@ C.cross = [
     ],
     answers: [
       { text: "She trained me. I gave evidence against her because it was true. I'd have given anything for it not to be.", kind: 'truth', cred: -1, exposed: null,
-        reply: [ S("Very affecting."), J("It was an answer, Mr. Coker-Odusote. Move on.") ] },
+        reply: [ S("Very affecting."), J("It was an answer, Mr. Olaniran-Cole. Move on.") ] },
       { text: "I barely knew her, sir.", kind: 'lie', cred: 1,
         reply: [ S("Barely. I see.") ],
-        exposed: [ S("My Lord, the witness's posting letter to NACECA, signed 'C. Adaeze, Commander'. And the citation for his first commendation, written in her hand. Barely, Agent?") ] },
+        exposed: [ S("My Lord, the witness's posting letter to the Lagos unit, signed by Commander Adaeze. And the citation for his first commendation, written in her hand. Barely, Agent?") ] },
       { text: "She put a student in a box. Somebody had to stop her.", kind: 'combative', cred: -3, exposed: null,
         reply: [ S("And you were glad it was you.") ] },
       { text: "My relationship with her is irrelevant.", kind: 'evasive', cred: -2, exposed: null,
-        reply: [ S("Is it? Her case and this one: same drive, same ledger, same witness.") ] }
+        reply: [ S("Is it? Her case and this one: same drive, same witness.") ] }
     ] },
 
   { id: 'adaeze_contested', when: 'adaeze_contested',
     q: [
       S("Agent, Commander Adaeze awaits her trial. You are the chief witness against her."),
-      S("This case uses the same drive, the same ledger. Forgive me. Is this the rehearsal?")
+      S("This case uses the same drive. Forgive me. Is this the rehearsal?")
     ],
     answers: [
       { text: "No, sir. Her case is hers. This one is about the money at T4.", kind: 'truth', cred: -2, exposed: null,
@@ -1669,11 +1669,11 @@ C.cross = [
         reply: [ S("'I still believe.' Belief, my Lord. On the witness's word.") ] },
       { text: "I never accused her of anything, sir.", kind: 'lie', cred: 1,
         reply: [ S("Never. Then help me with this.") ],
-        exposed: [ S("My Lord, the witness's sealed report to Benin Zonal Command, the one his commander was relieved of command over. Page one names her. In his handwriting.") ] },
+        exposed: [ S("My Lord, the witness's written report to Benin Zonal Command on the night of Ekosodin, the one his commander was relieved of command over. Page one names her. In his handwriting.") ] },
       { text: "Somebody protected her. You'll forgive me for wanting to know who.", kind: 'combative', cred: -4, exposed: null,
         reply: [ J("Agent, this courtroom is not your inquiry."), S("I'm obliged, my Lord.") ] },
       { text: "That was a different investigation.", kind: 'evasive', cred: -3, exposed: null,
-        reply: [ S("A different investigation. The same drive, the same ledger, the same officer.") ] }
+        reply: [ S("A different investigation. The same drive, the same officer.") ] }
     ] },
 
   { id: 'lucky_followed', when: 'lucky_followed',
@@ -1697,19 +1697,19 @@ C.cross = [
   { id: 'camp_mass', when: 'camp_mass',
     q: [ S("Agent, how many people did you arrest at the camp?") ],
     answers: [
-      { text: "Everyone we found there. Twenty-three.", kind: 'truth', cred: -2, exposed: null,
+      { text: "Everyone we found there. Nine.", kind: 'truth', cred: -2, exposed: null,
         reply: [
           S("And how many of them are before this court?"),
           K("One."),
-          S("So twenty-two people were arrested for being poor near a fire.")
+          S("So eight people were arrested for being poor near a fire.")
         ] },
       { text: "Only those directly involved, sir.", kind: 'lie', cred: 1,
         reply: [ S("Directly involved. How many?") ],
-        exposed: [ S("My Lord, the custody register of the Area Command for that morning: twenty-three entries, one charge. Directly involved, Agent?") ] },
+        exposed: [ S("My Lord, the custody register of the Area Command for that morning: nine entries, one charge. Directly involved, Agent?") ] },
       { text: "They were all working that camp.", kind: 'combative', cred: -3, exposed: null,
         reply: [ S("Then why charge one?"), K("...") ] },
       { text: "Arrests were made in line with the operation.", kind: 'evasive', cred: -3, exposed: null,
-        reply: [ S("Twenty-three of them. I'm obliged.") ] }
+        reply: [ S("Nine of them. I'm obliged.") ] }
     ] }
 ];
 
@@ -1744,13 +1744,13 @@ C.reexam = [
     answer: [
       K("In the Director-General's office, on the ninth floor. He said the Upstream file should come home to headquarters. Then he offered me Lagos."),
       S("My Lord, the Director-General is not on trial!"),
-      J("Neither is the witness's promotion, Mr. Coker-Odusote. You raised it. Overruled.")
+      J("Neither is the witness's promotion, Mr. Olaniran-Cole. You raised it. Overruled.")
     ],
     cred: 3 },
   { id: 'rx_suspension', fixes: ['ninth_refuse'],
     ask: [ D("PW1, when were you suspended, and what had happened that day?") ],
     answer: [
-      K("That same afternoon. That morning I was asked to hand the Upstream file to headquarters. I said it would stay with Zonal. By two o'clock I'd been told to leave my ID card at the desk."),
+      K("That same morning. I was asked to hand the Upstream file to headquarters. I said it would stay with Zonal. Before noon I'd been told to leave my ID card at the desk."),
       S("My Lord, the inquiry is into Ekosodin."),
       J("So the letter says. The court has heard both, and will weigh both.")
     ],
@@ -1775,13 +1775,15 @@ C.reexam = [
 
 /* =========================================================================
    OTHER PROSECUTION WITNESSES (Day 2). The engine picks:
-   analyst: pw_tobi* if Tobi is alive, else pw_igbinosa*; suffix by method
+   analyst: pw_igbinosa* in every save (CN06; pw_tobi* are retired, unused); suffix by method
             (none = image, _direct, _photo).  custodian: pw_ikpe, or pw_ikpe_gap
             if custody_unsigned.  pw_ejiro if ejiro_source.  pw_sotonye (or
             pw_sotonye_pressured if sotonye_pressured) if her plea was taken.
             pw_felix if his plea was taken.
    ========================================================================= */
 C.witnesses = {
+  /* RETIRED (CN06): pw_tobi, pw_tobi_direct, pw_tobi_photo. Mr. Igbinosa is PW2 in every save;
+     these stay in the file, unused, so old references resolve. */
   pw_tobi: [
     N("PW2 · TOBI ONUOHA, FORENSIC ANALYST. He takes the oath with both hands on the book, as if it might get away."),
     D("Mr. Onuoha, what did you do with exhibit 14?"),
@@ -1848,12 +1850,12 @@ C.witnesses = {
     I("Everything is a choice, sir. Some are written down. I wrote that one down.")
   ],
   pw_ikpe: [
-    N("PW3 · SGT. IKPE, EXHIBIT CUSTODIAN, BENIN ZONAL COMMAND. Thirty-one years. He carries the register in a plastic bag, wrapped like a Bible."),
+    N("PW3 · SGT. IKPE, EXHIBIT CUSTODIAN, BENIN ZONAL COMMAND. Twenty-two years. He carries the register in a plastic bag, wrapped like a Bible."),
     D("Sergeant, what does your register show for exhibit 14 on the night in question?"),
-    IK("Twenty-two ten: signed out to Agent Kelechi for forensic imaging, seal intact. Zero-three-forty: returned, new seal, new number recorded, signed by both of us."),
+    IK("Twenty-three-oh-four: signed out to Agent Kelechi for forensic imaging, seal intact. Zero-three-forty: returned, new seal, new number recorded, signed by both of us."),
     D("Who made those entries?"),
     IK("Me, ma. In this hand. Nobody writes in my book except me."),
-    S("Sergeant, in thirty-one years, has anyone ever asked you not to write something in that book?"),
+    S("Sergeant, in twenty-two years, has anyone ever asked you not to write something in that book?"),
     IK("Asked, sir? Yes."),
     S("And?"),
     IK("And it's in the book, sir. Everything is in the book."),
@@ -1864,9 +1866,9 @@ C.witnesses = {
     D("Sergeant, is there an entry for exhibit 14 on the night in question?"),
     IK("No, ma."),
     D("Why not?"),
-    IK("Agent Kelechi said, 'Sergeant, tonight this never left the cage.' I didn't write it. I should have. Thirty-one years, and that's the only blank I ever left."),
+    IK("Agent Kelechi said, 'Sergeant, tonight this never left the cage.' I didn't write it. I should have. Twenty-two years, and that's the only blank I ever left."),
     D("Did it leave the cage?"),
-    IK("About ten o'clock. It came back before four."),
+    IK("Just after eleven. It came back before four."),
     S("Sergeant, the seal on that bag today. Is it the seal number in your book?"),
     IK("...No, sir. The seal in my book is the old one. The new one, I never wrote down."),
     S("So the register this court is asked to trust is accurate, except on the one night that matters?"),
@@ -1894,9 +1896,9 @@ C.witnesses = {
     D("Who owns Riverstone Marine Services?"),
     SO("On paper, Godwin Ereba. He signs everything. I've never seen him read anything he signed."),
     D("Who is Godwin Ereba?"),
-    SO("He's a driver. He drives for Senator Tamuno Douglas-Akpan. I've seen him do it, many times, at our gate."),
+    SO("He's a driver. He drives for Senator Tonye Douglas-Akpan. I've seen him do it, many times, at our gate."),
     S("My Lord, I object. A distinguished Senator of this Republic is not a party to these proceedings, and—"),
-    J("The witness was asked who Mr. Ereba is, and she has told me what she has seen. The answer stands. Sit down, Mr. Coker-Odusote."),
+    J("The witness was asked who Mr. Ereba is, and she has told me what she has seen. The answer stands. Sit down, Mr. Olaniran-Cole."),
     S("Ms. Jumbo, you've bargained your way out of the dock with these words. Your freedom, for his name?"),
     SO("My sentence for the truth, sir. My freedom I lost the day I kept that USB.")
   ],
@@ -1905,7 +1907,7 @@ C.witnesses = {
     D("Ms. Jumbo, where did the diesel in Tank 3 come from?"),
     SO("From the barge TEKENA 2. Every load. We entered it in the official book as 'imported AGO'. The true log was on my USB."),
     D("Who owns Riverstone Marine Services?"),
-    SO("On paper, Godwin Ereba. He signs everything. He drives for Senator Tamuno Douglas-Akpan. I've seen him do it, many times, at our gate."),
+    SO("On paper, Godwin Ereba. He signs everything. He drives for Senator Tonye Douglas-Akpan. I've seen him do it, many times, at our gate."),
     S("My Lord, I object. A Senator of this Republic is not a party to—"),
     J("She has told me what she has seen. The answer stands."),
     S("Ms. Jumbo, when you were arrested, did the investigating officer tell you to 'think about your children'?"),
@@ -1956,7 +1958,7 @@ C.twt = {
     S("And where were you?"),
     K("In the car. At the jetty."),
     D("My Lord, the defendant spoke freely. Nobody laid a hand on him."),
-    J("I accept that, Counsel. It isn't the question. Sections 15(4) and 17(2) of the ACJA are the question, and FRN v Akaeze has answered it."),
+    J("I accept that, Counsel. It isn't the question. Sections 15(4) and 17(2) of the ACJA are the question, and the Supreme Court has answered it."),
     J("Both are mandatory. A statement taken without them cannot be admitted."),
     J("The statement is rejected. And even if it had been admitted, what one defendant says is not evidence against another. Section 29(4). Whatever he said about anyone else stays in that car.")
   ],
@@ -1981,7 +1983,7 @@ C.twt = {
 C.nocase = {
   submit: [
     D("My Lord, that is the case for the prosecution."),
-    N("Coker-Odusote is on his feet before the judge has finished writing the sentence."),
+    N("Olaniran-Cole is on his feet before the judge has finished writing the sentence."),
     S("My Lord, the first defendant makes a no-case submission under sections 302 and 303 of the ACJA."),
     S("Take away what this court has rejected, and what the witness did not see. What remains? A man drawing cash at a kiosk. That is not a crime in Nigeria. Not yet."),
     S("The prosecution must have some evidence on every element: that the money was the proceeds of an unlawful act, and that he knew or ought to have known it. On at least one of them, there is nothing."),
@@ -2044,12 +2046,12 @@ C.defence = {
         D("Then help the court. Your money went the other way. Upriver, at night, in two bags, to a boatman. There is no depot up the Ethiope, Mr. Edafe."),
         LU("Na... na for the boys. Dem dey buy... local product.", "It's... it's for the boys. They buy... local product."),
         D("Local product. From the camps on the creek."),
-        N("Coker-Odusote stops writing. For the first time in the trial, he puts his pen down."),
+        N("Olaniran-Cole stops writing. For the first time in the trial, he puts his pen down."),
         D("No further questions, my Lord.")
       ] },
     { text: "Ask him if he knows Senator Douglas-Akpan.", good: false,
       lines: [
-        D("Mr. Edafe, do you know Senator Tamuno Douglas-Akpan?"),
+        D("Mr. Edafe, do you know Senator Tonye Douglas-Akpan?"),
         S("Objection, my Lord. Relevance. My learned friend is fishing in a very large pond."),
         J("Sustained. Counsel, the Senator is not on this charge sheet. Ask about what is."),
         N("At the back of the gallery, a man in a dark agbada writes something down and leaves.")
@@ -2239,14 +2241,14 @@ C.judgment = {
   notguilty: {
     d1: [
       J("On count one, the prosecution has not proved its case beyond reasonable doubt. I find the first defendant, Lucky Edafe, not guilty. He is discharged and acquitted."),
-      N("Coker-Odusote closes his file the way some men close a door: quietly, and only once.")
+      N("Olaniran-Cole closes his file the way some men close a door: quietly, and only once.")
     ],
     d2: [ J("On count two, the case against the second defendant, Felix Ugbekile, is not proved beyond reasonable doubt. He is discharged and acquitted.") ],
     d3: [ J("On count three, the case against the third defendant, Sotonye Jumbo, is not proved beyond reasonable doubt. She is discharged and acquitted.") ]
   },
   allocutus: {
     d1: [
-      J("Allocutus. Mr. Coker-Odusote?"),
+      J("Allocutus. Mr. Olaniran-Cole?"),
       S("My Lord, the convict is a first offender, a husband, and the father of five children in Sapele. He has been in custody since his arrest."),
       S("I urge the court to temper justice with mercy. Section 18(3) permits a fine in place of imprisonment. We ask for it."),
       D("My Lord, the prosecution has no record of any previous conviction. We leave sentence to the court, and ask that any sum recovered be forfeited to the Federal Government."),
@@ -2257,7 +2259,7 @@ C.judgment = {
       F("My Lord, I know what the smoke does. I knew it every night. I'm sorry for the creek.")
     ],
     d3: [
-      LA("My Lord, the convict is a mother of three and a first offender. She asks the court to consider her children."),
+      LA("My Lord, the convict is a mother of two and a first offender. She asks the court to consider her children."),
       SO("My Lord, I kept the true record. I should have taken it to someone sooner.")
     ]
   },
@@ -2291,7 +2293,7 @@ C.judgment = {
     D("Walk with me, Agent."),
     D("Whatever you think of today, something is written in a judge's hand now that wasn't before. A barge. A tank farm. A company. A driver's name, if anyone said it in that box."),
     K("And the man the driver drives for?"),
-    D("Is not a party, as Mr. Coker-Odusote reminded us eleven times. But records don't forget, and judges read each other's."),
+    D("Is not a party, as Mr. Olaniran-Cole reminded us eleven times. But records don't forget, and judges read each other's."),
     D("The application to freeze Riverstone's accounts goes in tomorrow. If anyone needed that money moved, they now have days, not weeks."),
     K("Then they'll move it themselves. They won't trust anyone else with it now."),
     D("Then be there when they do. Lawfully, Agent. I'd like to win the next one too."),
@@ -2360,6 +2362,8 @@ C.fixes = {
       N("There isn't.")
     ]
   },
+  /* CN06: Mr. Igbinosa certifies the tracker in every save (lines_igbinosa). The Tobi `lines` are
+     RETIRED, unused; they stay so old references resolve. */
   cert_tracker: {
     title: "Section 84 certificate — tracker log",
     who: 'TOBI',
@@ -2395,7 +2399,7 @@ C.hub = {
   ],
   after_day2: [
     N("ABUJA · A SUYA SPOT OFF AMINU KANO CRESCENT · 22:10. Smoke, pepper, and a radio playing highlife to nobody."),
-    D("Lucky testifies on Thursday. Coker-Odusote will lead him gently and sit down. Then it's my turn."),
+    D("Lucky testifies on Thursday. Olaniran-Cole will lead him gently and sit down. Then it's my turn."),
     D("You watched that man for an hour in that market. Give me one question. The one he can't answer without hurting himself."),
     K("And if I give you the wrong one?"),
     D("Then he walks out taller than he walked in. No pressure."),
