@@ -688,7 +688,7 @@ function benchWait(){
   if(R.itBookAgain){ V13.drop(R.itBookAgain); R.itBookAgain = null; }
   seat({ x:5.48, z:3.22, rot:0 }, { release:()=>{ unseat([5.45, 3.9]); } });
   // Uche says why the book objective went (after the card, while the Prado comes up the crescent)
-  V13.skip(['22:58', 'THE SECOND FRIDAY'], ()=>{ if(bookLeft) radio(SAYS.book, 3600); theCar(); }, 2200);
+  V13.skip(['22:58', 'THE SECOND FRIDAY'], ()=>{ if(!alive(R)) return; if(bookLeft) radio(SAYS.book, 3600); theCar(); }, 2200);
   // during the card: Bitrus back on his chair, the gate shut, the SUV at the top of the crescent
   later(R, 900, ()=>{
     stop(R.bitrus); R.bitrus.visible = true; R.bitrus.position.set(-7.55, 0, -3.1); R.bitrus.rotation.y = PI / 2; V13.play(R.bitrus, 'sit');

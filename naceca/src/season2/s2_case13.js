@@ -669,7 +669,7 @@ function back(){
   twoShot(ENGINE.player, R.kuti);
   V13.say('m13_x_ready', ()=>{
     R.kutiAt = 'doors'; freeCam();
-    V13.skip(['10:40', 'FIFTY MINUTES ON THE SOFA'], ()=>toDoors(false), 2200);
+    V13.skip(['10:40', 'FIFTY MINUTES ON THE SOFA'], ()=>{ if(alive(R)) toDoors(false); }, 2200);   // (not into a replay started under the card)
     // during the card: everyone where the next beat wants them
     later(R, 900, ()=>{
       if(!R.seat) seat(R.seatAt, { release:standUp, camYaw:R.seatAt.rot + PI + 0.45 });
