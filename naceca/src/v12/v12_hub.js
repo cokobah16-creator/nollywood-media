@@ -151,6 +151,7 @@ const PEOPLE_ON_PHONE = {
   kcmum:{ name:'KC\'s mother', ini:'KM', col:'#e07d4a' }, posagent:{ name:'Ikeja POS agent', ini:'PA', col:'#4a8ad8' },
   simagent:{ name:'SIM agent, Asaba Main Market', ini:'SA', col:'#7a8aa3' },
 };
+V12.PHONEBOOK = PEOPLE_ON_PHONE;   // Season 2 adds its contacts here
 function phoneFor(h){
   const T = [], add = (who, msgs, reply, onRead)=>T.push({ who, msgs, reply, onRead });
   const them = text => ({ f:'them', text }), sys = text => ({ f:'sys', text });
@@ -268,7 +269,7 @@ V12.openPhone = function(onClose){
       conv = `<div class="ph-ch"><button class="ph-back" aria-label="Back">${ico('back')}</button>${avatar(cur)}<b>${V12.esc(nameOf(cur))}</b></div><div class="ph-msgs" id="ph-msgs">${bub}</div>${rep}`;
     }
     ov.innerHTML = `<div class="overlay-bg"></div><div class="ph-frame ${cur ? 'reading' : ''}">
-      <div class="ph-top"><span>${V12.esc((HUBS[S.game.currentMission] || {}).sub || 'PHONE')}</span><button class="ph-x" aria-label="Close">${ico('close')}</button></div>
+      <div class="ph-top"><span>${V12.esc((HUBS[S.game.currentMission] || (window.V13 && V13.HUBS && V13.HUBS[S.game.currentMission]) || {}).sub || 'PHONE')}</span><button class="ph-x" aria-label="Close">${ico('close')}</button></div>
       <div class="ph-body"><div class="ph-list">${list || '<div class="ph-empty">No messages.</div>'}</div><div class="ph-conv">${conv}</div></div></div>`;
     ov.querySelector('.ph-x').onclick = close;
     ov.querySelectorAll('.ph-row').forEach(b => b.onclick = ()=>{ open(b.dataset.id); });
@@ -297,6 +298,7 @@ V12.openPhone = function(onClose){
   if(first && window.innerWidth > 700) open(first); else draw();
 };
 const HUB_ORDER = ['h2', 'h4', 'h5', 'h6', 'h7'];
+V12.HUB_ORDER = HUB_ORDER;   // Season 2's offices sort after these
 
 /* ---------------- the news board ---------------- */
 function ticker(){
