@@ -35,7 +35,8 @@ not whether the reveal happens.
 
 ## Season 2
 Adaeze's defeat stands. The post-credits stinger reveals who protected her inside the wider system.
-It sets up the next season without undoing this victory.
+It sets up the next season without undoing this victory. Season 2 itself is recorded at the end of this file
+("Season 2 — Operation Upstream").
 
 ## Portrait use
 - Before the reveal, the Voice's lines show a phone-call card, not a face.
@@ -117,3 +118,44 @@ player chose to send the ledger to her office (stated only after the reveal); th
   money; "I found the money."
 - **The trial** — FRN v. Cdr. Adaeze & 2 Ors, Federal High Court, Benin. Every verdict leaves her out of
   power (worst case: discharged on a no-case submission, dismissed from service the same week).
+
+## Season 2 — Operation Upstream (decided 20 Oct 2026)
+These extend the canon above for the Season 2 layer (src/season2: Cases 09–15 with 13½, offices h9–h14); nothing
+here changes Season 1. The full record, with the old-to-new tables, is docs/season2/CASES.md section 6.
+
+- **The calendar.** Season 1's day one is Tue 6 Oct 2026, and Ekosodin falls about mid-October. Season 2 opens
+  "six weeks later": Case 09 Wed 2 Dec 2026; Cases 10 and 11 on 3 and 4 Dec; Case 12 Thu 10 Dec; Cases 13 and 13½
+  Fri 11 Dec (the second Friday); the pre-trial conference Fri 8 Jan 2027; the trial from Mon 11 Jan 2027, after the
+  court's Christmas vacation; Case 15 in February 2027. In the fix pass every Season 2 date after 12 Sep 2026 moved
+  +63 days (nine weeks, weekdays unchanged). The UPSTREAM ledger (Jun–Sep, last saved 12 Sep 2026) is older than
+  Ekosodin and stays.
+- **The drive.** Season 1's trial used only the payroll folder of exhibit 14, on certified printouts; Tobi read it
+  for eleven days. The drive came back from the registry sealed. Nobody imaged the whole of it or opened its hidden
+  `_old` folder, where the UPSTREAM sheet is, before Case 09.
+- **C.A.'s second paymaster.** UPSTREAM's "C.A." line — ₦4.8m in cash on the 10th, paid by R.M.S. (Riverstone) —
+  is Adaeze's second paymaster, beside the Foundation's ₦10M retainer to C.A. Consulting on the 1st. Season 1's money
+  trail is unchanged; Season 2 says the two run side by side.
+- **Tobi.** Alive iff rescued, or in the chase with the hostage not lost (`V13.tobiAlive()`); he testifies iff
+  rescued (`V13.tobiTestifies()`). He stays the accountant: a civilian Zonal took on to read the payroll, who reads
+  and decodes ledger codes and company records. Mr. Efosa Igbinosa (Zonal forensic officer, 19 years) runs the bench,
+  the image, the tracker and every section 84 certificate in every save, and is PW2 at the trial. A chase-alive Tobi
+  reads UPSTREAM for the prosecution from a desk at Zonal; his doctors keep him out of the witness box. A dead Tobi
+  gets no Season 2 slide.
+- **Reading Season 1 (`V13.s1snap`, `V13.s1fate`).** The first time a Season 2 case or office loads, Season 2 saves
+  what it reads from Season 1 — tobiAlive, tobiTestifies, bribe, kcFair, kcWrong, tundeWrong, musaTalked — in
+  `S.game.s2.s1snap`, and reads only that. Adaeze's fate as Season 2 tells it is `V13.s1fate()` (`S.game.s2.s1fate`,
+  else `moralChoices.finale`). Season 2 never writes `moralChoices.finale`, so Season 1's epilogue and trial keep her
+  verdict, the layer stays removable, and a Season 1 replay during Season 2 doesn't take Tobi or Musa out of it.
+- **Branches Season 2 respects.** Musa drives the Kano cooperative truck (and texts) only if he talked in Season 1;
+  otherwise "the cooperative's newest driver" does. Tunde stays silent if your Lagos charge sheet held him or at
+  Heat 70+; KC stays silent if it held him, and he stays in Ikeja (his Benin news comes through a contact). A barge
+  seized in Case 11 is released to Riverstone on a bond, and Case 15 says so. Count One charges the theft of crude
+  oil only: the kidnapping was never about ransom.
+- **Names.** Season 2's own people are named so none echoes Season 1 or a real person: Commander Itohan Okundaye
+  (Benin Zonal Commander), Barrister Zainab Danladi (NACECA Legal), Inspector (rtd.) Effiong Asuquo (Kelechi's
+  Academy trainer), Inspector Yakubu (the HQ escort), Garba (a Maitama gateman), Daniel Gbenga Olayemi (the DG's
+  driver, "D.G.O."), Mama Ufuoma, MAMA TEGA's buka, Preye (the camp boy), Tonbra (Pa Timi's grandson), Senator Tonye
+  Douglas-Akpan of 11 Harbour Close, Femi Olaniran-Cole, SAN, Mr. A. Kuti, "Daily Gold Oil" and the newspaper THE
+  WATERFRONT HERALD. Kelechi's unit is Lagos Cyber & Financial Crimes. The trial cites no invented case by name.
+- **Vehicles.** No Season 2 car echoes Season 1's plate cars: the DG drives himself in a small green Peugeot, a
+  silver Camry watches the Abuja hotel, Sotonye drives a red Kia, and the Senator's black Prado is ABJ-260XR.
