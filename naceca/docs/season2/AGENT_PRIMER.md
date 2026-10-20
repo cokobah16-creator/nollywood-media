@@ -3,7 +3,7 @@
 ROOT = the original Season 2 workspace (its src13/v13_*.js files are src/season2/s2_*.js in this kit)
 
 ## The game
-NACECA is a Nigerian anti-fraud-agency investigation game: a single page built on Three.js r128. Season 1 (cases m0–m8) is the original game in ROOT/game.html (~12k lines of global functions such as startDialogue, titleCard, showOverlay, showHUD, toast, showMeter/hideMeter, applyEffect, awardXP, showAftermath, collectEvidence). Season 1's dialogue (for voice) is around line 1330 of ROOT/game_code.html.
+NACECA is a Nigerian anti-corruption investigation game (the National Anti-Corruption & Economic Crimes Agency; all of it fictional): a single page built on Three.js r128. Season 1 (cases m0–m8) is the original game in ROOT/game.html (~12k lines of global functions such as startDialogue, titleCard, showOverlay, showHUD, toast, showMeter/hideMeter, applyEffect, awardXP, showAftermath, collectEvidence). Season 1's dialogue (for voice) is around line 1330 of ROOT/game_code.html.
 
 ROOT/build13.py injects two layers on top: a v12 layer (ROOT/src/*.js) and a v13 layer (ROOT/src13/*.js), one `<script>` per file. Season 2, "Operation Upstream", is cases m9–m15. ROOT/s2/CASES.md is the contract for the season: story, cast, flags, evidence ids, and the beats of every case. Read the section for your case closely.
 
@@ -80,7 +80,81 @@ Several builders work in ROOT/src13 at once. **Only create or edit your own deli
 - `V13.mc()` gives the moral choices (flags); `V13.setFlag(k, v)`.
 - `applyEffect({ integrity, publicTrust, agencyFavour, heat, intel })`.
 - `V13.s2()` is saved Season 2 state.
-- The Season 1 condition `V13.mc().asaba === 'rescue'` means Tobi is alive. If he isn't, use Mr. Igbinosa's version of a key (…_tobi / …_igbinosa).
+- Season 1's outcomes come from the snapshot helpers below (`V13.tobiAlive()`, `V13.s1fate()`, …), never from `V13.mc().asaba` or `V13.mc().finale` directly. Mr. Igbinosa runs the forensic bench, hashes and certifies in every save; a living Tobi reads records and ledger codes (…_tobi keys for that only).
+
+## Shared contracts (the integrated layer, src/season2 — fix pass 2026-10-20)
+The integrated kit lives in `naceca/src/season2/s2_*.js` (the `ROOT/src13/v13_*.js` files above). These helpers are in
+`s2_core.js` and are what every Season 2 file codes against.
+
+**Casework mode and timers**
+- `V13.rec()`: true on Recruit casework (`typeof isRecruit === 'function' && isRecruit()`). On Senior Agent (the default)
+  nothing tells the player the next step or the answer: such toasts, radio lines and wayfinding rows are Recruit-only.
+  Explaining why something happened is fine on Senior.
+- `V13.timeRate()`: `timerRate()` (systems/settings.js): 0.75 Relaxed, 1.2 Hard, ÷1.6 extended, 0 when timed sequences are
+  off. Every Season 2 countdown advances by `dt * V13.timeRate()`; a rate of 0 never runs out.
+
+**Season 1 as Season 2 reads it (the snapshot)**
+- `V13.s1snap()`: `{ tobiAlive, tobiTestifies, bribe, kcFair, kcWrong, tundeWrong, musaTalked }`. It is taken once, the
+  first time a Season 2 case or office loads (`V13.s1snapTake()`, from the `loadMission` wraps in `s2_core.js` and
+  `s2_boot.js`), and saved as plain data in `S.game.s2.s1snap`. Before it exists the live values are returned (and no
+  `S.game.s2` is created by reading). A Season 1 replay in the middle of Season 2 changes nothing Season 2 reads.
+  - `tobiAlive`: `asaba === 'rescue' || (asaba === 'chase' && !S.game._asabaHostageLost)` (canon: systems/finale.js);
+  - `tobiTestifies`: `asaba === 'rescue'` (only the deliberate rescue takes the stand);
+  - `bribe`: `arrest === 'bribe'`; `kcFair`: `market_runner === 'caught' && choice !== 'force'`;
+  - `kcWrong` / `tundeWrong`: `_cwWrong('lagos') === 'kc'` / `'tunde'` (the beta's charge sheet);
+  - `musaTalked`: `V12.mem().musaTalked()`.
+- `V13.tobiAlive()`, `V13.tobiTestifies()`: read the snapshot.
+- `V13.s1fate()`: `S.game.s2.s1fate || moralChoices.finale || 'unproven'`. `s2_merge.js`'s `adaptS1Fate` writes
+  `s2.s1fate`; Season 1's own `moralChoices.finale` is never rewritten.
+- `V13.s1()`: `{ finale:V13.s1fate(), tobi:V13.tobiAlive(), bribe:<the snapshot's bribe> }` (the old shape).
+- A probe that changes a Season 1 outcome after Season 2 has loaded must clear `S.game.s2.s1snap` (or `S.game.s2`) first.
+
+**Dialogue-line fields** (any Season 2 `DIALOGUE` line; Season 1's lines carry none of them and are untouched)
+- `rec:1`: the line plays only on Recruit.
+- `sr:'…'` (plus `srEn:'…'` for the English of a Pidgin line): on Senior the line plays with this text. On a choice line
+  only the prompt changes.
+- `cond:"<JS expression over S>"`: the line plays only if the expression is true when the line is reached. It runs as
+  `new Function('S', 'return (' + cond + ')')(S)`; an error counts as false. Helpers can be called in it (`V13.tobiAlive()`).
+- How it works (`V13.lineFields`, in a `renderDialogueLine` wrap in `s2_core.js`, and once more outermost in
+  `s2_boot.js` so the court and case hooks see the line that really plays): lines to skip are stepped over (`DLG.idx++`),
+  never removed, so indexes and choice jumps keep working; running past the end ends the conversation. An `sr` line is
+  swapped into a one-time shallow copy of the running script (`DIALOGUE` is never changed; the script's own marks such
+  as `_pick` are kept).
+- Never put `rec` or `cond` on a line with `choices`. A skipped line's `effect` and `trace` are not applied.
+- Because of the copy, never compare `DLG.script === DIALOGUE.x`. `DLG.scriptKey` is the key the conversation started
+  with (a choice's `next` does not change it); `V13.dlgKey()` is the key of the script or choice branch on screen now.
+  `V13.picked(key)` works on both.
+- Phone texts and tips keep their own `cond` (evaluated the same way).
+
+**Documents, evidence, the pause**
+- `V13.docFailed(key)`: true when that document failed forward (the misses ran out). A fail-forward and a solve both
+  close with `true`, so read this (or Case 12's `evQ === 'weak'`) instead of counting misses. The document's own rule is
+  3 misses on Recruit casework and 2 on Senior (v12_docs.js), never the Action pace.
+- `V13.ev(id, name, q, xp)` collects (and logs) an exhibit once per operation: after a document's `onCorrect` has
+  collected it, it only sets the quality.
+- The pause menu over a Season 2 conversation, document, minigame or phone: RESUME puts that overlay and the HUD's state
+  back (`s2_core.js` `togglePause` wrap; LOAD does not). `V13.ovShown(id)` is true while `id` is shown or held under the
+  pause menu: a case's "the document closed without an answer" watcher must use it, or it reads a pause as a back-off.
+  Season 2's own screens register with `v13Modal` (v13_intel.js) instead.
+
+**The season's flow and the log**
+- `V13.s1Done()` is `S.game.seasonOneComplete` (set when Season 1's epilogue starts, after the trial has sat).
+- `V13.syncCards()` makes the Season 2 cards' `playable` current; the mission select and Continue
+  (`nextPlayableMission`) both call it, so Continue after a reload goes on with the season (an owed office first).
+- `mission_start` / `mission_end` are logged by v12 (once per case, with the grade; once per office start). Season 2
+  logs only an office's own `mission_end` (offices have no aftermath). New event types need a row in
+  docs/tactics/DESIGN-tactics.md §4 (`source`, `seal15`, `accuse15` are there).
+- Flag-only choices (a `flag`, no `effect`) set their flag in Season 2 cases, offices and the court only; Season 1's
+  stay as Season 1 has them.
+
+**Wayfinding on Senior**
+- Where our wayfinding's fallback (beta/wayfind.js) would point at the answer among optional decoys, register a
+  Senior-only row from the case file: `WAY.OBJ_TARGETS.m10 = Object.assign(WAY.OBJ_TARGETS.m10 || {}, { o10_t4:()=>V13.rec() ? null : { ui:true } })`.
+  A null row keeps the old pointer for Recruit.
+
+**Names** (binding; code ids such as `osagie`, `hauwa`, `mamaefe` and `san` stay): Commander Itohan Okundaye
+(speaker `COMMANDER OKUNDAYE`, portrait key `OKUNDAYE`), Barrister Zainab Danladi (`BARRISTER DANLADI`), Femi
+Olaniran-Cole, SAN (`OLANIRAN-COLE, SAN`, key `OLANIRAN`), Mama Tega (`MAMA TEGA`). `CAST.tobi` is Season 1's Tobi.
 
 ## Testing (required)
 - **Build into your own folder:** `cd ROOT && NACECA_OUT=ROOT/out_<you> python3 -I build13.py .`

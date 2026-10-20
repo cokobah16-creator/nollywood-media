@@ -428,6 +428,9 @@ All distances are in metres to 0.1, and times in play seconds unless a field say
 | `seen_read` | D; the frozen alarm line leaves the screen | `who, enc, ms, via:'eye'\|'toast'\|'both', words, end:'overlay'\|'hidden'\|'replaced'\|'scene'\|'timeout'\|'quit'` |
 | `ov_dwell` | D; an overlay closes | `id, secs, obj` |
 | `pt_player`, `pt_export`, `pt_dropped`, `orient` | D | telemetry.md §4.3, with `pt_player.dev` (device id) and `ps0` |
+| `source` | Season 2 (`s2_sources.js`, `V13.recruit`); a source is recruited for the first time: at a case's end from its flags (`V13.recruitFromFlags`), or the two Season 1 sources on the first Season 2 load (logged before that case has started, so `m` is null there) | `code:'KC'\|'TUNDE'\|'HERBS'\|'TILL'\|'NETS'\|'TIDE'\|'GATE'` |
+| `seal15` | Season 2 (`s2_case15.js`); Case 15, the name is sealed before the jetty (the second tap on SEAL IT) | `who:'dg'\|'senator'\|'kuti'\|'osagie'\|'danladi'` (the `V13.S2_CANDIDATES` ids; `osagie` is Commander Okundaye, `danladi` Barrister Danladi) |
+| `accuse15` | Season 2 (`s2_case15.js`, `judge`); Case 15, the accusation is filed | `who:<a V13.S2_CANDIDATES id>, picks:[up to 3 Season 2 evidence ids], s:<score ≥0: strong picks against the right name, ±1 for the sealed envelope>, outcome:'proven'\|'contested'\|'unproven'` |
 
 **Enrichments of existing events (D, from the outer wrapper; no `v12_pt.js` edit):**
 - `session`: `ptv:2, player, orient, slice, tz`;
