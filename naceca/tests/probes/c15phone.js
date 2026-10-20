@@ -54,7 +54,7 @@ module.exports = async function (T) {
   await sc.use(T, 'Director-General');
   await L.accuse(T, 'osagie', ['dg_recording', 'visitor_book', 'senator_words'], '09_accuse');
   await L.waitDialogue(T, 20000); await T.wait(1500); await L.shot(T, '10_reveal');
-  await L.until(T, 'Grace Osagie kept your drive'); await L.shot(T, '11_wrong');
+  await L.until(T, '(Grace Osagie|Itohan Okundaye) kept your drive'); await L.shot(T, '11_wrong');
   await sc.talk(T);
   await T.until(() => document.getElementById('screen-case15') && document.getElementById('screen-case15').classList.contains('show'), 15000);
   await T.wait(600); await L.shot(T, '12_case_card');

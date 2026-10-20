@@ -130,7 +130,7 @@ async function drive(T, run) {
     if (/marked for identification only, MFI/.test(t)) await shotOnce('mfi', 500);
     if (/^PW2 ·/.test(t)) await shotOnce('pw2', 900);
     if (/TRIAL-WITHIN-TRIAL/.test(t)) await shotOnce('twt', 800);
-    if (/no-case submission/.test(t) && /COKER/.test(s.speaker)) await shotOnce('nocase');
+    if (/no-case submission/.test(t) && /COKER|OLANIRAN/.test(s.speaker)) await shotOnce('nocase');
     if (/^DW1 ·/.test(t)) await shotOnce('dw1', 900);
     if (/ABUJA · A GUEST HOUSE/.test(t)) await shotOnce('interlude', 700);
     if (/^Judgment\. The prosecution/.test(t)) await shotOnce('judgment_open', 800);
