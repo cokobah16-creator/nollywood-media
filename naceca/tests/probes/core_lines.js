@@ -120,7 +120,7 @@ module.exports = async function (T) {
   const srLines = arr.lines.filter(l => l.sr != null);
   C.check('CORE-01 Case 10 arrival radio on Senior: each line\'s sr, not its Recruit text; rec and cond-false lines not radioed',
     want.every(t => arrRadio.includes(t)) && srLines.length > 0 && !srLines.some(l => arrRadio.includes(l.text)) && !arrRadio.some(t => /^PROBE /.test(t)) &&
-    !arrRadio.some(t => /Straight for the blue kiosk/.test(t)), { want, got: arrRadio });
+    !arrRadio.some(t => /Straight for the blue kiosk/.test(t)), { want, got: arrRadio });   // renamed: absent (the old Senior line must not be radioed)
   toasts = await L.got(T, 'toast');
   C.check('R12 the changer\'s toast on Senior', toasts.some(t => /SOMEONE ARRIVES — Rice sacks on a boy's head/.test(t)) && !toasts.some(t => /Watch him from 4 to 10/.test(t)), toasts.slice(-3));
   // the Recruit pointer is as before
