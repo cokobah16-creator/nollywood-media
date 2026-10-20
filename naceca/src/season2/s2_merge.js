@@ -24,14 +24,21 @@ const inS2 = ()=>{ const m = S.game && S.game.currentMission; return !!m && (V13
 /* ---------- Adaeze's trial (The Case File) → Season 2's memory of her ---------- */
 const court = ()=>{ try{ return typeof I === 'function' ? (I() || {}).court : null; }catch(e){ return null; } };
 /* once, the first time Season 2 loads: a trial that convicted her on any count reads as 'proven';
-   a discharge on a no-case submission reads as 'unproven', with the words changed to say so */
+   a discharge on a no-case submission reads as 'unproven', with the words changed to say so.
+   Season 2 keeps its own reading in S.game.s2.s1fate (read through V13.s1fate()); Season 1's verdict
+   (moralChoices.finale, flags.finale) is never rewritten, so its epilogue and court still tell it right (CN13). */
 V13.adaptS1Fate = function(){
-  const s = V13.s2(); if(s.fateDone) return; s.fateDone = 1;
+  const s = V13.s2();
+  // a save from the kit's first build rewrote Season 1's verdict: put it back, and keep Season 2's reading
+  if(s.fateDone && !s.s1fate && s.s1finale != null){
+    const m = V13.mc(); m.finale = s.s1finale; if(S.game.flags) S.game.flags.finale = s.s1finale;
+    s.s1fate = (s.adaezeCounts || 0) >= 1 ? 'proven' : 'unproven';
+  }
+  if(s.fateDone) return; s.fateDone = 1;
   const c = court(); if(!c || !Array.isArray(c.proven)) return;
   const m = V13.mc(), n = c.proven.length;
   s.s1finale = m.finale || null; s.adaezeCounts = n;
-  const f = n >= 1 ? 'proven' : 'unproven';
-  m.finale = f; if(S.game.flags) S.game.flags.finale = f;
+  s.s1fate = n >= 1 ? 'proven' : 'unproven';
   if(n === 0) s.adaezeDischarged = 1;
   fateText();
 };
@@ -104,39 +111,79 @@ const GROUPS = [
   ['m13b', ['visitor_book', 'visitor_book_photo', 'ereba_photo']],
   ['m15', ['barge_cash', 'senator_words']],
 ];
-const Q = { good:['SOUND', 'Collected properly. It should stand up.'], contested:['CONTESTED', 'The defence will attack how this was obtained.'], weak:['WEAK', 'It may not get in at all.'] };
+const Q = { good:['SOUND', 'Collected properly. It should stand up.', 't-confirmed'], contested:['CONTESTED', 'The defence will attack how this was obtained.', 't-probable'], weak:['WEAK', 'It may not get in at all.', 't-allegation'] };
+/* every Season 2 exhibit id (the ops table's notes leave these out of Season 1's records) */
+V13.S2_EV = GROUPS.flatMap(g => g[1]);
 const inS2 = ()=>{ const m = S.game && S.game.currentMission; return !!m && (V13.isS2(m) || !!(V13.HUBS && V13.HUBS[m])); };
+const ico = n => (typeof icon === 'function' ? icon(n) : '');
+const rec = ()=>typeof isRecruit === 'function' && isRecruit();
+const hudOn = ()=>{ const h = document.getElementById('hud'); return !!h && h.style.display !== 'none'; };
+const CF = { open:false, hud:false, pause:false };
+document.addEventListener('v13:navreset', ()=>{ CF.open = false; CF.pause = false; });
+const closeCF = ()=>{
+  if(typeof v13ModalEnd === 'function') try{ v13ModalEnd('screen-s2case'); }catch(e){}
+  const wasHud = CF.hud, fromPause = CF.pause; CF.open = false; CF.pause = false;
+  // (SC1) opened from the pause menu (CASE FILE): BACK and Esc go back to the pause menu, as Season 1's Case Desk
+  // does, and its RESUME puts the HUD back. (The HUD was already hidden under the pause menu, so wasHud is false.)
+  const pa = document.getElementById('screen-pause');
+  if(fromPause && pa){
+    const ov = document.getElementById('screen-s2case'); if(ov) ov.classList.remove('show');
+    showOverlay('screen-pause');
+    return;
+  }
+  showOverlay(null);
+  if(wasHud && S.game && S.game.currentMission && typeof showHUD === 'function') showHUD(true);
+};
 V13.openCaseFileS2 = function(){
   let ov = document.getElementById('screen-s2case');
   if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-s2case'; document.getElementById('game-root').appendChild(ov); }
+  // what BACK returns to is read as the case file comes on screen: a re-render while it is shown (the pause menu's
+  // RESUME, TAB again) keeps it; one that something else closed (a scripted beat, showOverlay) is opened afresh
+  if(!CF.open || !ov.classList.contains('show')){ CF.hud = hudOn(); CF.pause = !!document.querySelector('#screen-pause.show'); CF.open = true; }
   const ev = S.game.evidence || [], q = S.game.evQ || {}, tr = V13.s2().trial || {}, ex = tr.exhibits || {};
   const cur = S.game.currentMission, card = V13.CARD(cur) || {}, hub = V13.HUBS && V13.HUBS[cur];
   const name = id => { const e = ev.find(x => x.id === id); return e ? e.name : id; };
+  const R = rec();
   const sections = GROUPS.map(([m, ids]) => {
     const have = ids.filter(id => ev.some(e => e.id === id)); if(!have.length) return '';
     const c = V13.CARD(m) || { num:'', name:m };
     const rows = have.map(id => {
       const k = Q[q[id] || 'good'] || Q.good, p = ex[id], rej = (tr.rejected || []).includes(id);
-      const court = p ? `<i class="s2c-p">${V13.esc(p)}</i>` : rej ? '<i class="s2c-p rej">REJECTED</i>' : '';
-      return `<li class="s2c-row"><b>${V13.esc(name(id).replace(/ \((contested|weak)\)$/, ''))}</b><span class="s2c-q ${q[id] || 'good'}" title="${V13.esc(k[1])}">${k[0]}</span>${court}</li>`;
+      const court = p ? `<i class="s2c-p v13-tier t-confirmed">${V13.esc(p)}</i>` : rej ? '<i class="s2c-p v13-stamp">REJECTED</i>' : '';
+      // (R15) the "why" behind a tier is Recruit's; Senior keeps the word
+      return `<li class="s2c-row"><b>${V13.esc(name(id).replace(/ \((contested|weak)\)$/, ''))}</b><span class="s2c-q v13-tier ${k[2]} ${q[id] || 'good'}"${R ? ` title="${V13.esc(k[1])}"` : ''}>${k[0]}</span>${court}</li>`;
     }).join('');
-    return `<section class="s2c-sec"><h3><span>CASE ${V13.esc(c.num)}</span>${V13.esc(c.name)}</h3><ul>${rows}</ul></section>`;
+    return `<section class="s2c-sec v13-sheet"><h3><span>CASE ${V13.esc(c.num)}</span>${V13.esc(c.name)}</h3><ul>${rows}</ul></section>`;
   }).join('');
   const verdict = tr.d1 ? `<p class="s2c-trial">COURT 5 · Lucky Edafe: <b>${tr.d1 === 'guilty' ? 'GUILTY' : 'NOT GUILTY'}</b> · Felix Ugbekile: <b>${({ plea:'PLEADED GUILTY', guilty:'GUILTY', notguilty:'NOT GUILTY' })[tr.d2] || '—'}</b> · Sotonye Jumbo: <b>${({ plea:'PLEADED GUILTY', guilty:'GUILTY', notguilty:'NOT GUILTY' })[tr.d3] || '—'}</b></p>` : '';
   const srcN = V13.srcList ? V13.srcList().length : 0;
-  ov.innerHTML = `<div class="overlay-bg"></div><div class="src-frame s2c-frame">
+  ov.innerHTML = `<div class="overlay-bg"></div><div class="src-frame s2c-frame" role="dialog" aria-label="Case file">
     <div class="src-head"><div><div class="plan-k">OPERATION UPSTREAM · CASE FILE</div><div class="plan-t">${V13.esc(hub ? hub.sub : ((card.num ? 'CASE ' + card.num + ' · ' : '') + (card.name || '')))}</div></div>
-      <div class="src-fund">EXHIBITS <b>${GROUPS.reduce((n, [, ids]) => n + ids.filter(id => ev.some(e => e.id === id)).length, 0)}</b></div><button class="ph-x s2c-x" aria-label="Close">✕</button></div>
+      <div class="src-fund">EXHIBITS <b>${GROUPS.reduce((n, [, ids]) => n + ids.filter(id => ev.some(e => e.id === id)).length, 0)}</b></div><button class="ph-x s2c-x" type="button" aria-label="Close">${ico('close') || 'CLOSE'}</button></div>
     <p class="src-lead">Every exhibit you hold, and how a defence lawyer will see it. ${srcN ? `${srcN} source${srcN > 1 ? 's' : ''} on the board — what they tell you is never evidence on its own.` : ''}</p>
     ${verdict}
     <div class="s2c-grid">${sections || '<p class="src-none">Nothing logged yet. Evidence you collect lands here, with how it will stand up in court.</p>'}</div>
-    <div class="src-foot"><button class="btn primary s2c-done">BACK</button></div></div>`;
-  const close = ()=>showOverlay(null);
-  ov.querySelector('.s2c-x').onclick = close; ov.querySelector('.s2c-done').onclick = close;
+    <div class="src-foot"><button class="btn primary s2c-done" type="button">BACK</button></div></div>`;
+  ov.querySelector('.s2c-x').onclick = closeCF; ov.querySelector('.s2c-done').onclick = closeCF;
   showOverlay('screen-s2case');
+  // Esc closes it (BACK); if the pause menu opens over it, RESUME brings it back
+  if(typeof v13Modal === 'function') try{ v13Modal('screen-s2case', { onEsc:closeCF, resume:()=>V13.openCaseFileS2() }); }catch(e){}
 };
 for(const fn of ['openCaseFile', 'openEvidenceBoard']) if(typeof window[fn] === 'function') V13.wrap(fn, orig => function(){ if(inS2()) return V13.openCaseFileS2(); return orig.apply(this, arguments); });
 if(typeof window.openDesk === 'function') V13.wrap('openDesk', orig => function(){ if(inS2()) return V13.openCaseFileS2(); return orig.apply(this, arguments); });
+
+/* (R03) In Season 2, J, the pause menu and TAB all open this case file: the HUD's "J · CASE DESK" pill would be
+   a second TAB · CASE FILE, so it goes, and the pause button says what it opens. Outside Season 2, both are back. */
+const deskUi = ()=>{
+  const on = inS2();
+  if(document.body) document.body.classList.toggle('s2-casefile', on);
+  const b = document.getElementById('btn-pause-desk'), want = on ? 'CASE FILE' : 'CASE DESK';
+  if(b && b.dataset.s2label !== want){ b.innerHTML = ico('folder') + want; b.dataset.s2label = want; }
+};
+const after = name => { if(typeof window[name] === 'function') V13.wrap(name, orig => function(){ const r = orig.apply(this, arguments); try{ deskUi(); }catch(e){} return r; }); };
+after('loadMission'); after('refreshHUD');
+if(typeof window.togglePause === 'function') V13.wrap('togglePause', orig => function(){ try{ deskUi(); }catch(e){} return orig.apply(this, arguments); });
+V13.deskUi = deskUi;
 })();
 
 /* =========================================================================

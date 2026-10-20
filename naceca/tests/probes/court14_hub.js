@@ -53,6 +53,6 @@ module.exports = async function (T) {
   // the escort's phone without the tracker log: the tracker certificate is on offer but protects nothing
   await T.ev(() => { S.game.evidence = S.game.evidence.filter(e => e.id !== 'barge_track'); V13.court.openFixes(2, () => {}, { where:'h13', kicker:'BEFORE THE TRIAL' }); });
   await T.wait(700); await T.shot('hub_board_phone_only');
-  T.log('tracker card', await T.ev(() => { const b = document.querySelector('#screen-courtfix .cf-go[data-f="cert_tracker"]'); const c = b && b.closest('.cf-card'); return c ? c.querySelector('.cf-prot').textContent : 'none'; }));
+  T.log('tracker card', await T.ev(() => { const b = document.querySelector('#screen-courtfix .cf-go[data-f="cert_tracker"]'); const c = b && b.closest('.cf-card'); return c ? ((c.querySelector('.cf-prot') || {}).textContent || '(no PROTECTS line: Senior Agent)') : 'none'; }));
   await T.ev(() => document.querySelector('#screen-courtfix .cf-close').click());
 };

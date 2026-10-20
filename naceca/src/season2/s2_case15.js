@@ -5,7 +5,7 @@
    with whatever the sources say and whatever the court decided. Then the way
    in: Chairman Ibinabo's boats under the jetty (and a task force that has to
    come round by the road: a clock), or the front gate, where the Director-
-   General's task force stands behind the bars and Osagie holds them with
+   General's task force stands behind the bars and Okundaye holds them with
    paper. The jetty is watched: three Riverstone torches; be seen and the
    bags go into the river. The cash room on the barge. The Senator under his
    umbrella. The Director-General on the phone: truth or career.
@@ -22,15 +22,26 @@ const K = 'tankfarm_n', KO = 'abuja_office', PI = Math.PI;
 const V3 = (x, y, z)=>new THREE.Vector3(x, y, z);
 const RT = ()=>V13.rt;
 const S2 = ()=>V13.s2();
-const KEL = 'AGENT KELECHI', UCHE = 'SGT. UCHE', SYS = 'NACECA SYSTEM', DG = 'DIRECTOR-GENERAL FASHINA', OSA = 'COMMANDER OSAGIE',
+const KEL = 'AGENT KELECHI', UCHE = 'SGT. UCHE', SYS = 'NACECA SYSTEM', DG = 'DIRECTOR-GENERAL FASHINA', OSA = 'COMMANDER OKUNDAYE',
       HAU = 'BARRISTER DANLADI', SEN = 'SENATOR DOUGLAS-AKPAN', TFC = 'TASK FORCE COMMANDER', IBI = 'CHAIRMAN IBINABO';
 const kel = (text, o)=>Object.assign({ speaker:KEL, portrait:'kelechi', text }, o || {});
 const lang = l => (typeof SETTINGS !== 'undefined' && SETTINGS.lang === 'english' && l.textEn) ? l.textEn : l.text;
 const esc = s => (V13.esc ? V13.esc(s) : String(s));
+const ico = n => (typeof icon === 'function' ? icon(n) : '');
+const rec = ()=>typeof isRecruit === 'function' && isRecruit();
+const modal = (id, o)=>{ if(typeof v13Modal === 'function') try{ v13Modal(id, o); }catch(e){} };
+const modalEnd = id => { if(typeof v13ModalEnd === 'function') try{ v13ModalEnd(id); }catch(e){} };
+/* (CN10) the commander and the barrister by their names; the code ids (osagie, hauwa) stay. Until s2_core adds
+   the OKUNDAYE portrait key and s2_dlg_c renames the candidates, this file does it (both are guarded no-ops after) */
+if(typeof SPEAKER_ART !== 'undefined' && !SPEAKER_ART.some(([k]) => k === 'OKUNDAYE')) SPEAKER_ART.unshift(['OKUNDAYE', 'osagie']);
+for(const c of (V13.S2_CANDIDATES || [])){
+  if(c.id === 'osagie' && !/Okundaye/.test(c.name)) c.name = 'Cdr. Itohan Okundaye';
+  if(c.id === 'danladi' && !/Zainab/.test(c.name)) c.name = 'Barr. Zainab Danladi';
+}
 
 /* ---------- the few lines the staging needs (gaps only; everything else is v13_dlg_c.js) ---------- */
 Object.assign(DIALOGUE, {
-  // the brief ends with Osagie's envelope: Season 1's sealed accusation, carried by hand
+  // the brief ends with Okundaye's envelope: Season 1's sealed accusation, carried by hand
   m15_x_seal_offer:[ { speaker:OSA, text:"And Kelechi — on Monday there'll be a warrant with a blank where a name goes. If you already know the name, seal it with me tonight. Before anyone tells you." } ],
   m15_x_seal_done:[ { speaker:OSA, text:"Sealed. It stays in my breast pocket, unopened, until Monday — whatever happens on that jetty." } ],
   // by water: the task force gets round by the road before the count is done
@@ -39,9 +50,9 @@ Object.assign(DIALOGUE, {
     { speaker:TFC, mood:'angry', text:"NACECA! By order of the Director-General, step away from that barge!" },
     { speaker:OSA, text:"It's a warrant, ACP. Read it slowly. Your men can wait on the quay while you do." },
   ],
-  // Monday: the envelope comes out of Osagie's pocket
+  // Monday: the envelope comes out of Okundaye's pocket
   m15_x_knew:[
-    kel("Commander Osagie has carried a sealed envelope since Friday night, sir. Your name is in it — written before the Senator said a word."),
+    kel("Commander Okundaye has carried a sealed envelope since Friday night, sir. Your name is in it — written before the Senator said a word."),
     { speaker:DG, mood:'afraid', text:"…You knew." },
   ],
 });
@@ -60,42 +71,15 @@ const RADIO = {
   made:{ text:"NACECA dey come! Throw am for water — quick quick!", textEn:"NACECA's coming! Throw it in the water — quick!" },
   wait:"He's still out there, Kelechi. Under his umbrella. Waiting for you.",
 };
+/* (R11) Senior Agent: the radio says what is there and what is at stake, never the method or the next step */
+const RADIO_SR = {
+  kit:"Body-cameras in my bag, sir, charged.",
+  low:"Three Riverstone guards on that jetty, sir. If they see a warrant before you're on the gangway, the bags go in the river.",
+  wait:null,                                                    // Recruit only
+};
+const radio = k => rec() ? RADIO[k] : RADIO_SR[k];
 
-/* ---------- styles (the accusation reuses Season 1's .acc-* look; v12.css carries most of it) ---------- */
-(function css(){
-  if(document.getElementById('c15-css')) return;
-  const s = document.createElement('style'); s.id = 'c15-css';
-  s.textContent = `
-#screen-accuse15,#screen-seal15,#screen-case15{padding:10px!important;overflow-y:auto;overscroll-behavior:contain;justify-content:safe center;scrollbar-width:thin;scrollbar-color:var(--naceca-gold) transparent}
-#screen-accuse15 .acc-grid,#screen-seal15 .acc-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
-#screen-seal15 .acc-frame{width:min(760px,100%)}
-#screen-case15 .acc-frame{width:min(860px,100%)}
-.a15-blank{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;color:#c9d3e2;background:rgba(255,255,255,.04);border:1px dashed rgba(216,166,74,.5);padding:7px 10px;margin-top:8px;line-height:1.55}
-.a15-blank b{color:#f0c878;font-weight:600;border-bottom:1px solid #f0c878;padding:0 6px;letter-spacing:.08em}
-.acc-item .a15-q{font-style:normal;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.14em;margin-left:6px;color:#f0c878}
-.acc-item .a15-q.weak{color:#ff8a96}
-.acc-card.a15-sealed{box-shadow:inset 0 -3px 0 #e84a5c}
-.a15-res{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
-.a15-res li{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start;font-size:12.5px;line-height:1.45;color:#dfe7f0;background:rgba(255,255,255,.03);border-left:2px solid #4a5a78;padding:7px 10px}
-.a15-res li.ok{border-left-color:#5dd07a}.a15-res li.no{border-left-color:#e84a5c}
-.a15-res li i{font-style:normal;font-family:'Oswald',sans-serif;font-size:15px;line-height:1.15}
-.a15-res li.ok i{color:#5dd07a}.a15-res li.no i{color:#ff8a96}
-.a15-res li b{display:block;font-family:'Oswald',sans-serif;font-weight:500;letter-spacing:.06em;font-size:12.5px;color:#fff}
-.a15-head{display:flex;align-items:center;gap:14px}
-.a15-head img{width:58px;height:58px;border-radius:50%;object-fit:cover;object-position:50% 20%;border:2px solid #f0c878;background:#0b1426;flex:0 0 auto}
-.a15-stamp{display:inline-block;font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.32em;padding:4px 12px;border:2px solid currentColor;transform:rotate(-2deg);margin-top:6px}
-.a15-stamp.proven{color:#5dd07a}.a15-stamp.contested{color:#f0c878}.a15-stamp.unproven{color:#ff8a96}
-.a15-note{font-size:12px;color:#9ba8bd;font-style:italic;margin:2px 0 0}
-.a15-foot2{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
-.a15-foot2 .btn{min-width:150px}
-@media (max-height:520px){
-  #screen-accuse15 .acc-card img,#screen-seal15 .acc-card img{width:36px;height:36px}
-  .a15-res li{font-size:11.5px;padding:5px 8px} .a15-blank{font-size:10px;padding:4px 8px;margin-top:4px}
-  .a15-head img{width:40px;height:40px}
-}
-@media (max-width:560px){ #screen-accuse15 .acc-grid,#screen-seal15 .acc-grid{grid-template-columns:repeat(3,minmax(0,1fr))} }`;
-  document.head.appendChild(s);
-})();
+/* ---------- styles: s2.css (the sealed envelope and the accusation are the beta's paper sheet, CW.sheet) ---------- */
 
 /* ---------- small sounds ---------- */
 const live = ()=>typeof AUDIO !== 'undefined' && AUDIO.enabled && AUDIO.ctx && AUDIO.sfxGain;
@@ -531,7 +515,7 @@ const artSrc = id => { const P = (typeof PORTRAIT_ART !== 'undefined') ? PORTRAI
 V13.defCase('m15', {
   title:'The Barge', region:'Rivers', sub:'Riverstone Jetty · 23:30', evMax:2, xp:500, ambient:'rain',
   objectives:()=>[
-    { id:'o15_brief', text:'Hear the plan: Osagie, Barrister Danladi and Uche' },
+    { id:'o15_brief', text:'Hear the plan: Okundaye, Barrister Danladi and Uche' },
     { id:'o15_go', text:'Tell Uche how we go in' },
     { id:'o15_in', text:'Get onto the Riverstone jetty' },
     { id:'o15_board', text:'Reach TEKENA 2\'s gangway before they see a warrant' },
@@ -569,7 +553,7 @@ V13.defCase('m15', {
     V13.every(dt => { trailTick(); for(const t of TR.tails) tailStep(t, dt); });
     cullTick();
     if(V13.prefetch) V13.prefetch(['env_' + KO]);
-    V13._c15 = { R, AL, TR, DIR, go, put, shot, monday };                 // debug handles (probes)
+    V13._c15 = { R, AL, TR, DIR, go, put, shot, monday, sealScreen, accuseScreen, caseCard, judge, radio, byGate, clock };   // debug handles (probes)
   },
   start(){ brief(); },
 });
@@ -708,7 +692,7 @@ function briefCue(l, sp, text){
 function afterBrief(){
   const R = RT();
   controls(true);
-  R.itSeal = V13.talk(R.osagie, 'Seal a name with Commander Osagie', it => {
+  R.itSeal = V13.talk(R.osagie, 'Seal a name with Commander Okundaye', it => {
     sealScreen(sealed => {
       if(!sealed) return;
       V13.drop(it); R.itSeal = null;
@@ -724,37 +708,62 @@ function afterBrief(){
   }, { optional:true, verb:'collect', range:1.9 });
   R.itGo = V13.talk(R.uche, 'Tell Uche how we go in', it => { V13.drop(it); entry(); }, { range:2.1 });
   if(MC().s2_wire === true) setTimeout(()=>{ if(RT() === R) V13.toast('THE PEN', 'Still in your breast pocket from the ninth floor. You click it on.', 2800); }, 700);
-  else setTimeout(()=>{ if(RT() === R && !R.cam && R.itKit) V13.radio('SGT. UCHE', RADIO.kit, 5200); }, 900);
+  else setTimeout(()=>{ if(RT() === R && !R.cam && R.itKit) V13.radio('SGT. UCHE', radio('kit'), 5200); }, 900);
 }
 
-/* ---------- Osagie's envelope (the sealed accusation, Season 2) ---------- */
+/* ---------- Okundaye's envelope (the sealed accusation, Season 2) ---------- */
+/* the kit's own probes find these sheets by the old .acc-* classes and button ids: give the paper sheet's buttons both */
+function compat(ov, fileId, cancelId){
+  if(!ov) return;
+  ov.querySelectorAll('.cw-card[data-k="who"]').forEach(b => { b.dataset.id = b.dataset.v; b.classList.add('acc-card'); });
+  ov.querySelectorAll('.cw-opt[data-k="ev"]').forEach(b => { b.dataset.id = b.dataset.v; b.classList.add('acc-item'); });
+  const f = ov.querySelector('[data-act="file"]'); if(f && fileId) f.id = fileId;
+  const c = ov.querySelector('[data-act="cancel"]'); if(c && cancelId) c.id = cancelId;
+}
+const candOpts = C => C.map(c => ({ id:c.id, name:c.name, line:c.role, img:artSrc(c.art) }));
 function sealScreen(done){
-  let ov = document.getElementById('screen-seal15');
-  if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-seal15'; document.getElementById('game-root').appendChild(ov); }
   const C = V13.S2_CANDIDATES || [];
-  let who = null;
-  const close = ok => { showOverlay(null); controls(true); if(done) done(ok); };
-  const draw = ()=>{
-    ov.innerHTML = `<div class="overlay-bg"></div><div class="acc-frame">
-      <div class="acc-head"><div class="plan-k">FRIDAY · 23:41 · THE ROAD OUTSIDE RIVERSTONE</div><div class="plan-t">A SEALED ENVELOPE</div>
-        <p class="acc-lead">Osagie holds out an envelope in the rain. <i>"Just the name. I won't open it until Monday."</i> If you're right, a court hears that you knew before anyone told you. If you're wrong, it counts against you.</p></div>
-      <div class="acc-body"><div class="acc-step"><div class="v12-step-h"><b>?</b> WHO KEPT ADAEZE SAFE FOR TWENTY YEARS?</div>
-        <div class="acc-grid">${C.map(c => `<button class="acc-card ${who === c.id ? 'sel' : ''}" data-id="${c.id}"><img src="${artSrc(c.art)}" alt=""><b>${esc(c.name)}</b><span>${esc(c.role)}</span></button>`).join('')}</div></div></div>
-      <div class="acc-foot"><span class="ops-p">You don't have to. You can walk onto that jetty with an open mind.</span>
-        <span class="a15-foot2"><button class="btn ghost" id="s15-no">NOT TONIGHT</button><button class="btn primary" id="s15-go" ${who ? '' : 'disabled'}>SEAL IT</button></span></div>
-    </div>`;
-    ov.querySelectorAll('.acc-card').forEach(b => b.addEventListener('click', ()=>{ who = b.dataset.id; if(typeof sfxClick === 'function') sfxClick(); draw(); }));
-    ov.querySelector('#s15-no').addEventListener('click', ()=>close(false));
-    const go = ov.querySelector('#s15-go');
-    go.addEventListener('click', ()=>{
-      if(!who) return;
-      if(!go.dataset.armed){ go.dataset.armed = '1'; go.textContent = 'TAP AGAIN — SEALED FOR GOOD'; return; }
-      S2().seal15 = { who, before:true, t:Date.now() };
-      if(V12 && V12.log) V12.log('seal15', { who });
-      close(true);
+  let over = false;
+  const close = ok => { if(over) return; over = true; modalEnd('screen-seal15'); showOverlay(null); controls(true); if(done) done(ok); };
+  const seal = who => { S2().seal15 = { who, before:true, t:Date.now() }; if(V12 && V12.log) V12.log('seal15', { who }); close(true); };
+  controls(false);
+  if(window.CW && typeof CW.sheet === 'function'){
+    // (R06) on the beta's paper sheet, as Season 1's accusation is: numbered sections, 44px targets, the two-tap arm
+    const sh = CW.sheet({
+      id:'screen-seal15', cls:'s2-seal15', title:'A SEALED ENVELOPE', meta:'FRIDAY · 23:41 · THE ROAD OUTSIDE RIVERSTONE',
+      lead:'Okundaye holds out an envelope in the rain. <i>"Just the name. I won\'t open it until Monday."</i> If you\'re right, a court hears that you knew before anyone told you. If you\'re wrong, it counts against you. You don\'t have to: you can walk onto that jetty with an open mind.',
+      sections:[{ key:'who', label:'THE NAME', q:'Who kept Adaeze safe for twenty years?', kind:'cards', options:candOpts(C) }],
+      warn:'Once it is sealed, it stays sealed until Monday.', cancelLabel:'NOT TONIGHT', fileLabel:'SEAL IT', armLabel:'TAP AGAIN — SEALED FOR GOOD', stamp:'SEALED', stampMs:400,
+      onCancel:()=>close(false), onFile:out => seal(out.who),
     });
-  };
-  draw(); controls(false); showOverlay('screen-seal15');
+    compat(sh && sh.ov, 's15-go', 's15-no');
+  } else {
+    // without the casework layer: the old markup, on our colours
+    let ov = document.getElementById('screen-seal15');
+    if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-seal15'; document.getElementById('game-root').appendChild(ov); }
+    let who = null;
+    const draw = ()=>{
+      ov.innerHTML = `<div class="overlay-bg"></div><div class="acc-frame" role="dialog" aria-label="A sealed envelope">
+        <div class="acc-head"><div class="plan-k">FRIDAY · 23:41 · THE ROAD OUTSIDE RIVERSTONE</div><div class="plan-t">A SEALED ENVELOPE</div>
+          <p class="acc-lead">Okundaye holds out an envelope in the rain. <i>"Just the name. I won't open it until Monday."</i> If you're right, a court hears that you knew before anyone told you. If you're wrong, it counts against you.</p></div>
+        <div class="acc-body"><div class="acc-step"><div class="v12-step-h"><b>1</b> WHO KEPT ADAEZE SAFE FOR TWENTY YEARS?</div>
+          <div class="acc-grid">${C.map(c => `<button class="acc-card ${who === c.id ? 'sel' : ''}" data-id="${c.id}"><img src="${artSrc(c.art)}" alt=""><b>${esc(c.name)}</b><span>${esc(c.role)}</span></button>`).join('')}</div></div></div>
+        <div class="acc-foot"><span class="ops-p">You don't have to. You can walk onto that jetty with an open mind.</span>
+          <span class="a15-foot2"><button class="btn ghost" id="s15-no">NOT TONIGHT</button><button class="btn primary" id="s15-go" ${who ? '' : 'disabled'}>SEAL IT</button></span></div>
+      </div>`;
+      ov.querySelectorAll('.acc-card').forEach(b => b.addEventListener('click', ()=>{ who = b.dataset.id; if(typeof sfxClick === 'function') sfxClick(); draw(); }));
+      ov.querySelector('#s15-no').addEventListener('click', ()=>close(false));
+      const go = ov.querySelector('#s15-go');
+      go.addEventListener('click', ()=>{
+        if(!who) return;
+        if(!go.dataset.armed){ go.dataset.armed = '1'; go.textContent = 'TAP AGAIN — SEALED FOR GOOD'; return; }
+        seal(who);
+      });
+    };
+    draw(); showOverlay('screen-seal15');
+  }
+  // (R04) a decision: Esc does nothing here; if the pause menu opens over it, RESUME puts it back
+  modal('screen-seal15', { onEsc:null });
 }
 
 /* ---------- the way in ---------- */
@@ -785,7 +794,7 @@ function byGate(){
   trailReset();
   R.tOsa = tail(R.osagie, 1.7); R.tHau = tail(R.hauwa, 2.5); R.tUche = tail(R.uche, 3.3);
   if(R.ibi) pose(R.ibi, 'folded');
-  V13.toast('THE GATE', 'West along the road. Blue lights behind the bars.', 2400);
+  V13.toast('THE GATE', rec() ? 'West along the road. Blue lights behind the bars.' : 'Blue lights behind the bars.', 2400);
   V13.every(()=>{ const P = ENGINE.player.position; if(P.z < 27.4 && Math.abs(P.x) < 4.6){ standoff(); return false; } });
 }
 /* borrow the strongroom's lamp for the gate: the faces behind the bars, lit from the road (R.lampHome() puts it back) */
@@ -834,10 +843,11 @@ function standoff(){
       if(R.lampHome) R.lampHome();
       go(R.osagie, [[-0.6, 24.6], [-0.2, 22.0]], { face:-PI / 2 - 0.3, end:'folded' });
       V13.done('o15_in');
-      objText('o15_board', 'Reach TEKENA 2\'s gangway — the north end of the yard — before they see a warrant');
+      // (SC3) where the barge lies is Recruit's, in the objective as in the toast below
+      objText('o15_board', rec() ? 'Reach TEKENA 2\'s gangway — the north end of the yard — before they see a warrant' : 'Reach TEKENA 2\'s gangway before they see a warrant');
       controls(true);
       trailReset(); R.tOsa.on = false; R.tHau.on = true; R.tUche.on = true;
-      V13.toast('THE YARD', 'The task force steps aside. Osagie stays with the ACP. The barge is at the north end.', 3200);
+      V13.toast('THE YARD', 'The task force steps aside. Okundaye stays with the ACP.' + (rec() ? ' The barge is at the north end.' : ''), 3200);
       V13.every(()=>{ const p = ENGINE.player.position; if(p.z < -10.5){ stealth(); return false; } });
     }, 4200);
   });
@@ -890,7 +900,7 @@ function clock(){
   const R = RT(), T = 165; R.tfT = 0;
   V13.every(dt => {
     if(R.counted || R.cashOpen){ if(typeof hideMeter === 'function') hideMeter('tf15'); return false; }   // the count has begun: the race is over
-    R.tfT += dt;
+    R.tfT += dt * (V13.timeRate ? V13.timeRate() : (typeof timerRate === 'function' ? timerRate() : 1));
     const left = Math.max(0, T - R.tfT), mm = Math.floor(left / 60), ss = Math.floor(left % 60);
     if(typeof showMeter === 'function') showMeter('tf15', 'TASK FORCE — ON THE ROAD', left / T, left < 45 ? 'danger' : 'info', mm + ':' + String(ss).padStart(2, '0'));
     if(R.tfT > T * 0.45 && !R.boomUp){ R.boomUp = true; if(V13.world){ V13.world.open('boom', 1); V13.world.open('gate', 1); } }
@@ -925,8 +935,9 @@ function tfArrives(){
 function stealth(){
   const R = RT(); if(R.stealth) return; R.stealth = true;
   for(const t of TR.tails) t.held = true;
-  V13.radio('SGT. UCHE', RADIO.low, 7400);
-  if(typeof showHint === 'function') showHint('m15_low', 'Hold <b>C</b> to stay low. The torches show where the guards are looking.', 'Tap <b>CROUCH</b> to stay low. The torches show where the guards are looking.', 6200);
+  V13.radio('SGT. UCHE', radio('low'), 7400);
+  const toggle = (()=>{ try{ return !!(window.TAC && TAC.crouch && TAC.crouch.mode() === 'toggle'); }catch(e){ return false; } })();
+  if(typeof showHint === 'function') showHint('m15_low', (toggle ? 'Press' : 'Hold') + ' <b>C</b> to stay low. The torches show where the guards are looking.', 'Tap <b>CROUCH</b> to stay low. The torches show where the guards are looking.', 6200);
   V13.eyes({ label:'THE JETTY IS WATCHING', watchers:R.guards.map(g => g.ch), radius:8.5, fov:0.85, rate:0.55, decay:0.16, onMade:()=>made('seen') });
   V13.every(()=>{
     if(R.boarded) return false;
@@ -1020,7 +1031,7 @@ function counted(){
     objText('o15_senator', 'The Senator is waiting on the jetty, under his umbrella');
     R.itSen = V13.talk(R.sen, 'Talk to the Senator', it => senator(it), { range:3.1 });
     R.itSen.priority = 2;
-    setTimeout(()=>{ if(RT() === R && !R.senDone) V13.radio('BARRISTER DANLADI', RADIO.wait, 4400); }, 1600);
+    setTimeout(()=>{ if(RT() === R && !R.senDone && radio('wait')) V13.radio('BARRISTER DANLADI', radio('wait'), 4400); }, 1600);
   });
 }
 
@@ -1031,7 +1042,7 @@ function senator(it){
   const R = RT(), P = ENGINE.player;
   V13.drop(it); R.senDone = true; controls(false); tailsOn(false);
   // parse the ninth floor while the Senator talks, so Monday doesn't wait for it (ENVART.load is cached and idempotent)
-  setTimeout(()=>{ try{ if(typeof ENVART !== 'undefined' && ENVART.load) ENVART.load(KO); }catch(e){} }, 1800);
+  setTimeout(()=>{ try{ if(typeof ENVART !== 'undefined' && ENVART.load && !(typeof ART !== 'undefined' && ART.failed)) ENVART.load(KO); }catch(e){} }, 1800);
   placePlayer(6.3, -23.3, Math.atan2(4.6 - 6.3, -24.8 + 23.3));
   put(R.hauwa, 7.45, -23.0, Math.atan2(4.6 - 7.45, -24.8 + 23.0)); pose(R.hauwa, 'folded');
   turn(R.sen, Math.atan2(6.3 - 4.6, -23.3 + 24.8)); faceCh(R.ereba, P);
@@ -1127,7 +1138,7 @@ function afterCall(){
   if(MC().s2_end === 'truth') S.game.arrests = (S.game.arrests || 0) + 1;
   else if(V13.hasEv('barge_cash')){ S.game.evQ.barge_cash = 'contested'; }
   V13.done('o15_senator');
-  setTimeout(()=>{ if(!R.recording) V13.toast('THE SENATOR\'S WORDS', 'Nothing recorded them. Your notebook and Hauwa\'s — that\'s all a court will see.', 3800); }, 600);
+  setTimeout(()=>{ if(!R.recording) V13.toast('THE SENATOR\'S WORDS', 'Nothing recorded them. Your notebook and Zainab\'s — that\'s all a court will see.', 3800); }, 600);
   setTimeout(monday, R.recording ? 1400 : 3800);
 }
 
@@ -1149,11 +1160,14 @@ function monday(){
   const both = ()=>{ if(cardDone && built) requestAnimationFrame(()=>requestAnimationFrame(()=>{ black(false); setTimeout(()=>lead(), 700); })); };
   titleCard(['MONDAY', 'NACECA HEADQUARTERS · ABUJA · THE NINTH FLOOR'], 3400, ()=>{ cardDone = true; both(); });
   setTimeout(()=>black(true), 500);
+  // (D9) the ninth floor gets twelve seconds to decode; a hang, a failed decode or no art at all plays Monday over the river
+  const artFailed = ()=>typeof ART !== 'undefined' && !!ART.failed;
   const load = (V13.loading ? V13.loading('THE NINTH FLOOR', ['env_' + KO]) : Promise.resolve(true))
-    .then(()=>ENVART.load(KO)).catch(()=>null);
+    .then(()=>(artFailed() || typeof ENVART === 'undefined') ? null : Promise.race([ENVART.load(KO), new Promise(r => setTimeout(()=>r(null), 12000))]))
+    .catch(()=>null);
   setTimeout(()=>load.then(set => {
     let ok = false;
-    if(set && ENVART.ready(KO)){ try{ office(); ok = true; }catch(e){ console.error('[m15] office', e); } }
+    if(set && typeof ENVART !== 'undefined' && ENVART.ready(KO)){ try{ office(); ok = true; }catch(e){ console.error('[m15] office', e); } }
     if(!ok) officeFallback();
     built = true; both();
   }), 1000);
@@ -1242,48 +1256,79 @@ function lead(){
 
 /* ---------- the accusation: one name, three things that prove it ---------- */
 function accuseScreen(){
-  let ov = document.getElementById('screen-accuse15');
-  if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-accuse15'; document.getElementById('game-root').appendChild(ov); }
   const seal = S2().seal15, C = V13.S2_CANDIDATES || [], ids = EV_S2();
   const items = (S.game.evidence || []).filter(e => e && ids.includes(e.id)).sort((a, b)=>ids.indexOf(a.id) - ids.indexOf(b.id));
-  let who = null; const picks = [];
-  const qTag = id => { const q = V13.evQ(id); return q === 'weak' ? ' <i class="a15-q weak">WEAK</i>' : q === 'contested' ? ' <i class="a15-q">CONTESTED</i>' : ''; };
-  const need = Math.min(3, items.length);
-  const draw = ()=>{
-    const ready = who && picks.length === need;
-    ov.innerHTML = `<div class="overlay-bg"></div><div class="acc-frame">
-      <div class="acc-head"><div class="plan-k">CASE 15 · MONDAY · THE NINTH FLOOR</div><div class="plan-t">FILL THE BLANK</div>
-        <p class="acc-lead">Hauwa's application for an arrest warrant, typed at seven this morning. Someone protected Commander Adaeze for twenty years. One name — and three things that prove it.</p>
-        <div class="a15-blank">FEDERAL REPUBLIC OF NIGERIA v. <b>${who ? esc(cand(who).name.toUpperCase()) : '&nbsp;'.repeat(18)}</b> — abuse of office, and gratification for shielding Cdr. Adaeze from investigation.</div></div>
-      <div class="acc-body">
-        <div class="acc-step"><div class="v12-step-h"><b>1</b> WHO PROTECTED HER?${seal ? ` <em>your sealed envelope named ${esc(cand(seal.who).name)}</em>` : ''}</div>
-          <div class="acc-grid">${C.map(c => `<button class="acc-card ${who === c.id ? 'sel' : ''} ${seal && seal.who === c.id ? 'a15-sealed' : ''}" data-id="${c.id}"><img src="${artSrc(c.art)}" alt=""><b>${esc(c.name)}</b><span>${esc(c.role)}</span></button>`).join('')}</div></div>
-        <div class="acc-step"><div class="v12-step-h"><b>2</b> THREE THINGS THAT PROVE IT <em>${picks.length}/${need || 3}</em></div>
-          <div class="acc-ev">${items.map(e => `<button class="acc-item ${picks.includes(e.id) ? 'sel' : ''}" data-id="${e.id}">${esc(e.name)}${qTag(e.id)}</button>`).join('') || '<p class="ops-p">You carry nothing to put to a judge.</p>'}</div></div>
-      </div>
-      <div class="acc-foot"><span class="ops-p">Only evidence that ties a name to protecting her will hold. A judge reads this once.</span>
-        <button class="btn primary" id="a15-go" ${ready ? '' : 'disabled'}>FILE IT</button></div>
-    </div>`;
-    ov.querySelectorAll('.acc-card').forEach(b => b.addEventListener('click', ()=>{ who = b.dataset.id; if(typeof sfxClick === 'function') sfxClick(); draw(); }));
-    ov.querySelectorAll('.acc-item').forEach(b => b.addEventListener('click', ()=>{
-      const id = b.dataset.id, i = picks.indexOf(id);
-      if(i >= 0) picks.splice(i, 1); else if(picks.length < 3) picks.push(id); else { V13.toast('THREE ONLY', 'Put one back first', 1400); return; }
-      if(typeof sfxBlip === 'function') sfxBlip(); draw();
-    }));
-    const go = ov.querySelector('#a15-go');
-    go.addEventListener('click', ()=>{
-      if(!(who && picks.length === need)) return;
-      if(!go.dataset.armed){ go.dataset.armed = '1'; go.textContent = 'TAP AGAIN — NO TAKING IT BACK'; return; }
-      showOverlay(null);
-      walkIn(judge(who, picks.slice()));
+  const blank = who => `FEDERAL REPUBLIC OF NIGERIA v. <b>${who ? esc(cand(who).name.toUpperCase()) : '&nbsp;'.repeat(18)}</b> — abuse of office, and gratification for shielding Cdr. Adaeze from investigation.`;
+  const lead = 'Zainab\'s application for an arrest warrant, typed at seven this morning. Someone protected Commander Adaeze for twenty years. One name — and three things that prove it.';
+  let over = false;
+  const file = (who, picks)=>{ if(over) return; over = true; modalEnd('screen-accuse15'); showOverlay(null); walkIn(judge(who, picks)); };
+  controls(false);
+  if(window.CW && typeof CW.sheet === 'function'){
+    const qTag = id => { const q = V13.evQ(id); return q === 'weak' ? 'WEAK' : q === 'contested' ? 'CONTESTED' : ''; };
+    const sh = CW.sheet({
+      id:'screen-accuse15', cls:'s2-accuse15', title:'FILL THE BLANK', meta:'CASE 15 · MONDAY · THE NINTH FLOOR',
+      lead:esc(lead) + `<span class="a15-blank">${blank(null)}</span>`,
+      sections:[
+        { key:'who', label:'WHO PROTECTED HER?', q:seal ? 'Your sealed envelope named ' + cand(seal.who).name + '.' : '', kind:'cards', options:candOpts(C) },
+        { key:'ev', label:'THREE THINGS THAT PROVE IT', q:'Only evidence that ties a name to protecting her will hold.', kind:'multi', max:3, empty:'You carry nothing to put to a judge.',
+          options:items.map(e => ({ id:e.id, name:e.name, tag:qTag(e.id) })) },
+      ],
+      warn:'A judge reads this once. It can\'t be withdrawn.', fileLabel:'FILE IT', armLabel:'TAP AGAIN — NO TAKING IT BACK', stamp:'FILED',
+      onFile:out => file(out.who, (out.ev || []).slice()),
     });
-  };
-  draw(); controls(false); showOverlay('screen-accuse15');
+    const ov = sh && sh.ov;
+    compat(ov, 'a15-go');
+    if(ov){
+      // the blank fills in as a name is chosen; the name the envelope carried is marked on its card
+      const bl = ov.querySelector('.a15-blank');
+      ov.querySelectorAll('.cw-card[data-k="who"]').forEach(c => {
+        if(seal && c.dataset.v === seal.who){ c.classList.add('a15-sealed'); c.insertAdjacentHTML('beforeend', '<span class="a15-sealtag">SEALED</span>'); }
+        c.addEventListener('click', ()=>{ if(bl) bl.innerHTML = blank(c.dataset.v); });
+      });
+    }
+  } else {
+    let ov = document.getElementById('screen-accuse15');
+    if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-accuse15'; document.getElementById('game-root').appendChild(ov); }
+    let who = null; const picks = [];
+    const qTag = id => { const q = V13.evQ(id); return q === 'weak' ? ' <i class="a15-q weak">WEAK</i>' : q === 'contested' ? ' <i class="a15-q">CONTESTED</i>' : ''; };
+    const need = Math.min(3, items.length);
+    const draw = ()=>{
+      const ready = who && picks.length === need;
+      ov.innerHTML = `<div class="overlay-bg"></div><div class="acc-frame" role="dialog" aria-label="Fill the blank">
+        <div class="acc-head"><div class="plan-k">CASE 15 · MONDAY · THE NINTH FLOOR</div><div class="plan-t">FILL THE BLANK</div>
+          <p class="acc-lead">${esc(lead)}</p>
+          <div class="a15-blank">${blank(who)}</div></div>
+        <div class="acc-body">
+          <div class="acc-step"><div class="v12-step-h"><b>1</b> WHO PROTECTED HER?${seal ? ` <em>your sealed envelope named ${esc(cand(seal.who).name)}</em>` : ''}</div>
+            <div class="acc-grid">${C.map(c => `<button class="acc-card ${who === c.id ? 'sel' : ''} ${seal && seal.who === c.id ? 'a15-sealed' : ''}" data-id="${c.id}"><img src="${artSrc(c.art)}" alt=""><b>${esc(c.name)}</b><span>${esc(c.role)}</span></button>`).join('')}</div></div>
+          <div class="acc-step"><div class="v12-step-h"><b>2</b> THREE THINGS THAT PROVE IT <em>${picks.length}/${need || 3}</em></div>
+            <div class="acc-ev">${items.map(e => `<button class="acc-item ${picks.includes(e.id) ? 'sel' : ''}" data-id="${e.id}">${esc(e.name)}${qTag(e.id)}</button>`).join('') || '<p class="ops-p">You carry nothing to put to a judge.</p>'}</div></div>
+        </div>
+        <div class="acc-foot"><span class="ops-p">Only evidence that ties a name to protecting her will hold. A judge reads this once.</span>
+          <button class="btn primary" id="a15-go" ${ready ? '' : 'disabled'}>FILE IT</button></div>
+      </div>`;
+      ov.querySelectorAll('.acc-card').forEach(b => b.addEventListener('click', ()=>{ who = b.dataset.id; if(typeof sfxClick === 'function') sfxClick(); draw(); }));
+      ov.querySelectorAll('.acc-item').forEach(b => b.addEventListener('click', ()=>{
+        const id = b.dataset.id, i = picks.indexOf(id);
+        if(i >= 0) picks.splice(i, 1); else if(picks.length < 3) picks.push(id); else { V13.toast('THREE ONLY', 'Put one back first', 1400); return; }
+        if(typeof sfxBlip === 'function') sfxBlip(); draw();
+      }));
+      const go = ov.querySelector('#a15-go');
+      go.addEventListener('click', ()=>{
+        if(!(who && picks.length === need)) return;
+        if(!go.dataset.armed){ go.dataset.armed = '1'; go.textContent = 'TAP AGAIN — NO TAKING IT BACK'; return; }
+        file(who, picks.slice());
+      });
+    };
+    draw(); showOverlay('screen-accuse15');
+  }
+  // (R04) a decision: Esc does nothing; RESUME after a pause menu puts the sheet back
+  modal('screen-accuse15', { onEsc:null });
 }
 /* what the case is worth: a strong piece counts only against the right name; the envelope counts either way */
 function judge(who, picks){
   const strong = (V13.S2_STRONG ? V13.S2_STRONG() : {}) || {}, right = who === 'dg', seal = S2().seal15, career = MC().s2_end === 'career';
-  if(strong.senator_words && V13.evQ('senator_words') !== 'good') strong.senator_words = 'The Senator, under arrest: "Kolawole kept her because I asked him to." Nothing recorded it — your notebook and Hauwa\'s will have to carry it.';
+  if(strong.senator_words && V13.evQ('senator_words') !== 'good') strong.senator_words = 'The Senator, under arrest: "Kolawole kept her because I asked him to." Nothing recorded it — your notebook and Zainab\'s will have to carry it.';
   let s = right ? picks.filter(id => strong[id]).length : 0;
   if(seal) s += seal.who === 'dg' ? 1 : -1;
   s = Math.max(0, s);
@@ -1294,8 +1339,8 @@ function judge(who, picks){
     return (V13.S2_WHY_NOT || {})[id] || 'It doesn\'t tie anyone to protecting her.';
   };
   const rows = picks.map(id => (right && strong[id]) ? { ok:true, t:name(id), d:strong[id] } : { ok:false, t:name(id), d:right ? why(id) : 'It was built against the wrong name.' });
-  if(seal) rows.push(seal.who === 'dg' ? { ok:true, t:'Your sealed envelope', d:'Osagie carried his name in her pocket from Friday night — before the Senator said a word.' }
-                                       : { ok:false, t:'Your sealed envelope', d:'It named ' + cand(seal.who).name + '. Osagie keeps it. So will the defence.' });
+  if(seal) rows.push(seal.who === 'dg' ? { ok:true, t:'Your sealed envelope', d:'Okundaye carried his name in her pocket from Friday night — before the Senator said a word.' }
+                                       : { ok:false, t:'Your sealed envelope', d:'It named ' + cand(seal.who).name + '. Okundaye keeps it. So will the defence.' });
   const res = { who, picks, s, outcome, rows, knew:!!(seal && seal.who === 'dg' && right), t:Date.now() };
   S2().acc15 = { who, picks, s, outcome };
   if(V12 && V12.log) V12.log('accuse15', { who, picks, s, outcome });
@@ -1376,16 +1421,21 @@ function caseCard(res){
   let ov = document.getElementById('screen-case15');
   if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-case15'; document.getElementById('game-root').appendChild(ov); }
   const c = cand(res.who), word = { proven:'PROVEN', contested:'CONTESTED', unproven:'UNPROVEN' }[res.outcome];
+  const stamp = { proven:'good', contested:'plain', unproven:'' }[res.outcome];
   const sub = { proven:'Three things a court cannot explain away.', contested:'Enough to charge him. Not enough to be sure.', unproven:'A story. Courts are for evidence.' }[res.outcome];
-  ov.innerHTML = `<div class="overlay-bg"></div><div class="acc-frame">
+  const foot = res.who !== 'dg' ? 'Zainab reads it twice, and says nothing.' : res.outcome === 'proven' ? 'Zainab initials every page.' : res.outcome === 'contested' ? 'Zainab initials every page, slowly.' : 'Zainab initials every page. She knows how it will read.';
+  ov.innerHTML = `<div class="overlay-bg"></div><div class="acc-frame" role="dialog" aria-label="The case you put to him">
     <div class="acc-head"><div class="plan-k">THE CASE YOU PUT TO HIM</div>
-      <div class="a15-head"><img src="${artSrc(c.art)}" alt=""><div><div class="plan-t">FRN v. ${esc(c.name.toUpperCase())}</div><span class="a15-stamp ${res.outcome}">${word}</span></div></div>
+      <div class="a15-head"><img src="${artSrc(c.art)}" alt=""><div><div class="plan-t">FRN v. ${esc(c.name.toUpperCase())}</div><span class="v13-stamp a15-stamp ${stamp} ${res.outcome}">${word}</span></div></div>
       <p class="acc-lead">${sub}</p></div>
-    <ul class="a15-res">${res.rows.map(r => `<li class="${r.ok ? 'ok' : 'no'}"><i>${r.ok ? '✓' : '✗'}</i><div><b>${esc(r.t)}</b>${esc(r.d)}</div></li>`).join('')}</ul>
-    <div class="acc-foot"><span class="ops-p">${res.who !== 'dg' ? 'Hauwa reads it twice, and says nothing.' : res.outcome === 'proven' ? 'Hauwa initials every page.' : res.outcome === 'contested' ? 'Hauwa initials every page, slowly.' : 'Hauwa initials every page. She knows how it will read.'}</span><button class="btn primary" id="c15-done">CONTINUE</button></div>
+    <ul class="a15-res">${res.rows.map(r => `<li class="${r.ok ? 'ok' : 'no'}"><span class="${r.ok ? 'v13-mark-ok' : 'v13-mark-bad'}">${ico(r.ok ? 'check' : 'cross')}</span><div><b>${esc(r.t)}<em>${r.ok ? 'HOLDS' : 'DOESN\'T HOLD'}</em></b>${esc(r.d)}</div></li>`).join('')}</ul>
+    <div class="acc-foot"><span class="ops-p">${foot}</span><button class="btn primary" id="c15-done">CONTINUE</button></div>
   </div>`;
-  ov.querySelector('#c15-done').addEventListener('click', ()=>{ showOverlay(null); finishCase(res); });
+  let over = false;
+  ov.querySelector('#c15-done').addEventListener('click', ()=>{ if(over) return; over = true; modalEnd('screen-case15'); showOverlay(null); finishCase(res); });
   controls(false); showOverlay('screen-case15');
+  // (R04) CONTINUE is the only way on: Esc does nothing; RESUME puts the card back
+  modal('screen-case15', { onEsc:null });
 }
 function finishCase(res){
   const R = RT();
@@ -1416,6 +1466,7 @@ V13.startEpilogueS2 = function(){
   EPI.slides.push({ kind:'card', title:esc((st.card && st.card.title) || 'SEASON 3'), sub:esc((st.card && st.card.sub) || ''), text:'' });
   EPI.i = 0;
   S.game.seasonTwoComplete = true;
+  S2().epiPending = 1;                                  // (D17) a quit mid-epilogue comes back here on Continue
   if(typeof saveGame === 'function') saveGame(true);
   ENGINE.movementEnabled = false; showHUD(false);
   if(typeof stopAmbient === 'function') stopAmbient();
@@ -1426,6 +1477,7 @@ V13.startEpilogueS2 = function(){
 function endSeasonTwo(){
   V13._s2Epi = false;
   S.game.seasonTwoComplete = true;
+  delete S2().epiPending;
   if(typeof saveGame === 'function') saveGame(true);
   if(typeof unlock === 'function') unlock('season_two');
   ENGINE.movementEnabled = false; showHUD(false);
@@ -1438,7 +1490,7 @@ V13.wrap('nextMissionPreview', orig => function(){
   if(S.game && S.game.currentMission === 'm15'){
     const A = V13.AFTER && V13.AFTER.m15;
     return `${A && A.next ? A.next : '<b>Season 2 is complete.</b>'} Continue for where everyone ended up.
-      <span style="display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid rgba(216,166,74,.6);color:#ffd76a;font-family:Oswald;font-size:10px;letter-spacing:.18em">SEASON 3 — COMING</span>`;
+      <span class="s2-badge">SEASON 3 — COMING</span>`;
   }
   return orig.apply(this, arguments);
 });
@@ -1451,6 +1503,12 @@ V13.wrap('computeGrade', orig => function(op){
   const pts = cap, g = pts >= 85 ? 'S' : pts >= 70 ? 'A' : pts >= 55 ? 'B' : pts >= 40 ? 'C' : 'D';
   return Object.assign({}, r, { g, pts });
 });
+/* (D17) Continue (or the pause menu's Load) after the tab closed on the season's epilogue: back to its first slide,
+   then the stinger, the award and the title, not "CAMPAIGN UP TO DATE" with all of it lost */
+V13.wrap('resumeCampaign', orig => function(){
+  try{ const s = S.game && S.game.s2; if(s && s.epiPending && typeof V13.startEpilogueS2 === 'function'){ showOverlay(null); V13.startEpilogueS2(); return; } }catch(e){ console.warn('[m15] resume the epilogue', e); }
+  return orig.apply(this, arguments);
+});
 /* the Season 1 path (v13_core: last slide → Season 2) is untouched; ours is guarded by V13._s2Epi */
 V13.wrap('advanceEpilogue', orig => function(){
   if(!V13._s2Epi) return orig.apply(this, arguments);
@@ -1459,12 +1517,15 @@ V13.wrap('advanceEpilogue', orig => function(){
   renderEpilogue();
 });
 
+/* ---------- (RT04) wayfinding: on Senior the Monday objective is shown, not pointed at; Recruit keeps the pointer ---------- */
+if(window.WAY && WAY.OBJ_TARGETS) WAY.OBJ_TARGETS.m15 = Object.assign(WAY.OBJ_TARGETS.m15 || {}, { o15_name:()=>rec() ? null : { ui:true } });
+
 /* ---------- achievements ---------- */
 (function(){
   if(typeof ACHIEVEMENTS === 'undefined') return;
   const add = [
-    { id:'before_he_said_it', name:'Before He Said It', desc:'Seal the right name before the Senator says it on the jetty.' },
-    { id:'ninth_floor', name:'The Ninth Floor', desc:'Prove who protected Adaeze, beyond doubt.' },
+    { id:'before_he_said_it', name:'Before He Said It', desc:'Seal the right name before anyone says it out loud.' },
+    { id:'ninth_floor', name:'The Ninth Floor', desc:'Close Operation Upstream with the proof beyond doubt.' },
     { id:'season_two', name:'Season Two', desc:'Finish Operation Upstream.' },
   ];
   for(const a of add) if(!ACHIEVEMENTS.some(x => x.id === a.id)) ACHIEVEMENTS.push(a);

@@ -8,7 +8,7 @@ module.exports = async function (T) {
   await L.waitDialogue(T, 30000); await T.wait(2600);
   await L.shot(T, '01_brief_estab');
   await L.until(T, 'BARRISTER DANLADI'); await L.shot(T, '02_brief_hauwa');
-  await L.until(T, 'COMMANDER OSAGIE'); await L.shot(T, '03_brief_osagie');
+  await L.until(T, 'COMMANDER (OSAGIE|OKUNDAYE)'); await L.shot(T, '03_brief_osagie');
   await L.until(T, 'BITRUS'); await L.shot(T, '04_brief_phone');
   await L.until(T, 'IBINABO'); await L.shot(T, '05_brief_ibinabo');
   await sc.talk(T);
@@ -21,6 +21,8 @@ module.exports = async function (T) {
   await T.ev(() => document.querySelector('#screen-seal15 .acc-card[data-id="dg"]').click()); await T.wait(300);
   await L.shot(T, '07_seal');
   await T.ev(() => { const b = document.getElementById('s15-go'); b.click(); b.click(); });
+  // the paper sheet's SEALED stamp shows for a moment before the envelope goes into her pocket
+  await T.until(() => !document.querySelector('#screen-seal15.show'), 5000); await T.wait(300);
   await sc.talk(T);
   await sc.use(T, 'body-camera');
   T.log('sealed', JSON.stringify(await L.st(T)), await T.ev(() => String(V13.rt.recording)));

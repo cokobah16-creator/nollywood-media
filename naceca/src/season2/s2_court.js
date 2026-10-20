@@ -16,6 +16,16 @@ const V13 = window.V13, MC = V13.mc;
 const K = V13.court = V13.court || {};
 const D = ()=>V13.COURT_DATA || {};
 const esc = s => V13.esc(s);
+const ico = n => (typeof icon === 'function' ? icon(n) : '');
+const rec = ()=>typeof isRecruit === 'function' && isRecruit();
+const modal = (id, o)=>{ if(typeof v13Modal === 'function') try{ v13Modal(id, o); }catch(e){} };
+const modalEnd = id => { if(typeof v13ModalEnd === 'function') try{ v13ModalEnd(id); }catch(e){} };
+/* a run of the trial (K.run) has a number; leaving the trial (K.abort) moves it on, and anything the old run
+   was waiting for (a line, a choice, a title card, a camera cue) then stops that run where it stands (D4) */
+const ABORTED = { aborted:true };
+K._run = K._run || 0;
+const live = (p, r)=>{ const q = p.then(v => { if(K._run !== r) throw ABORTED; return v; }); q.catch(()=>{}); return q; };   // (an unawaited cue is never an unhandled rejection)
+const rethrow = e => { if(e === ABORTED) throw e; };
 const LIE = 10;                         // what a lie costs when the document comes out
 const CRED0 = 60;                       // PW1 walks in with the benefit of the doubt
 
@@ -27,10 +37,11 @@ V13.CAST.usher = { name:'COURT USHER', skin:'#4a2b1c', top:'#26324a', hair:'#0c0
   const has = k => SPEAKER_ART.some(([x]) => x === k);
   if(!has('LEGAL AID COUNSEL')){ const i = SPEAKER_ART.findIndex(([x]) => x === 'LEGAL AID'); SPEAKER_ART.splice(i < 0 ? 0 : i, 0, ['LEGAL AID COUNSEL', 'abara']); }
   if(!has('COURT USHER')) SPEAKER_ART.unshift(['COURT USHER', 'usher']);
+  if(!has('OLANIRAN')) SPEAKER_ART.unshift(['OLANIRAN', 'san']);          // (CN15) the SAN's renamed speaker keeps his face
 })();
 const SPK = {
   'REGISTRAR':{ speaker:'REGISTRAR' }, 'JUDGE':{ speaker:'HON. JUSTICE BAKARE' }, 'DANLADI':{ speaker:'BARRISTER DANLADI' },
-  'SAN':{ speaker:'COKER-ODUSOTE, SAN' }, 'LEGAL AID':{ speaker:'LEGAL AID COUNSEL' }, 'KELECHI':{ speaker:'AGENT KELECHI', portrait:'kelechi' },
+  'SAN':{ speaker:'OLANIRAN-COLE, SAN' }, 'LEGAL AID':{ speaker:'LEGAL AID COUNSEL' }, 'KELECHI':{ speaker:'AGENT KELECHI', portrait:'kelechi' },
   'LUCKY':{ speaker:'LUCKY EDAFE' }, 'FELIX':{ speaker:'FELIX UGBEKILE' }, 'SOTONYE':{ speaker:'SOTONYE JUMBO' }, 'EJIRO':{ speaker:'EJIRO' },
   'TOBI':{ speaker:'TOBI' }, 'IGBINOSA':{ speaker:'MR. IGBINOSA' }, 'IKPE':{ speaker:'SGT. IKPE' }, 'USHER':{ speaker:'COURT USHER' },
   'NACECA SYSTEM':{ speaker:'NACECA SYSTEM' }, 'UCHE':{ speaker:'SGT. UCHE', portrait:'sergeant' },
@@ -38,6 +49,8 @@ const SPK = {
 
 /* ---------- conditions (COURT.md vocabulary → the player's history) ---------- */
 const S2SRC = ['HERBS', 'TILL', 'NETS', 'TIDE', 'GATE'];
+/* (CN13) how Season 2 reads Adaeze's fate: V13.s1fate() (s2_core), else the same rule inline; never a rewritten Season 1 field */
+const s1fate = m => { try{ return V13.s1fate ? V13.s1fate() : ((V13.s2().s1fate) || (m || MC()).finale || 'unproven'); }catch(e){ return (m || MC()).finale || 'unproven'; } };
 const srcs = ()=>(V13.srcList ? V13.srcList() : []).filter(c => S2SRC.includes(c)).map(c => V13.src(c)).filter(Boolean);
 const COND = {
   always:()=>true,
@@ -56,7 +69,7 @@ const COND = {
   source_unregistered:()=>srcs().some(x => !x.reg),
   sources_registered:()=>srcs().some(x => x.reg),
   ninth_bury:m => m.s2_ninth === 'bury', ninth_refuse:m => m.s2_ninth === 'refuse',
-  adaeze_proven:m => m.finale === 'proven', adaeze_contested:m => m.finale === 'contested', adaeze_unproven:m => (m.finale || 'unproven') === 'unproven',
+  adaeze_proven:m => s1fate(m) === 'proven', adaeze_contested:m => s1fate(m) === 'contested', adaeze_unproven:m => s1fate(m) === 'unproven',
   camp_navy:m => m.s2_camp === 'navy', camp_mass:m => m.s2_camp === 'mass',
   lucky_followed:m => m.s2_jetty === 'follow',
 };
@@ -111,13 +124,15 @@ const STANDDOWN = {
   cert_tracker:['the certificate is signed', 'The certificate for the tracker log is not yet signed.'],
 };
 const fixDone = id => !!(V13.s2().fixes || {})[id];
-const tobiAlive = ()=>MC().asaba === 'rescue';
+/* (CN06) Tobi is an accountant in canon, not a forensic examiner: whatever happened at Asaba, PW2 and every
+   section 84 certificate are Mr. Igbinosa's (the fix "who", the fix lines and the witness list all read this) */
+const tobiAlive = ()=>false;
 K.fixAvailable = function(id){
   if(id === 'cert_pos') return V13.hasEv('pos_t4_log');
   if(id === 'bank_cert') return V13.hasEv('bank_trail') || V13.hasEv('bvn_link');
   if(id === 'ctc_cac') return V13.hasEv('cac_record');
   if(id === 'search_record') return MC().s2_original === 'handed';
-  if(id === 'cert_tracker') return V13.hasEv('barge_track') || V13.hasEv('felix_phone');
+  if(id === 'cert_tracker') return V13.hasEv('barge_track');            // (D13) the escort's phone needs no certificate: its foundation is oral
   return false;
 };
 K.fixDone = fixDone;
@@ -181,11 +196,12 @@ K.play = function(lines, cb){
   const k = keyOf();
   V13.run(k, lines, ()=>{ delete DIALOGUE[k]; if(cb) cb(); });
 };
-const say = lines => new Promise(res => K.play(lines, res));
+const say = lines => { const r = K._run; return live(new Promise(res => K.play(lines, res)), r); };
 /* a decision: lead lines, then the prompt line carrying the choices; each choice continues into its own lines */
 K.decide = function(lead, prompt, options, opt){
   opt = opt || {};
-  return new Promise(res => {
+  const r = K._run;
+  return live(new Promise(res => {
     const base = keyOf();
     const keys = options.map((o, i)=>{ const k = base + '_' + i; const arr = (o.lines || []).filter(Boolean).slice(); arr._pick = i; DIALOGUE[k] = arr; return k; });
     const choices = options.map((o, i)=>{ const c = { text:esc(o.text), next:keys[i] }; if(opt.confirm) c.flag = {}; return c; });
@@ -197,7 +213,7 @@ K.decide = function(lead, prompt, options, opt){
       K.pending = null; keys.forEach(k => delete DIALOGUE[k]);
       res(i);
     });
-  });
+  }), r);
 };
 /* a fixed shuffle per decision, so the right answer is never always first */
 function shuffle(arr, seed){
@@ -236,8 +252,9 @@ K._onLine = function(line){
   if(K.stage && K.stage.onLine){ try{ K.stage.onLine(line); }catch(e){ console.warn('[court] stage', e); } }
 };
 const cue = (name, arg)=>{
-  if(!K.stage || !K.stage.cue) return Promise.resolve();
-  try{ return Promise.resolve(K.stage.cue(name, arg)).catch(e => { console.warn('[court] cue', name, e); }); }catch(e){ console.warn('[court] cue', name, e); return Promise.resolve(); }
+  const r = K._run;
+  if(!K.stage || !K.stage.cue) return live(Promise.resolve(), r);
+  try{ return live(Promise.resolve(K.stage.cue(name, arg)).catch(e => { console.warn('[court] cue', name, e); }), r); }catch(e){ console.warn('[court] cue', name, e); return live(Promise.resolve(), r); }
 };
 
 /* ---------- credibility ---------- */
@@ -253,6 +270,7 @@ K.showCred = function(v, delta){
   if(delta){
     const d = m.querySelector('.cb-delta'); d.textContent = (delta > 0 ? '+' : '−') + Math.abs(Math.round(delta));
     d.className = 'cb-delta ' + (delta > 0 ? 'up' : 'down'); void d.offsetWidth; d.classList.add('show');
+    clearTimeout(d._t); d._t = setTimeout(()=>d.classList.remove('show'), 1700);
   }
 };
 K.credMeter = function(on){
@@ -314,14 +332,15 @@ K.openExhibits = function(){
   if(!el){ el = V13.el('div', '', ''); el.id = 'court-exh'; document.getElementById('game-root').appendChild(el); }
   const M = D().meta || {};
   const rows = [];
-  const add = (id, cls, chip, sub)=>rows.push(`<li class="ce-row ${cls}"><span class="ce-chip">${esc(chip)}</span><span class="ce-n">${esc(K.evName(id))}</span>${sub ? `<span class="ce-s">${esc(sub)}</span>` : ''}</li>`);
+  const CHIP = { full:'v13-tier t-confirmed', reduced:'v13-tier t-probable', mfi:'v13-tier t-allegation', rej:'v13-stamp', todo:'' };
+  const add = (id, cls, chip, sub)=>rows.push(`<li class="ce-row v13-sheet ${cls}"><span class="ce-chip ${CHIP[cls] || ''}">${esc(chip)}</span><span class="ce-n">${esc(K.evName(id))}</span>${sub ? `<span class="ce-s">${esc(sub)}</span>` : ''}</li>`);
   S.admitted.slice().sort((a, b)=>parseInt(S.exhibits[a].slice(1)) - parseInt(S.exhibits[b].slice(1)))
     .forEach(id => add(id, S.weight[id] === 'reduced' ? 'reduced' : 'full', S.exhibits[id], S.weight[id] === 'reduced' ? 'admitted · reduced weight' : 'admitted · full weight'));
   S.mfiOrder.forEach(id => { if(S.mfi[id] && !S.admitted.includes(id) && !S.rejected.includes(id)) add(id, 'mfi', S.mfi[id].label, id === 'lucky_statement' ? 'awaiting the trial-within-trial' : 'marked for identification · not yet evidence'); });
   S.rejected.forEach(id => add(id, 'rej', S.withdrawn.includes(id) ? 'WITHDRAWN' : 'REJECTED', S.withdrawn.includes(id) ? 'not before the court' : 'tendered and rejected'));
   if(S.day <= 1) ORDER.forEach(id => { if(V13.hasEv(id) && D().exhibits && D().exhibits[id] && !S.admitted.includes(id) && !S.rejected.includes(id) && !S.mfi[id]) add(id, 'todo', '—', 'to be tendered'); });
   el.innerHTML = `<div class="ce-bg"></div><div class="ce-frame" role="dialog" aria-label="Exhibits">
-    <div class="ce-head"><div><div class="ce-k">${esc(M.number || 'FHC/ABJ/CR/214/2026')}</div><div class="ce-t">EXHIBITS</div></div><button class="ph-x ce-x" type="button" aria-label="Close">✕</button></div>
+    <div class="ce-head"><div><div class="ce-k">${esc(M.number || 'FHC/ABJ/CR/214/2026')}</div><div class="ce-t">EXHIBITS</div></div><button class="ph-x ce-x" type="button" aria-label="Close">${ico('close') || 'CLOSE'}</button></div>
     <ul class="ce-list">${rows.join('') || '<li class="ce-none">Nothing tendered yet.</li>'}</ul>
     <p class="ce-foot">Only what is admitted is evidence. Reduced weight: the court admits it but will rely on it less.</p></div>`;
   const close = ()=>{ el.classList.remove('show'); K._panel = null; };
@@ -343,28 +362,34 @@ K.openFixes = function(maxPicks, onClose, opt){
   opt = opt || {};
   let left = maxPicks == null ? 2 : maxPicks;
   const where = opt.where || S.game.currentMission || '';
+  const inCourt = where === 'm14' || !!K.active;
   const avail = ()=>FIXES.filter(id => K.fixAvailable(id) && !fixDone(id));
   let ov = document.getElementById('screen-courtfix');
   if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-courtfix'; document.getElementById('game-root').appendChild(ov); }
-  const close = ()=>{ showOverlay(null); K._fixOpen = false; if(typeof onClose === 'function') onClose(); };
+  let closed = false;
+  const close = ()=>{ if(closed) return; closed = true; modalEnd('screen-courtfix'); showOverlay(null); K._fixOpen = false; if(typeof onClose === 'function') onClose(); };
   if(!avail().length || left <= 0){ if(typeof onClose === 'function') setTimeout(onClose, 0); return; }
   const whoName = F => {
     const w = (F.who === 'TOBI' && !tobiAlive()) ? (F.who_alt || 'IGBINOSA') : F.who;
     return { DANLADI:'Danladi', KELECHI:'You', TOBI:'Tobi', IGBINOSA:'Igbinosa' }[w] || w;
   };
+  // Esc: in the office the board is a desk you can walk away from (its own button); in court it is a decision
+  const show = ()=>{ showOverlay('screen-courtfix'); K._fixOpen = true; modal('screen-courtfix', { onEsc:inCourt ? null : close }); };
   const draw = ()=>{
-    const FX = D().fixes || {};
+    const FX = D().fixes || {}, R = rec();
     const cards = FIXES.filter(id => K.fixAvailable(id) && FX[id]).map(id => {
       const F = FX[id], done = fixDone(id);
+      // (R10) which exhibits a fix saves is the deduction: Recruit is told, Senior reads the law (WHY) and decides
       const prot = (PROTECTS[id] || []).filter(e => V13.hasEv(e)).map(K.evName);
-      return `<article class="cf-card ${done ? 'done' : ''}">
-        <header><b class="cf-t">${esc(F.title)}</b><i class="cf-who">${esc(whoName(F))}</i></header>
+      const protHTML = R ? `<p class="cf-prot"><span>PROTECTS</span>${prot.length ? prot.map(esc).join(' · ') : '<em>nothing you will tender</em>'}</p>` : '';
+      return `<article class="cf-card v13-sheet ${done ? 'done' : ''}">
+        <header><b class="cf-t">${esc(F.title)}</b><i class="cf-who v13-tier t-probable">${esc(whoName(F))}</i></header>
         <p class="cf-why">${esc(WHY[id])}</p>
-        <div class="cf-act"><p class="cf-prot"><span>PROTECTS</span>${prot.length ? prot.map(esc).join(' · ') : '<em>nothing you will tender</em>'}</p>
-          ${done ? '<span class="cf-done">DONE</span>' : `<button class="btn ghost cf-go" type="button" data-f="${id}" ${left <= 0 ? 'disabled' : ''}>DO THIS</button>`}</div></article>`;
+        <div class="cf-act">${protHTML}
+          ${done ? `<span class="cf-done v13-mark-ok">${ico('check')}DONE</span>` : `<button class="btn ghost cf-go" type="button" data-f="${id}" ${left <= 0 ? 'disabled' : ''}>DO THIS</button>`}</div></article>`;
     }).join('');
-    const none = FIXES.filter(id => !K.fixAvailable(id)).map(id => `${(FX[id] || {}).title || id} (${NOFIX[id]})`);
-    ov.innerHTML = `<div class="overlay-bg"></div><div class="cf-frame">
+    const none = R ? FIXES.filter(id => !K.fixAvailable(id)).map(id => `${(FX[id] || {}).title || id} (${NOFIX[id]})`) : [];
+    ov.innerHTML = `<div class="overlay-bg"></div><div class="cf-frame" role="dialog" aria-label="Make it admissible">
       <div class="cf-head"><div><div class="plan-k">${esc(opt.kicker || 'BEFORE THE TRIAL')}</div><div class="plan-t">MAKE IT ADMISSIBLE</div></div>
         <div class="cf-left">TIME FOR <b>${left}</b> MORE</div></div>
       <p class="cf-lead">${esc(opt.note || 'Each of these takes a day you don\'t have. Choose what the case can\'t do without.')}</p>
@@ -376,20 +401,20 @@ K.openFixes = function(maxPicks, onClose, opt){
   };
   const pick = id => {
     const F = (D().fixes || {})[id]; if(!F) return;
-    left--; showOverlay(null);
+    left--; modalEnd('screen-courtfix'); showOverlay(null);
     const lines = LS(!tobiAlive() && F.lines_igbinosa ? F.lines_igbinosa : F.lines);
     if(lines[0]) stampOn(lines[0], F.title.toUpperCase(), 'info');
     const go = ()=>K.play(lines, ()=>{
       markFix(id, where);
       if(typeof sfxComplete === 'function') sfxComplete();
-      cue('interlude', null);
-      if(left > 0 && avail().length){ draw(); showOverlay('screen-courtfix'); K._fixOpen = true; } else close();
+      cue('interlude', null).catch(()=>{});
+      if(left > 0 && avail().length){ draw(); show(); } else close();
     });
-    Promise.resolve(cue('interlude', { label:F.title })).then(go);
+    cue('interlude', { label:F.title }).then(go, ()=>{});
   };
-  draw(); showOverlay('screen-courtfix'); K._fixOpen = true;
+  draw(); show();
 };
-const fixBoard = (n, opt)=>new Promise(res => K.openFixes(n, res, opt));
+const fixBoard = (n, opt)=>{ const r = K._run; return live(new Promise(res => K.openFixes(n, res, opt)), r); };
 
 /* ---------- exhibits: admit, reject, mark for identification ---------- */
 function weighed(id, w){
@@ -518,7 +543,7 @@ const adjournCues = lines => { lines.forEach(l => { if(l._who === 'USHER' && /co
 async function day1(){
   const S = st(), X = D().day1 || {};
   S.day = 1;
-  await card(['COURT 5', 'DAY 1 · MONDAY · 09:00'], ()=>cue('day', 1));
+  await card(['COURT 5', 'DAY 1 · MONDAY 11 JANUARY · 09:00'], ()=>cue('day', 1));
   K.bar(true); K.label('DAY 1 · CALL AND APPEARANCES');
   await say(callCues(LS(X.call), false));
   K.label('DAY 1 · ARRAIGNMENT');
@@ -533,7 +558,7 @@ async function day1(){
   const oath = open.slice(k + 1); if(oath[0]) stampOn(oath[0], 'PW1 · SWORN', 'info');
   await say(oath);
   const Q = X.exam || [];
-  for(let i = 0; i < Q.length; i++){ try{ await examQuestion(Q[i], i + 1, Q.length); }catch(e){ console.warn('[court] exam', Q[i] && Q[i].id, e); } }
+  for(let i = 0; i < Q.length; i++){ try{ await examQuestion(Q[i], i + 1, Q.length); }catch(e){ rethrow(e); console.warn('[court] exam', Q[i] && Q[i].id, e); } }
   K.label('DAY 1 · ADJOURNMENT');
   const adj = adjournCues(LS(X.adjourn));
   const corridor = adj.findIndex(l => l._who === 'NACECA SYSTEM' && /corridor/i.test(l.text));
@@ -596,7 +621,7 @@ async function crossExamination(){
     });
     shuffle(opts, 'cross:' + a.id);
     let i = 0;
-    try{ i = await K.decide(q.slice(0, -1), q[q.length - 1], opts, { type:'cross', id:a.id, confirm:true }); }catch(e){ console.warn('[court] cross', e); }
+    try{ i = await K.decide(q.slice(0, -1), q[q.length - 1], opts, { type:'cross', id:a.id, confirm:true }); }catch(e){ rethrow(e); console.warn('[court] cross', e); }
     const m = opts[i].meta;
     let d = m.cred;
     if(m.kind === 'lie' && a.answers.find(x => x.kind === 'lie' && x.exposed)){ d -= LIE; S.lies++; if(typeof applyEffect === 'function') applyEffect({ integrity:-3 }); }
@@ -724,6 +749,7 @@ function renum(text){
   return String(text || '').replace(/\bPW([2-6])\b/g, (m, k)=>{ const id = CANON_PW[k].find(x => N[x]); return id ? 'PW' + N[id] : m; });
 }
 K.renum = renum;
+K.witnessList = ()=>witnessList();               // (probes) who the prosecution calls after PW1
 const renumLines = L => L.map(l => { if(l && /\bPW[2-6]\b/.test(l.text + (l.textEn || ''))){ l.text = renum(l.text); if(l.textEn) l.textEn = renum(l.textEn); } return l; });
 
 async function noCase(){
@@ -751,18 +777,18 @@ async function day2(){
   await card(['COURT 5', 'DAY 2 · MONDAY NEXT · 09:05'], ()=>cue('day', 2));
   K.bar(true); K.label('DAY 2 · CONTINUATION OF TRIAL'); K.credMeter(true);
   await say(callCues(LS(X.call), true));
-  try{ await retender(); }catch(e){ console.warn('[court] retender', e); }
-  try{ await crossExamination(); }catch(e){ console.warn('[court] cross', e); }
-  try{ await reExamination(); }catch(e){ console.warn('[court] reexam', e); }
+  try{ await retender(); }catch(e){ rethrow(e); console.warn('[court] retender', e); }
+  try{ await crossExamination(); }catch(e){ rethrow(e); console.warn('[court] cross', e); }
+  try{ await reExamination(); }catch(e){ rethrow(e); console.warn('[court] reexam', e); }
   await say([stampOn(mk('JUDGE', 'The witness is discharged. Thank you, Agent.'), 'PW1 · DISCHARGED', 'info')]);
   K.credMeter(false);
   await cue('pw1_out');
   V13.done('o14_cross');
-  try{ await otherWitnesses(); }catch(e){ console.warn('[court] witnesses', e); }
-  try{ await trialWithinTrial(); }catch(e){ console.warn('[court] twt', e); }
+  try{ await otherWitnesses(); }catch(e){ rethrow(e); console.warn('[court] witnesses', e); }
+  try{ await trialWithinTrial(); }catch(e){ rethrow(e); console.warn('[court] twt', e); }
   // anything still marked for identification never became evidence
   S.mfiOrder.forEach(id => { if(S.mfi[id] && !S.admitted.includes(id)) reject(id); });
-  try{ await noCase(); }catch(e){ console.warn('[court] nocase', e); }
+  try{ await noCase(); }catch(e){ rethrow(e); console.warn('[court] nocase', e); }
   const anyone = S.onTrial.d1 || (!S.plea.d2 && S.onTrial.d2) || (!S.plea.d3 && S.onTrial.d3);
   const adj = anyone ? LS(X.adjourn)
     : (S.plea.d2 || S.plea.d3) ? [mk('JUDGE', 'The convicts will be sentenced at the conclusion of the matter. This matter is adjourned for sentence.'), mk('USHER', 'Court!')]
@@ -880,26 +906,31 @@ function verdictCard(){
                  e3a:'Received, stored and sold', e3b:'Without lawful authority', e3c:'Knew its origin' };
     const CT = { d1:['COUNT 1', 'LUCKY EDAFE', 'Money laundering · MLPPA 2022, s.18(2)(b)'], d2:['COUNT 2', 'FELIX UGBEKILE', 'Dealing in petroleum products without lawful authority · Misc. Offences Act, s.1(17)(a)'],
                  d3:['COUNT 3', 'SOTONYE JUMBO', 'Receiving and storing petroleum products without lawful authority · Misc. Offences Act, s.1(17)(a)'] };
+    const mark = (yes, text)=>`<li class="${yes ? 'y' : 'n'}" aria-label="${esc(text)}: ${yes ? 'proved' : 'not proved'}"><span class="${yes ? 'v13-mark-ok' : 'v13-mark-bad'}">${ico(yes ? 'check' : 'cross')}</span>${esc(text)}<em>${yes ? 'PROVED' : 'NOT PROVED'}</em></li>`;
     const row = d => {
       const res = tr[d], plea = res === 'plea', E = S.finalEls || {};
-      let outcome, cls;
-      if(plea){ outcome = 'PLEADED GUILTY · ' + SENT[d + '_plea'].toUpperCase(); cls = 'plea'; }
-      else if(S.nocase[d] === 'upheld'){ outcome = 'NOT GUILTY · DISCHARGED ON A NO-CASE SUBMISSION'; cls = 'ng'; }
-      else if(res === 'guilty'){ outcome = 'GUILTY · ' + SENT[d].toUpperCase(); cls = 'g'; }
-      else { outcome = 'NOT GUILTY · DISCHARGED AND ACQUITTED'; cls = 'ng'; }
-      const els = (!plea && S.nocase[d] !== 'upheld') ? `<ul class="cv-els">${ELS[d].map(e => `<li class="${E[e] ? 'y' : 'n'}"><i>${E[e] ? '✓' : '✕'}</i>${esc(EL[e])}</li>`).join('')}</ul>`
-        : (S.nocase[d] === 'upheld' ? `<ul class="cv-els">${ELS[d].map(e => `<li class="${(S.nocaseEls || {})[e] ? 'y' : 'n'}"><i>${(S.nocaseEls || {})[e] ? '✓' : '✕'}</i>${esc(EL[e])}</li>`).join('')}</ul>` : '');
-      return `<article class="cv-count ${cls}"><header><span class="cv-k">${CT[d][0]}</span><b>${CT[d][1]}</b></header><p class="cv-off">${esc(CT[d][2])}</p>${els}<div class="cv-out">${esc(outcome)}</div></article>`;
+      let outcome, cls, stamp;
+      if(plea){ outcome = 'PLEADED GUILTY · ' + SENT[d + '_plea'].toUpperCase(); cls = 'plea'; stamp = 'good'; }
+      else if(S.nocase[d] === 'upheld'){ outcome = 'NOT GUILTY · DISCHARGED ON A NO-CASE SUBMISSION'; cls = 'ng'; stamp = ''; }
+      else if(res === 'guilty'){ outcome = 'GUILTY · ' + SENT[d].toUpperCase(); cls = 'g'; stamp = 'good'; }
+      else { outcome = 'NOT GUILTY · DISCHARGED AND ACQUITTED'; cls = 'ng'; stamp = ''; }
+      const els = (!plea && S.nocase[d] !== 'upheld') ? `<ul class="cv-els">${ELS[d].map(e => mark(!!E[e], EL[e])).join('')}</ul>`
+        : (S.nocase[d] === 'upheld' ? `<ul class="cv-els">${ELS[d].map(e => mark(!!(S.nocaseEls || {})[e], EL[e])).join('')}</ul>` : '');
+      return `<article class="cv-count v13-sheet ${cls}"><header><span class="cv-k">${CT[d][0]}</span><b>${CT[d][1]}</b></header><p class="cv-off">${esc(CT[d][2])}</p>${els}<div class="cv-out"><span class="v13-stamp ${stamp}">${esc(outcome)}</span></div></article>`;
     };
     const full = S.admitted.filter(id => S.weight[id] !== 'reduced').length, red = S.admitted.length - full;
-    ov.innerHTML = `<div class="overlay-bg"></div><div class="cv-frame">
+    ov.innerHTML = `<div class="overlay-bg"></div><div class="cv-frame" role="dialog" aria-label="Judgment">
       <div class="cv-head"><div class="plan-k">${esc(M.number || '')} · ${esc(M.court || '')}</div><div class="plan-t">FRN v. EDAFE &amp; 2 ORS · JUDGMENT</div></div>
       <div class="cv-grid">${['d1', 'd2', 'd3'].map(row).join('')}</div>
       <div class="cv-stats"><span>EXHIBITS ADMITTED <b>${S.admitted.length}</b> <em>${full} full · ${red} reduced</em></span><span>REJECTED <b>${S.rejected.length}</b></span>
         <span>PW1 CREDIBILITY <b>${Math.round(S.cred)}</b></span><span>WITNESSES <b>${S.witnesses.length}</b></span></div>
       <div class="cv-foot"><button class="btn primary cv-go" type="button">LEAVE COURT 5</button></div></div>`;
-    ov.querySelector('.cv-go').onclick = ()=>{ showOverlay(null); res(); };
+    let left = false;
+    const go = ()=>{ if(left) return; left = true; modalEnd('screen-courtverdict'); showOverlay(null); res(); };
+    ov.querySelector('.cv-go').onclick = go;
     showOverlay('screen-courtverdict');
+    // Esc does what LEAVE COURT 5 does
+    modal('screen-courtverdict', { onEsc:go });
   });
 }
 
@@ -907,11 +938,12 @@ K.verdictCard = verdictCard;
 
 /* ---------- title cards ---------- */
 function card(lines, during){
-  return new Promise(res => {
+  const r = K._run;
+  return live(new Promise(res => {
     K.bar(false); K.docCard(null);
     titleCard(lines, K.fast ? 700 : 2600, ()=>res());
-    if(during) setTimeout(()=>{ try{ during(); }catch(e){ console.warn('[court] card', e); } }, K.fast ? 150 : 650);
-  });
+    if(during) setTimeout(()=>{ if(K._run !== r) return; try{ during(); }catch(e){ console.warn('[court] card', e); } }, K.fast ? 150 : 650);
+  }), r);
 }
 
 /* ---------- the conference ---------- */
@@ -929,7 +961,7 @@ async function conference(){
   const offerD3 = ['witness', 'pressured'].includes(MC().s2_sotonye), offerD2 = MC().s2_felix === 'cooperating';
   let open = (C.open || []).slice();
   // the writer set this at NACECA Legal; Danladi has borrowed the empty courtroom instead
-  if(open[0] && open[0].who === 'NACECA SYSTEM') open[0] = { who:'NACECA SYSTEM', text:'FEDERAL HIGH COURT · COURT 5 · FRIDAY, 18:40. The court has risen for the weekend. Danladi has borrowed the empty room for an hour, and there are case files on every chair.' };
+  if(open[0] && open[0].who === 'NACECA SYSTEM') open[0] = { who:'NACECA SYSTEM', text:'FEDERAL HIGH COURT · COURT 5 · FRIDAY 8 JANUARY, 18:40. The court has risen for the weekend. Danladi has borrowed the empty room for an hour, and there are case files on every chair.' };
   if(!offerD3 && !offerD2) open = open.filter(l => !/270\(5\)|consulting/i.test(l.text));
   await say(LS(open));
   if(offerD3 && C.sotonye) await plea('d3', C.sotonye);
@@ -948,9 +980,10 @@ async function conference(){
 
 /* ---------- the whole trial ---------- */
 K.run = async function(stage){
+  const r = ++K._run;
   K.stage = stage || null; K.active = true; K.reset();
   document.body.classList.add('v13-court');
-  const step = async (name, fn)=>{ try{ await fn(); }catch(e){ console.error('[court] ' + name, e); } };
+  const step = async (name, fn)=>{ if(K._run !== r) return; try{ await fn(); }catch(e){ if(e === ABORTED) return; console.error('[court] ' + name, e); } };
   await step('conference', conference);
   await step('day1', day1);
   await step('after day 1', ()=>interlude((D().hub || {}).after_day1, 'ABUJA', { where:'m14', kicker:'BEFORE THE NEXT SITTING', note:'Two more before Monday. Anything marked for identification can still be tendered once its foundation is ready.' }));
@@ -962,8 +995,10 @@ K.run = async function(stage){
     await step('day3', day3);
   }
   await step('judgment', judgment);
+  if(K._run !== r) return null;                    // left mid-trial (K.abort): nothing is written, nothing finishes
   if(!V13.s2().trial || !V13.s2().trial.d1) writeOutput();
   await step('card', verdictCard);
+  if(K._run !== r) return null;
   K.end();
   return V13.s2().trial;
 };
@@ -976,4 +1011,20 @@ K.end = function(){
   if(K.stage && K.stage.cue) try{ K.stage.cue('end'); }catch(e){}
   K.stage = null;
 };
+/* (D4) leaving the trial part-way (quit to the title, load, erase, another case): the court goes with it —
+   the bar, body.v13-court, the choice hook, the camera — and the old run stops where it stands.
+   K.onAbort is the staging's own end (s2_case14.js). */
+K.abort = function(){
+  if(!K.active) return false;
+  K._run++;
+  try{ K.end(); }catch(e){ console.warn('[court] abort', e); }
+  try{ if(typeof K.onAbort === 'function') K.onAbort(); }catch(e){ console.warn('[court] abort', e); }
+  for(const id of ['screen-courtfix', 'screen-courtverdict']){ modalEnd(id); const o = document.getElementById(id); if(o) o.classList.remove('show'); }
+  const sp = document.getElementById('court-stamp'); if(sp) sp.className = '';
+  clearTimeout(K._stampT); K._fixOpen = false; K._picked = null;
+  return true;
+};
+// a new case (or the same one again) starts clean; so does the title screen
+V13.wrap('loadMission', orig => function(){ try{ if(K.active) K.abort(); }catch(e){ console.warn('[court] abort', e); } return orig.apply(this, arguments); });
+document.addEventListener('click', e => { try{ if(K.active && e.target && e.target.closest && e.target.closest('#btn-quit, #btn-load, #btn-erase')) K.abort(); }catch(err){} }, true);
 })();

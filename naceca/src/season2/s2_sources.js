@@ -37,11 +37,13 @@ V13.srcBump = (code, k, n)=>{ const x = V13.src(code); if(x){ x[k] = Math.max(0,
 V13.srcExposed = code => { const x = V13.src(code); return !!x && (x.burned || x.exp >= 60); };
 
 /* Season 1 people who trust Kelechi come back as sources at the start of Season 2 */
+/* (CN12) nobody your Season 1 charge sheet wrongly held comes back to you: not KC, not Tunde */
+const wrongHeld = who => typeof _cwWrong === 'function' && (()=>{ try{ return _cwWrong('lagos') === who; }catch(e){ return false; } })();
 V13.s1Sources = function(){
   const m = MC();
   const kcFair = m.market_runner === 'caught' && m.choice !== 'force';
-  if(kcFair && !V13.src('KC')) V13.recruit('KC', 50);
-  if(!V13.src('TUNDE')) V13.recruit('TUNDE', 60);
+  if(kcFair && !wrongHeld('kc') && !V13.src('KC')) V13.recruit('KC', 50);
+  if(!wrongHeld('tunde') && !V13.src('TUNDE')) V13.recruit('TUNDE', 60);
 };
 /* the cases recruit through their flags (called at the end of each case) */
 V13.recruitFromFlags = function(){
@@ -95,26 +97,43 @@ V13.deliverTips = function(after){
 })();
 
 /* ---------- the sources board ---------- */
+const ico = n => (typeof icon === 'function' ? icon(n) : '');
+const rec = ()=>typeof isRecruit === 'function' && isRecruit();
+const modal = (id, o)=>{ if(typeof v13Modal === 'function') try{ v13Modal(id, o); }catch(e){} };
+const modalEnd = id => { if(typeof v13ModalEnd === 'function') try{ v13ModalEnd(id); }catch(e){} };
+const hudOn = ()=>{ const h = document.getElementById('hud'); return !!h && h.style.display !== 'none'; };
+/* one visit to the board: what the screen looked like before it opened, and who to tell when it closes */
+const SB = { open:false, hud:false, onClose:null };
+document.addEventListener('v13:navreset', ()=>{ SB.open = false; SB.onClose = null; });
+const meter = (v, k)=>`<span class="v13-meter ${k}${k === 'exp' ? ' src-exp' : ''}"><i style="width:${Math.max(0, Math.min(100, Math.round(v)))}%"></i></span>`;
 V13.openSources = function(onClose){
   let ov = document.getElementById('screen-sources');
   if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-sources'; document.getElementById('game-root').appendChild(ov); }
+  if(!SB.open){ SB.hud = hudOn(); SB.open = true; }
+  if(typeof onClose === 'function') SB.onClose = onClose;
   const s = st(); s.tipLog = s.tipLog || []; s.corrob = s.corrob || {};
   const hubKey = S.game.currentMission;
   const left = ()=>2 - (s.corrob[hubKey] || 0);
-  const bar = (v, col)=>`<span class="src-bar"><i style="width:${Math.round(v)}%;background:${col}"></i></span>`;
+  const close = ()=>{
+    modalEnd('screen-sources');
+    showOverlay(null);
+    const wasHud = SB.hud, cb = SB.onClose; SB.open = false; SB.onClose = null;
+    if(wasHud && S.game && S.game.currentMission && typeof showHUD === 'function') showHUD(true);
+    if(typeof cb === 'function') cb();
+  };
   const draw = ()=>{
-    const codes = V13.srcList();
+    const codes = V13.srcList(), R = rec();
     const cards = codes.map(c => {
       const x = V13.src(c), I = V13.SRC[c] || { name:c, role:'' };
       const tips = s.tipLog.filter(e => e.code === c).slice(-2).reverse();
       const quiet = V12.heat() >= 70;
-      return `<article class="src-card ${x.burned ? 'burned' : ''}">
-        <header><b class="src-code">${c}</b><span class="src-name">${V13.esc(I.name)}</span>${x.reg ? '<i class="src-chip reg">REGISTERED</i>' : '<i class="src-chip">UNREGISTERED</i>'}${I.accomplice ? '<i class="src-chip acc">ACCOMPLICE</i>' : ''}</header>
+      return `<article class="src-card v13-sheet ${x.burned ? 'burned' : ''}">
+        <header><b class="src-code">${c}</b><span class="src-name">${V13.esc(I.name)}</span>${x.reg ? '<i class="v13-tier t-confirmed src-chip reg">REGISTERED</i>' : '<i class="v13-tier t-allegation src-chip">UNREGISTERED</i>'}${I.accomplice ? '<i class="v13-warn src-chip acc">ACCOMPLICE</i>' : ''}${x.burned ? '<i class="v13-stamp src-chip">BURNED</i>' : ''}</header>
         <p class="src-role">${V13.esc(I.role)}</p>
-        <div class="src-row"><span>TRUST</span>${bar(x.trust, '#5dd07a')}<span>EXPOSURE</span>${bar(x.exp, '#e84a5c')}</div>
+        <div class="src-row"><span>TRUST</span>${meter(x.trust, 'trust')}<span class="src-exp">EXPOSURE</span>${meter(x.exp, 'exp')}</div>
         ${tips.length ? tips.map(e => `<div class="src-tip ${e.state}"><q>${V13.esc(e.text)}</q>
           <div class="src-tip-a">${e.state === 'new' ? `<button class="btn ghost src-corr" data-k="${e.key}" ${left() <= 0 ? 'disabled' : ''}>CHECK IT (${left()} left today)</button><button class="btn ghost src-file" data-k="${e.key}">FILE IT AS IS</button>`
-            : e.state === 'held' ? '<span class="src-v ok">CHECKED — IT HOLDS</span>' : e.state === 'false' ? '<span class="src-v bad">CHECKED — IT DOESN\'T HOLD. SOMEONE FED THEM THIS.</span>' : '<span class="src-v">FILED, NOT CHECKED</span>'}</div></div>`).join('')
+            : e.state === 'held' ? `<span class="src-v v13-mark-ok">${ico('check')}CHECKED — IT HOLDS</span>` : e.state === 'false' ? `<span class="src-v v13-mark-bad">${ico('cross')}CHECKED — IT DOESN'T HOLD. SOMEONE FED THEM THIS.</span>` : '<span class="src-v">FILED, NOT CHECKED</span>'}</div></div>`).join('')
           : `<p class="src-none">${quiet ? 'Quiet. Too much heat on your name — nobody is answering.' : 'Nothing new.'}</p>`}
         <div class="src-acts">
           ${x.reg ? '' : `<button class="btn ghost src-reg" data-c="${c}">REGISTER</button>`}
@@ -122,13 +141,15 @@ V13.openSources = function(onClose){
           <button class="btn ghost src-meet" data-c="${c}" ${x.met >= 3 ? 'disabled' : ''}>MEET SOMEWHERE QUIET</button>
         </div></article>`;
     }).join('');
-    ov.innerHTML = `<div class="overlay-bg"></div><div class="src-frame">
+    // (R09) Senior Agent: nothing on the board says which tips are planted; checking them is the player's work
+    const lead = 'Registering a source is the proper procedure, and it protects you in court. ' + (R ? 'Exposed sources get fed lies. ' : '')
+      + 'Paying from the fund is clean; paying with silence about their own crimes is how Adaeze started.';
+    ov.innerHTML = `<div class="overlay-bg"></div><div class="src-frame" role="dialog" aria-label="Sources">
       <div class="src-head"><div><div class="plan-k">SOURCES</div><div class="plan-t">WHO TALKS TO YOU</div></div>
-        <div class="src-fund">SOURCE FUND <b>${V13.money(s.fund)}</b></div><button class="ph-x src-x" aria-label="Close">✕</button></div>
-      <p class="src-lead">Registering a source is the proper procedure, and it protects you in court. Exposed sources get fed lies. Paying from the fund is clean; paying with silence about their own crimes is how Adaeze started.</p>
+        <div class="src-fund">SOURCE FUND <b>${V13.money(s.fund)}</b></div><button class="ph-x src-x" type="button" aria-label="Close">${ico('close') || 'CLOSE'}</button></div>
+      <p class="src-lead">${lead}</p>
       <div class="src-grid">${cards || '<p class="ops-p">No sources yet. People talk to officers who treat them well.</p>'}</div>
-      <div class="src-foot"><button class="btn primary src-done">BACK</button></div></div>`;
-    const close = ()=>{ showOverlay(null); if(typeof onClose === 'function') onClose(); };
+      <div class="src-foot"><button class="btn primary src-done" type="button">BACK</button></div></div>`;
     ov.querySelector('.src-x').onclick = close; ov.querySelector('.src-done').onclick = close;
     ov.querySelectorAll('.src-corr').forEach(b => b.onclick = ()=>{
       const e = s.tipLog.find(t => t.key === b.dataset.k); if(!e || left() <= 0) return;
@@ -159,5 +180,7 @@ V13.openSources = function(onClose){
   };
   draw();
   showOverlay('screen-sources');
+  // Esc closes the board (BACK); if the pause menu opens over it, RESUME brings it back
+  modal('screen-sources', { onEsc:close, resume:()=>V13.openSources() });
 };
 })();
