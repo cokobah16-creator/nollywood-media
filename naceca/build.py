@@ -223,6 +223,7 @@ def add_season2(html):
         print("  · season2 not present (or NACECA_SEASON2=0), skipped")
         return html
     import sys
+    sys.dont_write_bytecode = True   # no tools/__pycache__ in the checkout
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     from season2_inject import inject
     html, scenes = inject(html, ROOT)
