@@ -1,7 +1,7 @@
 /* =========================================================================
    NACECA · v13 Case 09 — The Evidence Room (Benin Zonal Command, 21:40)
    Abuja has ordered exhibit 14 — Osas's drive — flown to headquarters on
-   the 06:00 flight. Commander Osagie gives Kelechi the night. How the
+   the 06:00 flight. Commander Okundaye gives Kelechi the night. How the
    drive leaves the cage, how it is read, and what is handed over at dawn
    decide whether it survives the courtroom in Case 14.
    ========================================================================= */
@@ -101,32 +101,62 @@ function cage(x, z){
 
 /* ---------- the case ---------- */
 const RT = ()=>V13.rt;
+// this case's flags, exhibits and documents: a replay starts clean (as Case 12's reset)
+const FLAGS = ['s2_custody', 's2_method', 's2_abuja_call', 's2_original'];
+const EVIDS = ['drive_image', 'upstream_ledger', 'evidence_register'];
+const DOCKEYS = ['m9_hash', 'm9_ledger'];
+const tobiAlive = ()=>V13.tobiAlive ? V13.tobiAlive() : (m => m.asaba === 'rescue' || (m.asaba === 'chase' && !S.game._asabaHostageLost))(MC());
+/* a document closed without an answer (backed off): the bench comes back so the player can take it up again.
+   (A pause held over the document is not a close: V13.ovShown.) */
+function watchDoc(key, done){
+  const R = RT();
+  V13.every(()=>{
+    if(RT() !== R || done()) return false;
+    const open = V13.ovShown ? V13.ovShown('screen-puzzle') : !!document.querySelector('#screen-puzzle.show');
+    if(!open){ if(R.itBench) R.itBench._used = false; return false; }
+  });
+}
 V13.defCase('m9', {
   title:'The Evidence Room', region:'Edo', sub:'Benin Zonal Command · 21:40', evMax:3, xp:320, ambient:'hq',
   objectives:()=>[
-    { id:'o9_osagie', text:'Report to Commander Osagie' },
+    { id:'o9_osagie', text:'Report to Commander Okundaye' },
     { id:'o9_register', text:'Get the drive out of the evidence cage' },
     { id:'o9_examine', text:'Examine the drive at the forensic bench' },
     { id:'o9_ledger', text:'Read the rest of the ledger' },
     { id:'o9_call', text:'Take the call from Abuja' },
     { id:'o9_transfer', text:'05:10 — the transfer team' },
   ],
-  reset(){ for(const k of ['s2_custody', 's2_method', 's2_abuja_call', 's2_original']) delete MC()[k]; },
+  reset(){
+    const m = MC(), f = S.game.flags || {};
+    for(const k of FLAGS){ delete m[k]; delete f[k]; }
+    S.game.evidence = (S.game.evidence || []).filter(e => !e || !EVIDS.includes(e.id));
+    if(S.game.evQ) for(const id of EVIDS) delete S.game.evQ[id];
+    for(const store of ['_docMiss', '_docFree', '_docLocked']) if(S.game[store]) for(const k of DOCKEYS) delete S.game[store][k];
+    delete V13.s2().cert_drive;
+  },
   build(){
     V13.office('night', 'NACECA · BENIN ZONAL COMMAND');
-    const R = RT(), tobi = V13.s1().tobi;
+    const R = RT();
     // the people in the room tonight
     R.osagie = V13.person('osagie', { x:0.6, z:-7.2, rot:0 }, { clip:'folded', id:'osagie' });
     R.uche = V13.person({}, { x:-2.4, z:4.6, rot:2.4 }, { kind:'uche', clip:'folded' });
     R.cage = cage(-5.6, -4.4);
     R.ikpe = V13.person('ikpe', { x:-5.3, z:-3.05, rot:0.2 }, { clip:'idle', id:'ikpe' });
-    R.analyst = V13.person(tobi ? V13.look('tobi', { torso:'#d9dde6', armA:'#d9dde6', armB:'#d9dde6', armC:'#d9dde6', gear:['Gear_Glasses'] }) : 'igbinosa',
-      { x:6.45, z:-6.6, rot:Math.PI / 2 }, { clip:'sit', id:'analyst', solid:false });
-    R.speak = tobi ? 'tobi' : 'igbinosa';
+    // Mr. Igbinosa runs the bench, hashes and certifies in every save (canon review CN06)
+    R.analyst = V13.person('igbinosa', { x:6.45, z:-6.6, rot:Math.PI / 2 }, { clip:'sit', id:'analyst', solid:false });
+    R.speak = 'igbinosa';
+    // Tobi, if he came out of Asaba alive: Zonal took him on to read the payroll; he stands in at the bench
+    // (Season 1's look: CAST.tobi; a clean shirt tonight)
+    R.tobi = tobiAlive();
+    if(R.tobi){
+      R.tobiMesh = V13.person(V13.look('tobi', { torso:'#d9dde6', armA:'#d9dde6', armB:'#d9dde6', armC:'#d9dde6', gear:['Gear_Glasses'] }),
+        { x:6.0, z:-5.3, rot:0 }, { clip:'folded', id:'tobi', solid:false });
+      V13.face(R.tobiMesh, 2.5, -3.5);
+    }
     // what you can do
-    R.itOsagie = V13.talk(R.osagie, 'Report to Commander Osagie', it => {
-      if(V13.objDone('o9_osagie')){ V13.toast('COMMANDER OSAGIE', '"The night is yours, Kelechi. Use it."', 1800); return; }
-      const key = V13.s1().finale === 'unproven' ? V13.pick('m9_osagie_unproven', 'm9_osagie') : 'm9_osagie';
+    R.itOsagie = V13.talk(R.osagie, 'Report to Commander Okundaye', it => {
+      if(V13.objDone('o9_osagie')){ V13.toast('COMMANDER OKUNDAYE', '"The night is yours, Kelechi. Use it."', 1800); return; }
+      const key = V13.s1fate() === 'unproven' ? V13.pick('m9_osagie_unproven', 'm9_osagie') : 'm9_osagie';
       V13.say(key, ()=>{ V13.used(it); V13.done('o9_osagie'); });
     });
     R.itIkpe = V13.talk(R.ikpe, 'Sign for exhibit 14', it => {
@@ -140,39 +170,54 @@ V13.defCase('m9', {
       });
     });
     R.itBench = V13.talk(R.analyst, 'Examine the drive', it => {
-      if(!MC().s2_custody){ V13.toast(R.speak === 'tobi' ? 'TOBI' : 'MR. IGBINOSA', '"Bring me the drive first."', 1600); return; }
+      if(!MC().s2_custody){ V13.toast('MR. IGBINOSA', '"Bring me the drive first."', 1600); return; }
+      // the image is made but the hash check isn't on record yet (a back-off): the bench opens it again
+      if(MC().s2_method === 'image' && !V13.objDone('o9_examine')){ if(!R.hashDone) R.openHash(); return; }
       if(MC().s2_method){ examineNext(); return; }
-      V13.say('m9_forensic_' + R.speak, ()=>{ V13.used(it); afterMethod(); });
+      const bench = ()=>V13.say('m9_forensic_igbinosa', ()=>{ V13.used(it); afterMethod(); });
+      // Tobi says hello first (text: m9_tobi_bench; V13.say warns and carries on if it's missing)
+      if(R.tobi && !R.tobiMet){ R.tobiMet = true; V13.say(V13.pick('m9_tobi_bench') || 'm9_tobi_bench', bench); }
+      else bench();
     }, { verb:'inspect', range:2.8 });
+    /* the hash check on the image: kept here so the bench can reopen it after a back-off */
+    R.openHash = ()=>{
+      V13.used(R.itBench);
+      V13.doc('m9_hash', ok => {
+        if(R.hashDone) return; R.hashDone = true;
+        if(!V13.hasEv('drive_image')) V13.ev('drive_image', 'Forensic image of exhibit 14', ok ? 'good' : 'contested', 60);
+        else S.game.evQ.drive_image = ok ? (S.game.evQ.drive_image || 'good') : 'contested';
+        V13.say('m9_cert_' + R.speak, ()=>{ V13.done('o9_examine'); V13.s2().cert_drive = 1; examineNext(); });
+      });
+      watchDoc('m9_hash', ()=>R.hashDone);
+    };
   },
   start(){ V13.say('m9_intro'); },
 });
 
 /* after the analyst and Kelechi pick a method */
 function afterMethod(){
-  const m = MC().s2_method, R = RT(), who = R.speak;
+  const m = MC().s2_method, R = RT();
   if(m === 'image'){
-    V13.skip(['00:40', 'THE IMAGE FINISHES'], ()=>{
-      V13.doc('m9_hash', ok => {
-        if(!V13.hasEv('drive_image')) V13.ev('drive_image', 'Forensic image of exhibit 14', ok ? 'good' : 'contested', 60);
-        else S.game.evQ.drive_image = ok ? (S.game.evQ.drive_image || 'good') : 'contested';
-        V13.say('m9_cert_' + who, ()=>{ V13.done('o9_examine'); V13.s2().cert_drive = 1; examineNext(); });
-      });
-    });
+    V13.skip(['00:40', 'THE IMAGE FINISHES'], ()=>R.openHash());
   } else {
     V13.ev('drive_image', m === 'photo' ? 'Photographs of exhibit 14\'s screens' : 'Exhibit 14, read directly', m === 'photo' ? 'weak' : 'contested', 40);
     V13.done('o9_examine'); setTimeout(examineNext, 400);
   }
 }
-/* the ledger */
+/* the ledger: Tobi reads ledger codes (accountancy) when he is alive, else Mr. Igbinosa */
 function examineNext(){
   const R = RT();
   if(V13.objDone('o9_ledger')){ if(!V13.objDone('o9_call')) V13.toast('TONIGHT', 'Wait for Abuja to call. They will.', 1800); return; }
+  if(R.ledgerDone) return;
+  V13.used(R.itBench);
   V13.doc('m9_ledger', ok => {
+    if(R.ledgerDone) return; R.ledgerDone = true;
     if(!V13.hasEv('upstream_ledger')) V13.ev('upstream_ledger', 'The UPSTREAM ledger', ok ? 'good' : 'contested', 80);
     else S.game.evQ.upstream_ledger = ok ? (S.game.evQ.upstream_ledger || 'good') : 'contested';
-    V13.run('m9_ledger_run', [V13.pick('m9_ledger_' + R.speak), 'm9_dgo'], ()=>{ V13.done('o9_ledger'); setTimeout(theCall, 900); });
+    const reader = R.tobi ? V13.pick('m9_ledger_tobi', 'm9_ledger_igbinosa') : V13.pick('m9_ledger_igbinosa');
+    V13.run('m9_ledger_run', [reader, 'm9_dgo'], ()=>{ V13.done('o9_ledger'); setTimeout(theCall, 900); });
   });
+  watchDoc('m9_ledger', ()=>R.ledgerDone);
 }
 /* 02:30 — Abuja on the Commander's desk phone */
 function theCall(){
@@ -184,26 +229,35 @@ function theCall(){
       V13.drop(it);
       V13.call(/KUTI/, 'm9_call_kuti', ()=>{
         const caught = MC().s2_abuja_call === 'lie' && MC().s2_custody === 'signed';
-        const next = ()=>{ V13.done('o9_call'); setTimeout(transfer, 800); };
+        const next = ()=>{ V13.done('o9_call'); if(!backed()) leaves(); setTimeout(transfer, 800); };
         if(caught && V13.has('m9_call_kuti_caught')) V13.call(/KUTI/, 'm9_call_kuti_caught', next); else next();
       });
     }, { verb:'talk', range:2.6 });
   });
 }
+/* will the Commander back a retention order at 05:10? */
+function backed(){ const r = S.player.reputation; return MC().s2_custody === 'signed' && MC().s2_abuja_call !== 'lie' && r.integrity >= 50; }
+/* she won't: she goes home after the call, so her office is dark when the escort comes (m9_transfer) */
+function leaves(){
+  const R = RT(); if(!R.osagie || R.osagieGone) return;
+  R.osagieGone = true;
+  if(R.itOsagie) V13.drop(R.itOsagie);
+  V13.walk(R.osagie, [[0.6, -4.0], [0.4, 4.0], [0.4, 9.6]], { speed:1.5 }).then(()=>{ if(R.osagie) R.osagie.visible = false; });
+}
 /* 05:10 — the escort arrives early */
 function transfer(){
   const R = RT();
+  const isBacked = backed();
   V13.skip(['05:10', 'THEY ARE EARLY'], ()=>{
     R.escort = V13.person('escort', { x:0.4, z:8.8, rot:Math.PI }, { id:'escort', solid:false });
     R.suit = V13.person(V13.look('kuti', { torso:'#1c1e24', armA:'#1c1e24', armB:'#1c1e24', armC:'#1c1e24' }), { x:-0.6, z:9.3, rot:Math.PI }, { solid:false });
     V13.walk(R.escort, [[0.4, 3.4]], { face:Math.PI }); V13.walk(R.suit, [[-0.7, 4.0]], { face:Math.PI });
-    V13.walk(R.osagie, [[1.6, 1.6]], { face:Math.PI * 0.85 });
-    const r = S.player.reputation;
-    const backed = MC().s2_custody === 'signed' && MC().s2_abuja_call !== 'lie' && r.integrity >= 50;
+    if(isBacked) V13.walk(R.osagie, [[1.6, 1.6]], { face:Math.PI * 0.85 });   // she is on the steps in yesterday's uniform
+    else if(R.osagie){ R.osagie.visible = false; R.osagieGone = true; }       // gone home hours ago: the office is dark
     setTimeout(()=>{
       V13.talk(R.escort, 'Meet the transfer team', it => {
         V13.drop(it);
-        V13.say(backed ? 'm9_transfer_backed' : 'm9_transfer', ()=>{
+        V13.say(isBacked ? 'm9_transfer_backed' : 'm9_transfer', ()=>{
           V13.done('o9_transfer');
           if(!MC().s2_original) V13.setFlag('s2_original', 'handed');
           if(MC().s2_original === 'handed'){ V13.walk(R.escort, [[0.4, 9.6]]); V13.walk(R.suit, [[-0.6, 9.8]]); }

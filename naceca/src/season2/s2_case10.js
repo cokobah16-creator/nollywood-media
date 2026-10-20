@@ -29,15 +29,25 @@ if(typeof window.applyEffect === 'function' && !window.applyEffect._m10flag){
 
 /* ---------- the few lines the written scenes leave a gap for ---------- */
 Object.assign(DIALOGUE, {
-  m10_x_warn:[ { speaker:'SGT. UCHE', portrait:'sergeant', text:"Sir, people are looking at you. Buy something. Eat something." } ],
-  m10_x_angle:[ { speaker:'SGT. UCHE', portrait:'sergeant', text:"Good. Now get round him, sir. I want to see those cards." } ],
+  // (sr: the Senior Agent line, without the next step; see s2_core.js "dialogue-line fields")
+  m10_x_warn:[ { speaker:'SGT. UCHE', portrait:'sergeant', text:"Sir, people are looking at you. Buy something. Eat something.", sr:"Sir, people are looking at you." } ],
+  m10_x_angle:[ { speaker:'SGT. UCHE', portrait:'sergeant', text:"Good. Now get round him, sir. I want to see those cards.", sr:"Four swipes so far, sir." } ],
   m10_x_covered:[ { speaker:'SGT. UCHE', portrait:'sergeant', text:"I had him from here, sir. Four cards, four swipes, back to back." } ],
   m10_x_boat:[ { speaker:'SGT. UCHE', portrait:'sergeant', text:"Boat's in at the jetty end. He's getting up." } ],
   m10_x_close:[ { speaker:'SGT. UCHE', portrait:'sergeant', text:"He's at the kiosk, sir, and so are you. Step away. Slowly." } ],
   m10_x_buka_friend:[ { speaker:'AGENT KELECHI', portrait:'kelechi', text:"Bole and fish, two. And pepper soup for my friend at the end table — he's shy." } ],
-  m10_x_buka_again:[ { speaker:'MAMA EFE · BUKA', portrait:'street:buka', text:"You again? Oya, siddon. Cold water na two hundred.", textEn:"You again? All right, sit down. Cold water is two hundred." } ],
+  m10_x_buka_again:[ { speaker:'MAMA TEGA · BUKA', portrait:'street:buka', text:"You again? Oya, siddon. Cold water na two hundred.", textEn:"You again? All right, sit down. Cold water is two hundred." } ],
 });
-const X = k => (DIALOGUE[k] && DIALOGUE[k][0] && DIALOGUE[k][0].text) || '';
+const rec = ()=>V13.rec ? V13.rec() : (typeof isRecruit === 'function' && isRecruit());
+const tobiAlive = ()=>V13.tobiAlive ? V13.tobiAlive() : (m => m.asaba === 'rescue' || (m.asaba === 'chase' && !S.game._asabaHostageLost))(MC());
+// a radioed line, with the line fields (rec, cond, sr/srEn; s2_core.js V13.lineText): '' when it doesn't play
+const lineTxt = l => V13.lineText ? V13.lineText(l) : ((l && l.text) || '');
+const X = k => lineTxt(DIALOGUE[k] && DIALOGUE[k][0]);
+/* our wayfinding (beta/wayfind.js): on Senior, "Find terminal SPL-WSM-T4" and "Learn who uses it" would fall back to
+   the one required kiosk of four. Senior gets the objective text only; Recruit keeps the pointer (a null row). */
+if(window.WAY && WAY.OBJ_TARGETS){
+  WAY.OBJ_TARGETS.m10 = Object.assign(WAY.OBJ_TARGETS.m10 || {}, { o10_t4:()=>rec() ? null : { ui:true }, o10_who:()=>rec() ? null : { ui:true } });
+}
 
 /* ---------- the market's geography (game coordinates, metres) ---------- */
 const T4C = { x:-3.85, z:-1.75 };                                   // a customer at T4 stands here, facing the kiosk (−x)
@@ -321,13 +331,14 @@ V13.defCase('m10', {
   },
   start(){
     const R = RT();
-    const key = MC().asaba === 'rescue' ? V13.pick('m10_intro_tobi', 'm10_intro') : V13.pick('m10_intro_igbinosa', 'm10_intro');
+    const key = tobiAlive() ? V13.pick('m10_intro_tobi', 'm10_intro') : V13.pick('m10_intro_igbinosa', 'm10_intro');
     V13.say(key, ()=>{
       R.phase = 'explore';
       // Uche peels off to the charging stand; he doesn't walk the market with you
       go(R.uche, [[-0.6, 15.5], [-2.8, 11.0], [UCHE_CHARGE.x, UCHE_CHARGE.z]], { speed:1.2, end:'phone', face:UCHE_CHARGE.rot, then:()=>{ R.ucheAt = 'charging'; } });
       V13.eyes({ label:'SUSPICION', watchers:[], rate:0.42, decay:0.05, extraFn:()=>RT().seen || 0, onMade:()=>made() });
-      V13.toast('UNDERCOVER', 'Find kiosk T4. Don\'t stare at the POS — browse, eat, keep moving.', 3400);
+      if(rec()) V13.toast('UNDERCOVER', 'Find kiosk T4. Don\'t stare at the POS — browse, eat, keep moving.', 3400);
+      else V13.toast('UNDERCOVER', 'The market notices a man who stares at money.', 3400);
     });
   },
 });
@@ -414,7 +425,7 @@ function karoTalk(it){
     if(k === 'trust'){
       V13.done('o10_who');
       V13.say('m10_karo_source', ()=>{
-        const yes = V13.picked('m10_karo_source') === 0 || (typeof DLG !== 'undefined' && DLG.script === DIALOGUE.m10_karo_source_yes);
+        const yes = V13.picked('m10_karo_source') === 0 || (V13.dlgKey ? V13.dlgKey() : null) === 'm10_karo_source_yes';
         if(yes) V13.s2().karo_source = 1; else delete V13.s2().karo_source;
         faceTo(R.karo, PI / 2);
       });
@@ -495,8 +506,9 @@ function susStep(dt, p){
 function arrive(){
   const R = RT(); if(R.phase !== 'explore') return;
   R.phase = 'arrive';
-  for(const l of DIALOGUE.m10_lucky_arrives || []) V13.radio('SGT. UCHE', l.text, Math.max(3800, l.text.length * 55));
-  V13.toast('THE CHANGER', 'Watch him from 4 to 10 metres, and keep him in view. Don\'t stare from close.', 3600);
+  for(const l of DIALOGUE.m10_lucky_arrives || []){ const t = lineTxt(l); if(t) V13.radio('SGT. UCHE', t, Math.max(3800, t.length * 55)); }
+  if(rec()) V13.toast('THE CHANGER', 'Watch him from 4 to 10 metres, and keep him in view. Don\'t stare from close.', 3600);
+  else V13.toast('SOMEONE ARRIVES', 'Rice sacks on a boy\'s head.', 3600);
   const person = (look, x, z, rot, clip)=>V13.person(look, { x, z, rot }, { clip:clip || 'walk', solid:false });
   const L = R.lucky = person(LOOK.lucky(), 0.8, 23.2, PI, 'walk');
   const A = R.boyA = person(LOOK.boyA, 1.7, 24.0, PI, 'carry');
@@ -572,7 +584,7 @@ function obsStep(dt, p){
         if(R.obsT >= 2){ R.obsT = 0; observed(bearing); }
       } else {
         R.sameT = (R.sameT || 0) + dt;
-        if(R.sameT > 1.5 && R.time - (R.sameHint || -99) > 12){ R.sameHint = R.time; V13.toast('SAME VIEW', 'You\'ve seen the swipes from here. Find another side of the kiosk for the cards.', 2600); }
+        if(rec() && R.sameT > 1.5 && R.time - (R.sameHint || -99) > 12){ R.sameHint = R.time; V13.toast('SAME VIEW', 'You\'ve seen the swipes from here. Find another side of the kiosk for the cards.', 2600); }
       }
     } else { R.obsT = Math.max(0, R.obsT - dt * 1.5); R.sameT = 0; if(R.obsT <= 0) hideMeter('obs'); }
     return;
@@ -631,7 +643,7 @@ function leaveT4(){
 function whoDoc(){
   const R = RT(); if(R.docDone || R.docAsked) return;
   R.docAsked = true;
-  const who = MC().asaba === 'rescue' ? 'TOBI' : 'MR. IGBINOSA';
+  const who = tobiAlive() ? 'TOBI' : 'MR. IGBINOSA';
   whenFree(()=>{
     V13.toast('MESSAGE · ' + who, 'The BVN check on tonight\'s T4 pay-outs.', 2400);
     R.pocket = pocket('Read the forensic desk\'s message', ()=>openWho());
@@ -652,7 +664,8 @@ function openWho(){
     if(R.afterDoc){ const f = R.afterDoc; R.afterDoc = null; f(); }
   });
   // backed off without an answer: the message stays in the pocket (or comes straight back if the story is waiting on it)
-  always(()=>{ if(R.docDone) return false; const pz = document.getElementById('screen-puzzle'); if(pz && !pz.classList.contains('show')){ R.docOpen = false; if(R.afterDoc) whenFree(()=>openWho(), 1.2); return false; } });
+  // (a pause held over the document is not a back-off: V13.ovShown)
+  always(()=>{ if(R.docDone) return false; const shown = V13.ovShown ? V13.ovShown('screen-puzzle') : !!document.querySelector('#screen-puzzle.show'); if(!shown){ R.docOpen = false; if(R.afterDoc) whenFree(()=>openWho(), 1.2); return false; } });
 }
 
 /* ---------- Ejiro ---------- */
@@ -664,7 +677,7 @@ function openEjiro(){
   R.itEjiro = V13.talk(R.ejiro, 'Talk to Ejiro', it => ejiroTalk(it, false), { range:2.6 });
   if(R.phase === 'wait'){
     R.boatAt = Math.min(R.boatAt == null ? 1e9 : R.boatAt, R.time + 120);
-    V13.toast('T4', 'Lucky is on the jetty, waiting for a boat. Ejiro is alone at the kiosk.', 2800);
+    if(rec()) V13.toast('T4', 'Lucky is on the jetty, waiting for a boat. Ejiro is alone at the kiosk.', 2800);
   }
 }
 const EJ_LATE_ARREST = 'm10_x_ejiro_arrested_late';
@@ -883,7 +896,7 @@ function needEjiro(then){
   if(R.itEjiro) V13.drop(R.itEjiro);
   R.lateEjiroCb = ()=>V13.after(1.2, then);
   R.itEjiro = V13.talk(R.ejiro, 'Talk to Ejiro', it => ejiroTalk(it, true), { range:2.6 });
-  V13.toast('T4', 'Ejiro hasn\'t moved from his kiosk. Before you go, talk to him.', 2800);
+  if(rec()) V13.toast('T4', 'Ejiro hasn\'t moved from his kiosk. Before you go, talk to him.', 2800);
 }
 function statement(then){
   V13.say('m10_statement_choice', ()=>{

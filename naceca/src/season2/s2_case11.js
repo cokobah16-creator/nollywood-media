@@ -14,6 +14,12 @@ const RT = ()=>V13.rt;
 const here = ()=>S.game && S.game.currentMission === ID;
 const A = (n, d)=>V13.at(KEY, n, d);
 const busy = ()=>(typeof isOverlayOpen === 'function' && isOverlayOpen()) || !!document.querySelector('#title-card.show');
+const rec = ()=>V13.rec ? V13.rec() : (typeof isRecruit === 'function' && isRecruit());
+/* our wayfinding (beta/wayfind.js): the route is chosen in Uche's chart, not in the world; on Senior the tracker
+   shows the objective only (Recruit keeps the old pointer: a null row) */
+if(window.WAY && WAY.OBJ_TARGETS){
+  WAY.OBJ_TARGETS.m11 = Object.assign(WAY.OBJ_TARGETS.m11 || {}, { o11_route:()=>rec() ? null : { ui:true } });
+}
 
 /* A choice that carries a flag but no effect never reaches moralChoices
    (applyEffect returns early when there is no effect). This case's
@@ -58,7 +64,7 @@ V13.wrap('renderDialogueLine', orig => function(){
         const who = SPEAKER[line.speaker] || null;
         if(R.talking && R.talking !== who) hush(meshOf(R.talking));
         R.talking = who; if(who) speak(meshOf(who));
-        const key = Object.keys(DIALOGUE).find(k => DIALOGUE[k] === DLG.script), cue = key && LINE_CUE[key + ':' + DLG.idx];
+        const key = V13.dlgKey ? V13.dlgKey() : Object.keys(DIALOGUE).find(k => DIALOGUE[k] === DLG.script), cue = key && LINE_CUE[key + ':' + DLG.idx];
         if(cue) cue();
       }
     }
@@ -73,6 +79,7 @@ V13.wrap('endDialogue', orig => function(){
 /* ---------- the few lines the written scenes don't cover (m11_x_) ---------- */
 const X = {
   m11_x_hint:"The cooling drum is past the pit, by the first fire. Stay low, and watch which way the boys are facing.",
+  m11_x_hint_sr:"Stay low, sir.",                                   // Senior Agent: the rule, not the place
   m11_x_late:"They heard an engine on the wrong creek. Every boy in there is awake. Slower than slow, sir.",
   m11_x_samples_first:"Not yet, sir. Samples first. The minute that man looks up, this camp wakes.",
   m11_x_secured:"Camp's ours, sir. Eight boys on the boardwalk, and Felix hasn't moved from his chair.",
@@ -187,10 +194,11 @@ const arrest = n => { S.game.arrests = (S.game.arrests || 0) + (n || 1); };
 /* removable obstacles (people standing at their work) */
 function block(x, z, w){ const o = { minX:x - w / 2, maxX:x + w / 2, minZ:z - w / 2, maxZ:z + w / 2 }; (ENGINE.obstacles || (ENGINE.obstacles = [])).push(o); return o; }
 function unblock(o){ const L = ENGINE.obstacles || []; const i = L.indexOf(o); if(i >= 0) L.splice(i, 1); }
-/* a document's miss count tells a fail-forward from a solve (both close with `true`) */
+/* a fail-forward and a solve both close with `true`: read the document's own outcome (s2_core.js V13.docFailed);
+   without it, the document's own rule: 3 misses on Recruit casework, 2 on Senior (v12_docs.js), not the Action pace */
 function failedDoc(key){
-  const allowed = (typeof SETTINGS !== 'undefined' && SETTINGS.difficulty === 'story') ? 3 : 2;
-  return ((S.game._docMiss || {})[key] || 0) >= allowed;
+  if(V13.docFailed && V13._docRes && V13._docRes[key]) return V13.docFailed(key);
+  return ((S.game._docMiss || {})[key] || 0) >= (rec() ? 3 : 2);
 }
 /* the flag a decision set (and set it, if the dialogue layer didn't) */
 function decided(key, fk, dflt){
@@ -463,8 +471,10 @@ function sneak(){
   R.itSamples = V13.spot({ x:DRUM.x, y:1.0, z:DRUM.z }, 'Take samples from the cooling drum', it => samples(it), { range:1.75, verb:'collect' });
   R.itBook = V13.spot({ x:-6.0, y:0.85, z:6.0 }, 'Read the waybill book', it => book(it), { range:1.9, verb:'inspect', labelY:0.35 });
   R.itFelix = V13.talk(R.felix, 'Talk to Felix', it => felixTalk(it), { range:2.3 });
-  if(typeof showHint === 'function') showHint('c11_crouch', 'Hold <b>C</b> to crouch. The boys see what is in front of them.', 'Tap <b>CROUCH</b>. The boys see what is in front of them.', 5600);
-  setTimeout(()=>{ if(R.phase === 'sneak') V13.radio('SGT. UCHE', R.late ? X.m11_x_late : X.m11_x_hint, 4600); }, 900);
+  // the desktop hint follows the crouch setting (tactics: Auto and Hold hold C, Toggle presses it)
+  const toggle = !!(window.TAC && TAC.crouch && typeof TAC.crouch.mode === 'function' && TAC.crouch.mode() === 'toggle');
+  if(typeof showHint === 'function') showHint('c11_crouch', (toggle ? 'Press <b>C</b> to crouch.' : 'Hold <b>C</b> to crouch.') + ' The boys see what is in front of them.', 'Tap <b>CROUCH</b>. The boys see what is in front of them.', 5600);
+  setTimeout(()=>{ if(R.phase === 'sneak') V13.radio('SGT. UCHE', R.late ? X.m11_x_late : (rec() ? X.m11_x_hint : X.m11_x_hint_sr), 4600); }, 900);
 }
 
 /* the boys at work: Tari turns round to his basin every few seconds; the others glance up now and then */
@@ -499,17 +509,36 @@ function life(dt){
   // who is looking: a mark over the head of the one who has seen you
   if(R.phase === 'sneak' && V13.rt.eyes) mark(); else mark(true);
 }
-let markSpr = null;
+/* the mark over whoever has seen you: the tactics layer's head marker (.tac-mark: icon('eye'), icon('alert') and a
+   suspicion bar, tactics.css) when it is on the page, else a sprite: icon('eye') in manila on an ink disc */
+let markSpr = null, markEl = null, markBest = null;
+const EYE_D = 'M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z';
+function markHTML(){
+  if(!markEl || !markEl.isConnected){
+    const layer = document.getElementById('markers-layer') || document.getElementById('game-root') || document.body;
+    markEl = document.createElement('div'); markEl.className = 'tac-mark c11-mark';
+    markEl.innerHTML = '<span class="tac-mark-ico"></span><span class="tac-mark-bar"><i></i></span>';
+    markEl.style.display = 'none'; layer.appendChild(markEl); markEl._lv = null;
+  }
+  return markEl;
+}
+function markSprite(){
+  if(markSpr) return markSpr;
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  x.fillStyle = '#1C1C1A'; x.beginPath(); x.arc(32, 32, 30, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = '#E9DCC0'; x.lineWidth = 2; x.stroke();
+  // the same eye as icon('eye') (beta/icons.js), stroked in manila
+  x.save(); x.translate(8, 8); x.scale(2, 2); x.strokeStyle = '#E9DCC0'; x.lineWidth = 1.75; x.lineCap = 'round'; x.lineJoin = 'round';
+  try{ x.stroke(new Path2D(EYE_D)); }catch(e){}
+  x.beginPath(); x.arc(12, 12, 3, 0, Math.PI * 2); x.stroke(); x.restore();
+  markSpr = new THREE.Sprite(new THREE.SpriteMaterial({ map:new THREE.CanvasTexture(c), transparent:true, depthTest:false, depthWrite:false }));
+  markSpr.scale.set(0.42, 0.42, 1); markSpr.renderOrder = 9;
+  return markSpr;
+}
+function markHide(){ if(markSpr) markSpr.visible = false; if(markEl) markEl.style.display = 'none'; markBest = null; }
 function mark(off){
   const e = V13.rt.eyes, P = ENGINE.player;
-  if(off || !e || !P){ if(markSpr) markSpr.visible = false; return; }
-  if(!markSpr){
-    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
-    x.fillStyle = '#e8a02a'; x.font = '900 52px Oswald, Arial, sans-serif'; x.textAlign = 'center'; x.fillText('?', 32, 50);
-    markSpr = new THREE.Sprite(new THREE.SpriteMaterial({ map:new THREE.CanvasTexture(c), transparent:true, depthTest:false, depthWrite:false }));
-    markSpr.scale.set(0.42, 0.42, 1); markSpr.renderOrder = 9;
-  }
-  if(markSpr.parent !== ENGINE.scene) ENGINE.scene.add(markSpr);
+  if(off || !e || !P){ markHide(); return; }
   let best = null, bv = 0;
   for(const w of e.watchers || []){
     if(!w || !w.visible) continue;
@@ -519,10 +548,42 @@ function mark(off){
     if(ang > e.fov) continue;
     const v = 1 - d / e.radius; if(v > bv){ bv = v; best = w; }
   }
-  if(!best){ markSpr.visible = false; return; }
-  markSpr.visible = true; markSpr.position.set(best.position.x, 2.15, best.position.z);
-  markSpr.material.color.set(e.v > 0.66 ? '#ff5a4a' : '#ffffff');
+  if(!best){ markHide(); return; }
+  markBest = best;
+  if(window.TAC){
+    if(markSpr) markSpr.visible = false;
+    const el = markHTML(), lv = e.v > 0.66 ? 'alarm' : 'notice';
+    if(el._lv !== lv){ el._lv = lv; el.dataset.level = lv; el.querySelector('.tac-mark-ico').innerHTML = typeof icon === 'function' ? icon(lv === 'alarm' ? 'alert' : 'eye') : ''; }
+    el.querySelector('.tac-mark-bar i').style.width = Math.round(Math.max(0, Math.min(1, e.v)) * 100) + '%';
+    markPlace();
+    return;
+  }
+  const spr = markSprite();
+  if(spr.parent !== ENGINE.scene) ENGINE.scene.add(spr);
+  spr.visible = true; spr.position.set(best.position.x, 2.15, best.position.z);
+  spr.material.color.set(e.v > 0.66 ? '#B3261E' : '#ffffff');
 }
+/* the head marker follows the camera every frame (as tactics' own markers do) */
+function markPlace(){
+  const el = markEl, w = markBest; if(!el || !w) return;
+  let p = null;
+  try{
+    if(window.WAY && WAY.project) p = WAY.project(w.position.x, 2.2, w.position.z);
+    else if(ENGINE.camera){ const v = new THREE.Vector3(w.position.x, 2.2, w.position.z); v.project(ENGINE.camera); p = { x:(v.x * 0.5 + 0.5) * innerWidth, y:(-v.y * 0.5 + 0.5) * innerHeight, behind:v.z > 1 }; }
+  }catch(err){ p = null; }
+  if(!p || p.behind || !isFinite(p.x) || !isFinite(p.y)){ el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.style.transform = 'translate(' + Math.round(p.x) + 'px, ' + Math.round(p.y) + 'px) translate(-50%, -100%)';
+}
+if(typeof window.updateMarkers === 'function') V13.wrap('updateMarkers', orig => function(){
+  const r = orig.apply(this, arguments);
+  try{
+    if(!here() || (V13.rt && V13.rt.id !== ID)){ if(markEl && markEl.style.display !== 'none') markHide(); }      // the case is over
+    else if(markEl && markBest && markEl.style.display !== 'none') markPlace();
+  }catch(e){}
+  return r;
+});
+V13.c11mark = ()=>({ el:markEl ? { shown:markEl.style.display !== 'none', level:markEl.dataset.level || null, ico:!!markEl.querySelector('.tac-mark-ico svg') } : null, sprite:!!markSpr });
 
 /* ---------- Uche: follows Kelechi's own footsteps (never through a still), low when he is low ---------- */
 function follower(U){
@@ -578,6 +639,7 @@ function samples(it){
     // the camp is taken: nobody at the far drum now
     const L = DIALOGUE.m11_samples || [];
     const ask = Object.assign({}, L[2] || {}, { text:X.m11_x_samples_late, choices:((L[2] || {}).choices || []).map(c => { const o = Object.assign({}, c); delete o.next; return o; }) });
+    delete ask.sr; delete ask.srEn; delete ask.textEn;                // the old line's other texts would replace this one
     run('m11_x_samples_late', [L[0], L[1], ask], ()=>{
       const v = decided('m11_x_samples_late', 's2_samples', 'grabbed');
       const S_ = DIALOGUE.m11_samples_sealed || [];
@@ -708,7 +770,7 @@ function chase(){
   // the gold marker rides on the runner
   R.itRun = { mesh:E, label:'The camp escort', verb:'arrest', range:0.01, onInteract(){} };
   ENGINE.interactables.unshift(R.itRun);
-  if(typeof showHint === 'function') showHint('c11_sprint', 'Hold <b>SHIFT</b> to sprint.', 'Tap <b>RUN</b> to sprint.', 4200);
+  if(typeof showHint === 'function') showHint('c11_sprint', 'Hold <b>SHIFT</b> to sprint.', 'Tap the sprint button to sprint.', 4200);
   const c = V13.chase({ runner:E, path:[[E.position.x, E.position.z]].concat(ESCAPE), speed:R.late ? TUNE.runLate : TUNE.run, label:'CAMP ESCORT',
     onCaught:()=>{ V13.drop(R.itRun); R.caught = true; arrest(1);
       setTimeout(()=>{ quietToast(); sideShot(E); R.fillOn = E; say('m11_chase_caught', ()=>{ unshot(); R.fillOn = null; V13.ev('felix_phone', 'The escort\'s phone', 'good', 70); afterChase(); }); }, 1500); },
@@ -767,7 +829,7 @@ function secure(){
 function nextUp(){
   const R = RT();
   if(R.phase === 'secured' && MC().s2_samples && V13.objDone('o11_waybills') && MC().s2_felix && !R.toldUche){
-    R.toldUche = true; setTimeout(()=>{ if(R.phase === 'secured' && !busy()) V13.toast('THE CAMP', 'Uche is waiting with the boys on the boardwalk.', 2200); }, 600);
+    R.toldUche = true; setTimeout(()=>{ if(rec() && R.phase === 'secured' && !busy()) V13.toast('THE CAMP', 'Uche is waiting with the boys on the boardwalk.', 2200); }, 600);
   }
 }
 
@@ -811,7 +873,7 @@ function barge(){
   const R = RT(); R.phase = 'barge';
   if(R.follow){ placeAt(R.uche, ENGINE.player.position.x - 1.2, ENGINE.player.position.z + 0.6, 0); R.follow.hold(false); }
   const bt = A('barge_tag', { x:15.2, z:1.5, rot:PI / 2 });
-  setTimeout(()=>{ if(!busy() && !ENGINE.seq && R.itBarge && ENGINE.interactables.includes(R.itBarge)) V13.toast('TEKENA 2', 'Loaded, low in the water, at the far jetty.', 2200); }, 900);
+  setTimeout(()=>{ if(rec() && !busy() && !ENGINE.seq && R.itBarge && ENGINE.interactables.includes(R.itBarge)) V13.toast('TEKENA 2', 'Loaded, low in the water, at the far jetty.', 2200); }, 900);
   R.itBarge = V13.spot({ x:bt.x, y:0.9, z:bt.z }, 'Look over TEKENA 2', it => {
     if(busy() || ENGINE.seq) return;
     V13.drop(it);

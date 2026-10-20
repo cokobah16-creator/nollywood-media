@@ -28,12 +28,117 @@ V13.s2 = ()=>{
 };
 V13.flag = k => MC()[k];
 V13.setFlag = (k, v)=>{ MC()[k] = v; (S.game.flags || (S.game.flags = {}))[k] = v; };
-V13.s1 = ()=>({ finale:MC().finale || 'unproven', tobi:MC().asaba === 'rescue', bribe:MC().arrest === 'bribe' });
+
+/* ---------- the shared helpers every Season 2 file reads (docs/season2/AGENT_PRIMER.md, "Shared contracts") ---------- */
+// Recruit casework (the beta's mode). Anything that tells the player the next step or the answer is Recruit-only.
+V13.rec = ()=>typeof isRecruit === 'function' && !!isRecruit();
+// every Season 2 countdown advances by dt * V13.timeRate(): 0.75 Relaxed, 1.2 Hard, ÷1.6 extended, 0 = timed sequences off
+V13.timeRate = ()=>typeof timerRate === 'function' ? timerRate() : 1;
+// Season 2 state without creating it (a Season 1 save that never reaches Season 2 stays as it was)
+const s2peek = ()=>(S.game && S.game.s2) || {};
+/* Season 1 as Season 2 reads it. The snapshot is taken once, the first time a Season 2 case or office loads
+   (V13.s1snapTake, from the loadMission wraps), and saved as plain data in S.game.s2.s1snap, so a Season 1
+   replay in the middle of Season 2 changes nothing here. Before it exists, the live values are used. */
+V13.s1live = function(){
+  const g = S.game || {}, m = g.moralChoices || {};
+  let wrong = null; try{ wrong = typeof _cwWrong === 'function' ? _cwWrong('lagos') : null; }catch(e){}
+  let musa = false; try{ musa = !!(V12 && V12.mem && V12.mem().musaTalked()); }catch(e){}
+  return {
+    tobiAlive: m.asaba === 'rescue' || (m.asaba === 'chase' && !g._asabaHostageLost),   // canon: systems/finale.js
+    tobiTestifies: m.asaba === 'rescue',                                                 // only the deliberate rescue takes the stand
+    bribe: m.arrest === 'bribe',
+    kcFair: m.market_runner === 'caught' && m.choice !== 'force',
+    kcWrong: wrong === 'kc', tundeWrong: wrong === 'tunde',
+    musaTalked: musa,
+  };
+};
+V13.s1snap = ()=>s2peek().s1snap || V13.s1live();
+V13.s1snapTake = function(){ const s = V13.s2(); if(!s.s1snap) s.s1snap = V13.s1live(); return s.s1snap; };
+V13.tobiAlive = ()=>!!V13.s1snap().tobiAlive;
+V13.tobiTestifies = ()=>!!V13.s1snap().tobiTestifies;
+// Adaeze's fate as Season 2 reads it: s2_merge's adaptS1Fate writes s2.s1fate; Season 1's own moralChoices.finale is never rewritten
+V13.s1fate = ()=>s2peek().s1fate || MC().finale || 'unproven';
+V13.s1 = ()=>({ finale:V13.s1fate(), tobi:V13.tobiAlive(), bribe:!!V13.s1snap().bribe });
+
+/* ---------- dialogue-line fields (Season 2 lines only; Season 1's lines carry none of them) ----------
+   rec:1        the line plays only on Recruit;
+   sr:'…'       on Senior the line plays with this text instead (srEn:'…' is its English for a Pidgin line);
+   cond:"<JS>"  the line plays only if the expression (over S) is true when the line is reached; an error is false.
+   Skipped lines are stepped over, never removed, so indexes and choice jumps keep working. An sr line is swapped
+   into a one-time shallow copy of the running script (DIALOGUE itself is never changed); V13.dlgKey() still names it. */
+const condFn = new Map();
+V13.lineOn = function(line){
+  if(!line || typeof line !== 'object') return true;
+  if(line.rec && !V13.rec()) return false;
+  if(line.cond != null && line.cond !== ''){
+    let f = condFn.get(line.cond);
+    if(f === undefined){ try{ f = new Function('S', 'return (' + line.cond + ')'); }catch(e){ f = null; } condFn.set(line.cond, f); }
+    if(!f) return false;
+    try{ return !!f(S); }catch(e){ return false; }
+  }
+  return true;
+};
+/* the text a line shows now, for a line that is radioed, texted or toasted instead of played as a conversation
+   (the same three fields): '' when V13.lineOn(line) is false; else its sr on Senior (srEn in English), else its
+   text (textEn in English). A plain string is returned as it is. */
+V13.lineText = function(line){
+  if(typeof line === 'string') return line;
+  if(!line || typeof line !== 'object' || !V13.lineOn(line)) return '';
+  const en = typeof SETTINGS !== 'undefined' && SETTINGS.lang === 'english';
+  if(line.sr != null && !V13.rec()) return (en && line.srEn) ? line.srEn : String(line.sr);
+  return (en && line.textEn) ? line.textEn : (line.text || '');
+};
+function scriptKeyOf(arr){
+  if(!arr) return null;
+  if(arr._s2key) return arr._s2key;
+  const src = arr._s2src || arr;
+  for(const k in DIALOGUE) if(DIALOGUE[k] === src) return k;
+  return null;
+}
+/* the key of the conversation (or the choice branch) on screen now; DLG.scriptKey stays the key it started with */
+V13.dlgKey = ()=>(typeof DLG !== 'undefined' && DLG && DLG.script) ? (scriptKeyOf(DLG.script) || DLG.scriptKey || null) : null;
+V13.lineFields = function(){
+  if(typeof DLG === 'undefined' || !DLG || !Array.isArray(DLG.script)) return;
+  let n = 0;
+  while(DLG.idx < DLG.script.length && !V13.lineOn(DLG.script[DLG.idx]) && n++ < 2000) DLG.idx++;
+  const line = DLG.script[DLG.idx];
+  if(line && line.sr != null && !line._s2sr && !V13.rec()){
+    if(!DLG.script._s2src){
+      const src = DLG.script, c = Object.assign([], src);              // indexes and the script's own marks (_pick, _v13…)
+      Object.defineProperty(c, '_s2src', { value:src }); Object.defineProperty(c, '_s2key', { value:scriptKeyOf(src) });
+      DLG.script = c;
+    }
+    DLG.script[DLG.idx] = Object.assign({}, line, { text:line.sr, textEn:line.srEn || undefined, _s2sr:true });
+  }
+};
+V13.wrap('renderDialogueLine', orig => function(){
+  try{ V13.lineFields(); }catch(e){ console.warn('[v13] line fields', e); }
+  return orig.apply(this, arguments);
+});
+
+/* ---------- a document's own outcome: V13.docFailed(key) is true when it failed forward (the misses ran out) ---------- */
+V13._docRes = {};
+V13.docFailed = key => V13._docRes[key] === 'failed';
+if(V12 && typeof V12.openDoc === 'function' && !V12.openDoc._s2res){
+  const od = V12.openDoc, seen = new WeakSet();
+  V12.openDoc = function(spec){
+    try{
+      if(spec && spec.key && !seen.has(spec)){
+        seen.add(spec); const k = spec.key, f0 = spec.onFailed, s0 = spec.onSolved;
+        spec.onFailed = function(){ V13._docRes[k] = 'failed'; if(typeof f0 === 'function') return f0.apply(this, arguments); };
+        spec.onSolved = function(){ V13._docRes[k] = 'solved'; if(typeof s0 === 'function') return s0.apply(this, arguments); };
+      }
+      if(spec && spec.key) delete V13._docRes[spec.key];
+    }catch(e){}
+    return od.apply(this, arguments);
+  };
+  V12.openDoc._s2res = true;
+}
 
 /* ---------- the Season 2 cards ---------- */
 V13.CARDS = [
   { id:'m9',  num:'09',  name:'The Evidence Room', region:'EDO · BENIN ZONAL COMMAND, 21:40', env:'hq', music:'investigation',
-    summary:'Abuja wants exhibit 14 on the six o\'clock flight. Commander Osagie gives you the night.' },
+    summary:'Abuja wants exhibit 14 on the six o\'clock flight. Commander Okundaye gives you the night.' },
   { id:'m10', num:'10',  name:'The Night Market', region:'DELTA · SAPELE WATERSIDE NIGHT MARKET', env:'sapele', music:'ambient_lagos',
     summary:'Plain clothes. A terminal number from the ledger, a changer with sacks of cash, and a market that notices strangers.' },
   { id:'m11', num:'11',  name:'Black Rain', region:'DELTA · ETHIOPE CREEKS, 01:20', env:'creek', music:'stealth',
@@ -58,21 +163,46 @@ V13.isS2 = id => V13.S2_IDS.includes(id);
   for(const c of V13.CARDS) MISSIONS.push({ id:c.id, num:c.num, name:c.name, region:c.region, summary:c.summary, playable:false, season:2, interlude:!!c.interlude });
   for(const c of V13.CARDS) ENV_FOR[c.id] = c.env;
 })();
-V13.s1Done = ()=>!!(S.game.seasonOneComplete || (S.game.completedMissions || []).includes('m8'));
+/* Season 1 is closed once its epilogue has started (systems/finale.js startEpilogue), which is after the trial has
+   sat: an M8-aftermath save that still owes the trial gets the trial first (v13_court.js ctFinalePending). */
+V13.s1Done = ()=>!!(S.game && S.game.seasonOneComplete);
 V13.unlocked = id => {
   if(!V13.s1Done()) return false;
   const i = V13.S2_IDS.indexOf(id); if(i <= 0) return i === 0;
   const done = S.game.completedMissions || [];
   return done.includes(V13.S2_IDS[i - 1]) || done.includes(id);
 };
+/* one place sets which Season 2 cards are playable: the mission select and Continue (nextPlayableMission) both read it */
+V13.syncCards = ()=>{ for(const m of MISSIONS) if(m.season === 2) m.playable = V13.unlocked(m.id); };
 V13.wrap('renderMissionSelect', orig => function(){
-  for(const m of MISSIONS) if(m.season === 2) m.playable = V13.unlocked(m.id);
+  V13.syncCards();
   const r = orig.apply(this, arguments);
   document.querySelectorAll('#mission-grid .mission-card.locked .stamp').forEach(st => {
     const id = st.closest('.mission-card').dataset.mid;
     if(V13.isS2(id)) st.textContent = V13.s1Done() ? 'LOCKED' : 'FINISH SEASON 1';
   });
+  // the subtitle the Season 1 build wrote for its teaser cards
+  const d = document.querySelector('#screen-missions .desc');
+  if(d) d.textContent = 'Season 1, Operation Serpent’s Route: cases 00–08. Season 2, Operation Upstream: cases 09–15, open once Season 1 is closed.';
   return r;
+});
+// Continue after a reload: the Season 2 cards are current before resumeCampaign looks for the next case
+// (an office that is owed still opens first: loadMission → V13.hubBefore)
+// Before Season 2 has begun, a replayed M8 whose trial was cut off mid-sitting (The Case File's I().courtRun,
+// v13_court.js ctRunFor) comes first: its ctFinalePending only resumes the trial and its epilogue when no case is next,
+// so no Season 2 card is offered then. Once Season 2 has begun, Continue goes on with Season 2 (the M8 replay is in
+// the mission select), as ctFinalePending does whenever a case is next.
+V13.wrap('nextPlayableMission', orig => function(){
+  try{
+    const g = S.game || {}, o = (g.moralChoices || {}).finale, done = g.completedMissions || [];
+    const s2begun = !!s2peek().started || V13.S2_IDS.some(id => done.includes(id));
+    if(!s2begun && typeof ctRunFor === 'function' && done.includes('m8') && ctRunFor(o)){
+      for(const m of MISSIONS) if(m.season === 2) m.playable = false;
+      return orig.apply(this, arguments);
+    }
+  }catch(e){ console.warn('[v13] cards (trial)', e); }
+  try{ V13.syncCards(); }catch(e){ console.warn('[v13] cards', e); }
+  return orig.apply(this, arguments);
 });
 
 /* ---------- music, prefetch ---------- */
@@ -89,20 +219,22 @@ if(V13.MUSIC_FOR) for(const c of V13.CARDS) V13.MUSIC_FOR[c.id] = c.music;
   // TOBI before OBI ("TOBI" contains "OBI"), and every new speaker ahead of the generic matches
   const i = SPEAKER_ART.findIndex(([k]) => k === 'TOBI'); if(i > 0){ const t = SPEAKER_ART.splice(i, 1)[0]; SPEAKER_ART.unshift(t); }
   const add = [
-    ['OSAGIE','osagie'], ['IKPE','ikpe'], ['IGBINOSA','igbinosa'], ['KUTI','kuti'], ['ESCORT INSPECTOR','escort'],
+    ['OKUNDAYE','osagie'], ['IKPE','ikpe'], ['IGBINOSA','igbinosa'], ['KUTI','kuti'], ['ESCORT INSPECTOR','escort'],
     ['MAMA KARO','karo'], ['EJIRO','ejiro'], ['LUCKY','lucky'], ['LEGAL AID','legalaid'], ['BOATMAN','boatman'],
-    ['ESUSU','esusu'], ['OGAGA','ogaga'], ['MAMA EFE','mamaefe'], ['PA TIMI','timi'], ['FELIX','felix'], ['CAMP ESCORT','campescort'], ['CAMP BOY','campboy'],
+    ['ESUSU','esusu'], ['OGAGA','ogaga'], ['MAMA TEGA','mamaefe'], ['PA TIMI','timi'], ['FELIX','felix'], ['CAMP ESCORT','campescort'], ['CAMP BOY','campboy'],
     ['DANLADI','hauwa'], ['AMINA','amina'], ['SOTONYE','sotonye'], ['IBINABO','ibinabo'], ['TANK FARM SECURITY','security'],
     ['DIRECTOR-GENERAL','dg'], ['FASHINA','dg'], ['BABA SHAYI','shayi'], ['GATEMAN','gateman'], ['BITRUS','bitrus'], ['EREBA','ereba'],
-    ['SENATOR','senator'], ['TASK FORCE','acp'], ['IFE ADEBAYO','ife'], ['JUSTICE','judge'], ['REGISTRAR','registrar'], ['COKER','san'],
+    ['SENATOR','senator'], ['TASK FORCE','acp'], ['IFE ADEBAYO','ife'], ['JUSTICE','judge'], ['REGISTRAR','registrar'], ['OLANIRAN','san'],
   ];
   for(let k = add.length - 1; k >= 0; k--) SPEAKER_ART.unshift(add[k]);
 })();
 /* who looks like what (stand-in portraits are painted from this, and so are the 3D people) */
 V13.CAST = {
-  osagie:{ name:'COMMANDER OSAGIE', f:1, skin:'#5a3524', top:'#1b2a4c', hair:'#121010', hat:'beret', hatCol:'#1b2a4c' },
+  osagie:{ name:'COMMANDER OKUNDAYE', f:1, skin:'#5a3524', top:'#1b2a4c', hair:'#121010', hat:'beret', hatCol:'#1b2a4c' },
   ikpe:{ name:'SGT. IKPE', skin:'#4a2b1c', top:'#2c3a5a', hair:'#c8c4bc', beard:'#b8b4ac' },
   igbinosa:{ name:'MR. IGBINOSA', skin:'#4e2f20', top:'#d8d2c4', hair:'#141110', glasses:1 },
+  // Season 1's Tobi (scenes/asaba.js: buildNPCMesh skin #5a3818, shirt #5a5a3a, hair #0a0a08, glasses)
+  tobi:{ name:'TOBI ONUOHA', skin:'#5a3818', top:'#5a5a3a', hair:'#0a0a08', glasses:1 },
   kuti:{ name:'MR. KUTI', skin:'#5a3826', top:'#2a2a30', hair:'#0e0c0b', tie:'#7a1a1a' },
   escort:{ name:'ESCORT INSPECTOR', skin:'#3e2418', top:'#1d2b4c', hair:'#0c0a09', hat:'beret', hatCol:'#14141a' },
   karo:{ name:'MAMA KARO', f:1, skin:'#5a3826', top:'#7a2a6a', hair:'#0a0a0a', hat:'gele', hatCol:'#d8a020' },
@@ -112,7 +244,7 @@ V13.CAST = {
   boatman:{ name:'BOATMAN', skin:'#3e2418', top:'#4a6a8a', hair:'#0c0a09' },
   esusu:{ name:'MAMA ESUSU', f:1, skin:'#5a3826', top:'#2a7a4a', hair:'#0a0a0a', hat:'wrap', hatCol:'#2a7a4a' },
   ogaga:{ name:'OGAGA', skin:'#4a2b1c', top:'#3a3a3a', hair:'#0c0a09' },
-  mamaefe:{ name:'MAMA EFE', f:1, skin:'#5a3826', top:'#c85a18', hair:'#0a0a0a', hat:'wrap', hatCol:'#c85a18' },
+  mamaefe:{ name:'MAMA TEGA', f:1, skin:'#5a3826', top:'#c85a18', hair:'#0a0a0a', hat:'wrap', hatCol:'#c85a18' },
   timi:{ name:'PA TIMI', skin:'#3a2216', top:'#6a5a3a', hair:'#c8c4bc', beard:'#c8c4bc', hat:'cap', hatCol:'#3a3a3a' },
   felix:{ name:'FELIX UGBEKILE', skin:'#4a2b1c', top:'#3a4a3a', hair:'#3a3a38', beard:'#3a3a38', glasses:1 },
   campescort:{ name:'CAMP ESCORT', skin:'#3e2418', top:'#1a1a1a', hair:'#0c0a09', hat:'cap', hatCol:'#1a1a1a' },
@@ -132,21 +264,25 @@ V13.CAST = {
   ife:{ name:'IFE ADEBAYO', f:1, skin:'#5a3826', top:'#c8a04a', hair:'#0a0a0a' },
   judge:{ name:'HON. JUSTICE BAKARE', skin:'#4a2b1c', top:'#151515', hair:'#f2f0ea', wig:1, bands:1, glasses:1 },
   registrar:{ name:'REGISTRAR', f:1, skin:'#5a3826', top:'#2a2a30', hair:'#141110' },
-  san:{ name:'FEMI COKER-ODUSOTE, SAN', skin:'#5a3826', top:'#151515', hair:'#f2f0ea', wig:1, bands:1 },
+  san:{ name:'FEMI OLANIRAN-COLE, SAN', skin:'#5a3826', top:'#151515', hair:'#f2f0ea', wig:1, bands:1 },
 };
-/* a stand-in until the painted portrait arrives: a case-file silhouette — the cast's
-   headwear, glasses and clothing colour against the pack's navy, rim-lit, no face invented */
-function mix(a, b, t){ const A = new THREE.Color(a), B = new THREE.Color(b); return '#' + A.lerp(B, t).getHexString(); }
+/* a stand-in until the painted portrait arrives: a flat case-file silhouette on the paper identity's ink —
+   the cast's headwear, glasses and clothing tone, a 2px rule round the figure, no face invented, no light effects.
+   A painted PORTRAIT_ART[id + '_neutral'] always wins (V13.portraits). */
+const PAL = { ink:'#1C1C1A', ink2:'#262623', manila:'#E9DCC0', manila2:'#A89F8A', manila3:'#8C8473' };
+function hexRGB(h){ h = String(h || '#3a3a3a').replace('#', ''); if(h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16) || 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function mix(a, b, t){ const A = hexRGB(a), B = hexRGB(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
 function standIn(id){
   const C = V13.CAST[id]; if(!C) return null;
   const S_ = 256, c = document.createElement('canvas'); c.width = c.height = S_; const x = c.getContext('2d');
   const cx = S_ * 0.5;
-  // backdrop: navy, a soft key from the upper right, faint ruled lines like a file card
-  const bg = x.createRadialGradient(S_ * 0.62, S_ * 0.32, 8, S_ * 0.5, S_ * 0.5, S_ * 0.78); bg.addColorStop(0, '#2a3a66'); bg.addColorStop(0.55, '#121a33'); bg.addColorStop(1, '#05080f');
-  x.fillStyle = bg; x.fillRect(0, 0, S_, S_);
-  x.strokeStyle = 'rgba(160,180,220,0.05)'; x.lineWidth = 1; for(let y = 14; y < S_; y += 14){ x.beginPath(); x.moveTo(0, y + 0.5); x.lineTo(S_, y + 0.5); x.stroke(); }
+  // ground: flat ink, ruled like a file card
+  x.fillStyle = PAL.ink; x.fillRect(0, 0, S_, S_);
+  x.save(); x.globalAlpha = 0.35; x.strokeStyle = PAL.manila3; x.lineWidth = 1;
+  for(let y = 14; y < S_ - 30; y += 14){ x.beginPath(); x.moveTo(0, y + 0.5); x.lineTo(S_, y + 0.5); x.stroke(); }
+  x.restore();
   const f = !!C.f, hw = f ? 40 : 43;
-  // the silhouette as one path: shoulders, neck, head, headwear
+  // the silhouette as one path: shoulders, neck, head
   const P = new Path2D();
   P.moveTo(cx - 112, S_); P.quadraticCurveTo(cx - 106, 178, cx - 38, 166); P.lineTo(cx - 17, 160); P.lineTo(cx - 17, 138);
   P.ellipse(cx, 104, hw, 50, 0, Math.PI * 0.62, Math.PI * 2.38);
@@ -160,31 +296,30 @@ function standIn(id){
   else if(f){ H.ellipse(cx, 70, 52, 36, 0, Math.PI, Math.PI * 2); H.ellipse(cx, 60, 30, 22, 0, 0, Math.PI * 2); }
   const W = new Path2D();
   if(C.wig){ W.ellipse(cx, 72, 52, 34, 0, Math.PI, Math.PI * 2); for(let i = 0; i < 4; i++){ W.ellipse(cx - 47, 88 + i * 13, 9, 7, 0, 0, 7); W.ellipse(cx + 47, 88 + i * 13, 9, 7, 0, 0, 7); } }
-  // rim light: the same shapes, nudged right, in warm gold; then the dark figure over it
-  x.save(); x.translate(3, -2); x.fillStyle = 'rgba(255,196,120,0.9)'; x.fill(P); x.fill(H); x.fill(W); x.restore();
-  x.save(); x.translate(-2, 0); x.fillStyle = 'rgba(120,150,210,0.35)'; x.fill(P); x.restore();      // cool fill on the other edge
-  const body = x.createLinearGradient(cx - 80, 0, cx + 80, 0); body.addColorStop(0, '#0a0d16'); body.addColorStop(1, '#151b2a');
-  x.fillStyle = body; x.fill(P);
-  // clothing: the cast colour, deep in shadow, from the collar down
-  x.save(); x.clip(P); const cl = x.createLinearGradient(0, 160, 0, S_); cl.addColorStop(0, mix(C.top || '#3a3a3a', '#05070c', 0.55)); cl.addColorStop(1, mix(C.top || '#3a3a3a', '#05070c', 0.78));
-  x.fillStyle = cl; x.fillRect(0, 164, S_, S_ - 164);
-  if(C.bands){ x.fillStyle = 'rgba(240,238,230,0.75)'; x.fillRect(cx - 9, 168, 7, 30); x.fillRect(cx + 2, 168, 7, 30); }
-  if(C.tie){ x.fillStyle = 'rgba(230,228,220,0.45)'; x.beginPath(); x.moveTo(cx - 15, 166); x.lineTo(cx, 194); x.lineTo(cx + 15, 166); x.fill(); x.fillStyle = mix(C.tie, '#05070c', 0.35); x.beginPath(); x.moveTo(cx - 5, 172); x.lineTo(cx + 5, 172); x.lineTo(cx + 7, 232); x.lineTo(cx, 242); x.lineTo(cx - 7, 232); x.fill(); }
-  if(C.chain){ x.strokeStyle = 'rgba(224,184,74,0.8)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, 158, 30, 0.35, Math.PI - 0.35); x.stroke(); }
+  // the figure: flat ink-2, one flat clothing tone from the collar down
+  x.fillStyle = PAL.ink2; x.fill(P);
+  x.save(); x.clip(P);
+  x.fillStyle = mix(C.top || '#3a3a3a', PAL.ink, 0.45); x.fillRect(0, 164, S_, S_ - 164);
+  if(C.bands){ x.fillStyle = PAL.manila2; x.fillRect(cx - 9, 168, 7, 30); x.fillRect(cx + 2, 168, 7, 30); }
+  if(C.tie){ x.fillStyle = PAL.manila2; x.beginPath(); x.moveTo(cx - 15, 166); x.lineTo(cx, 194); x.lineTo(cx + 15, 166); x.fill();
+    x.fillStyle = mix(C.tie, PAL.ink, 0.3); x.beginPath(); x.moveTo(cx - 5, 172); x.lineTo(cx + 5, 172); x.lineTo(cx + 7, 232); x.lineTo(cx, 242); x.lineTo(cx - 7, 232); x.fill(); }
+  if(C.chain){ x.strokeStyle = PAL.manila2; x.lineWidth = 3; x.beginPath(); x.arc(cx, 158, 30, 0.35, Math.PI - 0.35); x.stroke(); }
   x.restore();
-  // headwear in its own colour, darkened; the wig catches the light
-  if(C.hat === 'gele' || C.hat === 'wrap' || C.hat === 'beret' || C.hat === 'cap' || C.hat === 'bowler'){ x.fillStyle = mix(C.hatCol || '#333333', '#05070c', 0.5); x.fill(H); }
-  else if(f){ x.fillStyle = '#0b0e16'; x.fill(H); }
-  if(C.wig){ x.fillStyle = 'rgba(214,212,204,0.82)'; x.fill(W); }
-  // glasses catch the light: two glints
-  if(C.glasses){ x.strokeStyle = 'rgba(255,230,190,0.75)'; x.lineWidth = 2; x.beginPath(); x.moveTo(cx - 28, 100); x.lineTo(cx - 12, 98); x.moveTo(cx + 12, 98); x.lineTo(cx + 30, 100); x.stroke(); }
-  // a thin warm edge along the jaw on the lit side
-  x.strokeStyle = 'rgba(255,190,120,0.35)'; x.lineWidth = 2; x.beginPath(); x.ellipse(cx + 1, 104, hw - 1, 49, 0, -0.9, 0.9); x.stroke();
-  // the name, small, like a case-file tab
-  x.fillStyle = 'rgba(5,9,18,0.78)'; x.fillRect(0, S_ - 30, S_, 30);
-  x.fillStyle = '#d8a64a'; x.font = '600 13px Oswald, "Arial Narrow", sans-serif'; x.textAlign = 'center'; x.fillText(C.name, cx, S_ - 11, S_ - 16);
+  // the 2px rule round the figure
+  x.strokeStyle = PAL.manila3; x.lineWidth = 2; x.stroke(P);
+  // headwear in its own colour (flat), ruled the same; the wig in pale paper
+  if(C.hat === 'gele' || C.hat === 'wrap' || C.hat === 'beret' || C.hat === 'cap' || C.hat === 'bowler'){ x.fillStyle = mix(C.hatCol || '#333333', PAL.ink, 0.4); x.fill(H); x.stroke(H); }
+  else if(f){ x.fillStyle = PAL.ink; x.fill(H); x.stroke(H); }
+  if(C.wig){ x.fillStyle = PAL.manila2; x.fill(W); x.stroke(W); }
+  // glasses: two plain frames
+  if(C.glasses){ x.strokeStyle = PAL.manila3; x.lineWidth = 2; x.strokeRect(cx - 30, 94, 18, 11); x.strokeRect(cx + 12, 94, 18, 11); x.beginPath(); x.moveTo(cx - 12, 99); x.lineTo(cx + 12, 99); x.stroke(); }
+  // the name tab: manila on ink, in the head font
+  x.fillStyle = PAL.ink; x.fillRect(0, S_ - 30, S_, 30);
+  x.fillStyle = PAL.manila3; x.fillRect(0, S_ - 30, S_, 1);
+  x.fillStyle = PAL.manila; x.font = '600 13px Oswald, "Arial Narrow", sans-serif'; x.textAlign = 'center'; x.fillText(C.name, cx, S_ - 11, S_ - 16);
   return c.toDataURL('image/webp', 0.86);
 }
+V13._standIn = standIn;     // (probes: the painter on its own)
 V13.portraits = function(){
   if(typeof PORTRAIT_ART === 'undefined') return;
   for(const id in V13.CAST){
@@ -219,7 +354,8 @@ V13.doc = function(key, cb){
   openPuzzle(key, ok => { if(cb) cb(ok); });
 };
 V13.ev = function(id, name, q, xp){
-  collectEvidence({ id, name, xp:xp || 60 });
+  // a document's onCorrect may already have collected it this operation: collect (and log) it once
+  if(!(S.game._opEv || []).includes(id)) collectEvidence({ id, name, xp:xp || 60 });
   S.game.evQ = S.game.evQ || {};
   if(q) S.game.evQ[id] = q; else if(!S.game.evQ[id]) S.game.evQ[id] = 'good';
   if(typeof refreshEvidenceCount === 'function') refreshEvidenceCount();
@@ -436,8 +572,10 @@ V13.skip = function(lines, then, ms){
 V13.CASES = {};
 V13.defCase = (id, def)=>{ V13.CASES[id] = def; };
 V13.wrap('loadMission', orig => function(id){
+  V13._pz = null;                                                // a pause held over the last scene is gone
   const C = V13.CASES[id];
   if(!C) return orig.apply(this, arguments);
+  try{ V13.s1snapTake(); }catch(e){ console.warn('[v13] s1 snapshot', e); }   // Season 1 as it stood when Season 2 began
   if(V13.hubBefore && V13.hubBefore(id)) return;                 // the office comes first
   S.game.currentMission = id; S.game.alertLevel = 0;
   V13.s2().started = V13.s2().started || Date.now();
@@ -466,7 +604,7 @@ V13.wrap('beginMissionCore', orig => function(id){
   musicForScene(id);
   S.game.currentRegion = C.region || 'Season 2'; S.game.currentSubregion = C.sub || ''; refreshHUD();
   if(ENGINE.player){ ENGINE.cameraYaw = ENGINE.player.rotation.y; ENGINE.playerYaw = ENGINE.player.rotation.y; }
-  V12.log('mission_start', { m:id });
+  // (mission_start is logged once, by v12's beginMission wrap, for cases and offices alike)
   if(C.start) setTimeout(()=>{ try{ C.start(); }catch(e){ console.error('[v13] start', id, e); } }, 700);
 });
 /* end of a case: XP, the aftermath screen */
@@ -477,7 +615,7 @@ V13.finish = function(id, xp){
   S.game._opXP = xp || C.xp || 300; awardXP(S.game._opXP);
   if(typeof sfxComplete === 'function') sfxComplete();
   if(typeof stopAmbient === 'function') stopAmbient();
-  V12.log('mission_end', { m:id });
+  // (mission_end is logged once, with the grade, by v12's showAftermath wrap)
   showAftermath();
 };
 
@@ -496,8 +634,15 @@ V13.wrap('nextMissionPreview', orig => function(){
     const pre = hub && V13.HUBS && V13.HUBS[hub] ? `Next — <b>${V13.HUBS[hub].where}</b>, then: ` : 'Next — ';
     return pre + nx;
   }
-  if(cur === 'm8') return `<b>Season 1 is complete.</b> Continue for the epilogue, who protected her — and <b>Season 2</b>.`;
+  // M8: Season 1's own line (with The Case File's "to the trial, then the epilogue"), and Season 2 is next, not coming
+  if(cur === 'm8') return String(orig.apply(this, arguments)).replace(/<span[^>]*>\s*SEASON 2 — COMING\s*<\/span>/, '<b>Season 2</b> next.');
   return orig.apply(this, arguments);
+});
+/* the base aftermath ends with its teaser line for the Season 1 build's four Season 2 cards: not true with this layer */
+V13.wrap('showAftermath', orig => function(){
+  const r = orig.apply(this, arguments);
+  try{ document.querySelectorAll('#aftermath-grid .cw-next-sub').forEach(e => { if(/Season 2 \(missions/.test(e.textContent)) e.remove(); }); }catch(e){}
+  return r;
 });
 setTimeout(()=>{ if(V13.AFTER && typeof SAFETY_TIPS !== 'undefined') for(const k in V13.AFTER) if(V13.AFTER[k].tip && !SAFETY_TIPS[k]) SAFETY_TIPS[k] = V13.AFTER[k].tip; }, 0);
 /* the aftermath's continue button: Season 2 goes to the office, then the next case */
@@ -517,18 +662,66 @@ V13.wrap('advanceEpilogue', orig => function(){
   if(typeof EPI !== 'undefined' && EPI.slides && EPI.i >= EPI.slides.length - 1 && !V13._s2Epi && S.game.seasonOneComplete && !V13.s2().started){
     showOverlay(null);
     if(typeof saveGame === 'function') saveGame(true);
-    const go = ()=>titleCard(['SEASON 2', 'OPERATION UPSTREAM', 'Six weeks later'], 3200, ()=>loadMission('m9'));
+    // the slide before this one is Season 1's own SEASON 2 card. Season 1's award comes as its own last slide gives
+    // it (systems/finale.js advanceEpilogue: with the title), so after the case review: here, with the next title card
+    const go = ()=>{
+      if(typeof unlock === 'function') try{ unlock('season_one'); }catch(e){}
+      titleCard(['OPERATION UPSTREAM', 'Six weeks later'], 3200, ()=>loadMission('m9'));
+    };
     if(V13.reviewThenS2) V13.reviewThenS2(go); else go();      // The Case File's case review comes first
     return;
   }
   return orig.apply(this, arguments);
 });
 
-/* ---------- a choice that carries a flag but no effect still sets its flag ---------- */
+/* ---------- a choice that carries a flag but no effect still sets its flag (in Season 2 only) ----------
+   Season 1's flag-only choices (the cold open's plate question) keep Season 1's behaviour: nothing is set. */
+const inS2 = ()=>{ const cur = S.game && S.game.currentMission; return V13.isS2(cur) || !!(V13.HUBS && V13.HUBS[cur]) || !!(V13.court && V13.court.active); };
+V13.inS2 = inS2;
 V13.wrap('applyEffect', orig => function(eff, flag){
-  if(!eff && flag) return orig.call(this, {}, flag);
+  if(!eff && flag && inS2()) return orig.call(this, {}, flag);
   return orig.apply(this, arguments);
 });
+
+/* ---------- the pause menu over a conversation or a document (Season 2 only) ----------
+   Season 2 holds movement off through long conversations (Court 5) and documents. The base pause hides every
+   overlay and its RESUME shows none, so the scene would wait for a callback that can't come. While the pause is
+   open over one of the base overlays below, it is remembered with the HUD's state; RESUME (not LOAD) puts both back.
+   Season 2's own screens are v13Modal's (v13_intel.js) and are left to it. */
+const PAUSE_UNDER = ['screen-dialogue', 'screen-puzzle', 'screen-minigame', 'screen-phone'];
+const shownOv = id => { const e = document.getElementById(id); return !!(e && e.classList.contains('show')); };
+const modalHolds = id => { try{ return typeof V13NAV !== 'undefined' && !!V13NAV.modals && V13NAV.modals.some(m => m.id === id); }catch(e){ return false; } };
+const hudHidden = ()=>{ const h = document.getElementById('hud'); return !!(h && h.style.display === 'none'); };
+V13._pz = null;
+// true while `id` is shown, or held under the pause menu by this wrap (a document watcher must not read that as closed)
+V13.underPause = id => !!(V13._pz && V13._pz.ov === id && shownOv('screen-pause'));
+V13.ovShown = id => shownOv(id) || V13.underPause(id);
+V13.wrap('togglePause', orig => function(){
+  const ev = window.event;
+  if(!shownOv('screen-pause')){
+    let rem = null;
+    try{
+      if(inS2()){
+        const ov = PAUSE_UNDER.find(id => shownOv(id));
+        if(ov && !modalHolds(ov)) rem = { ov, hudHidden:hudHidden() };
+      }
+    }catch(e){}
+    const r = orig.apply(this, arguments);
+    V13._pz = (rem && shownOv('screen-pause')) ? rem : null;
+    return r;
+  }
+  const rem = V13._pz; V13._pz = null;
+  const viaLoad = !!(ev && ev.type === 'click' && ev.target && ev.target.closest && ev.target.closest('#btn-load'));
+  const r = orig.apply(this, arguments);
+  if(rem && !viaLoad && !shownOv('screen-pause')){
+    try{ showOverlay(rem.ov); showHUD(!rem.hudHidden); }catch(e){ console.warn('[v13] resume', e); }
+  }
+  return r;
+});
+// QUIT and ERASE drop what the pause holds. LOAD does not: a load that finds no save ("NO SAVE") leaves the pause up,
+// and RESUME must still bring the conversation back; a load that works reaches togglePause from the #btn-load click
+// (viaLoad above: nothing is put back) and then loadMission, which clears the hold too.
+document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-erase')) V13._pz = null; }catch(err){} }, true);
 
 /* ---------- which choice was picked (for choices that carry no flag) ----------
    V13.picked('m10_karo_source') → index of the choice taken the last time that
@@ -543,7 +736,7 @@ V13.picked = key => (V13._picks[key] != null ? V13._picks[key] : null);
     const shown = line.choices.filter(c => !(c.requires && !S.player.skills.includes(c.requires)));
     const c = shown[[...wrap.querySelectorAll('.dialogue-choice')].indexOf(b)]; if(!c) return;
     if(c.flag && !b.dataset.armed) return;                       // the first tap only arms a decision
-    const key = Object.keys(DIALOGUE).find(k => DIALOGUE[k] === DLG.script) || DLG.scriptKey;
+    const key = V13.dlgKey();
     V13._picks[key] = line.choices.indexOf(c); V13.lastPick = { key, i:V13._picks[key], c };
     if(typeof c.onPick === 'function'){ try{ c.onPick(); }catch(err){ console.warn('[v13] onPick', err); } }
   }, true);
