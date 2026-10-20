@@ -131,7 +131,8 @@ here changes Season 1. The full record, with the old-to-new tables, is docs/seas
   Ekosodin and stays.
 - **The drive.** Season 1's trial used only the payroll folder of exhibit 14, on certified printouts; Tobi read it
   for eleven days. The drive came back from the registry sealed. Nobody imaged the whole of it or opened its hidden
-  `_old` folder, where the UPSTREAM sheet is, before Case 09.
+  `_old` folder, where the UPSTREAM sheet is, before Case 09. When Season 1 never charged her (an 'unproven' finale,
+  no trial), the inquiry into her read the payroll instead, and Case 09 says "the inquiry".
 - **C.A.'s second paymaster.** UPSTREAM's "C.A." line — ₦4.8m in cash on the 10th, paid by R.M.S. (Riverstone) —
   is Adaeze's second paymaster, beside the Foundation's ₦10M retainer to C.A. Consulting on the 1st. Season 1's money
   trail is unchanged; Season 2 says the two run side by side.
@@ -142,10 +143,12 @@ here changes Season 1. The full record, with the old-to-new tables, is docs/seas
   reads UPSTREAM for the prosecution from a desk at Zonal; his doctors keep him out of the witness box. A dead Tobi
   gets no Season 2 slide.
 - **Reading Season 1 (`V13.s1snap`, `V13.s1fate`).** The first time a Season 2 case or office loads, Season 2 saves
-  what it reads from Season 1 — tobiAlive, tobiTestifies, bribe, kcFair, kcWrong, tundeWrong, musaTalked — in
-  `S.game.s2.s1snap`, and reads only that. Adaeze's fate as Season 2 tells it is `V13.s1fate()` (`S.game.s2.s1fate`,
-  else `moralChoices.finale`). Season 2 never writes `moralChoices.finale`, so Season 1's epilogue and trial keep her
-  verdict, the layer stays removable, and a Season 1 replay during Season 2 doesn't take Tobi or Musa out of it.
+  what it reads from Season 1 — tobiAlive, tobiTestifies, bribe, kcFair, kcWrong, tundeWrong, musaTalked (Season 1's
+  `V12.who.musaTalked()`) — in `S.game.s2.s1snap`, and reads only that: Tobi, the stinger, the Lekki drawer and the
+  Musa, KC and Tunde texts all read the snapshot (Tunde's Heat 70+ rule is live). Adaeze's fate as Season 2 tells
+  it is `V13.s1fate()` (`S.game.s2.s1fate`, else `moralChoices.finale`). Season 2 never writes
+  `moralChoices.finale`, so Season 1's epilogue and trial keep her verdict, the layer stays removable, and a Season 1
+  replay during Season 2 doesn't take Tobi or Musa out of it.
 - **Branches Season 2 respects.** Musa drives the Kano cooperative truck (and texts) only if he talked in Season 1;
   otherwise "the cooperative's newest driver" does. Tunde stays silent if your Lagos charge sheet held him or at
   Heat 70+; KC stays silent if it held him, and he stays in Ikeja (his Benin news comes through a contact). A barge

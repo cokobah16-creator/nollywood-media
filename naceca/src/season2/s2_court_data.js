@@ -2297,7 +2297,7 @@ C.judgment = {
     D("The application to freeze Riverstone's accounts goes in tomorrow. If anyone needed that money moved, they now have days, not weeks."),
     K("Then they'll move it themselves. They won't trust anyone else with it now."),
     D("Then be there when they do. Lawfully, Agent. I'd like to win the next one too."),
-    N("Across the car park, a black SUV that has been idling since nine o'clock pulls out into the traffic.")
+    N("Across the car park, a black Prado that has been idling since nine o'clock pulls out into the traffic.")
   ]
 };
 

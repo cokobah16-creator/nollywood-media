@@ -221,7 +221,7 @@ Object.assign(DIALOGUE, {
   m13_dg_adaeze_unproven: [
     say(DG, "Relieved of command and never charged. The inquiry into her sits again next month. I chair it.", { mood:'evasive' }),
   ],
-  // S1: Kelechi took money from Chief Obi's drawer (moralChoices.arrest === 'bribe'); inserted before mark 'offer'
+  // S1: Kelechi took money from Chief Obi's drawer (V13.s1snap().bribe: moralChoices.arrest === 'bribe'); inserted before mark 'offer'
   m13_dg_bribe: [
     say(DG, "And Chief Obi's drawer in Lekki. Adaeze kept a note of what you took from it. Her files are my files now.", { mood:'evasive' }),
     k("(Lekki. I'd almost taught myself to forget.)", { mood:'afraid' }),
@@ -873,12 +873,16 @@ V13.epilogueS2 = function(){
    ====================================================================== */
 /* CN11: a getter, read at render time (s2_case15.js). Musa drives the cooperative truck only if he
    talked in Season 1 (finale.js: flags.musa_tip or checkpoint 'flip_driver'); otherwise he served eight
-   months, and the cooperative's newest driver takes the cartons. Assigning V13.STINGER_S2 overrides it. */
+   months, and the cooperative's newest driver takes the cartons. Assigning V13.STINGER_S2 overrides it.
+   It reads the Season 1 snapshot (V13.s1snap().musaTalked), as Musa's after_m14 text does; core computes
+   that value with V12.who.musaTalked() (src/v12/v12_mem.js; V12.mem() is the plain memory store). */
 const STINGER_PLACE = 'KANO · 05:40', STINGER_CARD = { title:'SEASON 3', sub:'Someone banks for all of them.' };
 const STINGER_LINE2 = 'A man in a pressed white kaftan is waiting by the cab. "Twelve cartons for Lagos, Malam. Printer paper." He pays for the space in new notes, still in their bank bands.';
 const STINGER_LINE4 = '"Don\'t worry, Malam. The Senator was only a customer. We are the bank."';
 const musaTalked = ()=>{
   try{ const sn = V13.s1snap && V13.s1snap(); if(sn && typeof sn.musaTalked === 'boolean') return sn.musaTalked; }catch(e){}
+  // no snapshot on this page: Season 1's own rule
+  try{ if(typeof V12 !== 'undefined' && V12.who && typeof V12.who.musaTalked === 'function') return !!V12.who.musaTalked(); }catch(e){}
   const g = ST().game || {};
   return !!(g.flags || {}).musa_tip || (g.moralChoices || {}).checkpoint === 'flip_driver';
 };
@@ -990,10 +994,10 @@ V13.PHONE = Object.assign(V13.PHONE || {}, {
     { who:'HAUWA', text:"Trial fixed: Monday 11 January, 9 a.m., Federal High Court Abuja, Court 5. The 1st defendant has briefed Femi Olaniran-Cole, SAN. He is very good. Iron your shirt, and answer only what you're asked." },
     { who:'MUM', text:"The polite man called again. I told him you are a good boy and hung up. Your uncle says if they call a third time he will report them to 'the BVN people'. Hm." },
     { who:'UCHE', text:"Baba Shayi says his tea is still the best in Maitama and that you didn't finish your egg. He's offended on behalf of the egg." },
-    { who:'KC', cond:"S.game.moralChoices.market_runner === 'caught' && S.game.moralChoices.choice !== 'force' && !(typeof _cwWrong==='function' && _cwWrong('lagos')==='kc')", text:"Oga, na KC. My guy for Benin phone market talk say that man wey wear NACECA lanyard don come again, dey ask the SIM boys who be the agent wey dey work Sapele. Dem no know say I know you.", textEn:"Sir, it's KC. My guy at the Benin phone market says the man with the NACECA lanyard came again, asking the SIM boys who the agent working Sapele is. They don't know I know you." },
+    { who:'KC', cond:"!!V13.s1snap().kcFair && !V13.s1snap().kcWrong", text:"Oga, na KC. My guy for Benin phone market talk say that man wey wear NACECA lanyard don come again, dey ask the SIM boys who be the agent wey dey work Sapele. Dem no know say I know you.", textEn:"Sir, it's KC. My guy at the Benin phone market says the man with the NACECA lanyard came again, asking the SIM boys who the agent working Sapele is. They don't know I know you." },
   ],
   after_m14:[
-    { who:'MUSA', cond:"!!(S.game.flags||{}).musa_tip || (S.game.moralChoices||{}).checkpoint === 'flip_driver'", text:"Oga Kelechi! Na Musa, from Kano. Cooperative don give me new truck — blue one. One man come yesterday wan rent space for back. Cash, no papers. I tell am no. E smile say another driver go say yes.", textEn:"Officer Kelechi! It's Musa, from Kano. The cooperative gave me a new truck — a blue one. A man came yesterday wanting to rent space in the back. Cash, no papers. I said no. He smiled and said another driver will say yes." },
+    { who:'MUSA', cond:"!!V13.s1snap().musaTalked", text:"Oga Kelechi! Na Musa, from Kano. Cooperative don give me new truck — blue one. One man come yesterday wan rent space for back. Cash, no papers. I tell am no. E smile say another driver go say yes.", textEn:"Officer Kelechi! It's Musa, from Kano. The cooperative gave me a new truck — a blue one. A man came yesterday wanting to rent space in the back. Cash, no papers. I said no. He smiled and said another driver will say yes." },
     { who:'HAUWA', cond:"!!(S.game.s2 && S.game.s2.trial) && S.game.s2.trial.d1 === 'guilty'", text:"Conviction entered on Count 1. The Senator's lawyers sat in the back row all three days, taking notes on you. Tonight we give them something worth writing down." },
     { who:'HAUWA', cond:"!!(S.game.s2 && S.game.s2.trial) && S.game.s2.trial.d1 === 'notguilty'", text:"I've read the judgment twice. It's fair. We weren't careful enough, and the court said so. That ends tonight — every bag numbered, every number signed." },
     { who:'OSAGIE', text:"The Senator's people are moving cash tonight, before the freeze order lands. Port Harcourt waterfront, 23:30. Wear something you can swim in." },
@@ -1136,7 +1140,8 @@ V13.C = {
     const m = MC(), f1 = S1FATE();
     const fate = f1 && DIALOGUE['m13_dg_adaeze_' + f1] ? DIALOGUE['m13_dg_adaeze_' + f1] : [];
     const pre = [];
-    if(m.arrest === 'bribe') pre.push(...DIALOGUE.m13_dg_bribe);
+    // Season 1's Lekki drawer, as the snapshot holds it (live moralChoices.arrest only before a snapshot exists)
+    if(V13.s1snap ? !!V13.s1snap().bribe : m.arrest === 'bribe') pre.push(...DIALOGUE.m13_dg_bribe);
     (registered || []).slice(0, 2).forEach(c => { const key = 'm13_dg_register_' + String(c).toLowerCase(); if(DIALOGUE[key]) pre.push(...DIALOGUE[key]); });
     if(m.s2_wire !== true){
       const L = base('m13_dg');

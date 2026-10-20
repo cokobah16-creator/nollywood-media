@@ -43,6 +43,9 @@ const probe = async function (T) {
   check('CN20/kuti-plate', has('A. KUTI'), 'desk plate A. KUTI (the docket now says A.K.)');
   check('rules/aks', any(/\bAKS\b/).length === 0, 'no AKS painted');
   check('names', any(/OSAGIE|COKER|TAMUNO|HAUWA|TIDE\b|CYBERCRIME & ECON/i).length === 0, JSON.stringify(any(/OSAGIE|COKER|TAMUNO|HAUWA|TIDE\b/i)));
+  // TX6: the market signs that echoed Season 1 (Efe; "Grace Divine") and the cause-list company that may be real
+  check('TX6/signs', has('IGHO & SONS ELECTRICALS') && has('CLEAR DROP PURE WATER') && any(/\bGRACE\b|\bEFE\b/).length === 0, JSON.stringify(any(/ELECTRICALS|PURE WATER|GRACE|\bEFE\b/)));
+  check('TX6/cause-list', any(/FRN v\. ADEJO-IKIME HAULAGE LTD$/).length === 1 && any(/KESTREL/i).length === 0, JSON.stringify(any(/^\d\.\s+FRN v\./)));
   console.log(`CHECKS ${pass}/${total}`);
 };
 export { probe as 'module.exports' };

@@ -28,6 +28,11 @@
 (function(){
 'use strict';
 const V13 = window.V13 = window.V13 || {};
+/* line conds (core's line fields): did Season 1 put Adaeze on trial? A 'proven' or 'contested' finale went to
+   trial; an 'unproven' one never charged her (the inquiry read the payroll), unless the trial sat and discharged
+   her (s2_merge's adaptS1Fate sets s2.adaezeDischarged and reads her fate as 'unproven'). */
+const S1_TRIED = "V13.s1fate() !== 'unproven' || !!(S.game.s2 || {}).adaezeDischarged";
+const S1_UNTRIED = '!(' + S1_TRIED + ')';
 const V12 = window.V12 = window.V12 || {};
 V12.DOCS = V12.DOCS || {};
 
@@ -155,12 +160,16 @@ Object.assign(DIALOGUE, {
      is alive (V13.tobiAlive()), the code seats him at the bench and plays m9_tobi_bench
      before m9_forensic_igbinosa. */
   m9_tobi_bench: [
-    { speaker:'TOBI',
+    { speaker:'TOBI', cond:S1_TRIED,
       text:"Kelechi! — Agent. Agent Kelechi. Sorry. Zonal took me on to read the payroll for the trial, and I've cleaned this bench three times." },
+    { speaker:'TOBI', cond:S1_UNTRIED,
+      text:"Kelechi! — Agent. Agent Kelechi. Sorry. Zonal took me on to read the payroll for the inquiry, and I've cleaned this bench three times." },
     { speaker:'TOBI', mood:'evasive',
       text:"I'm fine. I sleep with the light on, that's all. Mr. Igbinosa does the machine. I read what comes off it." },
-    { speaker:'TOBI',
+    { speaker:'TOBI', cond:S1_TRIED,
       text:"Eleven days on the payroll folder for the prosecution, and I never once opened _old. I didn't know it was there." },
+    { speaker:'TOBI', cond:S1_UNTRIED,
+      text:"Eleven days on the payroll folder for the inquiry, and I never once opened _old. I didn't know it was there." },
   ],
   /* RETIRED (CN06): Tobi no longer runs the bench. m9_forensic_tobi, its three method
      keys and m9_cert_tobi stay in the file, unused, so old saves and references resolve.
@@ -210,8 +219,10 @@ Object.assign(DIALOGUE, {
   m9_forensic_igbinosa: [
     { speaker:'MR. IGBINOSA',
       text:"Agent. Sit. Don't touch anything blue — the blue things on this bench cost more than my car." },
-    { speaker:'MR. IGBINOSA',
+    { speaker:'MR. IGBINOSA', cond:S1_TRIED,
       text:"It took this bench three weeks to unlock the payroll folder for the case against her. We printed what the prosecution asked for and sealed the drive again. Nobody has imaged the whole of it. Tonight we do." },
+    { speaker:'MR. IGBINOSA', cond:S1_UNTRIED,
+      text:"It took this bench three weeks to unlock the payroll folder for the inquiry into her. We printed what the inquiry asked for and sealed the drive again. Nobody has imaged the whole of it. Tonight we do." },
     { speaker:'MR. IGBINOSA',
       text:"There are three ways to read a drive. Two of them are fast. In nineteen years, nobody has ever accused me of fast." },
     { speaker:'MR. IGBINOSA',
@@ -647,9 +658,10 @@ Object.assign(DIALOGUE, {
   m10_lucky_arrives: [
     { speaker:'SGT. UCHE', portrait:'sergeant',
       text:"Road side. Blue kaftan, gold watch, two rice sacks on a wheelbarrow boy's head. He's greeting the whole market like he's running for councillor." },
+    // R12: s2_case10.js radios these lines' plain text in every mode (no rec / sr / cond on the radio path),
+    // so neither line says which kiosk he walks to.
     { speaker:'SGT. UCHE', portrait:'sergeant',
-      text:"Straight for the blue kiosk. Don't look up, sir. Look at your phone like you're losing at football.",
-      sr:"Don't look up, sir. Look at your phone like you're losing at football." },
+      text:"He's coming in. Don't look up, sir. Look at your phone like you're losing at football." },
   ],
   m10_obs_cashouts: [
     { speaker:'NACECA SYSTEM',
@@ -1069,8 +1081,10 @@ V13.PHONE = Object.assign(V13.PHONE || {}, {
       text:"Your messages have no full stops again. That means you haven't slept. Eat something before you go anywhere o. And don't eat fish from those Delta rivers — your uncle says the oil has entered them." },
     { who:'UCHE',
       text:"Bought you a shirt for Thursday. Market shirt, parrots on it. It was the only one in your size. Don't argue." },
-    { who:'TOBI', cond:"V13.tobiAlive()",
+    { who:'TOBI', cond:"V13.tobiAlive() && (" + S1_TRIED + ")",
       text:"Eleven days on that payroll for the trial and I never opened _old. Now I can't stop reading it. Every sailing is a Tuesday. Every T4 cash-out is a Thursday. Every C.A. line in this sheet is the 10th — cash, not the Foundation's 1st. Somebody ran this like a church harvest committee." },
+    { who:'TOBI', cond:"V13.tobiAlive() && " + S1_UNTRIED,
+      text:"Eleven days on that payroll for the inquiry and I never opened _old. Now I can't stop reading it. Every sailing is a Tuesday. Every T4 cash-out is a Thursday. Every C.A. line in this sheet is the 10th — cash, not the Foundation's 1st. Somebody ran this like a church harvest committee." },
     { who:'UCHE', cond:"!V13.tobiAlive()",
       text:"Igbinosa says to tell you every T4 cash-out in that book is a Thursday. He also says his tea is better than mine. One of those is true." },
     { who:'OSAGIE', cond:"(S.game.moralChoices||{}).s2_original==='kept'",
@@ -1100,7 +1114,7 @@ V13.PHONE = Object.assign(V13.PHONE || {}, {
       text:"The boatman's family came to Sapele Area Command at dawn. Thirty of them. He has four children. I've arranged for them to see him. — I.O." },
     { who:'TOBI', cond:"V13.tobiAlive()",
       text:"The four accounts behind Lucky's cards were opened at the same Warri branch on the same afternoon, eighteen months ago, by the same bank officer. Writing it up." },
-    { who:'TUNDE', cond:"!(typeof _cwWrong==='function' && _cwWrong('lagos')==='tunde') && !(V12.heat && V12.heat() >= 70)",
+    { who:'TUNDE', cond:"!V13.s1snap().tundeWrong && !(V12.heat && V12.heat() >= 70)",
       text:"Oga Kelechi! Na Tunde. I hear say you don go Delta. Ikeja boys dey ask for you. Abeg no forget us for Lagos o.",
       textEn:"Officer Kelechi! It's Tunde. I hear you've gone to Delta. The Ikeja boys are asking after you. Please don't forget us in Lagos." },
     { who:'MUM',

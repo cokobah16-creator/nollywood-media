@@ -56,7 +56,9 @@ Cases: 09 The Evidence Room (Benin Zonal, night) · 10 The Night Market (Sapele)
   (rescued, or carried out in the chase with the hostage not lost), `V13.tobiTestifies()` (the deliberate rescue
   only), `V13.s1fate()` (Adaeze's fate), `V13.s1snap().bribe` (Kelechi took money from Chief Obi's drawer in
   Case 03), `kcFair`, `kcWrong`, `tundeWrong` (your Lagos charge sheet held KC or Tunde: `_cwWrong('lagos')`),
-  `musaTalked` (flags.musa_tip or checkpoint 'flip_driver'), reputation `S.player.reputation.integrity` etc.
+  `musaTalked` (Season 1's `V12.who.musaTalked()`: flags.musa_tip or checkpoint 'flip_driver'; `V12.mem()` is the
+  plain memory store and has no such function), reputation `S.player.reputation.integrity` etc. In `cond` strings
+  read the snapshot itself (`!!V13.s1snap().musaTalked`, `!V13.s1snap().tundeWrong`), never the live Season 1 value.
   When a whole conversation depends on a condition, write separate keys and the code picks. In JS, guard the
   helpers (`V13.tobiAlive ? V13.tobiAlive() : <the canon rule>`); in `cond` strings call them directly.
 - Line fields (the core layer's `renderDialogueLine` wrap): `rec:1` plays a line on Recruit only; `sr:'…'` (and
@@ -149,7 +151,9 @@ flight. Commander Okundaye gives Kelechi the night.
 - m9_tobi_bench (when `V13.tobiAlive()`: three TOBI lines — Zonal took him on to read the payroll for the trial;
   "Mr. Igbinosa does the machine. I read what comes off it."; eleven days on the payroll folder and he never opened
   `_old`), then m9_forensic_igbinosa — at the forensic bench Mr. Igbinosa (every save) says the bench took three
-  weeks to unlock the payroll folder for the case against her and nobody has imaged the whole drive; he explains
+  weeks to unlock the payroll folder for the case against her and nobody has imaged the whole drive. When Season 1
+  never charged her (`V13.s1fate()==='unproven'` without `S.game.s2.adaezeDischarged`), those lines and Tobi's text
+  after m9 say "the inquiry" instead of the trial, the prosecution and the case against her (line `cond`s); he explains
   three ways to examine the drive and Kelechi picks:
   A write-blocker, forensic image, hash both, sign a section 84 certificate (40 minutes) flag {s2_method:'image'}
   B plug it straight into the laptop ("every file's access date will say tonight") flag {s2_method:'direct'}
@@ -205,7 +209,8 @@ of cash and withdraws through POS kiosks under the ₦1.2m daily cap per agent, 
 - m10_esusu (2–4 lines) the thrift collector counting traders' contributions (innocent, a decoy).
 - m10_fuel (2–4 lines) the jerrycan seller with big bundles (innocent, a decoy).
 - m10_buka (2–3 lines) buying food at MAMA TEGA's buka (lowers suspicion; banter).
-- m10_lucky_arrives (radio, 1–2 lines: Uche spots a man with two sacks; on Senior he never says which kiosk).
+- m10_lucky_arrives (radio, 1–2 lines: Uche spots a man with two sacks). s2_case10.js radios each line's plain
+  `text` in every mode (no `rec` / `sr` / `cond` on the radio path), so no line says which kiosk he walks to.
 - Observation captions (one line each, system): m10_obs_cashouts ("Four withdrawals back to back, each just under the
   limit"), m10_obs_cards ("A different card every time — and a different name on each"), m10_obs_boat ("He hands two
   bags to a boatman at the jetty").
@@ -362,7 +367,7 @@ of cash and withdraws through POS kiosks under the ₦1.2m daily cap per agent, 
   prove? Proof: a 2nd-Friday Hon. K.F. line and a "CHAIRMAN" line on the same night. evidenceId 'visitor_book'.
   Baba Shayi keeps his character on Senior ("he writes everything down"); his advice on how to approach Bitrus is
   Recruit-only. The DG drives himself in a small green Peugeot.
-- m13b_suv (2–3 lines: the black SUV arrives; Godwin Ereba gets out; tonight is the second Friday) and m13b_end.
+- m13b_suv (2–3 lines: the black Prado arrives; Godwin Ereba gets out; tonight is the second Friday) and m13b_end.
 
 ### Case 15 · The Barge — RIVERS · BONNY RIVER, RIVERSTONE JETTY, 23:30 (prefix m15_)
 - m15_brief (a Friday in Feb 2027; Danladi/Okundaye/Uche; the trial result and what the sources say; the Senator will
@@ -409,8 +414,10 @@ These settle where Season 2 met Season 1 canon (docs/STORY-CANON.md, "Season 2")
 
 **The Season 1 snapshot.** The first time a Season 2 case or office loads, the core layer saves the Season 1
 outcomes Season 2 reads as plain data in `S.game.s2.s1snap`: `{ tobiAlive, tobiTestifies, bribe, kcFair, kcWrong,
-tundeWrong, musaTalked }` (`V13.s1snap()`; before it exists, the live Season 1 values are used). `V13.tobiAlive()`
-and `V13.tobiTestifies()` read it. Adaeze's fate is `V13.s1fate()` = `S.game.s2.s1fate`, else
+tundeWrong, musaTalked }` (`V13.s1snap()`; before it exists, the live Season 1 values are used; `musaTalked` is
+`V12.who.musaTalked()`). `V13.tobiAlive()` and `V13.tobiTestifies()` read it, and so do the stinger, the Lekki
+drawer on the ninth floor (`bribe`) and the Musa, KC and Tunde texts (their `cond`s read `V13.s1snap()`; Tunde's
+Heat 70+ rule stays live). Adaeze's fate is `V13.s1fate()` = `S.game.s2.s1fate`, else
 `moralChoices.finale`, else 'unproven'; Season 2 never writes `moralChoices.finale` or `flags.finale`, so Season 1's
 epilogue, case review and trial keep telling her verdict as Season 1 left it, and the layer stays removable.
 
@@ -422,7 +429,11 @@ section 84 certificate in every save, and is PW2 at the trial. Retired keys stay
 
 **The drive.** Season 1's trial of Adaeze used only the payroll folder, on certified printouts (Tobi read it for
 eleven days). The drive came back from the registry sealed; nobody imaged the whole of it or opened `_old` until
-Case 09. Season 2's case against Lucky uses "the same drive", not "the same ledger".
+Case 09. Season 2's case against Lucky uses "the same drive", not "the same ledger". On a save where Season 1 never
+charged her (an 'unproven' finale that never went to trial), the inquiry read the payroll: the Case 09 bench
+(m9_tobi_bench, m9_forensic_igbinosa) and Tobi's text after m9 say "the inquiry". The trial lines play under
+`V13.s1fate()!=='unproven' || !!S.game.s2.adaezeDischarged` (a trial sat: proven, contested, or discharged), the
+inquiry lines under its negation.
 
 **C.A.** The UPSTREAM ledger's "C.A." line (₦4.8m in cash on the 10th, paid by R.M.S.) is Adaeze's second paymaster,
 beside Season 1's Foundation retainer (₦10M to C.A. Consulting on the 1st). The texts say so.
@@ -476,6 +487,29 @@ December". The visitor book: CHAIRMAN and K.F. pairs on 11/09, 09/10 and 13/11 (
 
 Code ids that stay: the phone threads `who:'OSAGIE'` and `who:'HAUWA'`, the cast and art ids `osagie`, `hauwa`,
 `mamaefe` (`osagie_neutral`, `hauwa_neutral`), the candidate ids, and DIALOGUE keys such as `m9_osagie*`, `m12_hauwa*`.
+
+The on-screen strings a probe may wait for, old to new (the kit's probes c15strong, c15phone, court14 and d_c15mon
+waited for the old ones; tools/harness/scenarios/s2_text_probes.cjs flags a probe that still does):
+
+| was | is |
+|---|---|
+| speaker COMMANDER OSAGIE | speaker COMMANDER OKUNDAYE |
+| speaker MAMA EFE · BUKA | speaker MAMA TEGA · BUKA |
+| "Grace Osagie kept your drive" | "Itohan Okundaye kept your drive" |
+| "Hauwa Danladi prosecuted" | "Zainab Danladi prosecuted" |
+| "Cdr. Grace Osagie", "Barr. Hauwa Danladi" | "Cdr. Itohan Okundaye", "Barr. Zainab Danladi" |
+| "You'll want Commander Osagie for that, sir." | "You'll want Commander Okundaye for that, sir." |
+| "Inspector Okon taught me…", "Inspector Okon always said…" | "Inspector Asuquo taught me…", "Inspector Asuquo always said…" |
+| Uche's radio "Straight for the blue kiosk. Don't look up, sir…" | "He's coming in. Don't look up, sir…" (every mode) |
+| "a black SUV that has been idling since nine o'clock" | "a black Prado that has been idling since nine o'clock" |
+| market signs EFE & SONS ELECTRICALS, GRACE PURE WATER | IGHO & SONS ELECTRICALS, CLEAR DROP PURE WATER |
+| court cause list "FRN v. KESTREL LOGISTICS LTD" | "FRN v. ADEJO-IKIME HAULAGE LTD" |
+
+**Invented names for the human real-name check.** Kestrel-named logistics firms exist, so the court's cause list now
+names ADEJO-IKIME HAULAGE LTD. The two market signs that echoed Season 1 (Efe, the UNIBEN witness; the "Grace Divine"
+cooperative) are now IGHO & SONS ELECTRICALS and CLEAR DROP PURE WATER. A web search found no business under any of
+the three new names, but a person should still check them, together with the rest of the Sapele market's sixteen
+painted signs (s2_mtex_a.js) and the cause list's other entries (s2_mtex_c.js).
 <!-- /lint:renames -->
 
 **Vehicles.** No Season 2 car echoes Season 1's plate cars (the government saloon at Lekki and Zuma Court, the

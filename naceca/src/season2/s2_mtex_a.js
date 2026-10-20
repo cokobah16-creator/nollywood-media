@@ -118,10 +118,10 @@
       x.fillStyle='#1d3a6a'; x.fillRect(512,384,512,128); x.fillStyle='#f0c020'; x.fillRect(512,384,512,10); x.fillRect(512,502,512,10);
       fit(x,'SAPELE WATERSIDE NIGHT MARKET',768,458,470,40,'#ffffff'); fit(x,'WELCOME · BUY · SELL · GOD DEY',768,492,440,20,'#f0c020','600'); weather(x,512,384,512,128,3174,0.5);
       // rows 4-11 (y 512..1024): sixteen shop signs 512x64
-      const shops=[['OGHENE TEGA PROVISIONS','#c8382a','#fff4d0'],['EFE & SONS ELECTRICALS','#1a4aa0','#ffffff'],['OVIE PHONE WORLD','#f0c020','#1a1a1a'],['DIVINE MERCY PATENT MEDICINE','#e8e8e0','#1a6a2a'],
+      const shops=[['OGHENE TEGA PROVISIONS','#c8382a','#fff4d0'],['IGHO & SONS ELECTRICALS','#1a4aa0','#ffffff'],['OVIE PHONE WORLD','#f0c020','#1a1a1a'],['DIVINE MERCY PATENT MEDICINE','#e8e8e0','#1a6a2a'],
                    ['JEHOVAH JIREH FABRICS','#8a2a8a','#ffffff'],['NO SHAKING BARBING SALON','#141414','#f0c040'],['ETHIOPE BOAT ENGINE SPARES','#1a6a6a','#ffffff'],['GOD’S TIME PLASTICS','#e0d0a0','#5a2a1a'],
                    ['ONOME COLD ROOM · FROZEN FISH','#2a4a8a','#ffffff'],['BLESSED HANDS TAILORING','#f2efe6','#a01818'],['UNITY PHARMACY & STORE','#1d6a3a','#ffffff'],['OKIEMUTE HOTEL · BAR','#3a1a1a','#ffd27a'],
-                   ['GRACE PURE WATER','#3a8ad0','#ffffff'],['ROTIMI BOOKS & STATIONERY','#e8a830','#1a1a1a'],['BRIGHT FUTURE SCHOOL · ADMISSION','#f2f0ea','#1d3a8a'],['TOP STAR MUSIC & DVD','#141414','#40d0ff']];
+                   ['CLEAR DROP PURE WATER','#3a8ad0','#ffffff'],['ROTIMI BOOKS & STATIONERY','#e8a830','#1a1a1a'],['BRIGHT FUTURE SCHOOL · ADMISSION','#f2f0ea','#1d3a8a'],['TOP STAR MUSIC & DVD','#141414','#40d0ff']];
       shops.forEach(([sg,bg,fg],i)=>{ const X=(i%2)*512, Y=512+(i>>1)*64; x.fillStyle=bg; x.fillRect(X,Y,512,64); x.strokeStyle='rgba(0,0,0,0.35)'; x.lineWidth=3; x.strokeRect(X+2,Y+2,508,60);
         fit(x,sg,X+256,Y+46,470,36,fg); weather(x,X,Y,512,64,3180+i,0.9); });
       return T(c,false); },

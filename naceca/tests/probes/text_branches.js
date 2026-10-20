@@ -27,6 +27,13 @@ const probe = async function (T) {
     if (typeof V13.tobiAlive !== 'function') { V13.tobiAlive = () => { const m = MCf(); return m.asaba === 'rescue' || (m.asaba === 'chase' && !S.game._asabaHostageLost); }; done.push('tobiAlive'); }
     if (typeof V13.tobiTestifies !== 'function') { V13.tobiTestifies = () => MCf().asaba === 'rescue'; done.push('tobiTestifies'); }
     if (typeof V13.s1fate !== 'function') { V13.s1fate = () => ((S.game && S.game.s2) || {}).s1fate || MCf().finale || 'unproven'; done.push('s1fate'); }
+    if (typeof V13.s1snap !== 'function') {   // core's s1live / s1snap (Season 1's Musa rule is V12.who.musaTalked)
+      V13.s1snap = () => { const g = S.game || {}, m = MCf(); if (g.s2 && g.s2.s1snap) return g.s2.s1snap;
+        let w = null; try { w = typeof _cwWrong === 'function' ? _cwWrong('lagos') : null; } catch (e) {}
+        let musa = false; try { musa = !!(V12.who && V12.who.musaTalked && V12.who.musaTalked()); } catch (e) {}
+        return { tobiAlive: m.asaba === 'rescue' || (m.asaba === 'chase' && !g._asabaHostageLost), tobiTestifies: m.asaba === 'rescue', bribe: m.arrest === 'bribe',
+          kcFair: m.market_runner === 'caught' && m.choice !== 'force', kcWrong: w === 'kc', tundeWrong: w === 'tunde', musaTalked: musa }; };
+      done.push('s1snap'); }
     window.__condOk = c => { try { return !!(new Function('S', 'return (' + c + ')'))(S); } catch (e) { return false; } };
     window.__fresh = (mc, fl, extra) => {
       const g = S.game; g.moralChoices = Object.assign({}, mc || {}); g.flags = Object.assign({}, fl || {});
@@ -126,26 +133,41 @@ const probe = async function (T) {
     r.tracker = m11.filter(m => /tracker/i.test(m.text)).map(m => ({ who: m.who, cond: m.cond }));
     r.audioTobi = m13.filter(m => m.who === 'TOBI').length;
     r.audio = (m13.find(m => /Igbinosa has the pen/.test(m.text)) || {}).cond;
-    r.bench = (DIALOGUE.m9_tobi_bench || []).map(l => l.speaker + ': ' + l.text);
-    r.benchMood = (DIALOGUE.m9_tobi_bench || [])[1] && DIALOGUE.m9_tobi_bench[1].mood;
-    r.igb = (DIALOGUE.m9_forensic_igbinosa || []).map(l => l.text);
+    // the lines a save sees (line conds evaluated as core's line fields do), by Season 1 verdict
+    const seen = k => (DIALOGUE[k] || []).filter(l => !l.cond || __condOk(l.cond));
+    for (const [v, fin, dis] of [['proven', 'proven', 0], ['contested', 'contested', 0], ['unproven', 'unproven', 0], ['discharged', 'unproven', 1]]) {
+      __fresh({ asaba: 'rescue', finale: fin }, {}, { s2: { s1fate: fin, adaezeDischarged: dis || undefined } });
+      const b = seen('m9_tobi_bench');
+      r['bench_' + v] = b.map(l => l.speaker + ': ' + l.text); r['mood_' + v] = (b[1] || {}).mood;
+      r['igb_' + v] = seen('m9_forensic_igbinosa').map(l => l.text);
+      r['t9_' + v] = (V13.PHONE.after_m9 || []).filter(m => m.who === 'TOBI' && /^Eleven days/.test(m.text) && __condOk(m.cond)).map(m => m.text);
+    }
+    r.bench = r.bench_proven; r.benchMood = r.mood_proven; r.igb = r.igb_proven;
     return r;
   });
   check('CN06/wireOffer', pen.rescue === 'm13_wire_offer' && pen.chase === 'm13_wire_offer' && pen.failed === 'm13_wire_offer', JSON.stringify([pen.rescue, pen.chase, pen.failed]));
   check('CN20/pen-video-call', /^22:10\. On the video call from Benin, Commander Okundaye nods at the parcel her driver brought you/.test(pen.line0 || ''), pen.line0);
   check('CN06/tracker-single', pen.tracker.length === 1 && pen.tracker[0].cond === "S.game.moralChoices.s2_barge==='tagged'" && pen.tracker[0].who !== 'TOBI', JSON.stringify(pen.tracker));
   check('CN06/audio', pen.audioTobi === 0 && pen.audio === 'S.game.moralChoices.s2_wire === true', 'Tobi texts: ' + pen.audioTobi + '; cond: ' + pen.audio);
-  check('CN06/m9_tobi_bench', pen.bench.length === 3 && pen.bench.every(l => /^TOBI: /.test(l)) && pen.benchMood === 'evasive' && /never once opened _old/.test(pen.bench[2] || ''), pen.bench.join(' / ').slice(0, 300));
+  check('CN06/m9_tobi_bench', ['proven', 'contested', 'unproven', 'discharged'].every(v => pen['bench_' + v].length === 3 && pen['bench_' + v].every(l => /^TOBI: /.test(l)) && pen['mood_' + v] === 'evasive' && /never once opened _old/.test(pen['bench_' + v][2] || '')), pen.bench.join(' / ').slice(0, 300));
   check('CN04/igbinosa-bench', pen.igb.some(t => /^It took this bench three weeks to unlock the payroll folder for the case against her\./.test(t)), 'the line plays in the every-save bench key');
+  // TX4: a save where Season 1 never charged her says "the inquiry"; a trial (proven, contested, or discharged) says the trial
+  const tried = v => /for the trial/.test(pen['bench_' + v][0]) && /for the prosecution/.test(pen['bench_' + v][2]) && pen['igb_' + v].filter(t => /^It took this bench/.test(t)).length === 1
+    && pen['igb_' + v].some(t => /for the case against her\. We printed what the prosecution asked for/.test(t)) && pen['t9_' + v].length === 1 && /for the trial/.test(pen['t9_' + v][0]);
+  check('TX4/tried', ['proven', 'contested', 'discharged'].every(tried), JSON.stringify(['proven', 'contested', 'discharged'].map(v => [pen['bench_' + v][0].slice(40, 100), pen['t9_' + v].length])));
+  { const u = 'unproven', all = pen['bench_' + u].join(' ') + ' ' + pen['igb_' + u].join(' ') + ' ' + pen['t9_' + u].join(' ');
+    check('TX4/never-charged', /for the inquiry, and I've cleaned/.test(pen['bench_' + u][0]) && /payroll folder for the inquiry, and I never/.test(pen['bench_' + u][2])
+      && pen['igb_' + u].some(t => /for the inquiry into her\. We printed what the inquiry asked for/.test(t)) && pen['t9_' + u].length === 1 && /payroll for the inquiry and I never/.test(pen['t9_' + u][0])
+      && !/\btrial\b|prosecution|case against her/.test(all), all.slice(0, 300)); }
 
   // ---------- CN05: the CAC call's last line; CN04/CN08 Tobi's text after m9 ----------
   const tob = await T.ev(() => {
     const L = DIALOGUE.m12_tobi_cac || [];
     const last2 = L.slice(-2).map(l => ({ cond: l.cond, text: l.text }));
-    const t9 = (V13.PHONE.after_m9 || []).find(m => m.who === 'TOBI') || {}, u9 = (V13.PHONE.after_m9 || []).find(m => m.who === 'UCHE' && /Igbinosa/.test(m.text)) || {};
+    const t9 = (V13.PHONE.after_m9 || []).find(m => m.who === 'TOBI' && /for the trial/.test(m.text)) || {}, u9 = (V13.PHONE.after_m9 || []).find(m => m.who === 'UCHE' && /Igbinosa/.test(m.text)) || {};
     const t10 = (V13.PHONE.after_m10 || []).find(m => m.who === 'TOBI') || {};
     const r = { last2, t9: t9.text, t9cond: t9.cond, u9cond: u9.cond, t10cond: t10.cond };
-    for (const [k, mc, lostF] of [['rescue', { asaba: 'rescue' }, false], ['chase', { asaba: 'chase' }, false], ['lost', { asaba: 'chase' }, true]]) {
+    for (const [k, mc, lostF] of [['rescue', { asaba: 'rescue', finale: 'proven' }, false], ['chase', { asaba: 'chase', finale: 'proven' }, false], ['lost', { asaba: 'chase', finale: 'proven' }, true]]) {
       __fresh(mc, {}, { lost: lostF });
       r[k] = { t9: __condOk(t9.cond), u9: __condOk(u9.cond), t10: __condOk(t10.cond), testify: last2.map(l => __condOk(l.cond)) };
     }
@@ -189,11 +211,11 @@ const probe = async function (T) {
   const sen = await T.ev(() => {
     const last = k => { const L = DIALOGUE[k] || []; return L[L.length - 1] || {}; };
     const ints = ['m10_intro', 'm10_intro_tobi', 'm10_intro_igbinosa'].map(k => last(k));
-    const la = (DIALOGUE.m10_lucky_arrives || [])[1] || {};
+    const arrive = (DIALOGUE.m10_lucky_arrives || []).map(l => ({ text: l.text || '', sr: l.sr, textEn: l.textEn, rec: l.rec, cond: l.cond }));
     const cac = [...(DIALOGUE.m12_tobi_cac || []), ...(DIALOGUE.m12_igbinosa_cac || [])];
     const shayi = [...(DIALOGUE.m13b_shayi_treat || []), ...(DIALOGUE.m13b_shayi_greet || [])].filter(l => /greet him well|smell a lie/.test(l.text));
     const who = PUZZLES.m10_who.screen, sw = V12.seniorScreen(who);
-    return { ints: ints.map(l => ({ text: l.text, sr: l.sr })), la: { text: la.text, sr: la.sr },
+    return { ints: ints.map(l => ({ text: l.text, sr: l.sr })), arrive,
       cacInterp: cac.filter(l => /driver/i.test(l.text) && !l.rec && !(l.sr && !/driver/i.test(l.sr))).map(l => l.text),
       cacRecords: cac.filter(l => l.sr === 'Records sent, Agent. Read them yourself.' || /^Records sent, Agent\. Read them yourself\./.test(l.sr || '')).length,
       choiceRec: cac.concat(shayi).filter(l => l.choices && (l.rec || l.cond)).length,
@@ -202,7 +224,9 @@ const probe = async function (T) {
       who: { rec: /<span class="cw-hint"> → EDAFE, LUCKY O\.<\/span>/.test(who), senior: sw.includes('EDAFE'), proofs: ['1,195,000', 'just under'].every(p => sw.includes(p)) } };
   });
   check('R11/m10-texts', sen.ints.every(l => l.sr && !/blue|herb|stall|beside|next to/i.test(l.sr) && /kiosk 4/.test(l.sr) && /blue board/.test(l.text)), JSON.stringify(sen.ints.map(l => l.sr)));
-  check('R12/uche-kiosk', !!sen.la.sr && !/kiosk/i.test(sen.la.sr) && /blue kiosk/.test(sen.la.text), sen.la.sr);
+  // s2_case10.js radios each line's plain text in every mode (no rec / sr / cond on the radio path)
+  check('R12/uche-kiosk', sen.arrive.length >= 1 && sen.arrive.every(l => !/kiosk|blue (board|one)|T4/i.test(l.text + ' ' + (l.sr || '') + ' ' + (l.textEn || '')) && !l.rec && l.sr == null && l.cond == null),
+    JSON.stringify(sen.arrive.map(l => l.text)));
   check('R11/cac-call', sen.cacInterp.length === 0 && sen.cacRecords >= 2 && sen.choiceRec === 0, 'interpretation on Senior: ' + JSON.stringify(sen.cacInterp));
   check('R11/doc-asks', /tap the result that settles it\.$/.test(sen.asks[0]) && /tap the line that proves it\.$/.test(sen.asks[1]) && !/no refinery|nominee away/.test(sen.asks.join(' ')), sen.asks.join(' | '));
   check('R11/baba-shayi', sen.shayi.length === 2 && sen.shayi.every(l => l.sr && !/greet|lie|straight/i.test(l.sr) && /book/.test(l.sr)), JSON.stringify(sen.shayi));
@@ -211,7 +235,7 @@ const probe = async function (T) {
   // ---------- CN09 / CN10 / CN21: no old names or cars in Season 2 dialogue ----------
   const names = await T.ev(mine => {
     const all = []; const spk = new Set(), other = [];
-    const bad = /Osagie|OSAGIE|Hauwa|Bassey|Danjuma|\bOke\b|Coker|COKER|MAMA EFE|Mama Efe|Tamuno|\bTari\b|\bEbi\b|grey (saloon|Corolla)|Cybercrime/;
+    const bad = /Osagie|OSAGIE|Hauwa|Bassey|Danjuma|\bOke\b|Coker|COKER|MAMA EFE|Mama Efe|Tamuno|\bTari\b|\bEbi\b|grey (saloon|Corolla)|Cybercrime/;   // renamed: absent
     for (const k in DIALOGUE) { if (!/^m1[0-5]|^m9/.test(k) || /_run$/.test(k)) continue;
       if (!mine.includes(k)) { for (const l of DIALOGUE[k] || []) if (bad.test((l.speaker || '') + ' ' + (l.text || ''))) other.push(k + ': ' + (l.speaker || '') + ' / ' + (l.text || '').slice(0, 60)); continue; }
       for (const l of DIALOGUE[k] || []) { all.push(l.text || '', l.textEn || '', l.sr || ''); spk.add(l.speaker || ''); } }
@@ -225,10 +249,11 @@ const probe = async function (T) {
     return { grey, other, keys: mine.length, speakers: [...spk].filter(x => /OSAGIE|EFE|COKER/.test(x)),
       n: { bassey: f(/Bassey/g), okon: f(/\bOkon\b/g), danjuma: f(/Danjuma/g), oke: f(/\bOke\b/g), hauwa: f(/Hauwa/g), mamaEfe: f(/Mama Efe/gi), cyber: f(/Lagos Cybercrime/g), osagie: f(/Osagie/g),
         grace: f(/\bGrace\b/g), coker: f(/Coker/gi), tari: f(/\bTari\b/g), ebi: f(/\bEbi\b/g), tamuno: f(/Tamuno/gi), divine: f(/Divine Grace/g), harbour4: f(/\b4B? Harbour/g),
-        tide: f(/PORT HARCOURT TIDE/g), akaeze: f(/Akaeze/g), antifraud: f(/anti-fraud/g), ransom: f(/kidnapping for ransom/g), plate: f(/ABJ-418KD/g), jeep: f(/black jeep/g), aks: f(/\bAKS\b/g), arrow: f(/←/g) } };
+        tide: f(/PORT HARCOURT TIDE/g), akaeze: f(/Akaeze/g), antifraud: f(/anti-fraud/g), ransom: f(/kidnapping for ransom/g), plate: f(/ABJ-418KD/g), jeep: f(/black jeep/g), suv: f(/black SUV/gi), aks: f(/\bAKS\b/g), arrow: f(/←/g) },
+      prado: f(/a black Prado that has been idling since nine o'clock/g) };
   }, MY_KEYS);
   out('grey_cars', names.grey); out('names', names.n);
-  check('CN09/cars', names.grey.length === 0 && names.n.plate === 0 && names.n.jeep === 0, JSON.stringify(names.grey));
+  check('CN09/cars', names.grey.length === 0 && names.n.plate === 0 && names.n.jeep === 0 && names.n.suv === 0 && names.prado === 1, JSON.stringify(names.grey) + ' · the Senator\'s car outside the court: a black Prado ' + names.prado);
   check('CN10/CN15/CN21/names', names.keys > 150 && Object.values(names.n).every(v => v === 0) && names.speakers.length === 0, names.keys + ' text-team keys; ' + JSON.stringify(names.n) + ' speakers:' + names.speakers.join(','));
   check('CN10/other-teams', names.other.length === 0 ? true : 'SKIP', names.other.length === 0 ? 'no old names in the other teams\' DIALOGUE keys' : 'needs core/screens: ' + names.other.join(' | '));
 

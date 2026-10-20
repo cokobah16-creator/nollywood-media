@@ -5,7 +5,8 @@
 //   - the old names of the binding rename table (PLAN.md §3.3): Osagie / Grace / G.O., Bassey Okon, Hauwa,
 //     Danjuma, Oke, Coker-Odusote, Mama Efe, Tari, Ebi, Tamuno, Divine Grace, 4B / 4 Harbour Close,
 //     PORT HARCOURT TIDE, FRN v Akaeze, Lagos Cybercrime;
-//   - the old cars and plate (grey saloon / grey one / grey car / grey Corolla / Corolla, ABJ-418KD, black jeep);
+//   - the old cars and plate (grey saloon / grey one / grey car / grey Corolla / Corolla, ABJ-418KD, black jeep,
+//     black SUV), the upper-case GRACE / EFE of the painted signs, and KESTREL (a real company name);
 //   - "kidnapping for ransom";
 //   - any Season 2 date after 12 Sep 2026 still in September or October (CN03), outside the two visitor-book
 //     rows canon keeps (30/09 and 09/10, canon.md CN03 §2), and the old season words (before Christmas, ...).
@@ -27,7 +28,10 @@ const RULES = [
   ['name', /\b4B Harbour\b/], ['name', /(^|[^0-9])4 Harbour\b/], ['name', /PORT HARCOURT TIDE/i], ['name', /Akaeze/i],
   ['name', /Lagos Cybercrime/i], ['name', /Mr\. K\. Kuti|signed: K\.(?!F)|for the DG: K\.(?!F)/],
   ['car', /grey saloon/i], ['car', /small grey (one|car)/i], ['car', /grey Corolla/i], ['car', /\bCorolla\b/],
-  ['car', /ABJ-418KD/], ['car', /black jeep/i],
+  ['car', /ABJ-418KD/], ['car', /black jeep/i], ['car', /black SUV/i],
+  // painted signs and boards are upper case: the echoes of Season 1's Efe and "Grace Divine", and the cause-list
+  // company that may be real (TX6)
+  ['name', /\bGRACE\b/], ['name', /\bEFE\b/], ['company', /\bKESTREL\b/i],
   ['ransom', /kidnapping for ransom/i],
   ['season', /dock before Christmas/i], ['season', /At Christmas, Kelechi/], ['season', /listed again for January/i],
   ['season', /SEP \/ OCT/], ['season', /\bOCTOBER 2026\b/i], ['season', /a Friday in October/i],
