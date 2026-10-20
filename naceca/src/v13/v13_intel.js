@@ -738,7 +738,8 @@ if(window.V12 && typeof V12.wrap === 'function'){
     return r;
   });
   // a quit, a load or an erase ends any v13 flow that was open
-  document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-load, #btn-erase')) v13NavReset(); }catch(err){} }, true);
+  // (a LOAD that finds no save changes nothing, so it resets nothing)
+  document.addEventListener('click', e => { try{ const b = e.target && e.target.closest && e.target.closest('#btn-quit, #btn-load, #btn-erase'); if(b && !(b.id === 'btn-load' && typeof hasSave === 'function' && !hasSave())) v13NavReset(); }catch(err){} }, true);
   // evidence logged outside collectEvidence (v12.2 street talk) gets a record too
   if(typeof V12.logEvidence === 'function'){
     const logEv = V12.logEvidence;

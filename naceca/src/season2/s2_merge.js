@@ -118,11 +118,11 @@ const inS2 = ()=>{ const m = S.game && S.game.currentMission; return !!m && (V13
 const ico = n => (typeof icon === 'function' ? icon(n) : '');
 const rec = ()=>typeof isRecruit === 'function' && isRecruit();
 const hudOn = ()=>{ const h = document.getElementById('hud'); return !!h && h.style.display !== 'none'; };
-const CF = { open:false, hud:false, pause:false };
-document.addEventListener('v13:navreset', ()=>{ CF.open = false; CF.pause = false; });
+const CF = { open:false, hud:false, pause:false, prev:null };
+document.addEventListener('v13:navreset', ()=>{ CF.open = false; CF.pause = false; CF.prev = null; });
 const closeCF = ()=>{
   if(typeof v13ModalEnd === 'function') try{ v13ModalEnd('screen-s2case'); }catch(e){}
-  const wasHud = CF.hud, fromPause = CF.pause; CF.open = false; CF.pause = false;
+  const wasHud = CF.hud, fromPause = CF.pause, prev = CF.prev; CF.open = false; CF.pause = false; CF.prev = null;
   // (SC1) opened from the pause menu (CASE FILE): BACK and Esc go back to the pause menu, as Season 1's Case Desk
   // does, and its RESUME puts the HUD back. (The HUD was already hidden under the pause menu, so wasHud is false.)
   const pa = document.getElementById('screen-pause');
@@ -131,6 +131,8 @@ const closeCF = ()=>{
     showOverlay('screen-pause');
     return;
   }
+  // opened over a screen (the title, the case files, the operations table): BACK returns to it, as the Case Desk does
+  if(prev && document.getElementById(prev)){ showOverlay(prev); return; }
   showOverlay(null);
   if(wasHud && S.game && S.game.currentMission && typeof showHUD === 'function') showHUD(true);
 };
@@ -139,7 +141,10 @@ V13.openCaseFileS2 = function(){
   if(!ov){ ov = V13.el('div', 'overlay', ''); ov.id = 'screen-s2case'; document.getElementById('game-root').appendChild(ov); }
   // what BACK returns to is read as the case file comes on screen: a re-render while it is shown (the pause menu's
   // RESUME, TAB again) keeps it; one that something else closed (a scripted beat, showOverlay) is opened afresh
-  if(!CF.open || !ov.classList.contains('show')){ CF.hud = hudOn(); CF.pause = !!document.querySelector('#screen-pause.show'); CF.open = true; }
+  if(!CF.open || !ov.classList.contains('show')){
+    CF.hud = hudOn(); CF.pause = !!document.querySelector('#screen-pause.show'); CF.open = true;
+    CF.prev = CF.pause ? null : ([...document.querySelectorAll('.overlay.show')].map(o => o.id).find(id => id && id !== 'screen-s2case') || null);
+  }
   const ev = S.game.evidence || [], q = S.game.evQ || {}, tr = V13.s2().trial || {}, ex = tr.exhibits || {};
   const cur = S.game.currentMission, card = V13.CARD(cur) || {}, hub = V13.HUBS && V13.HUBS[cur];
   const name = id => { const e = ev.find(x => x.id === id); return e ? e.name : id; };

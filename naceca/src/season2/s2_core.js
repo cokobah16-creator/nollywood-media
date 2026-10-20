@@ -42,7 +42,7 @@ const s2peek = ()=>(S.game && S.game.s2) || {};
 V13.s1live = function(){
   const g = S.game || {}, m = g.moralChoices || {};
   let wrong = null; try{ wrong = typeof _cwWrong === 'function' ? _cwWrong('lagos') : null; }catch(e){}
-  let musa = false; try{ musa = !!(V12 && V12.mem && V12.mem().musaTalked()); }catch(e){}
+  let musa = false; try{ musa = !!(V12 && V12.who && typeof V12.who.musaTalked === 'function' && V12.who.musaTalked()); }catch(e){}   // V12.who (v12_mem.js); V12.mem() is the plain store
   return {
     tobiAlive: m.asaba === 'rescue' || (m.asaba === 'chase' && !g._asabaHostageLost),   // canon: systems/finale.js
     tobiTestifies: m.asaba === 'rescue',                                                 // only the deliberate rescue takes the stand

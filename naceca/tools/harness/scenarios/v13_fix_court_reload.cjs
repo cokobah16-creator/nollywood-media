@@ -7,6 +7,7 @@
 // - an unproven finale closed at the aftermath: CONTINUE → the epilogue (no trial)
 // - a closed season: CONTINUE → the case files, "CAMPAIGN UP TO DATE", as before
 const LIB = require('./v13_c_lib.cjs');
+const S2H = require('./_s2_handoff.cjs');   // with Season 2 in the page, the review's FINISH starts Season 2
 const CASE = {
   moral:{ tower:'hold', asaba:'rescue', checkpoint:'flip_driver', market_runner:'caught', arrest:'professional' },
   flags:{ fin_bodycam:true }, sealed:{ who:'adaeze', before:true },
@@ -83,12 +84,20 @@ module.exports = async h => {
   dk = await disk();
   h.assert(!s.run && !dk.run && dk.season && dk.court, 'the run record is cleared; the save has the season and the verdict');
   h.assert(await epilogueToReview(), 'the last slide → the case review');
+  const s2p = await S2H.pending(h);
   await h.ev(() => document.getElementById('btn-review-done').click()); await h.step(200);
-  h.assert((await scr()).ov.includes('screen-title'), 'FINISH → the title');
+  const end = await S2H.after(h, s2p);
+  h.assert(S2H.ok(s2p, end), S2H.what(s2p));
+  if(end.s2) h.assert(await S2H.toTitle(h), 'Season 2 began: back to the title (pause, QUIT)');
 
   // ---- 5. a closed season: CONTINUE → the case files, as before ----
   s = await reloadContinue();
-  h.assert(s.ov.includes('screen-missions') && !s.ov.includes('screen-court') && /CAMPAIGN UP TO DATE/.test(s.toast), 'a closed season: the case files, "CAMPAIGN UP TO DATE"');
+  h.log('closed season + CONTINUE', JSON.stringify(Object.assign({ m:await h.ev(() => S.game.currentMission) }, s)));
+  if(end.s2){
+    // Season 2 began at the review: the campaign goes on, so CONTINUE resumes Case 09 (its start card); the court stays shut
+    const m = await h.ev(() => S.game.currentMission);
+    h.assert(m === 'm9' && !s.ov.includes('screen-court') && s.season, 'a closed Season 1 with Season 2 begun: CONTINUE resumes Case 09, the court stays shut');
+  } else h.assert(s.ov.includes('screen-missions') && !s.ov.includes('screen-court') && /CAMPAIGN UP TO DATE/.test(s.toast), 'a closed season: the case files, "CAMPAIGN UP TO DATE"');
 
   // ---- 2. closed at the aftermath, before CONTINUE ----
   await C.setup(CASE);

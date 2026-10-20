@@ -855,7 +855,8 @@ function docStep(key, id, it, then){
   const iv = setInterval(()=>{
     if(fired){ clearInterval(iv); return; }
     const el = document.getElementById('screen-puzzle');
-    if(Date.now() - t0 > 700 && !(el && el.classList.contains('show'))){
+    // a pause over the document holds it (V13.ovShown): that is not backing off
+    if(Date.now() - t0 > 700 && !(V13.ovShown ? V13.ovShown('screen-puzzle') : (el && el.classList.contains('show')))){
       clearInterval(iv);
       if(R.docOpen === key) R.docOpen = null;
       if(R.docDone[key]) return;

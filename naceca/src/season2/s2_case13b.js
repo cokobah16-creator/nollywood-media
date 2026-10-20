@@ -338,7 +338,7 @@ function always(dt){
     if(R.anims) R.anims = R.anims.filter(f => { try{ return f(dt, playing) !== false; }catch(e){ return false; } });
     if(R.watch) R.watch(dt, playing);
   }
-  if(R.docOpen && !doc){ R.docOpen = false; if(R.onDocGone){ const f = R.onDocGone; R.onDocGone = null; f(); } }
+  if(R.docOpen && !doc && !(V13.underPause && V13.underPause('screen-puzzle'))){ R.docOpen = false; if(R.onDocGone){ const f = R.onDocGone; R.onDocGone = null; f(); } }
   if(!playing){
     if(V13.world && V13.world.update && (dlg || doc)) V13.world.update(dt);
     if(TPCAM.override && typeof updateCamera === 'function') updateCamera();

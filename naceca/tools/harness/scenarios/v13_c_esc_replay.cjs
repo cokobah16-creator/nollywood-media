@@ -6,6 +6,7 @@
 // - an M8 replay that ends 'unproven' does not keep the old verdict: no trial, the base epilogue line;
 //   a replay that ends 'contested' gets a fresh trial; the old verdict is kept only in a log
 const LIB = require('./v13_c_lib.cjs');
+const S2H = require('./_s2_handoff.cjs');   // with Season 2 in the page, the review's FINISH starts Season 2
 const CASE = {
   moral:{ tower:'hold', asaba:'rescue', checkpoint:'flip_driver', market_runner:'caught', arrest:'professional' },
   flags:{ fin_bodycam:true }, sealed:{ who:'adaeze', before:true },
@@ -64,13 +65,16 @@ module.exports = async h => {
   await esc2();
   s = await scr();
   h.assert(s.review && !s.pause, 'Esc is ignored on the review');
+  const s2p = await S2H.pending(h);
   await h.ev(() => document.getElementById('btn-review-done').click());
   await h.step(150);
+  const end = await S2H.after(h, s2p);
   s = await scr();
   const fin = await h.ev(() => ({ music:window.__music.slice(), season:typeof _ach !== 'undefined' && !!_ach.season_one, shown:I().reviewShown, court:I().court }));
-  h.assert(s.title && !s.review, 'FINISH goes to the title');
-  h.assert(fin.music.includes('title') && fin.season, 'title music and the Season One unlock come with the title');
+  h.assert(S2H.ok(s2p, end) && !s.review, S2H.what(s2p));
+  h.assert((s2p || fin.music.includes('title')) && fin.season, 'the Season One unlock comes with the end of the season (and the title music, when the title follows)');
   h.assert(fin.shown && fin.court && fin.court.finale === 'proven', 'the review is marked shown; the verdict is kept for this finale');
+  if(end.s2) h.assert(await S2H.toTitle(h), 'Season 2 began: back to the title (pause, QUIT) for the replay checks');
 
   // ---- an M8 replay that ends unproven: no trial, no old verdict ----
   await h.ev(() => { loadMission('m8'); });
