@@ -49,7 +49,9 @@ const lowGfx = T => T.ev(() => { if (typeof applyGraphics === 'function') applyG
 const fps = T => T.ev(() => new Promise(res => { let n = 0; const t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 2000) requestAnimationFrame(f); else res(n / 2); }; requestAnimationFrame(f); }));
 /* jump every walking person to the last leg of their walk (only when frames are slow) */
 async function hurry(T, slow) { if (!slow) return; await T.ev(() => { for (const m of (V13.rt.movers || [])) { const e = m.pts[m.pts.length - 1]; m.ch.position.x = e.x; m.ch.position.z = e.z; m.i = m.pts.length - 1; } }); }
-/* the phone run: wire on, caught with the docket still open (half-read), two spooks early (the floor clamp), accept */
+/* the phone run: wire on, caught at Kuti's desk after backing off the docket, two spooks early (the floor clamp), accept.
+   (The call window stands still while the docket is open (R14, both casework modes), so Kuti can no longer walk in
+   on an open docket: the probe checks that, backs off, and waits at the desk to be caught.) */
 async function phoneRun(T) {
   const prep = "S.game.moralChoices.s2_wire = true; S.game.moralChoices.s2_original = 'handed';";
   T.log('phone run started', await s2start(T, 'm13', prep));
@@ -65,7 +67,13 @@ async function phoneRun(T) {
   await use(T, 'Read the docket');
   T.log('doc open?', await T.until(() => document.querySelector('#screen-puzzle.show .v12-opt'), 150000));
   await T.wait(800); await shot(T, 'm13_docket');
-  // keep reading until he walks in
+  // the window stands still while the docket is open
+  const w0 = await T.ev(() => V13.rt.win && V13.rt.win.t); await T.wait(3000);
+  const w1 = await T.ev(() => V13.rt.win && V13.rt.win.t);
+  T.log('window while reading', w0, '→', w1, w0 === w1 ? '(frozen)' : '(MOVED)');
+  // back off the docket and stay at the desk until he walks in
+  await T.ev(() => { const x = document.getElementById('v12-doc-x'); if (x) x.click(); });
+  await T.until(() => !document.querySelector('#screen-puzzle.show'), 10000);
   if (slow) await T.ev(() => { if (V13.rt.win) V13.rt.win.t = Math.min(V13.rt.win.t, 6.5); });
   await T.until(() => !V13.rt.win, 200000); await T.wait(800); await hurry(T, slow);
   await T.until(() => document.getElementById('screen-dialogue').classList.contains('show'), 150000);
