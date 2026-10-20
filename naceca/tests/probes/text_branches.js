@@ -251,6 +251,15 @@ const probe = async function (T) {
   check('CN08/m9_dgo', /^C\.A\. again\. Not the Foundation's retainer on the first/.test(ct.dgo) && /two paymasters/.test(ct.dgo), ct.dgo.slice(0, 80));
   check('CN20/court', ct.j.includes('Twenty-two years. He carries the register') && ct.j.includes('Everyone we found there. Nine.') && ct.j.includes('nine entries, one charge') && ct.j.includes('a mother of two')
     && ct.j.includes('dated the day before that meeting') && ct.j.includes("Before noon I'd been told") && ct.j.includes('I was suspended the morning I refused'), 'Ikpe 22, nine arrests, mother of two, promotion, suspension');
+  const cn20 = await T.ev(() => {
+    const t = k => (DIALOGUE[k] || []).map(l => l.text).join(' ');
+    __fresh({ s2_camp: 'mass' }, {}, { s2: { finale: null } });
+    return { ledger: PUZZLES.m9_ledger.screen, lt: t('m9_ledger_tobi') + ' ' + t('m9_ledger_igbinosa'), arrive: t('m11_arrive'), threat: t('m10_statement_threat'), igb: t('m12_igbinosa_cac'),
+      timi: (V13.epilogueS2().find(s => s.name === 'PA TIMI') || {}).text };
+  });
+  check('CN20/dialogue', ['· 176,000 L AGO', '· 171,000 L AGO', '· 180,000 L AGO', '· 178,000 L AGO'].every(s => cn20.ledger.includes(s)) && !/\b6\d\d,000 L/.test(cn20.ledger)
+    && (cn20.lt.match(/twenty times/g) || []).length === 2 && !/fifty times/.test(cn20.lt) && cn20.arrive.includes('Forty-odd drums, three of them on the fire.')
+    && /Twenty-two years in uniform, sir/.test(cn20.threat) && /Nineteen years in forensics\./.test(cn20.igb) && /^Nine arrests from one camp/.test(cn20.timi || ''), 'ledger volumes, twenty times, drums, Uche 22, Igbinosa 19, nine arrests');
   check('CN20/kuti', ct.dock.includes('Mr. A. Kuti') && ct.dock.includes('signed for the DG: A.K.') && ct.dock.includes('signed: A.K.') && ct.dock.includes('— A.K.'), 'Kuti on the docket');
   check('CN16/unit', /command of Lagos Cyber & Financial Crimes — your old unit/.test(ct.unit) && ct.j.includes('Head of Lagos Cyber and Financial Crimes') && ct.flagTxt === 'Ekosodin Officer Promoted to Head Lagos Cyber & Financial Crimes', ct.flagTxt);
   check('R23/akaeze', !/Akaeze/.test(ct.j) && ct.j.includes('The Supreme Court has held both requirements mandatory') && ct.j.includes('The Supreme Court\'s ruling binds this court'), 'no invented case name');
