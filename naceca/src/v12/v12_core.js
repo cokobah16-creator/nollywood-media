@@ -396,6 +396,12 @@ V12.m2TableCheck = function(){
   }catch(e){}
 };
 // M2: the van waits until the table has three links that hold, or three strikes (fail forward, at a cost)
+// the refusal says how far the table is: progress only, never which cards (Senior Agent's rule holds here too)
+V12.vanTableLine = inked => {
+  const n = Math.max(0, Math.min(3, inked | 0)), left = 3 - n;
+  return `${n} of 3 links inked. ` + (left === 1 ? 'Pencil one more pair and FILE it.'
+    : left === 2 ? 'Pencil two more pairs and FILE them.' : 'Open the CASE FILE, pencil three pairs and FILE them.');
+};
 V12.wrap('buildSceneMarket', orig => function(){
   const r = orig.apply(this, arguments);
   const van = ENGINE.interactables.find(i => /^Board NACECA van/.test(i.label || ''));
@@ -406,7 +412,10 @@ V12.wrap('buildSceneMarket', orig => function(){
       const inked = (ops.inked || []).length;
       const strikes = typeof V12.caseStrikes === 'function' ? V12.caseStrikes('lagos') : 0;
       if(S.game._marketScanned && S.game.moralChoices.market_runner && inked < 3 && strikes < 3){
-        toast('THE TABLE FIRST', 'File three links that hold on the operations table before Lekki — open the CASE FILE', 2600);
+        // remembered with the table, so Recruit's Uche can point at a pair once the van has said no
+        if(ops && typeof ops === 'object') ops.vanNo = (ops.vanNo || 0) + 1;
+        V12.log('van_refused', { inked, strikes });
+        toast('THE TABLE FIRST', V12.vanTableLine(inked), 3200);
         if(typeof showHint === 'function') showHint('table_m2', 'Open the <b>CASE FILE</b> (TAB), pencil what you found, then <b>FILE</b> the links you are sure of', 'Tap <b>CASE FILE</b>, pencil what you found, then <b>FILE</b> the links you are sure of');
         return;
       }

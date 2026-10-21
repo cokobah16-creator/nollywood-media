@@ -135,7 +135,7 @@ R.matchPlayer = (pl, q) => {
 R.lost = function(ev, ctx){
   const by = new Map(), inv = new Map();
   const get = (m, obj) => { const k = m + '|' + obj; if(!by.has(k)) by.set(k, { kind:'obj', m, obj, txt:null, secs:null, stuck:0, hints:0, away:0, eff:null, walked:null, direct:null, quit:false, nothing:0, done:false, want:null }); return by.get(k); };
-  const iget = (m, id) => { const k = m + '|' + id; if(!inv.has(k)) inv.set(k, { kind:'inv', m, id, name:screenOf(id), open:0, opens:0, strikes:0, files:0, struck:0, docFailed:0, refused:0, pending:0, verdicts:0 }); return inv.get(k); };
+  const iget = (m, id) => { const k = m + '|' + id; if(!inv.has(k)) inv.set(k, { kind:'inv', m, id, name:screenOf(id), open:0, opens:0, strikes:0, files:0, struck:0, docFailed:0, refused:0, pending:0, verdicts:0, vanNo:0, tableStuck:0 }); return inv.get(k); };
   let prev = null;
   for(const e of ev){
     const d = dOf(e), m = e.m || '?';
@@ -156,6 +156,8 @@ R.lost = function(ev, ctx){
       case 'desk_open': iget(m, 'screen-desk'); break;
       case 'strike': iget(m, 'screen-ops').strikes++; break;
       case 'file': { const a = iget(m, 'screen-ops'); a.files++; a.struck += +d.struck || 0; break; }
+      case 'van_refused': iget(m, 'screen-ops').vanNo++; break;          // the M2 van said THE TABLE FIRST
+      case 'table_stuck': iget(m, 'screen-ops').tableStuck++; break;     // 90 s at the table with no new ink
       case 'doc_failed': iget(m, 'screen-puzzle').docFailed++; break;
       case 'warrant': if(d.w === 'refused') iget(m, 'warrant').refused++; else if(d.w === 'pending') iget(m, 'warrant').pending++; break;
       case 'v13_warrant': if(d.status === 'refused') iget(m, 'screen-desk').refused++; else if(d.status === 'pending') iget(m, 'screen-desk').pending++; break;
@@ -173,7 +175,7 @@ R.lost = function(ev, ctx){
   for(const a of inv.values()){
     a.score = I.strike * a.strikes + I.docFailed * a.docFailed + I.refused * a.refused + I.pending * a.pending + Math.floor(a.open / I.openPer);
     a.level = a.score >= I.lostAt ? 'lost' : a.score >= I.slowAt ? 'slow' : null;
-    if(a.level || a.open >= 60 || a.strikes || a.docFailed || a.refused || a.pending) rows.push(a);
+    if(a.level || a.open >= 60 || a.strikes || a.docFailed || a.refused || a.pending || a.vanNo || a.tableStuck) rows.push(a);
   }
   const rank = r => (r.level === 'lost' ? 2 : r.level === 'slow' ? 1 : 0);
   rows.sort((a, b) => rank(b) - rank(a) || b.score - a.score || ((b.secs || b.open || 0) - (a.secs || a.open || 0)));
@@ -188,6 +190,8 @@ R.lostLine = o => {
     if(o.opens > 1) bits.push(`opened ×${o.opens}`);
     if(o.strikes) bits.push(`${o.strikes} strike${o.strikes === 1 ? '' : 's'}`);
     if(o.struck) bits.push(`${o.struck} link${o.struck === 1 ? '' : 's'} struck`);
+    if(o.vanNo) bits.push(`van refused ×${o.vanNo}`);
+    if(o.tableStuck) bits.push(`stuck at the table ×${o.tableStuck}`);
     if(o.docFailed) bits.push(`${o.docFailed} document${o.docFailed === 1 ? '' : 's'} failed`);
     if(o.refused) bits.push(`warrant refused ×${o.refused}`);
     if(o.pending) bits.push(`warrant pending ×${o.pending}`);
