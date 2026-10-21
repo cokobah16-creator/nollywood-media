@@ -247,6 +247,20 @@ setInterval(()=>{
     }
   }catch(e){}
 }, 1000);
+// time at the operations table on its open objective (M2's o4_table) is play time too, so a player stuck
+// there logs stuck like anyone else (v12_ops calls this once a second while the table is up; the sampler
+// above skips every screen, and the guidance tick that counts play doesn't run under one)
+V12.ptTableTime = function(ms){
+  try{
+    ms = Math.max(0, +ms || 0); if(!ms) return;
+    PT.play += ms;
+    const id = curObj();
+    const sg = sigNow(); if(sg !== PT.sig){ PT.sig = sg; PT.lastProg = PT.play; PT.stuckAt = 0; }
+    const idle = PT.play - PT.lastProg;
+    if(idle >= 90000 && idle - PT.stuckAt >= 90000){ PT.stuckAt = idle;
+      V12.log('stuck', { obj:id, secs:Math.round(idle / 1000), dist:null, moved:PT.o && PT.o.id === id ? Math.round(PT.o.walked) : 0, guide:null, arrowPct:null, at:'table' }); }
+  }catch(e){}
+};
 
 /* the two questions, asked once per save at the end of the slice, and any time from Settings */
 V12.PT_SLICE_END = V12.PT_SLICE_END || (new URLSearchParams(location.search).get('slice')) || 'm3';

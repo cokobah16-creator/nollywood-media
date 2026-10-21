@@ -477,6 +477,7 @@ V12.openOps = function(group, sel){
   showOverlay('screen-ops');
   render();
   requestAnimationFrame(drawLinks);
+  tableClock();
   V12.log('ops_open', { m:S.game.currentMission });
 };
 V12.closeOps = function(){
@@ -692,6 +693,7 @@ function inkLinks(keys, opt){
   }
   const after = V12.intelTier();
   if(after > before){ const x = V12.INTEL_TIERS[after - 1]; setTimeout(()=>toast(x.name, x.text, 3000), late ? 400 : 6200); }
+  tableInked();
   if(o.inked.length >= 3 && typeof completeObjective === 'function') completeObjective('o4_table');
   // a new link that holds is new evidence for a refused warrant
   CASES.forEach(c => refreshRefusal(c, !!opt.ruling));
@@ -706,6 +708,10 @@ function stamp(word, cls){
 }
 
 const nm = id => NODE[id] ? NODE[id].name : id;
+// why a link was struck, in the same words for every wrong link: it never says which link would have held
+const STRUCK_WHY = 'Nothing on the file ties these two together in the crime.';
+// what three strikes cost (the ruling and HOW IT WORKS)
+const STRIKE_STAKES = 'At three strikes the warrant is refused and the raid goes without it';
 function rulingModal(res, refusedNow, lifted){
   const m = document.getElementById('ops-modal'); if(!m || !res || !res.length) return;
   const rows = res.map(r => {
@@ -715,15 +721,19 @@ function rulingModal(res, refusedNow, lifted){
     const why = r.again ? 'Already struck off. No further cost.'
       : r.forgiven ? 'Follow the Money: forgiven. No strike, no Integrity cost.'
       : `${CASE_NAME[r.c]} strike ${strikeOf(r.strike)} · Integrity −${INTEGRITY_COST}`;
-    return `<li class="bad">${ic('cross')}<div><b>STRUCK OFF</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span>${why}</span></div></li>`;
+    return `<li class="bad">${ic('cross')}<div><b>STRUCK OFF</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span class="bd-why">${STRUCK_WHY}</span><span>${why}</span></div></li>`;
   }).join('');
   const cases = [...new Set(res.map(r => r.c || caseForPair(...r.k.split('|'))))];
   const wr = cases.map(c => { const w = V12.warrantFor(c); return `<div class="bd-rw"><span class="bd-rw-n">${CASE_NAME[c]}</span>${stampHTML(w, true)}<span class="bd-rw-s">STRENGTH <b>${w.strength}</b> · ${esc(w.need)}</span></div>`; }).join('');
   const lift = (lifted || []).map(c => `<p class="bd-lifted">${ic('unlock')}<span><b>WARRANT REVIEW.</b> New evidence: the magistrate will look at the ${CASE_NAME[c]} warrant again.</span></p>`).join('');
-  const ref = (refusedNow || []).map(c => `<p class="bd-refused">${ic('warning')}<span><b>THREE STRIKES.</b> The magistrate refuses the ${CASE_NAME[c]} warrant until you bring new evidence: a new lead, or a new link that holds.</span></p>`).join('');
+  const ref = (refusedNow || []).map(c => `<p class="bd-refused">${ic('warning')}<span><b>THREE STRIKES.</b> The magistrate refuses the ${CASE_NAME[c]} warrant until you bring new evidence: a new lead, or a new link that holds. Until then the raid goes without it.</span></p>`).join('');
+  // a strike that doesn't refuse the warrant yet: say what the third one costs
+  const o = V12.ops();
+  const hit = [...new Set(res.filter(r => r.strike).map(r => r.c))].filter(c => !(refusedNow || []).includes(c) && o.cases[c] && !o.cases[c].refused);
+  const stakes = hit.map(c => `<p class="bd-stakes">${ic('warning')}<span><b>${CASE_NAME[c]} STRIKES ${Math.min(o.cases[c].strikes, MAX_STRIKES)}/${MAX_STRIKES}.</b> ${STRIKE_STAKES}.</span></p>`).join('');
   m.innerHTML = `<div class="ops-mbox bd-ruling" role="dialog" aria-label="The magistrate's ruling">
     <div class="ops-h">THE MAGISTRATE'S RULING</div>
-    <ul class="bd-rul">${rows}</ul>${lift}${ref}<div class="bd-rws">${wr}</div>
+    <ul class="bd-rul">${rows}</ul>${lift}${ref}${stakes}<div class="bd-rws">${wr}</div>
     <div class="ops-mact"><button class="bd-btn" id="bd-rul-ok">BACK TO THE TABLE</button></div></div>`;
   m.classList.add('show');
   m.querySelector('#bd-rul-ok').onclick = ()=>{ m.classList.remove('show'); requestAnimationFrame(drawLinks); };
@@ -801,39 +811,112 @@ function side(){
   const th = T.filter(t => o.theories[t.id] || (rec && t.links.every(([a, b]) => visible(NODE[a]) && visible(NODE[b]))));
   const objs = (S.game.objectives || []);
   const mid = S.game.currentMission, mname = (MISSIONS.find(m => m.id === mid) || {}).name;
-  el.innerHTML = `
+  // the help, when there is any, goes first: at the bottom of the panel nobody scrolls to it
+  el.innerHTML = `${hintHTML()}${helpHTML()}
     <div class="ops-h">THEORIES</div>
     ${th.length ? th.map(t => o.theories[t.id]
       ? `<div class="ops-th done"><b>${ic('check')} ${t.name}</b><span>${t.effect}</span></div>`
       : `<div class="ops-th"><b>${t.q}</b><span>Unconfirmed</span></div>`).join('') : `<p class="ops-p">${rec ? 'No theories yet. Link what you\'ve found.' : 'No theories proven yet. Inked chains of links become theories.'}</p>`}
     <div class="ops-h">HOW IT WORKS</div>
     <p class="ops-p">Tap two cards to pencil a link. Pencils are free: erase and redraw as you like, up to six at a time.</p>
-    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. One that is true but says nothing about the crime is set aside, at no cost. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. Three strikes and the warrant is refused until you bring new evidence.</p>
+    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. One that is true but says nothing about the crime is set aside, at no cost. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. ${STRIKE_STAKES}, unless you bring new evidence first.</p>
     <p class="ops-p">Not every lead on this table belongs to the ring.</p>
     ${mid && objs.length ? `<div class="ops-h">${(mname || 'OPERATION').toUpperCase()}</div><div id="ops-objs"><div>${objs.map(x => `<div class="so ${x.done ? 'done' : ''}">${x.text}</div>`).join('')}</div></div>` : ''}
     <div class="ops-h">REPUTATION</div>${V12.repBars()}
-    <button class="ops-b gold wide" id="ops-caps">CAPABILITIES · ${S.player.skillPoints || 0} PT${(S.player.skillPoints || 0) === 1 ? '' : 'S'}</button>
-    ${hintHTML()}`;
+    <button class="ops-b gold wide" id="ops-caps">CAPABILITIES · ${S.player.skillPoints || 0} PT${(S.player.skillPoints || 0) === 1 ? '' : 'S'}</button>`;
   const objHost = el.querySelector('#ops-objs'); if(objHost && typeof sideCaseFile === 'function') try{ sideCaseFile(objHost); }catch(e){}
   el.querySelector('#ops-caps').addEventListener('click', ()=>{ V12._returnOps = true; openSkillTree(); });
 }
+/* ---------- the table that gates a mission: M2's o4_table (three inked links, or three strikes) ----------
+   Time at the table on that objective counts as play: for "Hints when stuck" (guidance.js) and the stuck
+   log (v12_pt.js). Every 90 s there with no new ink is logged (table_stuck); the first time, with hints on,
+   the help comes up: Senior Agent gets the process only, never a card; Recruit gets Sgt. Uche's nudge.
+   Once the van has said no, Recruit's Uche names one true pair that is still open. */
+const TABLE_NEED = 3, STUCK_MS = 90000;
+const tableObj = () => { try{ return S.game.currentMission === 'm2' ? ((S.game.objectives || []).find(x => x.id === 'o4_table' && !x.done) || null) : null; }catch(e){ return null; } };
+// the table is the only screen up (a pause menu or the desk on top of it is not time at the table)
+const tableUp = () => { const ov = [...document.querySelectorAll('.overlay.show')]; return ov.length > 0 && ov.every(e => e.id === 'screen-ops'); };
+V12.atTable = () => tableUp() && !!tableObj();
+const TT = { idle:0, helped:false, g:null, op:null, m:null, iv:null, last:0 };
+function tableInked(){ TT.idle = 0; TT.helped = false; }
+// the count belongs to one run of one operation: a new game, a load or a restart begins it again
+function ttSync(){
+  const g = (typeof S !== 'undefined' && S && S.game) || null;
+  if(!g) return;
+  if(TT.g !== g || TT.op !== g._opStart || TT.m !== g.currentMission){ TT.g = g; TT.op = g._opStart; TT.m = g.currentMission; tableInked(); }
+}
+const tableHelpLine = () => `Link two cards that are connected in the crime, not just in the same place. ${Math.min(V12.ops().inked.length, TABLE_NEED)} of ${TABLE_NEED} inked.`;
+function tableTick(ms){
+  ms = Math.max(0, +ms || 0);
+  if(!ms || !V12.atTable()) return false;
+  ttSync();
+  try{ if(typeof guideTableTime === 'function') guideTableTime(ms); }catch(e){}
+  try{ if(typeof V12.ptTableTime === 'function') V12.ptTableTime(ms); }catch(e){}
+  const before = TT.idle; TT.idle += ms;
+  const o = V12.ops();
+  if(Math.floor(TT.idle / STUCK_MS) > Math.floor(before / STUCK_MS))
+    V12.log('table_stuck', { secs:Math.round(TT.idle / 1000), inked:o.inked.length, pencils:o.pencils.length });
+  const modal = document.querySelector('#ops-modal.show');   // never a toast over the magistrate's ruling
+  if(!TT.helped && TT.idle >= STUCK_MS && typeof SETTINGS !== 'undefined' && SETTINGS.hints === 'on' && !modal){
+    TT.helped = true;
+    toast('HINT', recruit() ? 'Sgt. Uche has left you a note on the table.' : tableHelpLine(), 3600);
+    try{ if(typeof guideTableTime === 'function') guideTableTime(0, true); }catch(e){}   // this was the hint: the field's 60 s starts again
+    render();
+  }
+  return true;
+}
+V12.opsTableTick = tableTick;   // the 1 s clock below calls it; tests call it with the time they want to pass
+V12._tableState = TT;           // for tests
+function tableClock(){
+  if(TT.iv) return;
+  TT.last = performance.now();
+  TT.iv = setInterval(()=>{
+    const now = performance.now(), dt = Math.min(1500, Math.max(0, now - TT.last)); TT.last = now;
+    if(!document.getElementById('screen-ops') || !document.getElementById('screen-ops').classList.contains('show')){ clearInterval(TT.iv); TT.iv = null; return; }
+    if(document.hidden) return;
+    tableTick(dt);
+  }, 1000);
+}
+// Senior Agent's help at the table: how to link, and how far along. No card, no pair.
+function helpHTML(){
+  ttSync();
+  if(recruit() || !TT.helped || !tableObj()) return '';
+  return `<div class="ops-help" data-help="table" role="note">${ic('link')}<span>${tableHelpLine()}</span></div>`;
+}
+// a true link still open between two cards on the table (Recruit's pointer): the first in the case's
+// own order, so it stays put until it is inked
+function openPair(c){
+  const o = V12.ops();
+  return L.find(l => { const k = key(l.a, l.b); return !o.inked.includes(k) && linkIn(k, c) && visible(NODE[l.a]) && visible(NODE[l.b]); }) || null;
+}
+const cap1 = s => { s = String(s || ''); const i = s.search(/[a-z]/i); return i < 0 ? s : s.slice(0, i) + s[i].toUpperCase() + s.slice(i + 1); };
 // Sgt. Uche's nudge is a Recruit crutch
 function hintHTML(){
   if(!recruit()) return '';
-  const o = V12.ops(), cs = o.cases[caseForView()] || {};
-  if((o.sinceInk || 0) < 5 && !(cs.strikes > 0)) return '';
-  const m = S.game.currentMission;
-  const h = m === 'm2' ? 'Start with what you found today. Whose name is on KC\'s SIMs — and where do her SIMs sleep at night?'
+  ttSync();
+  const o = V12.ops(), m = S.game.currentMission, c = V12.caseOf(m) || caseForView(), cs = o.cases[caseForView()] || {};
+  const vanNo = !!tableObj() && (o.vanNo || 0) > 0;      // the M2 van has refused at least once
+  if((o.sinceInk || 0) < 5 && !(cs.strikes > 0) && !(TT.helped && tableObj()) && !vanNo) return '';
+  let h = m === 'm2' ? 'Start with what you found today. Whose name is on KC\'s SIMs — and where do her SIMs sleep at night?'
     : m === 'm3n' ? 'Put Obi\'s notebook next to the courier\'s phone. Same night?'
     : ['m4','m5','m6'].includes(m) ? 'Follow the paper: where did each ledger say to go next?'
     : ['m7','t7','m8'].includes(m) ? 'Every call pinged one tower. Where does the handset sleep?'
     : 'Pick one suspect and ask three things: where was he, what did he carry, who paid him?';
-  return `<div class="ops-hint" data-hint="uche"><img src="${V12.art('uche_neutral')}" alt=""><div><b>SGT. UCHE</b>${h}</div></div>`;
+  const p = vanNo ? openPair(c) : null;
+  if(p){
+    const A = `<b class="u-card">${esc(nm(p.a))}</b>`, B = `<b class="u-card">${esc(nm(p.b))}</b>`, why = esc(cap1(p.hint)) + '.';
+    h = o.pencils.includes(key(p.a, p.b)) ? `You have ${A} and ${B} pencilled, sir. ${why} FILE it.` : `Put ${A} with ${B}, sir. ${why} Start there.`;
+  }
+  return `<div class="ops-hint" data-hint="uche"${p ? ` data-a="${p.a}" data-b="${p.b}"` : ''}><img src="${V12.art('uche_neutral')}" alt=""><div><b>SGT. UCHE</b>${h}</div></div>`;
 }
 function foot(){
   const el = document.getElementById('ops-foot'), o = V12.ops(), tier = V12.intelTier();
   const next = V12.INTEL_TIERS[tier], n = o.pencils.length;
-  el.innerHTML = `<button class="bd-file" id="ops-file" ${n ? '' : 'disabled'}>${ic('stamp')}<span>${n ? `FILE ${n} LINK${n > 1 ? 'S' : ''}` : 'FILE LINKS'}</span></button>
+  // one line above FILE: the card you're holding, or (M2) what the van is waiting for
+  const held = UI.view === 'board' && UI.sel && NODE[UI.sel] ? NODE[UI.sel] : null, goal = tableObj();
+  const status = held ? `<p class="ops-status sel" id="ops-status" aria-live="polite"><b>${esc(held.name)}</b> selected — tap a second card to link it, or tap it again to put it down.</p>`
+    : goal ? `<p class="ops-status goal" id="ops-status" aria-live="polite">LEKKI NEEDS <b>${TABLE_NEED}</b> INKED · <b>${Math.min(o.inked.length, TABLE_NEED)}</b> SO FAR</p>` : '';
+  el.innerHTML = `${status}<button class="bd-file" id="ops-file" ${n ? '' : 'disabled'}>${ic('stamp')}<span>${n ? `FILE ${n} LINK${n > 1 ? 'S' : ''}` : '<span class="bd-file-c">Tap two cards to pencil a link</span>'}</span></button>
     <span class="f"><b>${n}</b>/6 PENCILLED</span><span class="f"><b>${o.inked.length}</b> INKED</span>
     <span class="f">INTEL <b>${S.game.intelScore || 0}</b>${next ? ` · next: ${next.name} at ${next.at}` : ''}</span>
     <button class="ops-b" id="ops-erase-all" ${n ? '' : 'disabled'}>ERASE PENCILS</button>`;
