@@ -478,6 +478,8 @@ V12.openOps = function(group, sel){
   render();
   requestAnimationFrame(drawLinks);
   tableClock();
+  // the van's THE TABLE FIRST toast says what the goal line in the foot now says: it would only cover the cards
+  if(tableObj()){ const t = document.getElementById('toast'); if(t && t.classList.contains('show') && /THE TABLE FIRST/.test(t.textContent || '')) t.classList.remove('show'); }
   V12.log('ops_open', { m:S.game.currentMission });
 };
 V12.closeOps = function(){
@@ -708,10 +710,19 @@ function stamp(word, cls){
 }
 
 const nm = id => NODE[id] ? NODE[id].name : id;
-// why a link was struck, in the same words for every wrong link: it never says which link would have held
-const STRUCK_WHY = 'Nothing on the file ties these two together in the crime.';
-// what three strikes cost (the ruling and HOW IT WORKS)
-const STRIKE_STAKES = 'At three strikes the warrant is refused and the raid goes without it';
+// why a link was struck, in the same words for every wrong link: the magistrate's standard, never what the
+// file holds (two cards can share a dossier line and still not be a link in the crime), never which link would hold
+const STRUCK_WHY = 'The magistrate won\'t take these two as a direct link in the crime.';
+// what three strikes cost (the ruling and HOW IT WORKS): the raid goes without the warrant only while the
+// case's raid is still ahead (LAGOS m3, THE ROUTE m6, THE VOICE m8)
+const RAID_OF = { lagos:'m3', route:'m6', voice:'m8' };
+const raidAhead = c => {
+  let r = RAID_OF[c];
+  try{ if(window.CW && CW.CASES && CW.CASES[c] && CW.CASES[c].raid) r = CW.CASES[c].raid; }catch(e){}
+  return !!r && !((S.game.completedMissions || []).includes(r));
+};
+const strikeStakes = c => raidAhead(c) ? 'At three strikes the warrant is refused and the raid goes without it'
+  : 'At three strikes the warrant is refused until you bring new evidence';
 function rulingModal(res, refusedNow, lifted){
   const m = document.getElementById('ops-modal'); if(!m || !res || !res.length) return;
   const rows = res.map(r => {
@@ -726,11 +737,11 @@ function rulingModal(res, refusedNow, lifted){
   const cases = [...new Set(res.map(r => r.c || caseForPair(...r.k.split('|'))))];
   const wr = cases.map(c => { const w = V12.warrantFor(c); return `<div class="bd-rw"><span class="bd-rw-n">${CASE_NAME[c]}</span>${stampHTML(w, true)}<span class="bd-rw-s">STRENGTH <b>${w.strength}</b> · ${esc(w.need)}</span></div>`; }).join('');
   const lift = (lifted || []).map(c => `<p class="bd-lifted">${ic('unlock')}<span><b>WARRANT REVIEW.</b> New evidence: the magistrate will look at the ${CASE_NAME[c]} warrant again.</span></p>`).join('');
-  const ref = (refusedNow || []).map(c => `<p class="bd-refused">${ic('warning')}<span><b>THREE STRIKES.</b> The magistrate refuses the ${CASE_NAME[c]} warrant until you bring new evidence: a new lead, or a new link that holds. Until then the raid goes without it.</span></p>`).join('');
+  const ref = (refusedNow || []).map(c => `<p class="bd-refused">${ic('warning')}<span><b>THREE STRIKES.</b> The magistrate refuses the ${CASE_NAME[c]} warrant until you bring new evidence: a new lead, or a new link that holds.${raidAhead(c) ? ' Until then the raid goes without it.' : ''}</span></p>`).join('');
   // a strike that doesn't refuse the warrant yet: say what the third one costs
   const o = V12.ops();
   const hit = [...new Set(res.filter(r => r.strike).map(r => r.c))].filter(c => !(refusedNow || []).includes(c) && o.cases[c] && !o.cases[c].refused);
-  const stakes = hit.map(c => `<p class="bd-stakes">${ic('warning')}<span><b>${CASE_NAME[c]} STRIKES ${Math.min(o.cases[c].strikes, MAX_STRIKES)}/${MAX_STRIKES}.</b> ${STRIKE_STAKES}.</span></p>`).join('');
+  const stakes = hit.map(c => `<p class="bd-stakes">${ic('warning')}<span><b>${CASE_NAME[c]} STRIKES ${Math.min(o.cases[c].strikes, MAX_STRIKES)}/${MAX_STRIKES}.</b> ${strikeStakes(c)}.</span></p>`).join('');
   m.innerHTML = `<div class="ops-mbox bd-ruling" role="dialog" aria-label="The magistrate's ruling">
     <div class="ops-h">THE MAGISTRATE'S RULING</div>
     <ul class="bd-rul">${rows}</ul>${lift}${ref}${stakes}<div class="bd-rws">${wr}</div>
@@ -792,6 +803,11 @@ function side(){
   if(UI.view === 'notes'){ el.innerHTML = `<div class="ops-h">CASE NOTES</div><p class="ops-p">Your personnel file, the case background, every piece of evidence and the calls you made. Tap NOTES again to go back to the table.</p>`; return; }
   if(UI.sel){
     const n = NODE[UI.sel];
+    // the M2 table's help, once it is up (90 s stuck, or Recruit's pointer after the van said no), stays on top
+    // while a card is held: reading dossiers is how a stuck player spends the time
+    ttSync();
+    const live = !!tableObj() && (TT.helped || (recruit() && (o.vanNo || 0) > 0));
+    const top = live ? hintHTML() + helpHTML() : '';
     const other = k => k.split('|').find(x => x !== n.id);
     const mine = o.inked.filter(k => k.split('|').includes(n.id)).map(k => `<li class="ink"><b>${esc(nm(other(k)))}</b><span>${(LINK[k] || {}).hint || ''}</span></li>`).join('');
     const struck = o.struck.filter(k => k.split('|').includes(n.id)).map(k => `<li class="bd-struck"><span class="bd-tag-x">${ic('cross')}STRUCK</span><span>${esc(nm(other(k)))}</span></li>`).join('');
@@ -799,7 +815,7 @@ function side(){
     const pens = o.pencils.filter(k => k.split('|').includes(n.id)).map(k => `<li class="pen">pencilled to ${esc(nm(other(k)))} <button class="ops-erase" data-k="${k}">erase</button></li>`).join('');
     const weak = V12.evQ(evIdOf(n)) === 'weak';
     const note = recruit() && n.note ? `<div class="bd-note"><b>${ic('search')} ANALYST'S NOTE</b><span>${n.note}</span></div>` : '';
-    el.innerHTML = `<div class="ops-kind k-${n.kind}">${tagOf(n)}</div><div class="ops-name">${n.name}</div><p class="ops-p bd-facts">${dossierOf(n)}</p>${note}
+    el.innerHTML = `${top}<div class="ops-kind k-${n.kind}">${tagOf(n)}</div><div class="ops-name">${n.name}</div><p class="ops-p bd-facts">${dossierOf(n)}</p>${note}
       ${weak ? '<p class="ops-weak">CONTESTED — the defence will attack how this was obtained.</p>' : ''}
       <div class="ops-h">LINKS</div><ul class="ops-ul">${mine}${struck}${noted}${pens}${!mine && !struck && !noted && !pens ? '<li class="none">Nothing yet.</li>' : ''}</ul>
       <p class="ops-tip">Tap another card to pencil a link from <b>${n.name}</b>. Tap this card again to put it down.</p>`;
@@ -819,7 +835,7 @@ function side(){
       : `<div class="ops-th"><b>${t.q}</b><span>Unconfirmed</span></div>`).join('') : `<p class="ops-p">${rec ? 'No theories yet. Link what you\'ve found.' : 'No theories proven yet. Inked chains of links become theories.'}</p>`}
     <div class="ops-h">HOW IT WORKS</div>
     <p class="ops-p">Tap two cards to pencil a link. Pencils are free: erase and redraw as you like, up to six at a time.</p>
-    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. One that is true but says nothing about the crime is set aside, at no cost. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. ${STRIKE_STAKES}, unless you bring new evidence first.</p>
+    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. One that is true but says nothing about the crime is set aside, at no cost. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. ${raidAhead(caseForView()) ? `${strikeStakes(caseForView())}, unless you bring new evidence first.` : 'Three strikes and the warrant is refused until you bring new evidence.'}</p>
     <p class="ops-p">Not every lead on this table belongs to the ring.</p>
     ${mid && objs.length ? `<div class="ops-h">${(mname || 'OPERATION').toUpperCase()}</div><div id="ops-objs"><div>${objs.map(x => `<div class="so ${x.done ? 'done' : ''}">${x.text}</div>`).join('')}</div></div>` : ''}
     <div class="ops-h">REPUTATION</div>${V12.repBars()}
@@ -831,21 +847,27 @@ function side(){
    Time at the table on that objective counts as play: for "Hints when stuck" (guidance.js) and the stuck
    log (v12_pt.js). Every 90 s there with no new ink is logged (table_stuck); the first time, with hints on,
    the help comes up: Senior Agent gets the process only, never a card; Recruit gets Sgt. Uche's nudge.
-   Once the van has said no, Recruit's Uche names one true pair that is still open. */
+   Once the van has said no, Recruit's Uche names one true pair that is still open: one pair, once (vanPair). */
 const TABLE_NEED = 3, STUCK_MS = 90000;
 const tableObj = () => { try{ return S.game.currentMission === 'm2' ? ((S.game.objectives || []).find(x => x.id === 'o4_table' && !x.done) || null) : null; }catch(e){ return null; } };
 // the table is the only screen up (a pause menu or the desk on top of it is not time at the table)
 const tableUp = () => { const ov = [...document.querySelectorAll('.overlay.show')]; return ov.length > 0 && ov.every(e => e.id === 'screen-ops'); };
 V12.atTable = () => tableUp() && !!tableObj();
-const TT = { idle:0, helped:false, g:null, op:null, m:null, iv:null, last:0 };
+const TT = { idle:0, helped:false, g:null, op:null, m:null, sig:null, iv:null, last:0 };
 function tableInked(){ TT.idle = 0; TT.helped = false; }
-// the count belongs to one run of one operation: a new game, a load or a restart begins it again
+const sigNow = () => { try{ return typeof progressSig === 'function' ? progressSig() : ''; }catch(e){ return ''; } };
+// the count belongs to one run of one operation: a new game, a load or a restart begins it again, and so does
+// progress (an objective done, new evidence, a new ink: guidance.js's progressSig): new cards are a new table
 function ttSync(){
   const g = (typeof S !== 'undefined' && S && S.game) || null;
   if(!g) return;
-  if(TT.g !== g || TT.op !== g._opStart || TT.m !== g.currentMission){ TT.g = g; TT.op = g._opStart; TT.m = g.currentMission; tableInked(); }
+  const sig = sigNow();
+  if(TT.g !== g || TT.op !== g._opStart || TT.m !== g.currentMission){ TT.g = g; TT.op = g._opStart; TT.m = g.currentMission; TT.sig = sig; tableInked(); }
+  else if(sig !== TT.sig){ TT.sig = sig; tableInked(); }
 }
-const tableHelpLine = () => `Link two cards that are connected in the crime, not just in the same place. ${Math.min(V12.ops().inked.length, TABLE_NEED)} of ${TABLE_NEED} inked.`;
+// the process only, in HOW IT WORKS's own terms ("not just in the same place" would steer a player off the
+// true links that have a place on one side)
+const tableHelpLine = () => `Link two cards that are connected in the crime, not just known to each other. ${Math.min(V12.ops().inked.length, TABLE_NEED)} of ${TABLE_NEED} inked.`;
 function tableTick(ms){
   ms = Math.max(0, +ms || 0);
   if(!ms || !V12.atTable()) return false;
@@ -883,11 +905,22 @@ function helpHTML(){
   if(recruit() || !TT.helped || !tableObj()) return '';
   return `<div class="ops-help" data-help="table" role="note">${ic('link')}<span>${tableHelpLine()}</span></div>`;
 }
-// a true link still open between two cards on the table (Recruit's pointer): the first in the case's
-// own order, so it stays put until it is inked
+// a true link still open between two cards on the table: the first in the case's own order
 function openPair(c){
   const o = V12.ops();
   return L.find(l => { const k = key(l.a, l.b); return !o.inked.includes(k) && linkIn(k, c) && visible(NODE[l.a]) && visible(NODE[l.b]); }) || null;
+}
+// Recruit's pointer names ONE pair, ever: the first one he names is kept with the table (o.vanPair) and he points
+// at it until it is inked; after that he is back to his nudge, and the other two links are the player's.
+// Returns the link to name, 'done' once that pair is inked, or null when there is nothing to name yet.
+function vanPair(c){
+  const o = V12.ops();
+  if(o.vanPair){
+    const l = LINK[o.vanPair];
+    if(!l || o.inked.includes(o.vanPair)) return 'done';
+    return visible(NODE[l.a]) && visible(NODE[l.b]) ? l : null;
+  }
+  return openPair(c);
 }
 const cap1 = s => { s = String(s || ''); const i = s.search(/[a-z]/i); return i < 0 ? s : s.slice(0, i) + s[i].toUpperCase() + s.slice(i + 1); };
 // Sgt. Uche's nudge is a Recruit crutch
@@ -895,17 +928,27 @@ function hintHTML(){
   if(!recruit()) return '';
   ttSync();
   const o = V12.ops(), m = S.game.currentMission, c = V12.caseOf(m) || caseForView(), cs = o.cases[caseForView()] || {};
-  const vanNo = !!tableObj() && (o.vanNo || 0) > 0;      // the M2 van has refused at least once
+  // the M2 van has refused at least once (and the player has not turned "Hints when stuck" off: a named pair
+  // is the strongest hint there is)
+  const vanNo = !!tableObj() && (o.vanNo || 0) > 0 && (typeof SETTINGS === 'undefined' || SETTINGS.hints === 'on');
   if((o.sinceInk || 0) < 5 && !(cs.strikes > 0) && !(TT.helped && tableObj()) && !vanNo) return '';
   let h = m === 'm2' ? 'Start with what you found today. Whose name is on KC\'s SIMs — and where do her SIMs sleep at night?'
     : m === 'm3n' ? 'Put Obi\'s notebook next to the courier\'s phone. Same night?'
     : ['m4','m5','m6'].includes(m) ? 'Follow the paper: where did each ledger say to go next?'
     : ['m7','t7','m8'].includes(m) ? 'Every call pinged one tower. Where does the handset sleep?'
     : 'Pick one suspect and ask three things: where was he, what did he carry, who paid him?';
-  const p = vanNo ? openPair(c) : null;
-  if(p){
+  let p = vanNo ? vanPair(c) : null;
+  if(p === 'done') p = null;
+  else if(p && UI.group !== c && UI.group !== 'all'){
+    // the pair's cards are not on this tab: send the player to the tab rather than name cards they can't see
+    h = `Tap the ${CASE_NAME[c]} tab, sir. There is a pair there I would start with.`;
+    p = null;
+  } else if(p){
+    o.vanPair = key(p.a, p.b);   // named once: this is the only pair he names
     const A = `<b class="u-card">${esc(nm(p.a))}</b>`, B = `<b class="u-card">${esc(nm(p.b))}</b>`, why = esc(cap1(p.hint)) + '.';
-    h = o.pencils.includes(key(p.a, p.b)) ? `You have ${A} and ${B} pencilled, sir. ${why} FILE it.` : `Put ${A} with ${B}, sir. ${why} Start there.`;
+    h = o.pencils.includes(key(p.a, p.b)) ? `You have ${A} and ${B} pencilled, sir. ${why} FILE it.`
+      : o.pencils.length >= 6 ? `Put ${A} with ${B}, sir. ${why} Erase a pencil first, then start there.`
+      : `Put ${A} with ${B}, sir. ${why} Start there.`;
   }
   return `<div class="ops-hint" data-hint="uche"${p ? ` data-a="${p.a}" data-b="${p.b}"` : ''}><img src="${V12.art('uche_neutral')}" alt=""><div><b>SGT. UCHE</b>${h}</div></div>`;
 }
@@ -914,7 +957,7 @@ function foot(){
   const next = V12.INTEL_TIERS[tier], n = o.pencils.length;
   // one line above FILE: the card you're holding, or (M2) what the van is waiting for
   const held = UI.view === 'board' && UI.sel && NODE[UI.sel] ? NODE[UI.sel] : null, goal = tableObj();
-  const status = held ? `<p class="ops-status sel" id="ops-status" aria-live="polite"><b>${esc(held.name)}</b> selected — tap a second card to link it, or tap it again to put it down.</p>`
+  const status = held ? `<p class="ops-status sel" id="ops-status" aria-live="polite"><b>${esc(held.name)}</b> selected — ${n >= 6 ? 'six pencils down: FILE or erase one first.' : 'tap a second card to link it, or tap it again to put it down.'}</p>`
     : goal ? `<p class="ops-status goal" id="ops-status" aria-live="polite">LEKKI NEEDS <b>${TABLE_NEED}</b> INKED · <b>${Math.min(o.inked.length, TABLE_NEED)}</b> SO FAR</p>` : '';
   el.innerHTML = `${status}<button class="bd-file" id="ops-file" ${n ? '' : 'disabled'}>${ic('stamp')}<span>${n ? `FILE ${n} LINK${n > 1 ? 'S' : ''}` : '<span class="bd-file-c">Tap two cards to pencil a link</span>'}</span></button>
     <span class="f"><b>${n}</b>/6 PENCILLED</span><span class="f"><b>${o.inked.length}</b> INKED</span>
