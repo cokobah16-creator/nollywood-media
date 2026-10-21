@@ -4426,7 +4426,17 @@ function progressSig(){
     (S.game.objectives||[]).map(o=>o.done?1:0),
     (S.game._opEv||[]).length,
     S.game.flags, S.game.moralChoices,
+    // a link that holds on the operations table is progress too (pencils and strikes are not)
+    ((S.game.ops && S.game.ops.inked) || []).length,
   ]);
+}
+
+/* time at the operations table on its open objective (M2's o4_table) counts as play: v12_ops reports it
+   here once a second while the table is up. hinted: the table just gave its own stuck help, so the 60 s
+   starts again from now. */
+function guideTableTime(ms, hinted){
+  GUIDE.tableMs = (GUIDE.tableMs || 0) + Math.max(0, +ms || 0);
+  if(hinted){ const t = performance.now(); GUIDE.lastProgress = t; GUIDE._lastRun = t; GUIDE.tableMs = 0; }
 }
 
 /* ---------- interaction hook (called by tryInteract) ---------- */
@@ -4495,9 +4505,12 @@ function updateGuidance(dt){
       }
     }
   }
-  // hints after 60 s with no progress (updateGuidance only runs while playing: time in menus doesn't count)
+  // hints after 60 s with no progress (updateGuidance only runs while playing: time in menus doesn't count,
+  // except time at the operations table on its objective, which guideTableTime has counted)
   const tnow = performance.now();
-  if(GUIDE._lastRun && tnow - GUIDE._lastRun > 500 && GUIDE.lastProgress) GUIDE.lastProgress += tnow - GUIDE._lastRun;
+  const gap = GUIDE._lastRun ? tnow - GUIDE._lastRun : 0, tbl = GUIDE.tableMs || 0;
+  GUIDE.tableMs = 0;
+  if(GUIDE.lastProgress && (gap > 500 || tbl > gap)) GUIDE.lastProgress += gap - tbl;
   GUIDE._lastRun = tnow;
   const sig = progressSig();
   if(sig !== GUIDE.lastSig){ GUIDE.lastSig = sig; GUIDE.lastProgress = performance.now(); }
@@ -4511,7 +4524,7 @@ function updateGuidance(dt){
     }
   }
 }
-function resetGuidance(){ GUIDE.lastProgress = performance.now(); GUIDE.lastSig = ''; }
+function resetGuidance(){ GUIDE.lastProgress = performance.now(); GUIDE.lastSig = ''; GUIDE.tableMs = 0; }
 
 /* ---------- feel: characters face each other while talking ---------- */
 function faceEachOtherLegacy(it){
