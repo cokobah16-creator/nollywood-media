@@ -16,14 +16,22 @@ V12.version = 'v13+beta';                     // playtest events carry the build
 W('collectEvidence', orig => function(ev){ safe(()=>I(), 'intel'); const r = orig.apply(this, arguments); safe(()=>intelOnEvidence(ev), 'evidence'); return r; });
 
 /* ---------- operations start and end ---------- */
+// Guard for a later layer: Season 2 (window.V13, src/season2) runs its cases and offices through these same
+// functions. Season 1's record (I().started, opLog, m8Replay) takes Season 1's operations only, so a Season 2 start
+// keeps just the nav reset intelOnMissionStart would have done. Season 1's own hubs are not in MISSION_ORDER and
+// still get the full call, so the check is on the later layer's ids. Without that layer nothing is skipped.
+const laterOp = id => !!(id && window.V13 && typeof window.V13.isS2 === 'function' && (window.V13.isS2(id) || !!(window.V13.HUBS && window.V13.HUBS[id])));
 W('beginMission', orig => function(id){
   safe(()=>I(), 'intel');                       // a new game gets its record at m0; an old save is migrated once (design A1/A9)
   const before = S.game._opStart;
   const r = orig.apply(this, arguments);
-  if(S.game._opStart !== before && S.game.currentMission === id && ENGINE.player) safe(()=>intelOnMissionStart(id), 'start');
+  if(S.game._opStart !== before && S.game.currentMission === id && ENGINE.player){
+    if(!laterOp(id)) safe(()=>intelOnMissionStart(id), 'start');
+    else if(typeof v13NavReset === 'function') safe(()=>v13NavReset(), 'start');   // a new operation: no v13 flow resumes into it
+  }
   return r;
 });
-W('showAftermath', orig => function(){ safe(()=>intelOnMissionEnd(S.game.currentMission), 'end'); return orig.apply(this, arguments); });
+W('showAftermath', orig => function(){ if(!laterOp(S.game.currentMission)) safe(()=>intelOnMissionEnd(S.game.currentMission), 'end'); return orig.apply(this, arguments); });
 
 /* ---------- the weekly briefing comes before the operation it prepares ---------- */
 // From Case 04 on, the briefing runs inside the hub's Commander call (V12.hubCallAfter in

@@ -96,6 +96,15 @@ BETA_DIR = os.path.join(SRC, "beta")
 BETA_CSS = ["paper.css", "wayfind.css", "board.css", "casework.css"]
 BETA_JS = ["casework.js", "wayfind.js", "chase.js"]
 
+# tactics layer (Playable Tactics: sight and noise, the market and mansion encounters, the playtest kit)
+# — after the beta, so it wins. Every file is optional: a missing one is skipped, so each team's branch
+# builds without the others' files, and deleting src/tactics/ plus these lines removes the layer.
+TACTICS_DIR = os.path.join(SRC, "tactics")
+TACTICS_CSS = ["tactics.css", "tac_market.css", "tac_mansion.css", "tac_pt.css"]
+TACTICS_JS = ["tac_api.js", "tac_pt_report.js", "tac_pt.js",
+              "tac_core.js", "tac_geo.js", "tac_interact.js", "tac_lanes.js", "tac_radio.js", "tac_sight.js",
+              "tac_market.js", "tac_mansion.js"]
+
 def build_bundle():
     parts = []
     parts.append(
@@ -174,16 +183,52 @@ def build_html(bundle):
         if "</script" in code.lower():
             raise SystemExit(f"beta/{name} contains a closing script tag")
         parts.append(f"<script>/* ---------- beta/{name} ---------- */\n{code}\n</script>")
-    # a content stamp (not a time or git hash, so the same source always builds the same page):
-    # the playtest log records which build a session came from
-    import hashlib
-    stamp = hashlib.sha1((html + "".join(parts)).encode("utf-8")).hexdigest()[:10]
-    parts.insert(0, f"<script>window.NACECA_BUILD = {{ src:'{stamp}' }};</script>")
+    # Append the tactics layer after the beta (missing files are skipped; each file is syntax-checked)
+    for name in TACTICS_CSS:
+        p = os.path.join(TACTICS_DIR, name)
+        if not os.path.exists(p):
+            continue
+        with open(p, "r", encoding="utf-8") as fh:
+            parts.append(f'<style id="tac-{name[:-4]}">\n{fh.read()}\n</style>')
+    for name in TACTICS_JS:
+        p = os.path.join(TACTICS_DIR, name)
+        if not os.path.exists(p):
+            print(f"  · tactics/{name} not present, skipped")
+            continue
+        with open(p, "r", encoding="utf-8") as fh:
+            code = fh.read()
+        if "</script" in code.lower():
+            raise SystemExit(f"tactics/{name} contains a closing script tag")
+        if os.system(f'node --check "{p}" 2>&1') != 0:
+            raise SystemExit(f"tactics/{name} has syntax errors")
+        parts.append(f"<script>/* ---------- tactics/{name} ---------- */\n{code}\n</script>")
+    stamp_at = "<!--NACECA_BUILD_STAMP-->"
     idx = html.rindex("</body>")
-    html = html[:idx] + "\n".join(parts) + "\n" + html[idx:]
+    html = html[:idx] + stamp_at + "\n" + "\n".join(parts) + "\n" + html[idx:]
+    html = add_season2(html)
+    # a content stamp (not a time or git hash, so the same source always builds the same page):
+    # the playtest log records which build a session came from; it covers every layer, Season 2 included
+    import hashlib
+    stamp = hashlib.sha1(html.replace(stamp_at, "").encode("utf-8")).hexdigest()[:10]
+    html = html.replace(stamp_at, f"<script>window.NACECA_BUILD = {{ src:'{stamp}' }};</script>", 1)
     with open(HTML_OUT, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"  built:  {HTML_OUT}  ({len(html):,} chars)")
+
+# Season 2 ("Operation Upstream", src/season2 + art/season2): the LAST layer, after the beta and tactics.
+# tools/season2_inject.py puts its seven scenes into ART_INLINE and appends its stylesheets and scripts.
+# Delete src/season2 (and art/season2), or build with NACECA_SEASON2=0, and the page is Season 1 only.
+def add_season2(html):
+    if os.environ.get("NACECA_SEASON2") == "0" or not os.path.isdir(os.path.join(SRC, "season2")):
+        print("  · season2 not present (or NACECA_SEASON2=0), skipped")
+        return html
+    import sys
+    sys.dont_write_bytecode = True   # no tools/__pycache__ in the checkout
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    from season2_inject import inject
+    html, scenes = inject(html, ROOT)
+    print(f"  season2: layer + {len(scenes)} scenes ({', '.join(scenes)})")
+    return html
 
 def main():
     bundle = build_bundle()

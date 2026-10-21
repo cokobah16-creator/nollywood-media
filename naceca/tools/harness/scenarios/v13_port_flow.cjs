@@ -25,6 +25,7 @@
 //   19 radio bulletins are for field operations only
 // Run at 390x844 --touch 1 and at 1280x800. Screens: --shots <dir>.
 const LIB = require('./v13_port_lib.cjs');
+const S2H = require('./_s2_handoff.cjs');   // with Season 2 in the page, the review's FINISH starts Season 2
 
 module.exports = async h => {
   const P = LIB.lib(h), B = P.B, C = P.C;
@@ -414,23 +415,30 @@ module.exports = async h => {
       { epi, ad:ad.slice(0, 80), rv, underTitle, pct });
   });
   await step(18, 'review → title', async () => {
+    const s2p = await S2H.pending(h);
     await h.ev(() => document.getElementById('btn-review-done').click());
-    const title = await P.waitShown('screen-title', { timeout:2000 });
+    const end = await S2H.after(h, s2p), title = end.title;
     const r = await h.ev(() => ({ s1:!!S.game.seasonOneComplete, review:!!document.querySelector('#screen-review.show') }));
-    check(18, 'Review → title screen; the season is closed', title && r.s1 && !r.review, Object.assign({ title }, r));
+    // with the Season 2 layer in, the review hands over to Season 2; back to the title (pause, QUIT) for step 19
+    const back = end.s2 ? await S2H.toTitle(h) : true;
+    check(18, 'Review → ' + (s2p ? 'Season 2 (then QUIT to the title)' : 'title screen') + '; the season is closed', S2H.ok(s2p, end) && back && r.s1 && !r.review, Object.assign({ title, s2:end.s2, back }, r));
   });
 
   // =============== 19 · the desk, the ops table's CASE DESK button, the radio (field operations only) ===============
   await step(19, 'desk, ops, radio', async () => {
     const r = await h.ev(async () => {
       const sleep = ms => new Promise(r => setTimeout(r, ms)), shown = id => !!document.querySelector('#' + id + '.show');
-      openDesk('locker'); await sleep(60); const d = shown('screen-desk');
-      closeDesk(); await sleep(40); const title = shown('screen-title');
+      // after the Season 2 hand-off the save is in Season 2 (Case 09): its layer sends every Case Desk entry to the
+      // Season 2 case file (screen-s2case, closed by its BACK button); in Season 1 it is the Case Desk, as before
+      const s2 = !!(window.V13 && V13.inS2 && V13.inS2()), sheet = s2 ? 'screen-s2case' : 'screen-desk';
+      const close = async () => { if(s2){ const b = document.querySelector('#screen-s2case .s2c-done'); if(b) b.click(); } else closeDesk(); await sleep(60); };
+      openDesk('locker'); await sleep(60); const d = shown(sheet);
+      await close(); const title = shown('screen-title');
       V12.openOps(); await sleep(120); const ob = document.getElementById('ops-desk');
-      if(ob) ob.click(); await sleep(80); const fromOps = shown('screen-desk');
-      closeDesk(); await sleep(80); const backOps = shown('screen-ops');
+      if(ob) ob.click(); await sleep(80); const fromOps = shown(sheet);
+      await close(); await sleep(20); const backOps = shown('screen-ops');
       V12.closeOps(); await sleep(60);
-      return { d, title, ob:!!ob, fromOps, backOps };
+      return { s2, d, title, ob:!!ob, fromOps, backOps };
     });
     await P.carry();
     await P.start('m7', { completed:['m0', 'm1', 'm2', 'm3', 'm3n', 'm4', 'm5', 'm6'], state:S => { const c = JSON.parse(window.__portCarry); S.game.intel = c.game.intel; S.game.headlines = c.game.headlines; S.game.mem = c.game.mem; } });

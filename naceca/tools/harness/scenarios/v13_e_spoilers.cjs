@@ -95,6 +95,22 @@ module.exports = async h => {
   for(const [k, v] of data) check('data ' + k, v, RULES.concat(PRE_T7));
   h.log('data strings checked:', data.length);
 
+  // ================= 0b. a fresh save: the awards tab (CASE RECORDS) never names her =================
+  // (locked awards are listed with their descriptions; Season 2's must not spoil Season 1's answer — CN01 / R02)
+  const awards = await h.ev(() => {
+    if(typeof openRecords !== 'function') return { open:false, text:'' };
+    const fresh = !(S.game.completedMissions || []).length && !S.game.seasonOneComplete;
+    openRecords();
+    const tab = document.querySelector('#screen-records .rec-tabs button[data-tab="awards"]'); if(tab) tab.click();
+    const text = (document.getElementById('records-body') || {}).innerText || '';
+    const b = document.getElementById('btn-records-close'); if(b) b.click();
+    return { open:!!tab, fresh, text, s2:!!(window.V13 && V13.CARDS), n:ACHIEVEMENTS.length };
+  });
+  h.log('awards tab', JSON.stringify({ open:awards.open, fresh:awards.fresh, s2:awards.s2, n:awards.n }));
+  h.assert(awards.open && awards.fresh, 'the awards tab opens on a fresh save');
+  h.assert(!/Adaeze/i.test(awards.text), 'the awards tab names no Adaeze on a fresh save: ' + ((awards.text.match(/[^\n]*Adaeze[^\n]*/i) || [])[0] || ''));
+  for(const [name, f] of RULES) { const hit = f(awards.text); if(hit) fails.push(`awards tab: ${name} — "${String(hit).slice(0, 140)}"`); }
+
   // ================= 1. Case 02: KC's phone, an empty money tab, the register =================
   await h.start('m2', { completed:['m0', 'm1'], briefings:true, state:S => { S.game.intel = { items:{}, briefed:{} }; } });
   await h.page.addScriptTag({ content:PAGE });

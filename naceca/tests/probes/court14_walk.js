@@ -1,0 +1,31 @@
+// Case 14 staging: people walking where the trial sends them (fast mode off), seen through the trial's own camera.
+const sc = require('../scen13.js');
+const C14 = require('./court14.js');
+module.exports = async function (T) {
+  await sc.s2start(T, 'm14', C14.RUNS.plea.prep);
+  await T.until(() => !document.querySelector('#title-card.show') && ENGINE.movementEnabled, 30000);
+  await T.wait(1500); await T.shot('walkup');
+  await sc.use(T, 'Barrister Danladi'); await T.wait(1500);
+  await T.ev(() => { DLG.onComplete = null; endDialogue(); V13.court.fast = false; V13.court.active = true; });
+  const cue = (n, a) => T.ev(([n, a]) => { window.__cue = Promise.resolve(V13.court.stageOf().cue(n, a)).then(() => { window.__cue = null; }); }, [n, a || null]);
+  const done = ms => T.until(() => window.__cue === null, ms || 90000);
+  await cue('day', 1); await T.wait(2500); await T.shot('est');
+  await cue('allrise'); await T.wait(4000); await T.shot('rise');
+  await cue('judge_in'); await T.wait(5000); await T.shot('judge_walk');
+  await done(); await T.wait(1500); await T.shot('judge_seated');
+  await cue('sitdown'); await T.wait(3000);
+  await cue('dock', { d:1, stand:true }); await T.wait(2500);
+  await T.ev(() => { const P = V13.court.stageOf(); });
+  await cue('pw1_in'); await T.wait(3000); await T.shot('pw1_walk');
+  await done(); await T.wait(1500); await T.shot('pw1_box');
+  await cue('pw1_out'); await done(); await T.wait(800);
+  await cue('witness_in', { id:'sotonye', from:'dock' }); await T.wait(2500); await T.shot('soto_dock');
+  await done(); await T.wait(1500); await T.shot('soto_box');
+  await cue('witness_out', { id:'sotonye', from:'dock' }); await done(); await T.wait(800);
+  await cue('witness_in', { id:'tobi', from:'door' }); await T.wait(2500); await T.shot('tobi_walk');
+  await done(); await T.wait(1500); await T.shot('tobi_box');
+  await cue('witness_out', { id:'tobi' }); await done();
+  await cue('day', 4); await T.wait(2500); await T.shot('full_gallery');
+  await cue('close'); await T.wait(2500); await T.shot('corridor');
+  T.log(await T.ev(() => JSON.stringify({ fps:ENGINE._dt, cam:TPCAM.override && TPCAM.override.pos.toArray().map(v => +v.toFixed(2)) })));
+};

@@ -1,0 +1,202 @@
+/* =========================================================================
+   NACECA · Season 2 styles — streaming, the sources board, the Season 2
+   case file and the Case 15 screens (seal, accusation, case card).
+   Written on our paper identity (styles.css :root tokens): ink frames,
+   manila sheets, 1px rules, 2-4px radius; no gradients, glows, shadows
+   or blur; right and wrong carry a word and an icon(), never colour alone.
+   The v13 primitives (src/v13/v13_shared.css) are copied below, scoped to
+   the Season 2 overlays, so this layer stays removable on its own.
+   ========================================================================= */
+
+/* ---------- loading card (streamed build) ---------- */
+#v13-loading{position:absolute;inset:0;z-index:120;display:none;align-items:center;justify-content:center;background:rgba(28,28,26,.92)}
+#v13-loading.show{display:flex}
+.v13-ld-card{width:min(420px,calc(100vw - 32px));padding:22px 22px 18px;background:var(--ink,#1C1C1A);border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-radius:var(--radius,3px);font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);color:var(--manila,#E9DCC0)}
+.v13-ld-k{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;letter-spacing:.32em;color:var(--manila-2,#A89F8A)}
+.v13-ld-t{font-size:22px;letter-spacing:.06em;margin:6px 0 14px;text-transform:uppercase;color:var(--manila,#E9DCC0)}
+.v13-ld-bar{height:4px;background:var(--rule-ink,rgba(233,220,192,.24));position:relative;overflow:hidden}
+.v13-ld-bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--manila,#E9DCC0);transition:width .12s linear}
+.v13-ld-n{margin-top:10px;font-family:'Inter',sans-serif;font-size:12px;color:var(--manila-2,#A89F8A);min-height:16px}
+.v13-ld-retry{margin-top:12px}
+
+/* =========================================================================
+   The v13 primitives, scoped to the Season 2 overlays (copied from
+   src/v13/v13_shared.css: buttons, sheets, stamps, marks, tiers, meters)
+   ========================================================================= */
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:8px 12px;margin:0;
+  background:transparent;border:1px solid var(--manila,#E9DCC0);border-radius:2px;color:var(--manila,#E9DCC0);
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;font-weight:500;letter-spacing:.1em;
+  line-height:1.2;text-transform:uppercase;cursor:pointer;box-shadow:none}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-btn:hover{background:var(--ink-3,#34342F)}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-btn.primary{background:var(--green,#0B6E4F);border-color:var(--green,#0B6E4F);color:var(--manila,#E9DCC0)}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-btn:disabled{opacity:.45;cursor:not-allowed}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-sheet{
+  position:relative;background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);border:1px solid var(--ink,#1C1C1A);border-radius:3px;
+  padding:12px 14px;margin:0;text-align:left;box-shadow:none}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-sheet-h{
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  border-bottom:1px solid var(--ink,#1C1C1A);padding-bottom:6px;margin-bottom:8px}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-mono{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace)}
+/* rubber stamp, inline: ink-red by default, agency green for a granted / upheld state */
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-stamp{
+  display:inline-block;padding:2px 8px;border:2px solid var(--red,#B3261E);border-radius:3px;color:var(--red,#B3261E);
+  font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:700;font-size:13px;letter-spacing:.16em;
+  text-transform:uppercase;transform:rotate(-3deg);background:transparent}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-stamp.good{border-color:var(--green,#0B6E4F);color:var(--green,#0B6E4F)}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-stamp.plain{border-color:currentColor;color:inherit}
+/* right / wrong as an ink word with a mark (readable on ink and on paper, never colour alone) */
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) :is(.v13-mark-ok,.v13-mark-bad){
+  color:inherit;font-weight:600;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-mark-ok{text-decoration-color:var(--green,#0B6E4F)}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-mark-bad{text-decoration-color:var(--red,#B3261E);text-decoration-style:wavy}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) :is(.v13-mark-ok,.v13-mark-bad) .ico{font-size:1.05em;vertical-align:-2px;margin-right:3px}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-dim{color:var(--manila-2,#A89F8A)}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-sheet .v13-dim{color:var(--ink-soft,#4F4C44)}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-warn{color:inherit;border-left:3px solid var(--red,#B3261E);padding-left:6px}
+/* evidence tier tag (a word, never colour alone) */
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-tier{
+  display:inline-block;padding:1px 6px;border:1px solid currentColor;border-radius:2px;white-space:nowrap;
+  font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;font-style:normal;letter-spacing:.08em;text-transform:uppercase;color:inherit}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .t-confirmed{border-style:solid;border-width:2px}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .t-probable{border-style:solid}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .t-allegation{border-style:dashed}
+/* flat meter: a ruled track and a solid fill; the word beside it */
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-meter{position:relative;display:block;height:6px;background:var(--rule-ink,rgba(233,220,192,.24));border-radius:1px;overflow:hidden}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-meter > i{position:absolute;left:0;top:0;bottom:0;background:var(--manila,#E9DCC0)}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-sheet .v13-meter{background:var(--rule-paper,rgba(28,28,26,.32))}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict,#court-exh,#screen-seal15,#screen-accuse15,#screen-case15) .v13-sheet .v13-meter > i{background:var(--ink,#1C1C1A)}
+/* buttons on paper are ink: transparent, an ink rule, ink words (green stays green) */
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict) .v13-sheet .btn{background:transparent;border:1px solid var(--ink,#1C1C1A);color:var(--ink,#1C1C1A);min-width:0;box-shadow:none}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict) .v13-sheet .btn:hover{background:rgba(28,28,26,.08);color:var(--ink,#1C1C1A)}
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict) .v13-sheet .btn.primary{background:var(--green,#0B6E4F);border-color:var(--green,#0B6E4F);color:var(--manila,#E9DCC0)}
+/* close buttons carry icon('close') */
+:is(#screen-sources,#screen-s2case,#court-exh) .ph-x{color:var(--manila,#E9DCC0);border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-radius:2px;min-width:36px;min-height:36px;padding:0;font-size:18px;display:inline-grid;place-items:center}
+:is(#screen-sources,#screen-s2case,#court-exh) .ph-x:hover{border-color:var(--manila,#E9DCC0)}
+.touch-active :is(#screen-sources,#screen-s2case,#court-exh) .ph-x{min-width:44px;min-height:44px}
+/* the screen behind a Season 2 board: flat ink, a little of the scene through it */
+:is(#screen-sources,#screen-s2case,#screen-courtfix,#screen-courtverdict) > .overlay-bg{background:var(--hud-panel,rgba(28,28,26,.94))}
+:is(#screen-seal15,#screen-accuse15,#screen-case15) > .overlay-bg{background:var(--hud-panel,rgba(28,28,26,.94))}
+
+/* ---------- the ink frame (the sources board and the case file share it) ---------- */
+#screen-sources,#screen-s2case{overflow-y:auto}
+.src-frame{position:relative;width:min(980px,96vw);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;gap:10px;padding:18px 20px;box-sizing:border-box;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-radius:var(--radius,3px);box-shadow:none}
+.src-head{display:flex;align-items:flex-start;gap:14px}
+.src-head>div:first-child{flex:1;min-width:0}
+.src-fund{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10.5px;letter-spacing:.18em;color:var(--manila-2,#A89F8A);text-align:right;padding-top:4px}
+.src-fund b{display:block;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:18px;letter-spacing:.06em;color:var(--manila,#E9DCC0);font-weight:500}
+.src-lead{font-family:'Inter',sans-serif;font-size:12.5px;line-height:1.5;color:var(--manila-2,#A89F8A);margin:0;border-left:2px solid var(--rule-ink,rgba(233,220,192,.24));padding-left:10px}
+.src-x{margin-left:4px}
+.src-foot{display:flex;justify-content:flex-end}
+.src-foot .btn{flex:0 0 auto;min-width:160px}
+.src-none{font-family:'Inter',sans-serif;font-size:12px;color:var(--ink-soft,#4F4C44);margin:0}
+.src-frame > .s2c-grid > .src-none,.src-frame > .src-grid > .ops-p{color:var(--manila-2,#A89F8A)}
+
+/* ---------- the sources board ---------- */
+.src-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;overflow:auto;min-height:0;padding:2px}
+.src-card{display:flex;flex-direction:column;gap:7px;padding:11px 12px;border-top:3px solid var(--ink,#1C1C1A)}
+.src-card.burned{border-top-color:var(--red,#B3261E)}
+.src-card header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.src-code{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:15px;font-weight:500;letter-spacing:.14em;color:var(--manila,#E9DCC0);background:var(--ink,#1C1C1A);padding:2px 8px;border-radius:2px}
+.src-name{font-family:'Inter',sans-serif;font-size:13px;color:var(--ink,#1C1C1A);font-weight:600;flex:1;min-width:90px}
+#screen-sources .src-chip{font-style:normal;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:9.5px;letter-spacing:.14em;line-height:1.5;text-transform:uppercase}
+#screen-sources .src-chip.v13-warn{padding:0 0 0 6px}
+#screen-sources .src-chip.v13-stamp{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:10px;padding:0 6px;border-width:1px}
+.src-role{font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-soft,#4F4C44);margin:0}
+.src-row{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;gap:6px 8px;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:9.5px;letter-spacing:.16em;color:var(--ink-soft,#4F4C44)}
+.src-row .v13-meter{height:5px}
+/* Senior Agent: exposure is not shown (it would tell which tips are planted); CHECK IT is the player's own check */
+.cw-senior #screen-sources .src-exp{display:none}
+/* a tip: a nested index card on the sheet; its rule says what became of it */
+.src-tip{background:var(--paper-2,#DCCDAB);border-left:2px solid var(--ink,#1C1C1A);border-radius:2px;padding:7px 9px;display:flex;flex-direction:column;gap:6px}
+.src-tip.held{border-left-color:var(--green,#0B6E4F)}.src-tip.false{border-left-color:var(--red,#B3261E)}.src-tip.filed{border-left-color:var(--grey,#6B6B63)}
+.src-tip q{font-family:'Inter',sans-serif;font-style:italic;font-size:12.5px;line-height:1.45;color:var(--ink,#1C1C1A);quotes:'“' '”'}
+.src-tip-a{display:flex;gap:6px;flex-wrap:wrap}
+.src-tip-a .btn,.src-acts .btn{flex:0 1 auto;min-width:0;padding:6px 9px;font-size:10px;letter-spacing:.12em;white-space:normal}
+.src-tip-a .btn[disabled],.src-acts .btn[disabled]{opacity:.4;cursor:default}
+.src-v{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:9.5px;letter-spacing:.14em;color:var(--ink,#1C1C1A);display:inline-flex;align-items:center;gap:4px}
+.src-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+@media (max-width:700px){ .src-grid{grid-template-columns:1fr} .src-frame{padding:14px} }
+@media (max-height:480px){ #screen-sources{padding:8px} .src-frame{max-height:calc(100dvh - 16px);padding:10px 14px;gap:7px} .src-lead{font-size:11.5px} .src-grid{gap:8px} .src-card{padding:8px 10px;gap:5px} }
+
+/* ---------- the Season 2 case file ---------- */
+.s2c-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;overflow:auto;min-height:0;padding:2px}
+.s2c-sec{padding:10px 12px;border-top:3px solid var(--ink,#1C1C1A)}
+.s2c-sec h3{margin:0 0 8px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:500;font-size:15px;letter-spacing:.08em;color:var(--ink,#1C1C1A);display:flex;gap:8px;align-items:baseline;border-bottom:1px solid var(--ink,#1C1C1A);padding-bottom:6px}
+.s2c-sec h3 span{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:9.5px;letter-spacing:.2em;color:var(--ink-soft,#4F4C44)}
+.s2c-sec ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.s2c-row{display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-size:12.5px;color:var(--ink,#1C1C1A)}
+.s2c-row b{flex:1;font-weight:500;min-width:0}
+.s2c-q,.s2c-p{flex:0 0 auto}
+#screen-s2case .s2c-p.v13-stamp{font-size:10px;padding:1px 6px;border-width:1px}
+.s2c-trial{margin:0;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10.5px;letter-spacing:.08em;color:var(--manila-2,#A89F8A);line-height:1.6}
+.s2c-trial b{color:var(--manila,#E9DCC0);font-weight:600}
+@media (max-width:700px){ .s2c-grid{grid-template-columns:1fr} }
+@media (max-height:480px){ #screen-s2case{padding:8px} .s2c-frame{max-height:calc(100dvh - 16px);padding:10px 14px;gap:7px} .s2c-sec{padding:8px 10px} .s2c-row{font-size:12px} }
+
+/* ---------- in Season 2, TAB · CASE FILE is the case file: no second "J · CASE DESK" pill (s2_merge.js) ---------- */
+body.s2-casefile #btn-desk{display:none}
+
+/* =========================================================================
+   Case 15 — the sealed envelope, the accusation (both on the beta's paper
+   sheet, CW.sheet) and the case you put to him
+   ========================================================================= */
+#screen-accuse15,#screen-seal15,#screen-case15{overflow-y:auto;overscroll-behavior:contain;justify-content:safe center;scrollbar-width:thin;scrollbar-color:var(--manila-3,#8C8473) transparent}
+#screen-case15{padding:10px}
+/* the warrant's blank, in the sheet's lead */
+.a15-blank{display:block;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:11.5px;letter-spacing:.04em;line-height:1.55;color:var(--ink,#1C1C1A);
+  background:var(--paper-2,#DCCDAB);border:1px dashed var(--rule-paper,rgba(28,28,26,.32));border-radius:2px;padding:7px 10px;margin-top:8px}
+.a15-blank b{color:var(--ink,#1C1C1A);font-weight:600;border-bottom:1px solid var(--ink,#1C1C1A);padding:0 6px;letter-spacing:.08em}
+/* the candidate the envelope named: an ink-red rule and the word on the card */
+#screen-accuse15 .cw-card.a15-sealed{border-bottom:3px solid var(--red,#B3261E)}
+.a15-sealtag{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:9px;letter-spacing:.16em;color:var(--red,#B3261E)}
+/* the kit's probes still find the cards by their old classes: keep v12's .acc-card / .acc-item look off the paper sheet */
+:is(#screen-seal15,#screen-accuse15) .cw-card.acc-card.sel{outline:0}
+:is(#screen-seal15,#screen-accuse15) .cw-card.acc-card.sel img{outline:0}
+:is(#screen-seal15,#screen-accuse15) .cw-card.acc-card .cw-box{color:inherit}
+:is(#screen-seal15,#screen-accuse15) .cw-card.acc-card .cw-ol{color:var(--ink-soft,#4F4C44)}
+:is(#screen-seal15,#screen-accuse15) .cw-opt.acc-item{font-family:inherit;font-size:inherit;padding:10px 12px}
+:is(#screen-seal15,#screen-accuse15) .cw-opt.acc-item.sel{background:rgba(28,28,26,.07);color:var(--ink,#1C1C1A);padding:9px 11px}
+.touch-active :is(#screen-seal15,#screen-accuse15) .cw-opt.acc-item{align-items:flex-start}
+
+/* the old .acc-* markup, kept for a page without the beta's casework layer (window.CW missing) */
+#screen-accuse15 .acc-grid,#screen-seal15 .acc-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+#screen-seal15 .acc-frame{width:min(760px,100%)}
+#screen-case15 .acc-frame{width:min(860px,100%)}
+:is(#screen-seal15,#screen-accuse15) .acc-card img{border-radius:2px}
+/* (SC5) a <button> does not inherit the page font: the card's role line (span) would be Arial */
+:is(#screen-seal15,#screen-accuse15) .acc-card:not(.cw-card){font-family:'Inter',sans-serif}
+:is(#screen-seal15,#screen-accuse15) .v12-step-h b{border-radius:2px}
+.acc-item .a15-q{font-style:normal;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:9px;letter-spacing:.14em;margin-left:6px;color:var(--red,#B3261E)}
+.acc-card.a15-sealed{border-bottom:3px solid var(--red,#B3261E)}
+.a15-foot2{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.a15-foot2 .btn{min-width:150px}
+
+/* the case card: ink words on manila, a green or red rule, a mark and a word on every row */
+.a15-res{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.a15-res li{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;font-size:12.5px;line-height:1.45;color:var(--ink,#1C1C1A);background:transparent;border-left:3px solid var(--green,#0B6E4F);padding:7px 10px}
+.a15-res li.no{border-left-color:var(--red,#B3261E)}
+.a15-res li > span{font-size:16px;line-height:1.2;text-decoration:none}
+.a15-res li > span.v13-mark-ok{color:var(--green,#0B6E4F)}
+.a15-res li > span.v13-mark-bad{color:var(--red,#B3261E)}
+.a15-res li b{display:block;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:500;letter-spacing:.06em;font-size:12.5px;color:var(--ink,#1C1C1A)}
+.a15-res li em{font-style:normal;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:9px;letter-spacing:.16em;color:var(--ink-soft,#4F4C44);margin-left:6px}
+.a15-head{display:flex;align-items:center;gap:14px}
+.a15-head img{width:58px;height:58px;border-radius:2px;object-fit:cover;object-position:50% 20%;border:1px solid var(--ink,#1C1C1A);background:var(--ink,#1C1C1A);flex:0 0 auto}
+#screen-case15 .a15-head .v13-stamp{margin-top:6px;font-size:13px;letter-spacing:.32em;padding:4px 12px}
+.a15-note{font-size:12px;color:var(--ink-soft,#4F4C44);font-style:italic;margin:2px 0 0}
+@media (max-height:520px){
+  #screen-accuse15 .acc-card img,#screen-seal15 .acc-card img{width:36px;height:36px}
+  .a15-res li{font-size:11.5px;padding:5px 8px} .a15-blank{font-size:10px;padding:4px 8px;margin-top:4px}
+  .a15-head img{width:40px;height:40px}
+}
+@media (max-width:560px){ #screen-accuse15 .acc-grid,#screen-seal15 .acc-grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+
+/* the aftermath's "next" line after the finale */
+.s2-badge{display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid var(--grey,#6B6B63);border-radius:2px;color:var(--ink-soft,#4F4C44);font:10px var(--font-head,'Oswald','Arial Narrow',sans-serif);letter-spacing:.18em;vertical-align:middle}
+
+/* colour-blind mode: the red rules are dashed as well as red */
+body.cb .src-card.burned{border-top-style:dashed}
+body.cb .src-tip.false{border-left-style:dashed}
+body.cb .a15-res li.no{border-left-style:dashed}

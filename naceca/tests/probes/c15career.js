@@ -1,0 +1,78 @@
+// Case 15, career run: no boats (Ibinabo cold), the gate and the task force stand-off, seen on the jetty
+// (bags into the river), cash room, the Senator, stand down, a weak case against the DG. Then the epilogue to the menu.
+const L = require('./c15lib.js'), sc = L.sc;
+module.exports = async function (T) {
+  const ok = await sc.s2start(T, 'm15', L.WEAK);
+  T.log('started', ok, JSON.stringify(await L.st(T)));
+  await L.waitDialogue(T, 30000); await T.wait(1200);
+  await L.until(T, 'Superintendent Kelechi'); await L.shot(T, '01_brief_bury');
+  await sc.talk(T);
+  await L.waitFree(T); await T.wait(600);
+  T.log('after brief', await T.ev(() => ENGINE.interactables.map(i => i.label).join(' | ')));
+  await sc.use(T, 'Tell Uche');
+  await sc.talk(T);
+  await L.waitFree(T);
+  T.log('entry', JSON.stringify(await L.st(T)));
+  // walk to the gate (teleport most of the way)
+  await T.ev(() => { const P = ENGINE.player; P.position.set(1.2, 0, 28.2); ENGINE.cameraYaw = ENGINE.playerYaw = P.rotation.y = Math.PI; });
+  await T.wait(600);
+  await T.ev(() => { const P = ENGINE.player; P.position.set(0.6, 0, 27.0); });
+  await L.waitDialogue(T, 15000); await T.wait(2200); await L.shot(T, '02_gate_wide');
+  await L.until(T, 'ACP Lawal, special task force'); await L.shot(T, '03_standoff_acp');
+  await L.until(T, 'holds up his phone'); await T.wait(600); await L.shot(T, '04_standoff_phone');
+  await L.until(T, 'Paper beats phone'); await L.shot(T, '05_standoff_osagie');
+  await L.until(T, 'Madam, I have forty men', ['Move the trucks']); await L.shot(T, '06_standoff_forty');
+  await sc.talk(T);
+  await T.wait(3000); await L.shot(T, '07_gate_opens');
+  await L.waitFree(T, 20000);
+  T.log('through the gate', JSON.stringify(await L.st(T)), await T.ev(() => JSON.stringify({ gate:V13.world.live.gate && +V13.world.live.gate.open.toFixed(2), boom:V13.world.live.boom && +V13.world.live.boom.up.toFixed(2), obs:(ENGINE.obstacles || []).some(o => Math.abs((o.minZ + o.maxZ) / 2 - 23.55) < 0.06 && Math.abs((o.minX + o.maxX) / 2 - 0.1) < 0.06) })));
+  // walk north through the gate a little, check the companions follow, then into the yard
+  await T.ev(() => { window.__k = { KeyW:true }; ENGINE.keys.KeyW = true; ENGINE.cameraYaw = Math.PI; });
+  await T.wait(3500);
+  await T.ev(() => { ENGINE.keys.KeyW = false; });
+  T.log('walked', JSON.stringify(await L.st(T)), await T.ev(() => JSON.stringify({ hauwa:V13.rt.hauwa.position.toArray().map(v => +v.toFixed(1)), uche:V13.rt.uche.position.toArray().map(v => +v.toFixed(1)) })));
+  await L.shot(T, '08_yard_follow');
+  await T.ev(() => { const P = ENGINE.player; P.position.set(-2.5, 0, -11.5); ENGINE.cameraYaw = ENGINE.playerYaw = P.rotation.y = Math.PI; });
+  await T.wait(1500);
+  // get seen: stand in front of the gangway guard
+  await T.ev(() => { const P = ENGINE.player; P.position.set(8.2, 0, -20.4); ENGINE.cameraYaw = ENGINE.playerYaw = P.rotation.y = Math.PI; V13.rt.guards[0].ch.rotation.y = 0; });
+  await T.until(() => !!V13.rt.made, 20000);
+  T.log('made', await T.ev(() => String(V13.rt.made)));
+  await T.wait(1200); await L.shot(T, '09_made');
+  await T.wait(4800);
+  await L.shot(T, '10_bags_overboard');
+  await T.ev(() => { const P = ENGINE.player; P.position.set(6.95, 0, -25.6); });
+  await T.wait(2000);
+  T.log('boarded', await T.ev(() => JSON.stringify({ b:V13.rt.boarded, lost:V13.rt.lost })));
+  await sc.use(T, 'painted steel door');
+  await L.waitDialogue(T); await sc.talk(T);
+  await sc.waitCards(T); await T.wait(1200);
+  T.log('counted', JSON.stringify(await L.st(T)));
+  await sc.use(T, 'Talk to the Senator');
+  await L.waitDialogue(T);
+  await L.until(T, 'Section 308 of the Constitution', ['Barrister Danladi']);
+  await L.until(T, 'Standing down|Then God help|Good\\. Good man', ['Standing down']);
+  await L.until(T, 'come up the jetty at a jog'); await T.wait(2600); await L.shot(T, '11_career_tf');
+  await L.until(T, 'car keys'); await T.wait(1200); await L.shot(T, '12_career_keys');
+  await sc.talk(T);
+  T.log('friday over', JSON.stringify(await L.st(T)));
+  await L.waitDialogue(T, 240000); await T.wait(1500); await L.shot(T, '13_monday_career');
+  await sc.talk(T);
+  await L.waitFree(T); await T.wait(600);
+  await sc.use(T, 'Director-General');
+  await L.accuse(T, 'dg', ['transfer_docket', 'upstream_ledger', 'bank_trail'], '14_accuse_weak');
+  await L.waitDialogue(T, 20000); await T.wait(1500); await L.shot(T, '15_reveal');
+  await L.until(T, 'You bought Friday'); await L.shot(T, '16_career_add');
+  await sc.talk(T);
+  await T.until(() => document.getElementById('screen-case15') && document.getElementById('screen-case15').classList.contains('show'), 15000);
+  await T.wait(600); await L.shot(T, '17_case_card');
+  await T.ev(() => document.getElementById('c15-done').click());
+  await T.until(() => document.getElementById('screen-aftermath').classList.contains('show'), 15000);
+  await T.wait(1200); await L.shot(T, '18_aftermath');
+  T.log('aftermath', JSON.stringify(await L.st(T)), await T.ev(() => (document.querySelector('#aftermath-grid .head') && document.querySelector('#aftermath-grid .head').textContent) + ' · grade ' + ((document.querySelector('#aftermath-grid .grade-letter') || {}).textContent || '?')));
+  await T.ev(() => document.getElementById('btn-aftermath-continue').click());
+  const seen = await L.epilogue(T, [[12, '19_epi_dg'], ['last', '20_season3']]);
+  T.log('epilogue', seen.join(' · '));
+  await T.wait(1200); await L.shot(T, '21_after');
+  T.log('end', await T.ev(() => JSON.stringify({ title:document.getElementById('screen-title').classList.contains('show'), s2done:!!S.game.seasonTwoComplete, epi:V13._s2Epi, finale:V13.s2().finale })));
+};

@@ -7,6 +7,7 @@
 // Senior (default): every answer is open and none says '— not in your file'; reaching for a certificate
 // you never signed is struck out and costs patience. Recruit: as delivered (greyed out, '— not in your file').
 const LIB = require('./v13_c_lib.cjs');
+const S2H = require('./_s2_handoff.cjs');   // with Season 2 in the page, the review's FINISH starts Season 2
 const CASE = {
   moral:{ tower:'hold', asaba:'rescue', checkpoint:'flip_driver', market_runner:'caught', shrine:'negotiate', arrest:'bribe' },
   flags:{ fin_bodycam:true }, sealed:{ who:'adaeze', before:true }, theories:['t_madam'],
@@ -81,9 +82,12 @@ module.exports = async h => {
   const desk = await h.ev(() => { const html = renderReviewHTML(true), d = document.createElement('div'); d.innerHTML = html; return { sheet:!!d.querySelector('.v13-review.v13-sheet'), text:d.textContent }; });
   h.assert(desk.sheet && /THE CHARGE SHEETS/.test(desk.text), 'the Case Desk REVIEW tab gets the same report as a manila sheet');
   h.assert(!/[\u2190-\u21FF\u25A0-\u25FF\u2600-\u27BF]/.test(desk.text) && !/\bAKS\b/.test(desk.text), 'no glyph icons and no AKS in the desk copy either');
+  const s2p = await S2H.pending(h);
   await h.ev(() => document.getElementById('btn-review-done').click());
   await h.step(150);
-  h.assert(await h.ev(() => !!document.querySelector('#screen-title.show')), 'FINISH goes to the title');
+  const end = await S2H.after(h, s2p);
+  h.assert(S2H.ok(s2p, end), S2H.what(s2p));
+  if(end.s2) h.assert(await S2H.toTitle(h), 'Season 2 began: back to the title (pause, QUIT)');
 
   // ---------------- Senior: reaching for what you don't hold ----------------
   await C.setup(Object.assign({}, CASE, { moral:Object.assign({}, CASE.moral, { arrest:'professional' }), cert:[], voice:{ suspect:'adaeze', method:'shield', money:'ca', picks:CASE.voice.picks } }));

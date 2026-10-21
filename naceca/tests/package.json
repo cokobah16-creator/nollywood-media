@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "commonjs",
+  "description": "the Season 2 kit harness (t_s2.js) and its probes are CommonJS; the repo root package.json is an ES module"
+}

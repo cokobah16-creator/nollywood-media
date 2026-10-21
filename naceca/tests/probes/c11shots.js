@@ -1,0 +1,107 @@
+// c11shots: full-size screenshots of every place in the case (default graphics); a quick route through it
+const L = require('./c11lib.js');
+const sc = L.sc;
+module.exports = async function (T) {
+  if (process.env.C11_LOW) await T.ev(() => { if (typeof applyGraphics === 'function') applyGraphics('low'); });
+  T.log('started', await L.start(T, "S.game.moralChoices.s2_statement='car'; S.game.moralChoices.s2_jetty='lucky';"));
+  await T.wait(1200);
+  await L.shot(T, 'a_landing_dlg');
+  await T.ev(() => { document.getElementById('screen-dialogue').style.visibility = 'hidden'; });
+  await T.wait(1500);
+  await L.shot(T, 'a_landing');
+  await T.ev(() => { document.getElementById('screen-dialogue').style.visibility = ''; });
+  await sc.talk(T, [0]);
+  await L.waitDlg(T, 120000);
+  await T.wait(800);
+  await L.shot(T, 'b_arrive_dlg');
+  await sc.talk(T);
+  await L.waitFree(T);
+  await T.wait(2500);
+  await L.shot(T, 'b_camp_edge');
+  // the drums: keep Tari's back turned while we look
+  await T.ev(() => { const t = V13.rt.tari; t.away = true; t.want = Math.PI / 2; t.t = 9999; V13.eyesOff(); V13.rt.phase = 'sneak'; ENGINE.keys.KeyC = true; });
+  await L.put(T, 0.75, -0.3, 2, -0.3);
+  await T.wait(2500);
+  await L.shot(T, 'c_drums');
+  await L.use(T, 'Take samples');
+  await L.waitDlg(T);
+  await T.wait(1200);
+  await L.shot(T, 'c_samples_dlg');
+  await sc.talk(T, ['Properly']);
+  await T.until(() => ENGINE.seq && ENGINE.seq.phase === 'act', 60000);
+  await T.wait(2500);
+  await L.shot(T, 'c_sealing');
+  await T.until(() => V13.hasEv('fuel_samples'), 120000);
+  await L.waitFree(T);
+  await L.put(T, -5.2, 4.3, -6, 6);
+  await T.wait(2500);
+  await L.shot(T, 'd_shelter');
+  await L.put(T, -4.4, 6.0, -5.2, 6.6);
+  await L.use(T, 'Talk to Felix');
+  await L.waitDlg(T);
+  await T.wait(1200);
+  await L.shot(T, 'd_felix_dlg');
+  await sc.talk(T, ['Help me catch']);
+  await L.waitDlg(T, 90000);
+  await T.wait(1200);
+  await L.shot(T, 'e_bolt_dlg');
+  await sc.talk(T);
+  await T.until(() => V13.rt.chase, 60000);
+  await T.ev(() => { ENGINE.keys.KeyC = false; });
+  // watch him run onto the boardwalk from behind
+  await T.until(() => V13.rt.chase && V13.rt.chase.seg >= 4, 120000);
+  await T.ev(() => { const c = V13.rt.chase; const r = c.runner, P = ENGINE.player; P.position.set(r.position.x, 0, r.position.z + 5.5); P.rotation.y = Math.PI; ENGINE.playerYaw = ENGINE.cameraYaw = Math.PI; c.speed = 0.4; });
+  await T.wait(2500);
+  await L.shot(T, 'e_chase');
+  await T.ev(() => { const c = V13.rt.chase; if (!c) return; const r = c.runner, P = ENGINE.player; P.position.set(r.position.x - 0.5, 0, r.position.z + 0.9); });
+  await T.until(() => !V13.rt.chase, 60000);
+  await L.waitDlg(T);
+  await T.wait(1200);
+  await L.shot(T, 'e_caught_dlg');
+  await sc.talk(T);
+  await L.waitFree(T);
+  await T.wait(2500);
+  await L.shot(T, 'f_secured');
+  await L.use(T, 'Read the waybill book');
+  await L.solve(T, 'm11_waybills');
+  await T.until(() => V13.hasEv('waybill_book'), 60000);
+  await L.use(T, 'Talk to Uche');
+  await L.waitDlg(T);
+  await T.wait(1500);
+  await L.shot(T, 'g_camp_decide_dlg');
+  await sc.talk(T, ['Call the Navy']);
+  await L.waitFree(T);
+  await L.put(T, 13.6, 1.9, 15.2, 1.5);
+  await T.wait(2500);
+  await L.shot(T, 'h_barge_jetty');
+  await L.use(T, 'Look over TEKENA 2');
+  await L.waitDlg(T);
+  await T.wait(1500);
+  await L.shot(T, 'h_barge_dlg');
+  // two other framings of the same moment, for comparison
+  for (const [nm, cam, side] of [['h_barge_alt1', [11.4, 1.7, 5.2], 0.25], ['h_barge_alt2', [9.8, 2.6, 7.6], 0.3]]) {
+    await T.ev(([cam, side]) => {
+      const at = [15.985, 0.4, -0.2], dx = at[0] - cam[0], dz = at[2] - cam[2], L = Math.hypot(dx, dz), rx = -dz / L, rz = dx / L, k = side * L;
+      const p = new THREE.Vector3(cam[0], cam[1], cam[2]), l = new THREE.Vector3(at[0] - rx * k, at[1], at[2] - rz * k);
+      TPCAM.override = { pos: p, look: l }; ENGINE.camera.position.copy(p); ENGINE.camera.lookAt(l);
+      if (TPCAM.pos && TPCAM.look) { TPCAM.pos.copy(p); TPCAM.look.copy(l); }
+    }, [cam, side]);
+    await T.wait(1500);
+    await L.shot(T, nm);
+  }
+  await sc.talk(T, ['Plant the tracker']);
+  await T.until(() => ENGINE.seq && ENGINE.seq.phase === 'act' && ENGINE.seq.t > 1.0, 60000);
+  await L.shot(T, 'h_tag');
+  await L.waitDlg(T, 120000);
+  await T.wait(2500);
+  await L.shot(T, 'i_end_dlg');
+  await T.ev(() => { document.getElementById('screen-dialogue').style.visibility = 'hidden'; });
+  await T.wait(2500);
+  await L.shot(T, 'i_end');
+  await T.ev(() => { document.getElementById('screen-dialogue').style.visibility = ''; });
+  await sc.talk(T);
+  await T.until(() => document.getElementById('screen-aftermath').classList.contains('show'), 60000);
+  await T.wait(1000);
+  await L.shot(T, 'j_aftermath');
+  T.log('END', await L.flags(T), await L.ev(T));
+};

@@ -1,0 +1,231 @@
+/* =========================================================================
+   NACECA · Season 2 court — Case 14: the court bar, stamps, the exhibit
+   list, the fix board, the judgment card, and the dialogue while court
+   sits. On our paper identity: the bar is a HUD panel, documents are
+   manila sheets, stamps are rubber stamps; no gradients, glows or shadows;
+   green and red always carry a word (and a dashed rule in colour-blind mode).
+   The primitives (.v13-sheet, .v13-stamp, .v13-tier, .v13-mark-*) are in s2.css.
+   ========================================================================= */
+
+/* ---------- the court bar: where we are, PW1's credibility, the exhibits ---------- */
+#court-bar{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:50%;z-index:95;display:flex;align-items:center;gap:12px;
+  padding:6px 7px 6px 14px;max-width:calc(100vw - 24px);box-sizing:border-box;background:var(--hud-panel,rgba(28,28,26,.94));border:1px solid var(--hud-border,rgba(233,220,192,.3));border-radius:var(--radius,3px);
+  box-shadow:none;opacity:0;pointer-events:none;transform:translate(-50%,-6px);transition:opacity .25s ease,transform .25s ease}
+#court-bar.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.cb-stage{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
+.cb-k{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;letter-spacing:.16em;color:var(--manila-2,#A89F8A);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cb-n{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.14em;color:var(--manila,#E9DCC0);white-space:nowrap;min-height:14px}
+#court-bar .cb-cred{display:none;position:relative;width:188px;flex:0 0 auto;margin:0;padding:4px 9px 6px;border-radius:2px}
+#court-bar.with-cred .cb-cred{display:block}
+#court-bar .cb-cred .pm-top{margin-bottom:3px;font-size:10px}
+/* the change to PW1's credibility: an ink chip under the meter, its sign and a green or red rule */
+.cb-delta{position:absolute;right:0;bottom:-20px;font-style:normal;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:12px;letter-spacing:.06em;line-height:1.3;padding:0 6px;border-radius:2px;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--manila,#E9DCC0);opacity:0;pointer-events:none}
+.cb-delta.up{border-color:var(--green,#0B6E4F)}.cb-delta.down{border-color:var(--red,#B3261E)}
+.cb-delta.show{animation:cbDelta 1.6s ease-out forwards}
+@keyframes cbDelta{0%{opacity:0;transform:translateY(-4px)}15%{opacity:1;transform:translateY(0)}75%{opacity:1}100%{opacity:0;transform:translateY(4px)}}
+/* EXHIBITS: the ghost button's look */
+.cb-exh{flex:0 0 auto;display:inline-flex;align-items:center;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.18em;color:var(--manila,#E9DCC0);background:transparent;border:1px solid var(--manila,#E9DCC0);
+  border-radius:var(--radius,3px);padding:0 12px;min-height:36px;cursor:pointer;white-space:nowrap;box-shadow:none}
+.cb-exh:hover{background:var(--ink-3,#34342F)}
+.cb-exh b{color:var(--manila,#E9DCC0);margin-left:6px;font-weight:600}
+.touch-active .cb-exh{min-height:44px;min-width:44px}
+
+/* ---------- stamps: OBJECTION, ADMITTED · EXHIBIT P4, REJECTED … a rubber stamp on manila, readable over 3D ---------- */
+#court-stamp{position:absolute;left:50%;top:30%;z-index:96;max-width:calc(100vw - 32px);box-sizing:border-box;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:700;font-size:28px;
+  letter-spacing:.16em;line-height:1.15;text-align:center;padding:8px 20px;border:2px solid var(--ink,#1C1C1A);border-radius:var(--radius,3px);color:var(--ink,#1C1C1A);background:var(--manila,#E9DCC0);
+  text-shadow:none;box-shadow:none;opacity:0;pointer-events:none;transform:translate(-50%,-50%) rotate(-3deg)}
+#court-stamp.obj,#court-stamp.bad{color:var(--red,#B3261E);border-color:var(--red,#B3261E)}
+#court-stamp.ok{color:var(--green,#0B6E4F);border-color:var(--green,#0B6E4F)}
+#court-stamp.show{animation:cStamp 1.7s ease-out forwards}
+@keyframes cStamp{0%{opacity:0;transform:translate(-50%,-50%) scale(1.5) rotate(-3deg)}12%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-3deg)}
+  80%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-3deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(.98) rotate(-3deg)}}
+
+/* ---------- a count of the charge, held up while the registrar reads it: a manila sheet ---------- */
+#court-doc{position:absolute;left:50%;top:calc(76px + env(safe-area-inset-top,0px));z-index:94;width:min(640px,calc(100vw - 32px));max-height:40vh;overflow:hidden;box-sizing:border-box;
+  padding:12px 18px 14px;background:var(--manila,#E9DCC0);color:var(--ink,#1C1C1A);border:1px solid var(--ink,#1C1C1A);border-left:3px solid var(--ink,#1C1C1A);border-radius:var(--radius,3px);box-shadow:none;
+  opacity:0;pointer-events:none;transform:translate(-50%,-6px);transition:opacity .25s ease,transform .25s ease}
+#court-doc.show{opacity:1;transform:translate(-50%,0)}
+#court-doc .cd-k{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;letter-spacing:.18em;color:var(--ink-soft,#4F4C44)}
+#court-doc .cd-t{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:16px;letter-spacing:.22em;color:var(--ink,#1C1C1A);margin:2px 0 6px;border-bottom:1px solid var(--ink,#1C1C1A);padding-bottom:4px}
+#court-doc p{margin:0;font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.55;color:var(--ink,#1C1C1A)}
+
+/* ---------- between the sittings: flat ink, a manila line ---------- */
+#court-interlude{position:absolute;inset:0;z-index:85;display:flex;align-items:flex-start;justify-content:center;pointer-events:none;opacity:0;transition:opacity .5s ease;background:var(--ink,#1C1C1A)}
+#court-interlude.show{opacity:1}
+#court-interlude .ci-k{margin-top:16vh;padding:0 24px;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:20px;letter-spacing:.3em;line-height:1.5;color:var(--manila,#E9DCC0);text-align:center}
+
+/* ---------- the exhibit list ---------- */
+#court-exh{position:absolute;inset:0;z-index:130;display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
+#court-exh.show{display:flex}
+#court-exh .ce-bg{position:absolute;inset:0;background:rgba(28,28,26,.8)}
+#court-exh .ce-frame{position:relative;width:min(640px,100%);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;box-sizing:border-box;padding:16px 18px 14px;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-radius:var(--radius,3px);box-shadow:none}
+.ce-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.ce-k{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;letter-spacing:.2em;color:var(--manila-2,#A89F8A)}
+.ce-t{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:22px;letter-spacing:.24em;color:var(--manila,#E9DCC0)}
+.ce-list{list-style:none;margin:0;padding:2px 2px 2px 0;display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:0;overscroll-behavior:contain}
+.ce-row{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;row-gap:1px;align-items:center;padding:7px 10px;border-left:3px solid var(--ink,#1C1C1A)}
+.ce-chip{grid-row:span 2;min-width:70px;box-sizing:border-box;text-align:center;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:13px;letter-spacing:.06em;padding:4px 8px;color:var(--ink,#1C1C1A)}
+#court-exh .ce-chip.v13-tier{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:13px}
+#court-exh .ce-chip.v13-stamp{font-size:11px;letter-spacing:.1em;padding:3px 6px}
+.ce-n{font-family:'Inter',sans-serif;font-size:13px;color:var(--ink,#1C1C1A);line-height:1.3}
+.ce-s{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:9.5px;letter-spacing:.12em;color:var(--ink-soft,#4F4C44);text-transform:uppercase}
+.ce-row.full{border-left-color:var(--green,#0B6E4F)}
+.ce-row.reduced{border-left-color:var(--ink,#1C1C1A)}
+.ce-row.mfi{border-left:3px dashed var(--grey,#6B6B63)}
+.ce-row.rej{border-left-color:var(--red,#B3261E)}.ce-row.rej .ce-n{color:var(--ink-soft,#4F4C44)}
+.ce-row.todo{opacity:.7;border-left:3px dashed var(--grey,#6B6B63)}
+.ce-none{font-family:'Inter',sans-serif;font-size:13px;color:var(--manila-2,#A89F8A);padding:10px 2px}
+.ce-foot{margin:10px 0 0;font-family:'Inter',sans-serif;font-size:11.5px;line-height:1.45;color:var(--manila-2,#A89F8A)}
+
+/* ---------- the fix board ---------- */
+#screen-courtfix{overflow-y:auto}
+.cf-frame{position:relative;width:min(980px,96vw);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;gap:10px;box-sizing:border-box;padding:18px 20px;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-radius:var(--radius,3px);box-shadow:none}
+.cf-head{display:flex;align-items:flex-start;gap:14px}
+.cf-head>div:first-child{flex:1;min-width:0}
+.cf-left{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10.5px;letter-spacing:.18em;color:var(--manila-2,#A89F8A);text-align:right;padding-top:2px;white-space:nowrap}
+.cf-left b{display:block;font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:22px;letter-spacing:.06em;color:var(--manila,#E9DCC0);font-weight:500}
+.cf-lead{margin:0;padding-left:10px;border-left:2px solid var(--rule-ink,rgba(233,220,192,.24));font-family:'Inter',sans-serif;font-size:12.5px;line-height:1.5;color:var(--manila-2,#A89F8A)}
+.cf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;overflow-y:auto;min-height:0;padding:2px;overscroll-behavior:contain}
+.cf-card{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-top:3px solid var(--ink,#1C1C1A)}
+.cf-card.done{border-top-color:var(--green,#0B6E4F)}
+.cf-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.cf-t{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:14.5px;letter-spacing:.05em;color:var(--ink,#1C1C1A);font-weight:500;line-height:1.3}
+.cf-who{flex:0 0 auto;color:var(--ink-soft,#4F4C44)}
+.cf-why{margin:0;font-family:'Inter',sans-serif;font-size:12px;line-height:1.45;color:var(--ink,#1C1C1A)}
+.cf-prot{margin:0;flex:1 1 auto;min-width:0;font-family:'Inter',sans-serif;font-size:11.5px;line-height:1.4;color:var(--ink,#1C1C1A)}
+.cf-prot span{display:block;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:9px;letter-spacing:.2em;color:var(--ink-soft,#4F4C44);margin-bottom:1px}
+.cf-prot em{font-style:normal;color:var(--ink-soft,#4F4C44)}
+.cf-act{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.cf-act .btn{min-width:0;flex:0 0 auto;padding:8px 14px;font-size:11px;letter-spacing:.16em;margin-left:auto}
+.cf-act .btn[disabled]{opacity:.4;cursor:default}
+.cf-done{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:11px;letter-spacing:.2em;color:var(--ink,#1C1C1A);padding:8px 0;margin-left:auto;display:inline-flex;align-items:center;gap:4px}
+.cf-none{margin:0;font-family:'Inter',sans-serif;font-size:11.5px;line-height:1.45;color:var(--manila-2,#A89F8A)}
+.cf-foot{display:flex;justify-content:flex-end}
+.cf-foot .btn{flex:0 0 auto;min-width:200px}
+
+/* ---------- the judgment card ---------- */
+#screen-courtverdict{overflow-y:auto}
+.cv-frame{position:relative;width:min(1060px,96vw);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;gap:12px;box-sizing:border-box;padding:18px 20px;
+  background:var(--ink,#1C1C1A);color:var(--manila,#E9DCC0);border:1px solid var(--rule-ink,rgba(233,220,192,.24));border-radius:var(--radius,3px);box-shadow:none;overflow-y:auto}
+.cv-head .plan-t{font-size:22px}
+.cv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cv-count{display:flex;flex-direction:column;gap:7px;padding:12px;border-top:3px solid var(--ink,#1C1C1A)}
+.cv-count.g{border-top-color:var(--green,#0B6E4F)}.cv-count.ng{border-top-color:var(--red,#B3261E)}.cv-count.plea{border-top-color:var(--ink,#1C1C1A)}
+.cv-count header{display:flex;flex-direction:column;gap:2px}
+.cv-k{font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;letter-spacing:.2em;color:var(--ink-soft,#4F4C44)}
+.cv-count header b{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:17px;letter-spacing:.08em;color:var(--ink,#1C1C1A);font-weight:500}
+.cv-off{margin:0;font-family:'Inter',sans-serif;font-size:11.5px;line-height:1.45;color:var(--ink-soft,#4F4C44)}
+.cv-els{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.cv-els li{display:flex;align-items:baseline;gap:6px;font-family:'Inter',sans-serif;font-size:12.5px;color:var(--ink,#1C1C1A)}
+.cv-els li > span:first-child{flex:0 0 18px;font-size:15px;line-height:1;text-decoration:none}
+.cv-els li.y > span:first-child{color:var(--green,#0B6E4F)}
+.cv-els li.n > span:first-child{color:var(--red,#B3261E)}
+.cv-els li.n{color:var(--ink-soft,#4F4C44)}
+.cv-els li em{font-style:normal;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:9px;letter-spacing:.14em;color:var(--ink-soft,#4F4C44);margin-left:auto;white-space:nowrap}
+.cv-out{margin-top:auto;padding-top:8px;border-top:1px solid var(--rule-paper,rgba(28,28,26,.32));line-height:1.35}
+#screen-courtverdict .cv-out .v13-stamp{font-size:12px;letter-spacing:.1em;white-space:normal;transform:rotate(-1deg)}
+.cv-stats{display:flex;flex-wrap:wrap;gap:6px 22px;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:10px;letter-spacing:.16em;color:var(--manila-2,#A89F8A)}
+.cv-stats b{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:16px;letter-spacing:.04em;color:var(--manila,#E9DCC0);font-weight:500;margin-left:4px}
+.cv-stats em{font-style:normal;color:var(--manila-3,#8C8473);margin-left:4px;letter-spacing:.08em}
+.cv-foot{display:flex;justify-content:flex-end;position:sticky;bottom:-18px;margin:0 -20px -18px;padding:10px 20px 14px;background:var(--ink,#1C1C1A);border-top:1px solid var(--rule-ink,rgba(233,220,192,.24))}
+.cv-foot .btn{flex:0 0 auto;min-width:200px}
+
+/* ---------- the dialogue while court sits: the camera shows the speaker, the face moves aside ---------- */
+body.v13-court .dialogue-overlay{background:transparent}
+body.v13-court .dialogue-overlay.show{padding-bottom:22px}
+body.v13-court .dialogue-portrait{position:static;transform:none;align-self:flex-start;flex:0 0 auto;width:84px;height:84px;margin:0 0 -18px max(22px,calc(50% - 444px));z-index:2;border-width:2px}
+body.v13-court .dialogue-box{padding:22px 28px 14px}
+body.v13-court .dialogue-box .speaker{padding-left:72px}
+body.v13-court .dialogue-box .text{margin-bottom:10px}
+body.v13-court .dialogue-box .choices{gap:6px}
+body.v13-court .dialogue-choice{font-size:13.5px;line-height:1.4;padding:9px 14px}
+@media (max-width:760px){
+  body.v13-court .dialogue-portrait{width:64px;height:64px;margin:0 0 -14px 16px}
+  body.v13-court .dialogue-box .speaker{padding-left:58px}
+}
+
+/* ---------- short landscape phones: everything tighter, the 3D view kept open ---------- */
+@media (max-height:520px){
+  body.v13-court .cine-bars.show{height:30px}
+  body.v13-court .dialogue-overlay.show{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+  body.v13-court .dialogue-portrait{width:44px;height:44px;margin:0 0 -12px max(16px,calc(50% - 444px))}
+  body.v13-court #screen-dialogue:has(#dlg-choices .dialogue-choice) .dialogue-portrait{display:none}
+  body.v13-court .dialogue-box{padding:10px 16px 8px;width:calc(100% - 20px);max-height:calc(100dvh - 56px);overflow-y:auto;overscroll-behavior:contain}
+  body.v13-court .dialogue-box .speaker{font-size:11px;letter-spacing:.22em;margin-bottom:4px;padding-left:40px}
+  body.v13-court #screen-dialogue:has(#dlg-choices .dialogue-choice) .dialogue-box .speaker{padding-left:0}
+  body.v13-court .dialogue-box .text{font-size:13.5px;line-height:1.45;margin-bottom:6px;min-height:0}
+  body.v13-court .dialogue-box .choices{gap:5px}
+  body.v13-court .dialogue-choice{font-size:12.5px;line-height:1.32;padding:7px 10px;gap:8px;min-height:36px}
+  body.v13-court.touch-active .dialogue-choice{min-height:44px}
+  body.v13-court .dialogue-choice .marker{width:14px}
+  body.v13-court .dialogue-continue{margin-top:0;font-size:10px}
+  #court-bar{top:calc(3px + env(safe-area-inset-top,0px));gap:8px;padding:3px 4px 3px 10px}
+  .cb-k{font-size:9px;letter-spacing:.12em}
+  .cb-n{font-size:10.5px;min-height:12px}
+  #court-bar .cb-cred{width:150px;padding:2px 7px 4px}
+  #court-bar .cb-cred .pm-top{font-size:9px;margin-bottom:2px}
+  .cb-exh{min-height:30px;padding:0 9px;font-size:10px;letter-spacing:.14em}
+  .touch-active .cb-exh{min-height:44px}
+  .cb-delta{bottom:-16px;font-size:11px}
+  #court-stamp{top:24%;font-size:20px;padding:5px 14px}
+  #court-doc{top:calc(40px + env(safe-area-inset-top,0px));max-height:calc(100dvh - 190px);padding:8px 12px 10px}
+  .touch-active #court-doc{top:calc(56px + env(safe-area-inset-top,0px))}
+  #court-doc .cd-t{font-size:13px;margin:0 0 3px}
+  #court-doc p{font-size:12px;line-height:1.42}
+  #court-interlude .ci-k{margin-top:10vh;font-size:15px}
+  #court-exh{padding:8px}
+  #court-exh .ce-frame{max-height:calc(100dvh - 16px);padding:10px 12px}
+  .ce-head{margin-bottom:6px}.ce-t{font-size:17px}
+  .ce-row{padding:5px 8px}.ce-n{font-size:12px}.ce-chip{font-size:12px;min-width:60px;padding:4px 6px}
+  .ce-foot{display:none}
+  #screen-courtfix,#screen-courtverdict{padding:8px}
+  .cf-frame,.cv-frame{max-height:calc(100dvh - 16px);padding:10px 14px;gap:7px}
+  .cf-head .plan-t,.cv-head .plan-t{font-size:17px}
+  .cf-left{display:flex;align-items:baseline;gap:6px;padding-top:0}
+  .cf-left b{display:inline;font-size:17px}
+  .cf-lead{display:none}
+  .cf-t{font-size:13px}
+  /* (SC2) no line clamp: on Senior the WHY line is the only basis for choosing a fix; the cards wrap and the grid scrolls */
+  .cf-why{font-size:11.5px;line-height:1.4}
+  .cf-none{display:none}
+  .cf-act .btn{padding:6px 12px;font-size:10.5px}
+  .cv-foot{bottom:-10px;margin:0 -14px -10px;padding:8px 14px 10px}
+  /* the fix board wraps into rows and scrolls down: every card is in reach, the next row shows there is more */
+  .cf-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;overflow-y:auto;overflow-x:hidden;padding-bottom:4px}
+  .cf-card{padding:8px 10px;gap:5px}
+  .cf-prot{font-size:11px}
+  .cf-foot .btn,.cv-foot .btn{min-width:160px;padding:10px 18px}
+  .cv-grid{gap:8px}
+  .cv-count{padding:8px 10px;gap:5px}
+  .cv-count header b{font-size:15px}
+  .cv-off{font-size:10.5px}
+  .cv-els li{font-size:11.5px}
+}
+/* narrow portrait: one column, the stage line wraps under the meter */
+@media (max-width:620px){
+  #court-bar{flex-wrap:wrap;justify-content:space-between;width:calc(100vw - 16px);row-gap:4px}
+  .cb-stage{flex:1 1 100%}
+  #court-bar .cb-cred{flex:1 1 auto;width:auto}
+  #court-stamp{font-size:20px;letter-spacing:.12em}
+  #court-doc{top:calc(112px + env(safe-area-inset-top,0px))}
+}
+@media (max-width:620px) and (min-height:521px){
+  .cf-grid{grid-template-columns:1fr}
+  .cv-grid{grid-template-columns:1fr}
+  body.v13-court .cine-bars.show{height:56px}
+  body.v13-court .dialogue-box{max-height:calc(100dvh - 120px);overflow-y:auto}
+}
+
+/* ---------- reduced motion: the stamp and the credibility change just appear ---------- */
+body.reduce-motion :is(.cb-delta.show,#court-stamp.show){animation:none;opacity:1}
+body.reduce-motion :is(#court-bar,#court-doc,#court-interlude){transition:none}
+/* ---------- colour-blind mode: every red rule is dashed as well, beside its word ---------- */
+body.cb .cv-count.ng{border-top-style:dashed}
+body.cb .ce-row.rej{border-left-style:dashed}
+body.cb .cb-delta.down{border-style:dashed}
+body.cb #court-stamp:is(.obj,.bad){border-style:dashed}
+body.cb .cv-els li.n > span:first-child{color:var(--ink,#1C1C1A)}
+body.cb .cv-els li.y > span:first-child{color:var(--ink,#1C1C1A)}

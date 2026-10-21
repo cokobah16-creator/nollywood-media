@@ -9,6 +9,7 @@
 // six metres behind the courier, crouching whenever she looks back; "lost" stands twenty metres off.
 // FT_CASES='A front,C calm' picks cases by name (default: all eight).
 const LIB = require('./v13_port_lib.cjs');
+const S2H = require('./_s2_handoff.cjs');   // with Season 2 in the page, the review's FINISH starts Season 2
 const PRE_M8 = ['m0', 'm1', 'm2', 'm3', 'm3n', 'm4', 'm5', 'm6', 'm7', 't7'];
 const EV = (id, name) => ({ id, name, xp:0 });
 const CASES = [
@@ -141,8 +142,9 @@ module.exports = async h => {
         return { sheets:sheets.length, rows, warrants:lines.every(t => text.includes(t)), verdict:courtEpilogueText() };
       });
       await h.shot('port_finale_review_' + (E.court ? 'proven' : 'unproven') + '_' + vp);
+      const s2p = await S2H.pending(h);
       await h.ev(() => document.getElementById('btn-review-done').click());
-      const title = await P.waitShown('screen-title', { timeout:2000 });
+      const end = await S2H.after(h, s2p), title = end.title;
       const trail = await B.trail();
       r.after = { slides:slides.length, review, title, s1:await h.ev(() => !!S.game.seasonOneComplete) };
       h.log('   epilogue', slides.join(' | '));
@@ -154,8 +156,9 @@ module.exports = async h => {
       }
       h.assert(review && !underTitle, cs.name + ': the review opens after the last slide, before the title screen');
       h.assert(rv.sheets === 3 && rv.warrants, cs.name + ': the review reads the filed records (three sheets, every warrant line)');
-      h.assert(title && r.after.s1, cs.name + ': FINISH → title; Season One complete');
-      h.assert(trail.indexOf('ov:screen-review') > trail.indexOf('ov:screen-epilogue') && trail.lastIndexOf('ov:screen-title') > trail.indexOf('ov:screen-review'), cs.name + ': epilogue → review → title, in that order');
+      h.assert(S2H.ok(s2p, end) && r.after.s1, cs.name + ': ' + S2H.what(s2p) + '; Season One complete');
+      h.assert(trail.indexOf('ov:screen-review') > trail.indexOf('ov:screen-epilogue') && (s2p || trail.lastIndexOf('ov:screen-title') > trail.indexOf('ov:screen-review')), cs.name + ': epilogue → review → ' + (s2p ? 'Season 2' : 'title') + ', in that order');
+      if(end.s2) h.assert(await S2H.toTitle(h), cs.name + ': Season 2 began: back to the title (pause, QUIT)');
     }
     out.push(r);
     await h.ev(() => { showOverlay(null); ENGINE.movementEnabled = false; ENGINE.keys.KeyC = false; });
