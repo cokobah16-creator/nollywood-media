@@ -103,6 +103,7 @@ async function dryrun(h, out) {
   const kit = () => h.ev(() => ({ dev:V12.ptKit.device(), label:V12.ptKit.label(), ps:V12.ptKit.ps() }));
   const touch = await h.ev(() => document.body.classList.contains('touch-active'));
   const size = await h.ev(() => innerWidth + 'x' + innerHeight);
+  const desk = !touch && (await h.ev(() => innerWidth)) >= 1024;   // the protocol's desktop (1280x800); the phone is 390x844 touch
   // the harness has no three.js: the legacy scene builders, as every scenario's h.start sets them; again after a reload
   const legacy = () => WF.boot(h).then(() => h.ev(() => { ART.failed = true; ART.ready = false; ART.promise = null; }));
   const live = async () => { await WF.frozenClock(h); await WF.stepper(h); };   // the scripted slice steps the world (as T.start)
@@ -121,7 +122,10 @@ async function dryrun(h, out) {
     h.log(`the menu control (${where}): ${MENU} ${JSON.stringify(c)}`);
     if (touch) h.assert(c.vis && c.text === '' && c.aria === 'Pause' && c.bars === 2 && c.top < 40 && c.right < 40 && c.w >= 40 && c.h >= 40 && !c.otherVis,
       'phone: the round pause button (two bars, no text) at the top right; no MENU pill on this layout');
-    else h.assert(c.vis && /MENU$/.test(c.text) && c.top < 40 && !c.otherVis, 'desktop: the MENU pill (ESC · MENU) at the top of the screen, beside the mission panel; no round pause button on this layout');
+    else if (desk) h.assert(c.vis && /MENU$/.test(c.text) && c.top < 40 && !c.otherVis, 'desktop: the MENU pill (ESC · MENU) at the top of the screen, beside the mission panel; no round pause button on this layout');
+    // a narrow keyboard window (the harness's default 390x844 without touch) is no protocol layout: the mission panel
+    // stacks above the pill there, so only the control itself is checked, not where it sits
+    else h.assert(c.vis && /MENU$/.test(c.text) && !c.otherVis, 'narrow keyboard window: the MENU pill is the menu control; no round pause button');
     await tap(MENU, 300);
     h.assert((await shown()).includes('screen-pause'), 'it opens the menu ' + JSON.stringify(await shown()));
   };
