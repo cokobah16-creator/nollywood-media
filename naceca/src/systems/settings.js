@@ -173,8 +173,13 @@ function ensureSettingsScreen(){
     </div>`;
   document.getElementById('game-root').appendChild(ov);
   document.getElementById('btn-settings-close').addEventListener('click', closeSettings);
-  document.getElementById('btn-settings-reset').addEventListener('click', ()=>{ SETTINGS = Object.assign({}, SETTINGS_DEFAULT); saveSettings(); _gfxActive = null; applySettings(); renderSettings(); });
+  document.getElementById('btn-settings-reset').addEventListener('click', ()=>{ resetSettings(); renderSettings(); });
 }
+/* RESET TO DEFAULTS. beta/casework.js wraps this: during an investigation "Hints when stuck" goes back to the casework's
+   default (Senior Agent off, Recruit on), not the table's 'on'. */
+function resetSettings(){ SETTINGS = Object.assign({}, SETTINGS_DEFAULT); saveSettings(); _gfxActive = null; applySettings(); }
+// the playtest log (V12.log, when the v12 layer is present): a "Hints when stuck" change is what the facilitator writes down
+function logSettingChange(k, v, src){ if(typeof V12 !== 'undefined' && V12 && typeof V12.log === 'function') V12.log('settings', { k, v, src }); }
 function renderSettings(){
   const body = document.getElementById('settings-body'); body.innerHTML = '';
   SETTINGS_UI.forEach((row, ri)=>{
@@ -204,6 +209,7 @@ function renderSettings(){
         SETTINGS[btn.dataset.k] = btn.dataset.v;
         if(btn.dataset.k === 'gfx') _gfxActive = null;
         saveSettings(); applySettings();
+        if(btn.dataset.k === 'hints') logSettingChange('hints', btn.dataset.v, 'row');
       }
       btn.parentElement.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on', b===btn); b.setAttribute('aria-pressed', b===btn); });
       if(typeof sfxClick === 'function') sfxClick();

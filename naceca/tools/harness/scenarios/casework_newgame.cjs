@@ -62,9 +62,11 @@ module.exports = async h => {
     localStorage.setItem(SAVE_KEY, JSON.stringify(s));
     S.game.difficulty = 'recruit'; syncDifficultyClass();
     loadGame();
-    return { d:S.game.difficulty, acc:typeof S.game.accusations, cls:document.body.classList.contains('cw-senior') };
+    return { d:S.game.difficulty, acc:typeof S.game.accusations, cls:document.body.classList.contains('cw-senior'), hints:SETTINGS.hints, prev:SETTINGS.hintsPrev };
   });
   h.assert(st.d === 'senior' && st.acc === 'object' && st.cls, 'an old save loads as Senior Agent with an accusations object');
+  // the Senior start above never saved, so the save on the device is still the old one: the device's setting goes back with it
+  h.assert(st.hints === 'on' && st.prev === undefined, 'a save loaded before the new investigation ever saved brings Hints when stuck back to the value from before the start (on) ' + JSON.stringify(st));
 
   // CONTINUE keeps a Recruit save's mode and class
   st = await h.ev(() => {
@@ -75,6 +77,6 @@ module.exports = async h => {
     return { d:S.game.difficulty, cls:document.body.classList.contains('cw-recruit'), hints:SETTINGS.hints };
   });
   h.assert(st.d === 'recruit' && st.cls, 'CONTINUE restores Recruit and the body class');
-  h.assert(st.hints === 'off', 'CONTINUE leaves Hints when stuck as the device has it (off since the Senior start)');
+  h.assert(st.hints === 'on', 'CONTINUE leaves Hints when stuck as the device has it (on again since the load above)');
   h.log('PASS casework_newgame', tag);
 };

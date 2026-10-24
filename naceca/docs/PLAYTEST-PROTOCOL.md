@@ -31,8 +31,12 @@ gives the device a 4-character id, for example **B7QX**, which stays on the devi
 2. Leave every setting at its default: Action pace Standard, Objective marker On. "Hints when stuck" is set by the start
    itself (decided 24 Oct, DESIGN-tactics.md §11.8): a new **Senior Agent** investigation (NEW INVESTIGATION or START AT M2)
    turns it **Off**, a **Recruit** one turns it **On**; the sheet says so under each mode, and the Settings row still
-   changes it. Write down any change you make, and **still write down "Hints when stuck" for every player**: its 60 s
-   "Try this next" toast names the next step, so a Senior player who turned it back On played a different game.
+   changes it (RESET TO DEFAULTS during an investigation sets the casework's default, not On). The M2 table's 90 s
+   process line ("Link two cards that are connected in the crime…", no card named) still comes for a Senior player
+   either way; only its HINT toast follows the setting. Write down any change you make, and **still write down "Hints
+   when stuck" for every player**: its 60 s "Try this next" toast names the next step, so a Senior player who turned it
+   back On played a different game. The report prints the value in force for each player, with "(changed during play)"
+   when it was changed after the start.
 3. Tap **NEW PLAYER** twice (the first tap reads `TAP AGAIN · START P3`). The row now reads, for example,
    *B7QX·P3 · 1 event since 14:02*. Write **the device id and the label together** on your sheet, exactly as the row prints
    them: **B7QX·P3**. The Summary sheet and the report print players the same way.

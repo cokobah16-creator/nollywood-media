@@ -40,24 +40,62 @@ const trail = (k, d)=>{ CW.trail.push([k, d == null ? null : d]); if(CW.trail.le
    1. Casework difficulty
    ===================================================================== */
 const sync = ()=>{ if(typeof syncDifficultyClass === 'function') syncDifficultyClass(); };
-/* "Hints when stuck" (SETTINGS.hints, the 60 s "Try this next" toast and the table's 90 s process line) follows the
-   casework a NEW investigation starts with: off for Senior Agent (no answer-giving hints), on for Recruit. Only at the
-   new-investigation sheet's BEGIN and at the playtest kit's START AT M2 (tactics/tac_pt.js calls this) — never on a
-   load, a mission-select replay or a Casework change in Settings: an existing save keeps whatever the device has, and
-   the Settings row changes it at any time. */
+/* "Hints when stuck" (SETTINGS.hints) gates what is a hint: the field's 60 s "Try this next" toast, the M2 table's HINT
+   toast, Recruit's note and pair at the table — not the table's Senior process line, which names nothing (v12_ops.js).
+   It follows the casework a NEW investigation starts with: off for Senior Agent (no answer-giving hints), on for
+   Recruit. Only at the new-investigation sheet's BEGIN and at the playtest kit's START AT M2 (tactics/tac_pt.js calls
+   this) — never on a load, a mission-select replay or a Casework change in Settings: an existing save keeps whatever
+   the device has, and the Settings row changes it at any time.
+   Until the new investigation saves for the first time the old save is still the one on the device (the sheet says
+   so), so the value from before the start is kept with the settings (SETTINGS.hintsPrev) and comes back if that old
+   save is loaded instead; the first save drops it. RESET TO DEFAULTS during an investigation sets the casework's
+   default, not the table's 'on'. A change the player did not make at the row is logged: settings {k:'hints', v, src}. */
+const HV = v => v === 'on' || v === 'off';
 CW.HINTS_FOR = { recruit:'on', senior:'off' };
 CW.hintsForNewGame = function(d){
-  const v = CW.HINTS_FOR[d === 'recruit' ? 'recruit' : 'senior'];
-  try{ if(typeof SETTINGS !== 'undefined' && SETTINGS){ SETTINGS.hints = v; if(typeof saveSettings === 'function') saveSettings(); } }catch(e){}
-  trail('hints_default', { d:d === 'recruit' ? 'recruit' : 'senior', hints:v });
+  d = d === 'recruit' ? 'recruit' : 'senior';
+  const v = CW.HINTS_FOR[d];
+  try{
+    if(typeof SETTINGS !== 'undefined' && SETTINGS){
+      const before = HV(SETTINGS.hintsPrev) ? SETTINGS.hintsPrev : SETTINGS.hints;   // a start abandoned before its first save keeps the first "before"
+      SETTINGS.hints = v;
+      if(before !== v) SETTINGS.hintsPrev = before; else delete SETTINGS.hintsPrev;
+      if(typeof saveSettings === 'function') saveSettings();
+    }
+  }catch(e){}
+  trail('hints_default', { d, hints:v });
   return v;
 };
+// the first save of the new investigation replaces the old one on the device: the "before" value is no longer wanted
+wrap('saveGame', orig => function(){
+  const r = orig.apply(this, arguments);
+  try{ if(typeof SETTINGS !== 'undefined' && SETTINGS && 'hintsPrev' in SETTINGS){ delete SETTINGS.hintsPrev; if(typeof saveSettings === 'function') saveSettings(); } }catch(e){}
+  return r;
+});
+// RESET TO DEFAULTS during an investigation: the casework's default; with no investigation running, the table's 'on'
+wrap('resetSettings', orig => function(){
+  const was = (typeof SETTINGS !== 'undefined' && SETTINGS) ? SETTINGS.hints : null;
+  const r = orig.apply(this, arguments);
+  try{
+    if(S && S.game && S.game.currentMission && typeof gameDifficulty === 'function'){ SETTINGS.hints = CW.HINTS_FOR[gameDifficulty()]; if(typeof saveSettings === 'function') saveSettings(); }
+    if(SETTINGS.hints !== was){ trail('hints_reset', { hints:SETTINGS.hints }); log('settings', { k:'hints', v:SETTINGS.hints, src:'reset' }); }
+  }catch(e){}
+  return r;
+});
 wrap('loadGame', orig => function(){
   const ok = orig.apply(this, arguments);
   try{
     if(S && S.game){
       if(S.game.difficulty !== 'recruit') S.game.difficulty = 'senior';           // old saves → Senior
       if(!S.game.accusations || typeof S.game.accusations !== 'object') S.game.accusations = {};
+    }
+    // the save on the device came back before a new investigation ever saved: the device's "Hints when stuck" goes back with it
+    if(ok && typeof SETTINGS !== 'undefined' && SETTINGS && HV(SETTINGS.hintsPrev)){
+      const v = SETTINGS.hintsPrev, changed = SETTINGS.hints !== v;
+      delete SETTINGS.hintsPrev; SETTINGS.hints = v;
+      if(typeof saveSettings === 'function') saveSettings();
+      trail('hints_restore', { hints:v });
+      if(changed) log('settings', { k:'hints', v, src:'restore' });
     }
   }catch(e){}
   sync();

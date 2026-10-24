@@ -2,7 +2,10 @@
 // a Senior Agent start sets SETTINGS.hints 'off', a Recruit start 'on' — at the new-investigation sheet's BEGIN and at the
 // playtest kit's START AT M2 only. A save loaded with 'on' stays 'on' (an existing save keeps whatever the device has); the
 // Casework row in Settings and a mission-select replay leave it alone; the sheet and the Settings row say so; the 60 s toast
-// still follows the setting; the new_game event carries hints next to the casework.
+// still follows the setting; the new_game event carries hints next to the casework. Review fixes: the report reads the
+// start's value (R1); the row, RESET TO DEFAULTS and the restore log settings {k:'hints', v, src} (R5); RESET during an
+// investigation sets the casework's default (R3); a start abandoned before its first save gives the old save its setting
+// back (R4).
 //   node tools/harness/run.cjs tools/harness/scenarios/casework_hints_default.cjs --html <build> [--w 390 --h 844 --touch 1 | --w 1280 --h 800]
 const P = require('./pt_lib.cjs');
 const W = require('./wayfind_lib.cjs');
@@ -145,6 +148,71 @@ module.exports = async h => {
   await h.step(150);
   st = await h.ev(() => { openSettings(); const r = document.querySelector('#settings-body .set-row[data-key="hints"]'); const o = { on:(r.querySelector('button.on') || {}).dataset.v, note:(r.querySelector('.set-note') || {}).textContent }; closeSettings(); return o; });
   h.assert(st.on === 'off' && st.note === ROW_NOTE, 'after START AT M2 the row reads Off, with its note ' + JSON.stringify(st));
+
+  // ---- 9. the report reads the start's value, not the device's value at load: "hints when stuck off" (R1) ----
+  const leadFor = t0 => h.ev(t0 => {
+    const R = V12.ptReport, all = R.dedupe(R.normalize({ ok:true, events:V12.ptKit.events() }, 'now.json'));
+    const p = R.players(all).find(p => p.events.some(e => e.type === 'new_game' && e.t >= t0));
+    return p ? R.leadLine(R.meta(p.events)) : null;
+  }, t0);
+  let lead = await leadFor(t0);
+  h.assert(lead && /Senior Agent · hints when stuck off ·/.test(lead), 'after the Senior start (session logged with hints on) the report\'s lead line reads hints when stuck off: ' + lead);
+
+  // ---- 10. the row logs its change; RESET TO DEFAULTS during an investigation sets the casework's default (R3, R5) ----
+  const tReset = await P.mark(h);
+  st = await h.ev(() => {
+    const out = {}, q = v => document.querySelector(`#settings-body .set-row[data-key="hints"] button[data-v="${v}"]`);
+    openSettings(); q('on').click(); out.rowOn = SETTINGS.hints;
+    document.getElementById('btn-settings-reset').click();
+    out.afterReset = SETTINGS.hints; out.row = (document.querySelector('#settings-body .set-row[data-key="hints"] button.on') || {}).dataset.v;
+    out.d = S.game.difficulty; out.m = S.game.currentMission; out.pace = SETTINGS.difficulty; out.prev = SETTINGS.hintsPrev;
+    out.stored = (JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')).hints;
+    closeSettings(); return out;
+  });
+  h.assert(st.rowOn === 'on' && st.d === 'senior' && st.m === 'm2' && st.afterReset === 'off' && st.row === 'off' && st.stored === 'off' && st.pace === 'standard' && st.prev === undefined,
+    'RESET TO DEFAULTS during a Senior investigation puts Hints when stuck back Off (the other rows reset) ' + JSON.stringify(st));
+  let sets = P.of(await P.all(h), 'settings', tReset).map(e => e.d);
+  h.assert(sets.length === 2 && sets[0].k === 'hints' && sets[0].v === 'on' && sets[0].src === 'row' && sets[1].k === 'hints' && sets[1].v === 'off' && sets[1].src === 'reset',
+    'the row and the reset each log settings {k:hints, v, src} ' + JSON.stringify(sets));
+  lead = await leadFor(t0);
+  h.assert(lead && /hints when stuck off \(changed during play\)/.test(lead), 'the report prints the value in force and that it changed: ' + lead);
+  st = await h.ev(() => { setGameDifficulty('recruit'); openSettings(); document.getElementById('btn-settings-reset').click(); const o = { hints:SETTINGS.hints, d:S.game.difficulty }; closeSettings(); return o; });
+  h.assert(st.d === 'recruit' && st.hints === 'on', 'RESET during a Recruit investigation: On ' + JSON.stringify(st));
+  await h.ev(() => { if(document.querySelector('#screen-pause.show')) togglePause(); showOverlay(null); });
+
+  // ---- 11. a start abandoned before its first save: the old save stays on the device, and so does its setting (R4) ----
+  // a Recruit save on the device, hints on → NEW INVESTIGATION → BEGIN (Senior) → quit to the title before any save → CONTINUE
+  await h.ev(() => { SETTINGS.hints = 'on'; delete SETTINGS.hintsPrev; saveSettings();
+    const s = defaultState(); s.game.difficulty = 'recruit'; s.game.completedMissions = ['m0', 'm1']; s.game.currentMission = 'm2'; localStorage.setItem(SAVE_KEY, JSON.stringify(s));
+    showHUD(false); ENGINE.movementEnabled = false; showOverlay('screen-title'); });
+  await sheetOpen();
+  const tAb = await P.mark(h);
+  await begin(null);
+  st = await h.ev(() => ({ d:S.game.difficulty, m:S.game.currentMission, hints:SETTINGS.hints, prev:SETTINGS.hintsPrev, saveIs:JSON.parse(localStorage.getItem(SAVE_KEY)).game.difficulty,
+    storedPrev:(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')).hintsPrev }));
+  h.assert(st.d === 'senior' && st.m === 'm0' && st.hints === 'off' && st.prev === 'on' && st.storedPrev === 'on' && st.saveIs === 'recruit',
+    'BEGIN Senior over a Recruit save: off now, the value from before kept with the settings, the old save still on the device ' + JSON.stringify(st));
+  st = await h.ev(() => { showHUD(false); ENGINE.movementEnabled = false; showOverlay('screen-title'); document.getElementById('btn-continue').disabled = false; document.getElementById('btn-continue').click();
+    return { d:S.game.difficulty, hints:SETTINGS.hints, prev:SETTINGS.hintsPrev, trail:(CW.trail.filter(t => t[0] === 'hints_restore').pop() || [])[1] || null }; });
+  h.assert(st.d === 'recruit' && st.hints === 'on' && await stored() === 'on' && st.prev === undefined && st.trail && st.trail.hints === 'on', 'CONTINUE on the old Recruit save: Hints when stuck comes back on ' + JSON.stringify(st));
+  sets = P.of(await P.all(h), 'settings', tAb).map(e => e.d);
+  h.assert(sets.length === 1 && sets[0].k === 'hints' && sets[0].v === 'on' && sets[0].src === 'restore', 'and the log says so: settings {k:hints, v:on, src:restore} ' + JSON.stringify(sets));
+  // the normal path: the new investigation's first save makes it the one on the device; nothing comes back after it
+  await toTitle(); await sheetOpen();
+  await begin(null);
+  st = await h.ev(() => { const a = { hints:SETTINGS.hints, prev:SETTINGS.hintsPrev }; saveGame(true);
+    const b = { prev:SETTINGS.hintsPrev, storedPrev:(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')).hintsPrev, saveIs:JSON.parse(localStorage.getItem(SAVE_KEY)).game.difficulty };
+    showHUD(false); ENGINE.movementEnabled = false; showOverlay('screen-title'); document.getElementById('btn-continue').disabled = false; document.getElementById('btn-continue').click();
+    return { a, b, after:{ d:S.game.difficulty, hints:SETTINGS.hints } }; });
+  h.assert(st.a.hints === 'off' && st.a.prev === 'on' && st.b.prev === undefined && st.b.storedPrev === undefined && st.b.saveIs === 'senior' && st.after.d === 'senior' && st.after.hints === 'off' && await stored() === 'off',
+    'once the new investigation has saved, the value from before is dropped and CONTINUE keeps off ' + JSON.stringify(st));
+  // two starts abandoned in a row keep the first "before"; a start that lands on it drops it
+  st = await h.ev(() => { SETTINGS.hints = 'on'; delete SETTINGS.hintsPrev; saveSettings(); const r = {}; CW.hintsForNewGame('senior'); r.one = [SETTINGS.hints, SETTINGS.hintsPrev]; CW.hintsForNewGame('senior'); r.two = [SETTINGS.hints, SETTINGS.hintsPrev]; CW.hintsForNewGame('recruit'); r.three = [SETTINGS.hints, SETTINGS.hintsPrev]; return r; });
+  h.assert(st.one.join() === 'off,on' && st.two.join() === 'off,on' && st.three[0] === 'on' && st.three[1] == null, 'abandoned starts keep the first "before"; a Recruit start on a device that was on has nothing to give back ' + JSON.stringify(st));
+
+  // ---- 12. RESET with no investigation running: the table's default On ----
+  st = await h.ev(() => { S = defaultState(); SETTINGS.hints = 'off'; saveSettings(); openSettings(); document.getElementById('btn-settings-reset').click(); const o = { hints:SETTINGS.hints, m:S.game.currentMission }; closeSettings(); return o; });
+  h.assert(st.m === null && st.hints === 'on', 'RESET with no investigation running: the table\'s default On ' + JSON.stringify(st));
   h.assert(h.errors.length === 0, 'no page errors');
   h.log('PASS casework_hints_default', tag);
 };

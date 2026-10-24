@@ -863,7 +863,8 @@ The harness stubs three.js, so these can't be settled there.
     done, the state `h.start('m2', {completed:['m0','m1']})` uses) for sessions under 60 minutes, and record which start
     was used.
   - **Hints when stuck:** record the setting per player. A Senior Agent start (full or M2) sets it Off, a Recruit start
-    On (§11.8, decided 24 Oct); the Settings row still changes it.
+    On (§11.8, decided 24 Oct); the Settings row still changes it, and the report prints the value in force (with
+    "changed during play" when it moved after the start).
   - **Summary access:** the Summary rows appear only after NEW PLAYER (or `?pt=1`).
   - **CLI:** `node tools/pt_report.cjs <folder> [--player B7QX·P3] [--around 2026-10-17T14:32] [--md report.md]`.
 
@@ -888,8 +889,15 @@ The design ships the bold default, so nothing blocks on these.
    for Senior Agent, On for Recruit** — at the new-investigation sheet's BEGIN and at START AT M2 (`CW.hintsForNewGame`,
    src/beta/casework.js; the sheet says so under each mode and the Settings row's note says the default). Nothing else
    moves it: a loaded save keeps whatever the device has, a Casework change in Settings leaves it alone, and the row
-   still changes it at any time. The `new_game` event carries `hints` next to `d`. The facilitator still writes it down
-   per player (PLAYTEST-PROTOCOL.md).
+   still changes it at any time. Two edges follow the same rule: RESET TO DEFAULTS during an investigation sets the
+   casework's default, not the table's On; and until the new investigation saves for the first time the old save is
+   still the one on the device (the sheet says so), so the value from before the start is kept with the settings
+   (`SETTINGS.hintsPrev`) and comes back if that old save is loaded instead — the first save drops it. The setting gates
+   what is a hint: the 60 s toast, the M2 table's HINT toast, Recruit's note and pair at the table. It does not gate the
+   table's Senior process line (90 s, no card, no pair: HOW IT WORKS's own terms with the count), which comes either
+   way. The `new_game` event carries `hints` next to `d`; the Settings row, RESET and the restore log
+   `settings {k:'hints', v, src}`; the report prints the value in force (the last of those) and "(changed during play)"
+   when a change moved it. The facilitator still writes it down per player (PLAYTEST-PROTOCOL.md).
 9. **Hold-to-crouch on touch** ships opt-in. Auto stays toggle. Confirm.
 10. **Achievements on Uche's catch.** As written, "Faster Than Computer Village" and "Not One Bystander" unlock only on
     Kelechi's own catch (a tackle or cut-off). Confirm.

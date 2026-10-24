@@ -4,7 +4,8 @@
 //   3. a selection line after one tap (and a second tap on the same card puts it down: no pencil),
 //   4. a neutral reason on a struck link, and what three strikes cost (the ruling and HOW IT WORKS),
 //   5. table time counting as play for "Hints when stuck" and the stuck log; ~90 s there with no new ink brings
-//      the help: Senior Agent a process line only, Recruit Sgt. Uche's nudge,
+//      the help: Senior Agent a process line only (with "Hints when stuck" off too: it names nothing, and only its
+//      HINT toast follows the setting), Recruit Sgt. Uche's nudge (with the setting on only),
 //   6. Recruit only: once the van has said no, Uche names one true pair still open between two visible cards,
 //      ONE pair, once: after it is inked he names no other (the other two links are the player's), and never
 //      on a tab where those cards aren't, nor with "Hints when stuck" off,
@@ -241,10 +242,16 @@ module.exports = async h => {
     h.assert(p1 - p0 >= 1500 && p1 - p0 <= 4000, tag('the table clock counts real seconds as play: ' + (p1 - p0) + ' ms'));
     h.assert(p2 - p1 <= 1600, tag('and stops when the table closes: ' + (p2 - p1) + ' ms'));
 
-    // hints off: no help comes up, but the table still logs being stuck
-    await h.ev(() => { SETTINGS.hints = 'off'; V12.openOps('lagos'); V12.opsTableTick(91000); });
+    // hints off (what a Senior Agent start sets): the table still logs being stuck. Senior's process line names no card
+    // and no pair, so it is not a hint and still comes, with no HINT toast; Recruit's note from Uche is one, so nothing comes
+    await h.ev(() => { SETTINGS.hints = 'off'; const t = document.getElementById('toast'); t.classList.remove('show'); t.innerHTML = ''; V12.openOps('lagos'); V12.opsTableTick(91000); });
+    await h.step(150);
     hp = await help();
-    h.assert(!hp.senior && !hp.uche, tag('Hints when stuck off: no help at the table ' + JSON.stringify(hp)));
+    const ttOff = await toastNow();
+    h.log(D, 'stuck help with hints off', JSON.stringify(hp), JSON.stringify(ttOff));
+    if(SR){ h.assert(hp.senior && hp.senior.txt === HELP(1) && hp.senior.t <= 20 && !hp.uche, 'senior: with Hints when stuck off the process line still comes ' + JSON.stringify(hp)); seniorText.push(hp.senior.txt); }
+    else h.assert(!hp.senior && !hp.uche, 'recruit: with Hints when stuck off no note comes ' + JSON.stringify(hp));
+    h.assert(ttOff.big !== 'HINT' && !ttOff.show, tag('and no HINT toast with hints off ' + JSON.stringify(ttOff)));
     h.assert((await events('table_stuck')).length === 2, tag('table_stuck is still logged with hints off'));
     await h.ev(() => { SETTINGS.hints = 'on'; V12.closeOps(); });
 
