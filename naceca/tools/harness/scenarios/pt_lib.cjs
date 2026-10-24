@@ -17,7 +17,8 @@
 //   P.newPlayerUI(h)         Settings › PLAYTEST › NEW PLAYER, two taps
 //   P.eye(h, text|null)      script the eye's why-line (#eye-ind .eye-why) when Team A's eye isn't in the build
 //   P.check(events)          the DESIGN §4 contract: [problems]
-//   P.driveM2(h, o) / P.driveM3(h, o)   scripted runs (fixtures, slices)
+//   P.driveM2(h, o) / P.driveM3(h, o)   scripted runs (fixtures, slices); driveM3 {summary:false} leaves m3_summary to the
+//                            real emitter (completeMission('m3') logs it): a run that completes the mission wants no stand-in
 const fs = require('fs'), path = require('path');
 const T = require('./tactics_lib.cjs');
 const P = async h => {
@@ -291,7 +292,7 @@ P.driveM3 = async (h, o = {}) => {
     states:[['stunned', 0], ['grabbed', 4.2]], ucheJob:null, prep:{ sims:false, kcFair:false } }, standIns);
   await P.standIn(h, t0, 'enc', { enc:'m3_laptop', outcome:'halted', pct:34, files:5, ledger:true, total:7, firstAt:22.5, armedAt:0, mg:{ strikes:1, secs:9.1, yank:false } }, standIns);
   await P.standIn(h, t0, 'enc', { enc:'m3_child', choice:'gentle', by:'kelechi', calm:false, outAt:71.2, gentle:true }, standIns);
-  await P.standIn(h, t0, 'm3_summary', { entry:'loud', door:'front', power:'on', uche:'with', spawn:'front', obi:{ first:'stunned', alertedBy:'loud', alertedAt:0, outcome:'stun_grab', by:'kelechi', arrest:'professional' },
+  if (o.summary !== false) await P.standIn(h, t0, 'm3_summary', { entry:'loud', door:'front', power:'on', uche:'with', spawn:'front', obi:{ first:'stunned', alertedBy:'loud', alertedAt:0, outcome:'stun_grab', by:'kelechi', arrest:'professional' },
     seen:{ notices:0, alarms:0, evaded:0, causes:{ sight:0, noise:0, close:0 } }, crouchSecs:0, wipe:{ armed:true, outcome:'halted', pct:34, files:5, total:7 },
     child:{ choice:'gentle', out:true, by:'kelechi' }, uche:{ orders:[], acts:[] }, extract:{ refusals:0, missing:[] }, prep:{ sims:false, kcFair:false, tip:false, tipped:false, warrant:'signed' },
     secs:188, force:0, trust:2, grade:'B', diff:{ casework:'senior', pace:'standard' }, hints:[], build:'stand-in' }, standIns);
