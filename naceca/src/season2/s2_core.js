@@ -605,7 +605,11 @@ V13.wrap('beginMissionCore', orig => function(id){
   S.game.currentRegion = C.region || 'Season 2'; S.game.currentSubregion = C.sub || ''; refreshHUD();
   if(ENGINE.player){ ENGINE.cameraYaw = ENGINE.player.rotation.y; ENGINE.playerYaw = ENGINE.player.rotation.y; }
   // (mission_start is logged once, by v12's beginMission wrap, for cases and offices alike)
-  if(C.start) setTimeout(()=>{ try{ C.start(); }catch(e){ console.error('[v13] start', id, e); } }, 700);
+  // The opening beat waits 700 ms. A QUIT or LOAD inside that window replaces the run (V13.rt) and the mission,
+  // and then the beat belongs to a case that is no longer on screen: it must not play over the title or the loaded game.
+  if(C.start){ const rt = V13.rt; setTimeout(()=>{
+    if(V13.rt !== rt || S.game.currentMission !== id) return;
+    try{ C.start(); }catch(e){ console.error('[v13] start', id, e); } }, 700); }
 });
 /* end of a case: XP, the aftermath screen */
 V13.finish = function(id, xp){
@@ -721,7 +725,9 @@ V13.wrap('togglePause', orig => function(){
 // QUIT and ERASE drop what the pause holds. LOAD does not: a load that finds no save ("NO SAVE") leaves the pause up,
 // and RESUME must still bring the conversation back; a load that works reaches togglePause from the #btn-load click
 // (viaLoad above: nothing is put back) and then loadMission, which clears the hold too.
-document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-erase')) V13._pz = null; }catch(err){} }, true);
+// They also end the run: a case's delayed opening beat (beginMissionCore, 700 ms) and its tick functions belong to the
+// run that was quit, never to the title screen; any way back into play rebuilds V13.rt in beginMissionCore.
+document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-erase')){ V13._pz = null; V13.rt = { tick:[] }; } }catch(err){} }, true);
 
 /* ---------- which choice was picked (for choices that carry no flag) ----------
    V13.picked('m10_karo_source') → index of the choice taken the last time that
