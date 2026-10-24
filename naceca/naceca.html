@@ -14763,7 +14763,7 @@ function hqFixCaseBoard(){
 
 
 </script>
-<script>window.NACECA_BUILD = { src:'8219190d6e' };</script>
+<script>window.NACECA_BUILD = { src:'07e968af64' };</script>
 <style id="v12">
 /* =========================================================================
    NACECA · v12 styles — operations table, documents, raid plan, accusation,
@@ -21109,12 +21109,14 @@ V12.ptSurvey = function(where){
   ov.querySelector('#pt-a1').value = ''; ov.querySelector('#pt-a2').value = '';
   const done = ()=>{ try{ const k = String(where || '').replace(/^slice:/, ''); S.game._ptAsked = S.game._ptAsked || {}; S.game._ptAsked[k] = Date.now(); }catch(e){} PT.pendingSurvey = null; };
   PT.surveyOpen = where;
-  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); done(); write(); close(); };
+  // opened from Settings › Two questions › ANSWER: the row behind it ("n answers saved in the log") is redrawn on return
+  const refresh = ()=>{ try{ if(where === 'settings' && typeof renderSettings === 'function' && document.querySelector('#screen-settings.show')) renderSettings(); }catch(e){} };
+  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); done(); write(); close(); refresh(); };
   ov.querySelector('#pt-save').onclick = ()=>{
     const a1 = ov.querySelector('#pt-a1').value.trim(), a2 = ov.querySelector('#pt-a2').value.trim();
     V12.log('survey', { where, satisfying:a1, unfair:a2, diff:(typeof gameDifficulty === 'function' ? gameDifficulty() : null),
       secsPlayed:Math.round(PT.play / 1000), missions:((S.game && S.game.completedMissions) || []).slice(), misses:PT.totals.misses, refusals:PT.totals.refusals, hints:PT.totals.hints, build:(window.NACECA_BUILD || {}).src || null });
-    done(); write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close();
+    done(); write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close(); refresh();
   };
   ov.classList.add('show');
   try{ const t = document.getElementById('toast'); if(t) t.classList.remove('show'); }catch(e){}   // a save toast would sit on the first answer
@@ -28876,10 +28878,14 @@ function playerRows(body){
 // market's start screen — the state the harness's h.start('m2', {completed:['m0','m1']}) uses, plus the one piece of
 // evidence the cold open always leaves (co_madam, from prologueEnd, v12_core.js:319), so the M2 operations table has the
 // same cards as after a full start. No M0/M1 XP or capabilities (the protocol says so). Like NEW INVESTIGATION, it
-// replaces the game in progress; it is offered only on the title screen of a ?pt=1 page.
+// replaces the game in progress; it is offered only on the title screen of a ?pt=1 page. Unlike NEW INVESTIGATION it
+// also drops the device's save file: the facilitator has exported the previous player's log by now (the protocol says
+// so), and after a freeze the title's CONTINUE must be greyed until THIS player has saved (the first FILE on the table,
+// the van), never the previous player's run.
 function startAtM2(){
   try{
     if(typeof v13NavReset === 'function') v13NavReset();
+    try{ if(typeof SAVE_KEY === 'string') localStorage.removeItem(SAVE_KEY); }catch(e){}
     S = defaultState(); S.game.difficulty = 'senior'; S.game.completedMissions = ['m0', 'm1'];
     if(Array.isArray(S.game.evidence) && !S.game.evidence.some(e => e && e.id === 'co_madam'))
       S.game.evidence.push({ id:'co_madam', name:"Courier's Dropped Phone — 'Tell Madam it's clean'", t:Date.now() });
