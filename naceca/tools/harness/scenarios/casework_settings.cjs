@@ -1,5 +1,6 @@
 // Casework 2: Settings has a "Casework" row (Recruit / Senior Agent) that edits S.game.difficulty,
-// and the old Difficulty row is relabelled "Action pace" with its values kept.
+// and the old Difficulty row is relabelled "Action pace" with its values kept. The Casework row never
+// touches "Hints when stuck" (only a NEW investigation sets that), and the hints row says its default per casework.
 module.exports = async h => {
   await h.start('m1', { completed:['m0'] });
   const rows = await h.ev(() => {
@@ -20,13 +21,16 @@ module.exports = async h => {
   h.assert(rows.ap && rows.ap.label === 'Action pace' && JSON.stringify(rows.ap.opts) === '["story","standard","hard"]', 'the old Difficulty row is "Action pace" with its values kept');
   h.assert(/Timers, chase speed and minigames/.test(rows.ap.note), 'Action pace says what it controls');
   h.assert(!rows.labels.includes('Difficulty'), 'no second "Difficulty" row');
+  const hn = await h.ev(() => (document.querySelector('#settings-body .set-row[data-key="hints"] .set-note') || {}).textContent || '');
+  h.assert(hn === 'A new investigation sets it: off for Senior Agent, on for Recruit.', 'Hints when stuck says its default per casework: ' + hn);
 
-  // Recruit via Settings
+  // Recruit via Settings (with Hints when stuck off, to see that the Casework row leaves it alone)
   const pace0 = await h.ev(() => SETTINGS.difficulty);
-  let st = await h.ev(() => { document.querySelector('#settings-body .set-row[data-key="casework"] button[data-v="recruit"]').click();
-    return { d:S.game.difficulty, cls:document.body.classList.contains('cw-recruit'), pace:SETTINGS.difficulty, stored:JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}').casework }; });
+  let st = await h.ev(() => { SETTINGS.hints = 'off'; document.querySelector('#settings-body .set-row[data-key="casework"] button[data-v="recruit"]').click();
+    return { d:S.game.difficulty, cls:document.body.classList.contains('cw-recruit'), pace:SETTINGS.difficulty, stored:JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}').casework, hints:SETTINGS.hints }; });
   h.assert(st.d === 'recruit' && st.cls && st.pace === pace0, 'Casework edits S.game.difficulty only, and the body class follows');
   h.assert(st.stored === undefined, 'casework is not written into device settings');
+  h.assert(st.hints === 'off', 'Casework in Settings does not touch Hints when stuck');
   // Action pace edits SETTINGS only
   st = await h.ev(() => { document.querySelector('#settings-body .set-row[data-key="difficulty"] button[data-v="hard"]').click(); return { d:S.game.difficulty, pace:SETTINGS.difficulty }; });
   h.assert(st.d === 'recruit' && st.pace === 'hard', 'Action pace edits SETTINGS.difficulty only');

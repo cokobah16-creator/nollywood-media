@@ -3,7 +3,10 @@
    NACECA · casework — "the investigation is too easy"
    1. Casework difficulty per investigation: RECRUIT (deduction hints on) or
       SENIOR AGENT (default). Chosen on the new-game sheet, editable in
-      Settings, mirrored on <body> as cw-recruit / cw-senior.
+      Settings, mirrored on <body> as cw-recruit / cw-senior. A NEW
+      investigation also sets the device's "Hints when stuck": off for
+      Senior Agent, on for Recruit (owner decision, 24 Oct) — at the
+      sheet's BEGIN and the playtest kit's START AT M2 only.
    2. A paper CHARGE SHEET before each raid (Lagos before Lekki, the route
       before Asaba): SUSPECT, METHOD, MONEY TRAIL, filed with a two-tap
       confirm. Permanent for the save (S.game.accusations).
@@ -37,12 +40,62 @@ const trail = (k, d)=>{ CW.trail.push([k, d == null ? null : d]); if(CW.trail.le
    1. Casework difficulty
    ===================================================================== */
 const sync = ()=>{ if(typeof syncDifficultyClass === 'function') syncDifficultyClass(); };
+/* "Hints when stuck" (SETTINGS.hints) gates what is a hint: the field's 60 s "Try this next" toast, the M2 table's HINT
+   toast, Recruit's note and pair at the table — not the table's Senior process line, which names nothing (v12_ops.js).
+   It follows the casework a NEW investigation starts with: off for Senior Agent (no answer-giving hints), on for
+   Recruit. Only at the new-investigation sheet's BEGIN and at the playtest kit's START AT M2 (tactics/tac_pt.js calls
+   this) — never on a load, a mission-select replay or a Casework change in Settings: an existing save keeps whatever
+   the device has, and the Settings row changes it at any time.
+   Until the new investigation saves for the first time the old save is still the one on the device (the sheet says
+   so), so the value from before the start is kept with the settings (SETTINGS.hintsPrev) and comes back if that old
+   save is loaded instead; the first save drops it. RESET TO DEFAULTS during an investigation sets the casework's
+   default, not the table's 'on'. A change the player did not make at the row is logged: settings {k:'hints', v, src}. */
+const HV = v => v === 'on' || v === 'off';
+CW.HINTS_FOR = { recruit:'on', senior:'off' };
+CW.hintsForNewGame = function(d){
+  d = d === 'recruit' ? 'recruit' : 'senior';
+  const v = CW.HINTS_FOR[d];
+  try{
+    if(typeof SETTINGS !== 'undefined' && SETTINGS){
+      const before = HV(SETTINGS.hintsPrev) ? SETTINGS.hintsPrev : SETTINGS.hints;   // a start abandoned before its first save keeps the first "before"
+      SETTINGS.hints = v;
+      if(before !== v) SETTINGS.hintsPrev = before; else delete SETTINGS.hintsPrev;
+      if(typeof saveSettings === 'function') saveSettings();
+    }
+  }catch(e){}
+  trail('hints_default', { d, hints:v });
+  return v;
+};
+// the first save of the new investigation replaces the old one on the device: the "before" value is no longer wanted
+wrap('saveGame', orig => function(){
+  const r = orig.apply(this, arguments);
+  try{ if(typeof SETTINGS !== 'undefined' && SETTINGS && 'hintsPrev' in SETTINGS){ delete SETTINGS.hintsPrev; if(typeof saveSettings === 'function') saveSettings(); } }catch(e){}
+  return r;
+});
+// RESET TO DEFAULTS during an investigation: the casework's default; with no investigation running, the table's 'on'
+wrap('resetSettings', orig => function(){
+  const was = (typeof SETTINGS !== 'undefined' && SETTINGS) ? SETTINGS.hints : null;
+  const r = orig.apply(this, arguments);
+  try{
+    if(S && S.game && S.game.currentMission && typeof gameDifficulty === 'function'){ SETTINGS.hints = CW.HINTS_FOR[gameDifficulty()]; if(typeof saveSettings === 'function') saveSettings(); }
+    if(SETTINGS.hints !== was){ trail('hints_reset', { hints:SETTINGS.hints }); log('settings', { k:'hints', v:SETTINGS.hints, src:'reset' }); }
+  }catch(e){}
+  return r;
+});
 wrap('loadGame', orig => function(){
   const ok = orig.apply(this, arguments);
   try{
     if(S && S.game){
       if(S.game.difficulty !== 'recruit') S.game.difficulty = 'senior';           // old saves → Senior
       if(!S.game.accusations || typeof S.game.accusations !== 'object') S.game.accusations = {};
+    }
+    // the save on the device came back before a new investigation ever saved: the device's "Hints when stuck" goes back with it
+    if(ok && typeof SETTINGS !== 'undefined' && SETTINGS && HV(SETTINGS.hintsPrev)){
+      const v = SETTINGS.hintsPrev, changed = SETTINGS.hints !== v;
+      delete SETTINGS.hintsPrev; SETTINGS.hints = v;
+      if(typeof saveSettings === 'function') saveSettings();
+      trail('hints_restore', { hints:v });
+      if(changed) log('settings', { k:'hints', v, src:'restore' });
     }
   }catch(e){}
   sync();
@@ -635,8 +688,10 @@ window.openNewGameSheet = function(){
   let pick = 'senior';
   const has = typeof hasSave === 'function' && hasSave();
   const modes = [
-    { v:'recruit', name:'RECRUIT', line:'Deduction hints on: lines worth a second look, an extra miss on documents, Uche\'s notes on the charge sheet.' },
-    { v:'senior',  name:'SENIOR AGENT', line:'No deduction hints. You read the papers and you sign for what you conclude. Recommended.' },
+    { v:'recruit', name:'RECRUIT', line:'Deduction hints on: lines worth a second look, an extra miss on documents, Uche\'s notes on the charge sheet.',
+      hints:'Hints when stuck: on.' },
+    { v:'senior',  name:'SENIOR AGENT', line:'No deduction hints. You read the papers and you sign for what you conclude. Recommended.',
+      hints:'Hints when stuck: off. Change it in Settings.' },
   ];
   ov.innerHTML = `<div class="overlay-bg cw-bg"></div>
     <div class="cw-sheet cw-paper cw-newgame" role="dialog" aria-modal="true" aria-labelledby="screen-newgame-t">
@@ -644,7 +699,7 @@ window.openNewGameSheet = function(){
         <header class="cw-head"><div class="cw-agency">${AGENCY}</div><h2 class="cw-title" id="screen-newgame-t">NEW INVESTIGATION</h2><div class="cw-meta">POSTING · AGENT KELECHI · LAGOS HQ · CASE NACECA-2026/0034</div></header>
         <section class="cw-sec">
           <div class="cw-sec-h"><span class="cw-l">CASEWORK</span><span class="cw-q">How much help do you want reading the evidence?</span></div>
-          <div class="cw-opts">${modes.map(m => `<button class="cw-opt cw-mode" data-v="${m.v}" aria-pressed="false"><span class="cw-box">${ico('check')}</span><span class="cw-ot"><b>${m.name}</b><span class="cw-ol">${esc(m.line)}</span></span></button>`).join('')}</div>
+          <div class="cw-opts">${modes.map(m => `<button class="cw-opt cw-mode" data-v="${m.v}" aria-pressed="false"><span class="cw-box">${ico('check')}</span><span class="cw-ot"><b>${m.name}</b><span class="cw-ol">${esc(m.line)}</span><span class="cw-ol cw-hints">${esc(m.hints)}</span></span></button>`).join('')}</div>
           <p class="cw-note">Action pace (timers, chases, minigames) is separate, in Settings. You can switch casework there during the investigation.</p>
           ${has ? `<p class="cw-note cw-alert">${ico('warning')}<span>You have a saved investigation. It stays on this device until the new one saves for the first time, after the briefing.</span></p>` : ''}
         </section>
@@ -659,7 +714,8 @@ window.openNewGameSheet = function(){
   ov.querySelector('[data-act="back"]').addEventListener('click', ()=>{ click(); if(typeof showOverlay === 'function') showOverlay('screen-title'); });
   ov.querySelector('[data-act="go"]').addEventListener('click', ()=>{
     click(); ov.classList.remove('show');
-    log('new_game', { d:pick });
+    const hints = CW.hintsForNewGame(pick);   // the device setting follows the casework chosen here
+    log('new_game', { d:pick, hints });
     if(typeof startNewInvestigation === 'function') startNewInvestigation(pick);
     else { S = defaultState(); S.game.difficulty = pick; sync(); if(typeof showHUD === 'function') showHUD(false); loadMission('m0'); }
   });

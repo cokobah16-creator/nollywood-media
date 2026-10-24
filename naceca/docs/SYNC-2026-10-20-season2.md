@@ -86,5 +86,7 @@ inked links, or three strikes), clearer table (src/v12/v12_ops.js, v12_core.js, 
 - time at the table counts for "Hints when stuck": after 90 s with no new ink, Senior gets a process line with no
   card names ("Link two cards that are connected in the crime, not just known to each other. n of 3 inked."),
   Recruit gets Uche's note, and after a van refusal Uche names one true un-inked pair, once (off when hints are off);
+  (24 Oct: a Senior Agent start now sets "Hints when stuck" Off; the Senior process line comes either way, its HINT
+  toast and Recruit's note and pair only with it On — DESIGN-tactics.md §11.8);
 - the playtest log adds `van_refused {inked, strikes}` and `table_stuck {secs, inked, pencils}`.
 Test: `board_m2_help` (both casework modes, 390x844 / 844x390 touch, 1280x800).

@@ -485,10 +485,10 @@ function playerRows(body){
 // market's start screen — the state the harness's h.start('m2', {completed:['m0','m1']}) uses, plus the one piece of
 // evidence the cold open always leaves (co_madam, from prologueEnd, v12_core.js:319), so the M2 operations table has the
 // same cards as after a full start. No M0/M1 XP or capabilities (the protocol says so). Like NEW INVESTIGATION, it
-// replaces the game in progress; it is offered only on the title screen of a ?pt=1 page. Unlike NEW INVESTIGATION it
-// also drops the device's save file: the facilitator has exported the previous player's log by now (the protocol says
-// so), and after a freeze the title's CONTINUE must be greyed until THIS player has saved (the first FILE on the table,
-// the van), never the previous player's run.
+// replaces the game in progress and sets "Hints when stuck" for the casework (off: beta/casework.js, CW.hintsForNewGame);
+// it is offered only on the title screen of a ?pt=1 page. Unlike NEW INVESTIGATION it also drops the device's save file:
+// the facilitator has exported the previous player's log by now (the protocol says so), and after a freeze the title's
+// CONTINUE must be greyed until THIS player has saved (the first FILE on the table, the van), never the previous player's run.
 function startAtM2(){
   try{
     if(typeof v13NavReset === 'function') v13NavReset();
@@ -497,7 +497,8 @@ function startAtM2(){
     if(Array.isArray(S.game.evidence) && !S.game.evidence.some(e => e && e.id === 'co_madam'))
       S.game.evidence.push({ id:'co_madam', name:"Courier's Dropped Phone — 'Tell Madam it's clean'", t:Date.now() });
     if(typeof syncDifficultyClass === 'function') syncDifficultyClass();
-    V12.log('new_game', { d:'senior' });
+    const hints = (window.CW && typeof CW.hintsForNewGame === 'function') ? CW.hintsForNewGame('senior') : null;
+    V12.log('new_game', hints ? { d:'senior', hints } : { d:'senior' });
     if(typeof showOverlay === 'function') showOverlay(null);
     if(typeof showHUD === 'function') showHUD(false);
     loadMission('m2');

@@ -152,6 +152,27 @@ module.exports = async h => {
   // meta: difficulty from new_game, played time per session from ps, independent per player
   const meta = R.meta([ev('session', { settings:{ casework:'recruit' }, ps:0, p:'P2' }), ev('new_game', { d:'senior', ps:3, p:'P2' }), ev('x', { ps:100, p:'P2' }), ev('session', { ps:0, p:'P2' }, 'm2', 's2'), ev('x', { ps:40, p:'P2' }, 'm2', 's2')]);
   h.assert(meta.diff === 'senior' && meta.playSecs === 140, 'difficulty from new_game.d; played = per session first to last ps (' + meta.diff + ', ' + meta.playSecs + ')');
+  // "Hints when stuck" in the lead line: the last event that reports it wins. The protocol's own flow logs session and
+  // pt_player (device on) before a Senior BEGIN / START AT M2 (new_game hints:off): the report says off
+  const sess = (v, extra) => ev('session', Object.assign({ settings:{ hints:v, casework:'senior' }, ptv:2 }, extra || {}));
+  const ppl = v => ev('pt_player', { label:'P1', dev:'B7QX', settings:{ hints:v } });
+  const ngm = (d, hints) => ev('new_game', hints ? { d, hints } : { d });
+  const chg = (v, src) => ev('settings', { k:'hints', v, src:src || 'row' });
+  let HM = R.meta([sess('on'), ppl('on'), ngm('senior', 'off')]);
+  h.assert(HM.hints === 'off' && !HM.hintsChanged && /Senior Agent · hints when stuck off ·/.test(R.leadLine(HM)), 'pt_player settings.hints on, then new_game hints off: the report says off (' + R.leadLine(HM) + ')');
+  h.assert(R.meta([sess('on'), ppl('on'), ngm('recruit', 'on')]).hints === 'on', 'a Recruit start: on');
+  h.assert(R.meta([sess('on'), ngm('senior')]).hints === 'on' && R.meta([sess('off'), ppl('off')]).hints === 'off' && R.meta([ngm('senior')]).hints === null, 'an older log (no new_game.hints) still reports the session value; nothing reported → null');
+  h.assert(r1.meta.hints === 'on' && r2.meta.hints === 'on', 'the fixtures (session on, new_game without hints) still read on');
+  // a Senior player who turned the row back On: the value in force, flagged; the same value again is not a change
+  HM = R.meta([sess('on'), ppl('on'), ngm('senior', 'off'), chg('on')]);
+  h.assert(HM.hints === 'on' && HM.hintsChanged && R.leadLine(HM).includes('hints when stuck on (changed during play)'), 'a settings {k:hints} event after the start wins and is flagged: ' + R.leadLine(HM));
+  h.assert(!R.meta([sess('on'), ngm('recruit', 'on'), chg('on')]).hintsChanged, 'a settings event with the value already in force is not a change');
+  HM = R.meta([sess('on'), ngm('senior', 'off'), chg('on', 'reset'), chg('off', 'row')]);
+  h.assert(HM.hints === 'off' && HM.hintsChanged, 'RESET then the row back: the last value, still flagged');
+  // a reload after the start: the session event carries the device's current value and is the latest word
+  h.assert(R.meta([sess('on'), ngm('senior', 'off'), sess('off', { ps:0 })]).hints === 'off' && R.meta([sess('on'), ngm('senior', 'off'), chg('on'), sess('on', { ps:0 })]).hints === 'on', 'a session event after the start reports the device as it is then');
+  const first = R.text(R.analyze([sess('on'), ppl('on'), ngm('senior', 'off')]), 'B7QX·P1')[0];
+  h.assert(/^B7QX·P1 · Desktop · Senior Agent · hints when stuck off · 0:0\d on the clock · finished nothing yet · 3 events$/.test(first), 'the text report\'s first line: ' + first);
 
   // the text renderer prints the same rows the sheet shows (shared functions)
   const L = R.text(r1, p1.name).join('\n'), S = R.sections(r1);

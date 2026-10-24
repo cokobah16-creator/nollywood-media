@@ -13,7 +13,8 @@ network is needed.
 1. Open the game. Go to **Settings › PLAYTEST**. If *Playtest log* shows events from someone else, tap **EXPORT**, check the file
    arrived, then tap **CLEAR** twice.
 2. Leave every setting at its default: Action pace Standard, Hints when stuck On, Objective marker On. Write down any change you
-   make.
+   make. *(Superseded 24 Oct — see docs/PLAYTEST-PROTOCOL.md step 2: "Hints when stuck" is set by the start itself, Off
+   for a Senior Agent start and On for Recruit.)*
 3. Tap **NEW PLAYER** twice. The row now reads, for example, *P3 · 0 events*. Write the device letter and the label on your
    sheet (for example **B · P3**).
 4. On a phone, turn brightness up and rotation lock off. On a desktop, use headphones.

@@ -44,10 +44,15 @@ needed only if you want to look at a report yourself before sending the folder b
      the session address, and only then **CLEAR** twice. Never CLEAR a log you haven't seen arrive.
    CLEAR and NEW PLAYER (next) work in the Settings opened from the title and in the one opened from the menu during
    play; START AT M2 only in the title's.
-2. Leave every setting at its default: Action pace Standard, Objective marker On, and
-   **Hints when stuck: On — write it down per player, from the row in Settings, never from memory.**
-   (That default on Senior Agent is an open decision; if the owner flips it, only this line changes.)
-   Write down any setting you change.
+2. Leave every setting at its default: Action pace Standard, Objective marker On. **"Hints when stuck" is set by the
+   start itself** (decided 24 Oct, DESIGN-tactics.md §11.8): a new **Senior Agent** investigation (NEW INVESTIGATION or
+   START AT M2) turns it **Off**, a **Recruit** one turns it **On**. The sheet says so under each mode; the Settings row
+   still changes it, and RESET TO DEFAULTS during an investigation sets the casework's default, not On. The M2 table's
+   90 s process line ("Link two cards that are connected in the crime…", no card named) still comes for a Senior player
+   either way; only its HINT toast follows the setting. Write down any setting you change, and **still write down
+   "Hints when stuck" for every player, from the row in Settings, never from memory**: its 60 s "Try this next" toast
+   names the next step, so a Senior player who turned it back On played a different game. The report prints the value
+   in force for each player, with "(changed during play)" when it was changed after the start.
 3. Tap **NEW PLAYER** twice, within a few seconds (the first tap reads `TAP AGAIN · START P3` while it waits). The row then
    reads, for example, *B7QX·P3 · 1 event since 14:02*. Copy **the device id and the label together, as printed**, into
    the sheet's header: **B7QX·P3**. The Summary sheet and the report name players the same way. The id stays on the

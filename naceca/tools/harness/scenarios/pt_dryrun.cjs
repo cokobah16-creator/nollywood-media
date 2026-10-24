@@ -148,7 +148,7 @@ async function dryrun(h, out) {
   h.assert(/^No player yet/.test(await playerRow() || ''), 'a fresh device: "No player yet"');
   const def = await h.ev(() => ({ pace:SETTINGS.difficulty, hints:SETTINGS.hints, marker:SETTINGS.marker }));
   h.log('settings at the hand-over: ' + JSON.stringify(def));
-  h.assert(def.pace === 'standard' && def.marker === 'on' && /^(on|off)$/.test(def.hints), 'the defaults the protocol names (Hints when stuck is recorded, either way)');
+  h.assert(def.pace === 'standard' && def.marker === 'on' && /^(on|off)$/.test(def.hints), 'the defaults the protocol names (Hints when stuck is set by the start, below; recorded either way)');
   // the protocol's step 1: a device that names a player is exported first; a fresh one ("No player yet") holds only the
   // page's own events (session, quit), which the report would print as a "no player label" block, so CLEAR, twice.
   // "twice, within a few seconds": the arm times out after 4 s, and a late second tap only arms again
@@ -187,6 +187,9 @@ async function dryrun(h, out) {
   h.assert(!st.save, 'START AT M2 leaves no save file (CONTINUE is greyed until this player saves)');
   const ng = await evs('new_game', t0);
   h.assert(ng.length === 1 && ng[0].d === 'senior' && ng[0].p === label, 'new_game {d:senior} is logged for the player');
+  // the start sets "Hints when stuck" for the casework (decided 24 Oct): a Senior Agent start turns it off, and says so
+  const hs = await h.ev(() => SETTINGS.hints);
+  h.assert(hs === 'off' && ng[0].hints === 'off', 'START AT M2 (Senior Agent) sets Hints when stuck off and new_game carries hints:off ' + JSON.stringify({ hs, ng:ng[0].hints }));
 
   /* ---------- hand over: START MISSION (the player's first tap) ---------- */
   await tap('#btn-start-mission', 900);
@@ -247,12 +250,15 @@ async function dryrun(h, out) {
   const s91 = await h.ev(() => { V12.opsTableTick(91000); return { idle:V12._tableState.idle, atTable:V12.atTable() }; });
   await h.step(200);
   const hp = await help(), ht = await toastNow(), ts = await evs('table_stuck', t0), stk = (await evs('stuck', t0)).filter(d => d.at === 'table');
-  h.log(`91 s at the table (hints ${def.hints}): help ${JSON.stringify(hp)} toast ${JSON.stringify(ht)} table_stuck ${JSON.stringify(ts)} stuck@table ${stk.length}`);
+  const hints = await h.ev(() => SETTINGS.hints);
+  h.log(`91 s at the table (hints ${hints}): help ${JSON.stringify(hp)} toast ${JSON.stringify(ht)} table_stuck ${JSON.stringify(ts)} stuck@table ${stk.length}`);
   h.assert(s91.atTable && s91.idle >= 91000, 'the table clock ran 91 s on the open table objective');
   h.assert(ts.length === 1 && ts[0].secs >= 90 && ts[0].secs <= 100 && ts[0].inked === 0 && ts[0].pencils === 0, 'table_stuck {secs, inked:0, pencils:0} once');
   h.assert(stk.length >= 1 && stk[0].obj === 'o4_table', 'the stuck log counts the table time (at:table)');
-  if (def.hints === 'on') h.assert(hp === HELP0 && ht.big === 'HINT' && ht.small === HELP0, 'Senior Agent, Hints when stuck on: the 90 s help is the process line, as a HINT and at the top of the side panel');
-  else h.assert(hp === null && ht.big !== 'HINT', 'Hints when stuck off: no help at the table (table_stuck is still logged)');
+  // Senior Agent's 90 s process line names no card, so it comes with "Hints when stuck" off too (the Senior default);
+  // the setting gates the HINT toast (board_m2_help, DESIGN-tactics.md §11.8)
+  if (hints === 'on') h.assert(hp === HELP0 && ht.big === 'HINT' && ht.small === HELP0, 'Senior Agent, Hints when stuck on: the 90 s help is the process line, as a HINT and at the top of the side panel');
+  else h.assert(hp === HELP0 && ht.big !== 'HINT', 'Senior Agent, Hints when stuck off (the default): the process line at the top of the side panel, no HINT toast (table_stuck is still logged) ' + JSON.stringify({ hp, ht }));
   await h.shot('dryrun-table-stuck');
   // three true links between cards on the Lagos table now, one filing at a time, on the real chips and FILE
   const links = await h.ev(() => { const g = id => ((V12.OPS_NODES.find(n => n.id === id) || { g:[] }).g || []).includes('lagos');

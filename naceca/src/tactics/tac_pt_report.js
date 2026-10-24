@@ -378,6 +378,17 @@ R.meta = function(ev){
   const sv = ev.filter(e => e.type === 'survey' && !dOf(e).skipped);
   const set = s.settings || p.settings || {};
   const diff = (ng && dOf(ng).d) || (sv.length && dOf(sv[sv.length - 1]).diff) || set.casework || null;
+  // "Hints when stuck": the last event that reports it wins. session and pt_player carry the device's value at load and at
+  // NEW PLAYER (both before the start); new_game the value the start set (Senior off, Recruit on; older logs have none, so
+  // the session value stands); settings {k:'hints', v} the row, RESET TO DEFAULTS or the restore after an abandoned start.
+  // hintsChanged: a settings event moved it from the value in force, so part of the session was played the other way.
+  let hints = null, hintsChanged = false;
+  for(const e of ev){
+    const d = dOf(e), v = (e.type === 'session' || e.type === 'pt_player') ? (d.settings || {}).hints : e.type === 'new_game' ? d.hints : (e.type === 'settings' && d.k === 'hints') ? d.v : undefined;
+    if(v !== 'on' && v !== 'off') continue;
+    if(e.type === 'settings' && hints && v !== hints) hintsChanged = true;
+    hints = v;
+  }
   // played: per session, from the first to the last ps of this player (ps restarts at NEW PLAYER and on reload)
   const bySid = {};
   for(const e of ev){ const v = dOf(e).ps; if(typeof v !== 'number') continue; const b = bySid[e.sid] || (bySid[e.sid] = [v, v]); b[0] = Math.min(b[0], v); b[1] = Math.max(b[1], v); }
@@ -386,7 +397,7 @@ R.meta = function(ev){
   const ends = [...new Set(ev.filter(e => e.type === 'mission_end').map(e => dOf(e).m).filter(Boolean))];
   ['m2', 'm3'].forEach(m => { if(ev.some(e => e.type === m + '_summary') && !ends.includes(m)) ends.push(m); });
   const hdr = ev.find(e => e._bsrc);
-  return { kinds, sessions:new Set(ev.map(e => e.sid)).size, diff, pace:set.difficulty || null, hints:set.hints || null, build:(s.build || {}).src || (hdr ? hdr._bsrc : null),
+  return { kinds, sessions:new Set(ev.map(e => e.sid)).size, diff, pace:set.difficulty || null, hints, hintsChanged, build:(s.build || {}).src || (hdr ? hdr._bsrc : null),
     w:s.w || p.w || null, h:s.h || p.h || null, from:ev.length ? ev[0].t : null, to:ev.length ? ev[ev.length - 1].t : null,
     wallSecs:ev.length ? Math.round((ev[ev.length - 1].t - ev[0].t) / 1000) : 0, playSecs:anyPs ? Math.round(play) : null,
     missions:ends, survey:sv.map(e => ({ where:dOf(e).where, satisfying:dOf(e).satisfying, unfair:dOf(e).unfair })), events:ev.length,
@@ -396,7 +407,7 @@ R.meta = function(ev){
 R.analyze = (ev, ctx) => ({ meta:R.meta(ev), lost:R.lost(ev, ctx), failed:R.failed(ev), detection:R.detection(ev), approaches:R.approaches(ev) });
 R.DIFF = { recruit:'Recruit', senior:'Senior Agent' };
 R.leadLine = M => [M.kinds.map(k => k === 'touch' ? 'Phone' : 'Desktop').join(' + ') || 'Device ?', R.DIFF[M.diff] || 'casework ?',
-  M.hints ? 'hints when stuck ' + M.hints : null, M.playSecs != null ? mmss(M.playSecs) + ' played' : mmss(M.wallSecs) + ' on the clock',
+  M.hints ? 'hints when stuck ' + M.hints + (M.hintsChanged ? ' (changed during play)' : '') : null, M.playSecs != null ? mmss(M.playSecs) + ' played' : mmss(M.wallSecs) + ' on the clock',
   'finished ' + (M.missions.map(up).join(', ') || 'nothing yet'), M.events + ' event' + (M.events === 1 ? '' : 's'), M.build ? 'build ' + M.build : null].filter(Boolean).join(' · ');
 // the four sections as data: the sheet and the text renderers share these rows
 R.sections = function(res){

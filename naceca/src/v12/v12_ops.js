@@ -845,9 +845,11 @@ function side(){
 }
 /* ---------- the table that gates a mission: M2's o4_table (three inked links, or three strikes) ----------
    Time at the table on that objective counts as play: for "Hints when stuck" (guidance.js) and the stuck
-   log (v12_pt.js). Every 90 s there with no new ink is logged (table_stuck); the first time, with hints on,
-   the help comes up: Senior Agent gets the process only, never a card; Recruit gets Sgt. Uche's nudge.
-   Once the van has said no, Recruit's Uche names one true pair that is still open: one pair, once (vanPair). */
+   log (v12_pt.js). Every 90 s there with no new ink is logged (table_stuck); the first time the help comes
+   up: Senior Agent gets the process only, never a card — with "Hints when stuck" off too, since the line is
+   not a hint (a Senior start sets the setting off: beta/casework.js); the HINT toast, and Recruit's note from
+   Sgt. Uche, come only with it on. Once the van has said no, Recruit's Uche names one true pair that is
+   still open: one pair, once (vanPair), again only with it on. */
 const TABLE_NEED = 3, STUCK_MS = 90000;
 const tableObj = () => { try{ return S.game.currentMission === 'm2' ? ((S.game.objectives || []).find(x => x.id === 'o4_table' && !x.done) || null) : null; }catch(e){ return null; } };
 // the table is the only screen up (a pause menu or the desk on top of it is not time at the table)
@@ -879,10 +881,14 @@ function tableTick(ms){
   if(Math.floor(TT.idle / STUCK_MS) > Math.floor(before / STUCK_MS))
     V12.log('table_stuck', { secs:Math.round(TT.idle / 1000), inked:o.inked.length, pencils:o.pencils.length });
   const modal = document.querySelector('#ops-modal.show');   // never a toast over the magistrate's ruling
-  if(!TT.helped && TT.idle >= STUCK_MS && typeof SETTINGS !== 'undefined' && SETTINGS.hints === 'on' && !modal){
+  // "Hints when stuck" gates what is a hint: the HINT toast, and Recruit's note from Uche (hintHTML reads TT.helped).
+  // Senior Agent's process line names no card and no pair (HOW IT WORKS's own terms, with the count), so it is not a
+  // hint under the Senior rule and comes with the setting off too (a Senior start sets it off: beta/casework.js).
+  const hintsOn = typeof SETTINGS !== 'undefined' && SETTINGS.hints === 'on';
+  if(!TT.helped && TT.idle >= STUCK_MS && !modal && (hintsOn || !recruit())){
     TT.helped = true;
-    toast('HINT', recruit() ? 'Sgt. Uche has left you a note on the table.' : tableHelpLine(), 3600);
-    try{ if(typeof guideTableTime === 'function') guideTableTime(0, true); }catch(e){}   // this was the hint: the field's 60 s starts again
+    if(hintsOn) toast('HINT', recruit() ? 'Sgt. Uche has left you a note on the table.' : tableHelpLine(), 3600);
+    try{ if(typeof guideTableTime === 'function') guideTableTime(0, true); }catch(e){}   // the table gave its help: the field's 60 s starts again
     render();
   }
   return true;
@@ -899,7 +905,8 @@ function tableClock(){
     tableTick(dt);
   }, 1000);
 }
-// Senior Agent's help at the table: how to link, and how far along. No card, no pair.
+// Senior Agent's help at the table: how to link, and how far along. No card, no pair — so not gated by "Hints when
+// stuck" (tableTick sets TT.helped for Senior either way; only the toast follows the setting).
 function helpHTML(){
   ttSync();
   if(recruit() || !TT.helped || !tableObj()) return '';
