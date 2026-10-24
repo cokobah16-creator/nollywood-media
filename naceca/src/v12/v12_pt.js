@@ -281,12 +281,14 @@ V12.ptSurvey = function(where){
   ov.querySelector('#pt-a1').value = ''; ov.querySelector('#pt-a2').value = '';
   const done = ()=>{ try{ const k = String(where || '').replace(/^slice:/, ''); S.game._ptAsked = S.game._ptAsked || {}; S.game._ptAsked[k] = Date.now(); }catch(e){} PT.pendingSurvey = null; };
   PT.surveyOpen = where;
-  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); done(); write(); close(); };
+  // opened from Settings › Two questions › ANSWER: the row behind it ("n answers saved in the log") is redrawn on return
+  const refresh = ()=>{ try{ if(where === 'settings' && typeof renderSettings === 'function' && document.querySelector('#screen-settings.show')) renderSettings(); }catch(e){} };
+  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); done(); write(); close(); refresh(); };
   ov.querySelector('#pt-save').onclick = ()=>{
     const a1 = ov.querySelector('#pt-a1').value.trim(), a2 = ov.querySelector('#pt-a2').value.trim();
     V12.log('survey', { where, satisfying:a1, unfair:a2, diff:(typeof gameDifficulty === 'function' ? gameDifficulty() : null),
       secsPlayed:Math.round(PT.play / 1000), missions:((S.game && S.game.completedMissions) || []).slice(), misses:PT.totals.misses, refusals:PT.totals.refusals, hints:PT.totals.hints, build:(window.NACECA_BUILD || {}).src || null });
-    done(); write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close();
+    done(); write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close(); refresh();
   };
   ov.classList.add('show');
   try{ const t = document.getElementById('toast'); if(t) t.classList.remove('show'); }catch(e){}   // a save toast would sit on the first answer
