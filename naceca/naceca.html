@@ -5417,7 +5417,7 @@ const SETTINGS_DEFAULT = {
   subSize: 'M', subBg: 'on',
   gfx: 'auto',                 // auto | low | medium | high
   touchSize: 'M', hand: 'right',
-  marker: 'on', hints: 'on',
+  marker: 'on', hints: 'on',    // hints: a NEW investigation sets it per casework (beta/casework.js): Senior off, Recruit on
   reduceMotion: 'off', colourBlind: 'off', haptics: 'on',
   lang: 'mixed',               // mixed (Pidgin where characters speak it) | english
 };
@@ -5546,7 +5546,8 @@ const SETTINGS_UI = [
   { key:'timed', label:'Timed sequences', opts:[['normal','Normal'],['extended','Extended'],['off','No timers']],
     note:'Wipe, smoke and trace clocks. Chases still run.' },
   { key:'marker', label:'Objective marker', opts:[['on','On'],['off','Off']] },
-  { key:'hints',  label:'Hints when stuck', opts:[['on','On'],['off','Off']] },
+  { key:'hints',  label:'Hints when stuck', opts:[['on','On'],['off','Off']],
+    note:'A new investigation sets it: off for Senior Agent, on for Recruit.' },
   { key:'lang',   label:'Dialogue', opts:[['mixed','Pidgin + English'],['english','English only']] },
   { group:'DISPLAY' },
   { key:'subSize', label:'Subtitle size', opts:[['S','S'],['M','M'],['L','L'],['XL','XL']] },
@@ -5571,8 +5572,13 @@ function ensureSettingsScreen(){
     </div>`;
   document.getElementById('game-root').appendChild(ov);
   document.getElementById('btn-settings-close').addEventListener('click', closeSettings);
-  document.getElementById('btn-settings-reset').addEventListener('click', ()=>{ SETTINGS = Object.assign({}, SETTINGS_DEFAULT); saveSettings(); _gfxActive = null; applySettings(); renderSettings(); });
+  document.getElementById('btn-settings-reset').addEventListener('click', ()=>{ resetSettings(); renderSettings(); });
 }
+/* RESET TO DEFAULTS. beta/casework.js wraps this: during an investigation "Hints when stuck" goes back to the casework's
+   default (Senior Agent off, Recruit on), not the table's 'on'. */
+function resetSettings(){ SETTINGS = Object.assign({}, SETTINGS_DEFAULT); saveSettings(); _gfxActive = null; applySettings(); }
+// the playtest log (V12.log, when the v12 layer is present): a "Hints when stuck" change is what the facilitator writes down
+function logSettingChange(k, v, src){ if(typeof V12 !== 'undefined' && V12 && typeof V12.log === 'function') V12.log('settings', { k, v, src }); }
 function renderSettings(){
   const body = document.getElementById('settings-body'); body.innerHTML = '';
   SETTINGS_UI.forEach((row, ri)=>{
@@ -5602,6 +5608,7 @@ function renderSettings(){
         SETTINGS[btn.dataset.k] = btn.dataset.v;
         if(btn.dataset.k === 'gfx') _gfxActive = null;
         saveSettings(); applySettings();
+        if(btn.dataset.k === 'hints') logSettingChange('hints', btn.dataset.v, 'row');
       }
       btn.parentElement.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on', b===btn); b.setAttribute('aria-pressed', b===btn); });
       if(typeof sfxClick === 'function') sfxClick();
@@ -14763,7 +14770,7 @@ function hqFixCaseBoard(){
 
 
 </script>
-<script>window.NACECA_BUILD = { src:'07e968af64' };</script>
+<script>window.NACECA_BUILD = { src:'e555dc3141' };</script>
 <style id="v12">
 /* =========================================================================
    NACECA · v12 styles — operations table, documents, raid plan, accusation,
@@ -16960,9 +16967,11 @@ function side(){
 }
 /* ---------- the table that gates a mission: M2's o4_table (three inked links, or three strikes) ----------
    Time at the table on that objective counts as play: for "Hints when stuck" (guidance.js) and the stuck
-   log (v12_pt.js). Every 90 s there with no new ink is logged (table_stuck); the first time, with hints on,
-   the help comes up: Senior Agent gets the process only, never a card; Recruit gets Sgt. Uche's nudge.
-   Once the van has said no, Recruit's Uche names one true pair that is still open: one pair, once (vanPair). */
+   log (v12_pt.js). Every 90 s there with no new ink is logged (table_stuck); the first time the help comes
+   up: Senior Agent gets the process only, never a card — with "Hints when stuck" off too, since the line is
+   not a hint (a Senior start sets the setting off: beta/casework.js); the HINT toast, and Recruit's note from
+   Sgt. Uche, come only with it on. Once the van has said no, Recruit's Uche names one true pair that is
+   still open: one pair, once (vanPair), again only with it on. */
 const TABLE_NEED = 3, STUCK_MS = 90000;
 const tableObj = () => { try{ return S.game.currentMission === 'm2' ? ((S.game.objectives || []).find(x => x.id === 'o4_table' && !x.done) || null) : null; }catch(e){ return null; } };
 // the table is the only screen up (a pause menu or the desk on top of it is not time at the table)
@@ -16994,10 +17003,14 @@ function tableTick(ms){
   if(Math.floor(TT.idle / STUCK_MS) > Math.floor(before / STUCK_MS))
     V12.log('table_stuck', { secs:Math.round(TT.idle / 1000), inked:o.inked.length, pencils:o.pencils.length });
   const modal = document.querySelector('#ops-modal.show');   // never a toast over the magistrate's ruling
-  if(!TT.helped && TT.idle >= STUCK_MS && typeof SETTINGS !== 'undefined' && SETTINGS.hints === 'on' && !modal){
+  // "Hints when stuck" gates what is a hint: the HINT toast, and Recruit's note from Uche (hintHTML reads TT.helped).
+  // Senior Agent's process line names no card and no pair (HOW IT WORKS's own terms, with the count), so it is not a
+  // hint under the Senior rule and comes with the setting off too (a Senior start sets it off: beta/casework.js).
+  const hintsOn = typeof SETTINGS !== 'undefined' && SETTINGS.hints === 'on';
+  if(!TT.helped && TT.idle >= STUCK_MS && !modal && (hintsOn || !recruit())){
     TT.helped = true;
-    toast('HINT', recruit() ? 'Sgt. Uche has left you a note on the table.' : tableHelpLine(), 3600);
-    try{ if(typeof guideTableTime === 'function') guideTableTime(0, true); }catch(e){}   // this was the hint: the field's 60 s starts again
+    if(hintsOn) toast('HINT', recruit() ? 'Sgt. Uche has left you a note on the table.' : tableHelpLine(), 3600);
+    try{ if(typeof guideTableTime === 'function') guideTableTime(0, true); }catch(e){}   // the table gave its help: the field's 60 s starts again
     render();
   }
   return true;
@@ -17014,7 +17027,8 @@ function tableClock(){
     tableTick(dt);
   }, 1000);
 }
-// Senior Agent's help at the table: how to link, and how far along. No card, no pair.
+// Senior Agent's help at the table: how to link, and how far along. No card, no pair — so not gated by "Hints when
+// stuck" (tableTick sets TT.helped for Senior either way; only the toast follows the setting).
 function helpHTML(){
   ttSync();
   if(recruit() || !TT.helped || !tableObj()) return '';
@@ -25901,7 +25915,10 @@ body.cw-senior .cw-hint{display:none}
    NACECA · casework — "the investigation is too easy"
    1. Casework difficulty per investigation: RECRUIT (deduction hints on) or
       SENIOR AGENT (default). Chosen on the new-game sheet, editable in
-      Settings, mirrored on <body> as cw-recruit / cw-senior.
+      Settings, mirrored on <body> as cw-recruit / cw-senior. A NEW
+      investigation also sets the device's "Hints when stuck": off for
+      Senior Agent, on for Recruit (owner decision, 24 Oct) — at the
+      sheet's BEGIN and the playtest kit's START AT M2 only.
    2. A paper CHARGE SHEET before each raid (Lagos before Lekki, the route
       before Asaba): SUSPECT, METHOD, MONEY TRAIL, filed with a two-tap
       confirm. Permanent for the save (S.game.accusations).
@@ -25935,12 +25952,62 @@ const trail = (k, d)=>{ CW.trail.push([k, d == null ? null : d]); if(CW.trail.le
    1. Casework difficulty
    ===================================================================== */
 const sync = ()=>{ if(typeof syncDifficultyClass === 'function') syncDifficultyClass(); };
+/* "Hints when stuck" (SETTINGS.hints) gates what is a hint: the field's 60 s "Try this next" toast, the M2 table's HINT
+   toast, Recruit's note and pair at the table — not the table's Senior process line, which names nothing (v12_ops.js).
+   It follows the casework a NEW investigation starts with: off for Senior Agent (no answer-giving hints), on for
+   Recruit. Only at the new-investigation sheet's BEGIN and at the playtest kit's START AT M2 (tactics/tac_pt.js calls
+   this) — never on a load, a mission-select replay or a Casework change in Settings: an existing save keeps whatever
+   the device has, and the Settings row changes it at any time.
+   Until the new investigation saves for the first time the old save is still the one on the device (the sheet says
+   so), so the value from before the start is kept with the settings (SETTINGS.hintsPrev) and comes back if that old
+   save is loaded instead; the first save drops it. RESET TO DEFAULTS during an investigation sets the casework's
+   default, not the table's 'on'. A change the player did not make at the row is logged: settings {k:'hints', v, src}. */
+const HV = v => v === 'on' || v === 'off';
+CW.HINTS_FOR = { recruit:'on', senior:'off' };
+CW.hintsForNewGame = function(d){
+  d = d === 'recruit' ? 'recruit' : 'senior';
+  const v = CW.HINTS_FOR[d];
+  try{
+    if(typeof SETTINGS !== 'undefined' && SETTINGS){
+      const before = HV(SETTINGS.hintsPrev) ? SETTINGS.hintsPrev : SETTINGS.hints;   // a start abandoned before its first save keeps the first "before"
+      SETTINGS.hints = v;
+      if(before !== v) SETTINGS.hintsPrev = before; else delete SETTINGS.hintsPrev;
+      if(typeof saveSettings === 'function') saveSettings();
+    }
+  }catch(e){}
+  trail('hints_default', { d, hints:v });
+  return v;
+};
+// the first save of the new investigation replaces the old one on the device: the "before" value is no longer wanted
+wrap('saveGame', orig => function(){
+  const r = orig.apply(this, arguments);
+  try{ if(typeof SETTINGS !== 'undefined' && SETTINGS && 'hintsPrev' in SETTINGS){ delete SETTINGS.hintsPrev; if(typeof saveSettings === 'function') saveSettings(); } }catch(e){}
+  return r;
+});
+// RESET TO DEFAULTS during an investigation: the casework's default; with no investigation running, the table's 'on'
+wrap('resetSettings', orig => function(){
+  const was = (typeof SETTINGS !== 'undefined' && SETTINGS) ? SETTINGS.hints : null;
+  const r = orig.apply(this, arguments);
+  try{
+    if(S && S.game && S.game.currentMission && typeof gameDifficulty === 'function'){ SETTINGS.hints = CW.HINTS_FOR[gameDifficulty()]; if(typeof saveSettings === 'function') saveSettings(); }
+    if(SETTINGS.hints !== was){ trail('hints_reset', { hints:SETTINGS.hints }); log('settings', { k:'hints', v:SETTINGS.hints, src:'reset' }); }
+  }catch(e){}
+  return r;
+});
 wrap('loadGame', orig => function(){
   const ok = orig.apply(this, arguments);
   try{
     if(S && S.game){
       if(S.game.difficulty !== 'recruit') S.game.difficulty = 'senior';           // old saves → Senior
       if(!S.game.accusations || typeof S.game.accusations !== 'object') S.game.accusations = {};
+    }
+    // the save on the device came back before a new investigation ever saved: the device's "Hints when stuck" goes back with it
+    if(ok && typeof SETTINGS !== 'undefined' && SETTINGS && HV(SETTINGS.hintsPrev)){
+      const v = SETTINGS.hintsPrev, changed = SETTINGS.hints !== v;
+      delete SETTINGS.hintsPrev; SETTINGS.hints = v;
+      if(typeof saveSettings === 'function') saveSettings();
+      trail('hints_restore', { hints:v });
+      if(changed) log('settings', { k:'hints', v, src:'restore' });
     }
   }catch(e){}
   sync();
@@ -26533,8 +26600,10 @@ window.openNewGameSheet = function(){
   let pick = 'senior';
   const has = typeof hasSave === 'function' && hasSave();
   const modes = [
-    { v:'recruit', name:'RECRUIT', line:'Deduction hints on: lines worth a second look, an extra miss on documents, Uche\'s notes on the charge sheet.' },
-    { v:'senior',  name:'SENIOR AGENT', line:'No deduction hints. You read the papers and you sign for what you conclude. Recommended.' },
+    { v:'recruit', name:'RECRUIT', line:'Deduction hints on: lines worth a second look, an extra miss on documents, Uche\'s notes on the charge sheet.',
+      hints:'Hints when stuck: on.' },
+    { v:'senior',  name:'SENIOR AGENT', line:'No deduction hints. You read the papers and you sign for what you conclude. Recommended.',
+      hints:'Hints when stuck: off. Change it in Settings.' },
   ];
   ov.innerHTML = `<div class="overlay-bg cw-bg"></div>
     <div class="cw-sheet cw-paper cw-newgame" role="dialog" aria-modal="true" aria-labelledby="screen-newgame-t">
@@ -26542,7 +26611,7 @@ window.openNewGameSheet = function(){
         <header class="cw-head"><div class="cw-agency">${AGENCY}</div><h2 class="cw-title" id="screen-newgame-t">NEW INVESTIGATION</h2><div class="cw-meta">POSTING · AGENT KELECHI · LAGOS HQ · CASE NACECA-2026/0034</div></header>
         <section class="cw-sec">
           <div class="cw-sec-h"><span class="cw-l">CASEWORK</span><span class="cw-q">How much help do you want reading the evidence?</span></div>
-          <div class="cw-opts">${modes.map(m => `<button class="cw-opt cw-mode" data-v="${m.v}" aria-pressed="false"><span class="cw-box">${ico('check')}</span><span class="cw-ot"><b>${m.name}</b><span class="cw-ol">${esc(m.line)}</span></span></button>`).join('')}</div>
+          <div class="cw-opts">${modes.map(m => `<button class="cw-opt cw-mode" data-v="${m.v}" aria-pressed="false"><span class="cw-box">${ico('check')}</span><span class="cw-ot"><b>${m.name}</b><span class="cw-ol">${esc(m.line)}</span><span class="cw-ol cw-hints">${esc(m.hints)}</span></span></button>`).join('')}</div>
           <p class="cw-note">Action pace (timers, chases, minigames) is separate, in Settings. You can switch casework there during the investigation.</p>
           ${has ? `<p class="cw-note cw-alert">${ico('warning')}<span>You have a saved investigation. It stays on this device until the new one saves for the first time, after the briefing.</span></p>` : ''}
         </section>
@@ -26557,7 +26626,8 @@ window.openNewGameSheet = function(){
   ov.querySelector('[data-act="back"]').addEventListener('click', ()=>{ click(); if(typeof showOverlay === 'function') showOverlay('screen-title'); });
   ov.querySelector('[data-act="go"]').addEventListener('click', ()=>{
     click(); ov.classList.remove('show');
-    log('new_game', { d:pick });
+    const hints = CW.hintsForNewGame(pick);   // the device setting follows the casework chosen here
+    log('new_game', { d:pick, hints });
     if(typeof startNewInvestigation === 'function') startNewInvestigation(pick);
     else { S = defaultState(); S.game.difficulty = pick; sync(); if(typeof showHUD === 'function') showHUD(false); loadMission('m0'); }
   });
@@ -28212,6 +28282,17 @@ R.meta = function(ev){
   const sv = ev.filter(e => e.type === 'survey' && !dOf(e).skipped);
   const set = s.settings || p.settings || {};
   const diff = (ng && dOf(ng).d) || (sv.length && dOf(sv[sv.length - 1]).diff) || set.casework || null;
+  // "Hints when stuck": the last event that reports it wins. session and pt_player carry the device's value at load and at
+  // NEW PLAYER (both before the start); new_game the value the start set (Senior off, Recruit on; older logs have none, so
+  // the session value stands); settings {k:'hints', v} the row, RESET TO DEFAULTS or the restore after an abandoned start.
+  // hintsChanged: a settings event moved it from the value in force, so part of the session was played the other way.
+  let hints = null, hintsChanged = false;
+  for(const e of ev){
+    const d = dOf(e), v = (e.type === 'session' || e.type === 'pt_player') ? (d.settings || {}).hints : e.type === 'new_game' ? d.hints : (e.type === 'settings' && d.k === 'hints') ? d.v : undefined;
+    if(v !== 'on' && v !== 'off') continue;
+    if(e.type === 'settings' && hints && v !== hints) hintsChanged = true;
+    hints = v;
+  }
   // played: per session, from the first to the last ps of this player (ps restarts at NEW PLAYER and on reload)
   const bySid = {};
   for(const e of ev){ const v = dOf(e).ps; if(typeof v !== 'number') continue; const b = bySid[e.sid] || (bySid[e.sid] = [v, v]); b[0] = Math.min(b[0], v); b[1] = Math.max(b[1], v); }
@@ -28220,7 +28301,7 @@ R.meta = function(ev){
   const ends = [...new Set(ev.filter(e => e.type === 'mission_end').map(e => dOf(e).m).filter(Boolean))];
   ['m2', 'm3'].forEach(m => { if(ev.some(e => e.type === m + '_summary') && !ends.includes(m)) ends.push(m); });
   const hdr = ev.find(e => e._bsrc);
-  return { kinds, sessions:new Set(ev.map(e => e.sid)).size, diff, pace:set.difficulty || null, hints:set.hints || null, build:(s.build || {}).src || (hdr ? hdr._bsrc : null),
+  return { kinds, sessions:new Set(ev.map(e => e.sid)).size, diff, pace:set.difficulty || null, hints, hintsChanged, build:(s.build || {}).src || (hdr ? hdr._bsrc : null),
     w:s.w || p.w || null, h:s.h || p.h || null, from:ev.length ? ev[0].t : null, to:ev.length ? ev[ev.length - 1].t : null,
     wallSecs:ev.length ? Math.round((ev[ev.length - 1].t - ev[0].t) / 1000) : 0, playSecs:anyPs ? Math.round(play) : null,
     missions:ends, survey:sv.map(e => ({ where:dOf(e).where, satisfying:dOf(e).satisfying, unfair:dOf(e).unfair })), events:ev.length,
@@ -28230,7 +28311,7 @@ R.meta = function(ev){
 R.analyze = (ev, ctx) => ({ meta:R.meta(ev), lost:R.lost(ev, ctx), failed:R.failed(ev), detection:R.detection(ev), approaches:R.approaches(ev) });
 R.DIFF = { recruit:'Recruit', senior:'Senior Agent' };
 R.leadLine = M => [M.kinds.map(k => k === 'touch' ? 'Phone' : 'Desktop').join(' + ') || 'Device ?', R.DIFF[M.diff] || 'casework ?',
-  M.hints ? 'hints when stuck ' + M.hints : null, M.playSecs != null ? mmss(M.playSecs) + ' played' : mmss(M.wallSecs) + ' on the clock',
+  M.hints ? 'hints when stuck ' + M.hints + (M.hintsChanged ? ' (changed during play)' : '') : null, M.playSecs != null ? mmss(M.playSecs) + ' played' : mmss(M.wallSecs) + ' on the clock',
   'finished ' + (M.missions.map(up).join(', ') || 'nothing yet'), M.events + ' event' + (M.events === 1 ? '' : 's'), M.build ? 'build ' + M.build : null].filter(Boolean).join(' · ');
 // the four sections as data: the sheet and the text renderers share these rows
 R.sections = function(res){
@@ -28878,10 +28959,10 @@ function playerRows(body){
 // market's start screen — the state the harness's h.start('m2', {completed:['m0','m1']}) uses, plus the one piece of
 // evidence the cold open always leaves (co_madam, from prologueEnd, v12_core.js:319), so the M2 operations table has the
 // same cards as after a full start. No M0/M1 XP or capabilities (the protocol says so). Like NEW INVESTIGATION, it
-// replaces the game in progress; it is offered only on the title screen of a ?pt=1 page. Unlike NEW INVESTIGATION it
-// also drops the device's save file: the facilitator has exported the previous player's log by now (the protocol says
-// so), and after a freeze the title's CONTINUE must be greyed until THIS player has saved (the first FILE on the table,
-// the van), never the previous player's run.
+// replaces the game in progress and sets "Hints when stuck" for the casework (off: beta/casework.js, CW.hintsForNewGame);
+// it is offered only on the title screen of a ?pt=1 page. Unlike NEW INVESTIGATION it also drops the device's save file:
+// the facilitator has exported the previous player's log by now (the protocol says so), and after a freeze the title's
+// CONTINUE must be greyed until THIS player has saved (the first FILE on the table, the van), never the previous player's run.
 function startAtM2(){
   try{
     if(typeof v13NavReset === 'function') v13NavReset();
@@ -28890,7 +28971,8 @@ function startAtM2(){
     if(Array.isArray(S.game.evidence) && !S.game.evidence.some(e => e && e.id === 'co_madam'))
       S.game.evidence.push({ id:'co_madam', name:"Courier's Dropped Phone — 'Tell Madam it's clean'", t:Date.now() });
     if(typeof syncDifficultyClass === 'function') syncDifficultyClass();
-    V12.log('new_game', { d:'senior' });
+    const hints = (window.CW && typeof CW.hintsForNewGame === 'function') ? CW.hintsForNewGame('senior') : null;
+    V12.log('new_game', hints ? { d:'senior', hints } : { d:'senior' });
     if(typeof showOverlay === 'function') showOverlay(null);
     if(typeof showHUD === 'function') showHUD(false);
     loadMission('m2');
