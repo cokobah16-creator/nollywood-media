@@ -1,4 +1,6 @@
 // Casework 1: the new-game sheet sets S.game.difficulty and the body class; old saves load as Senior.
+// BEGIN also sets the device's "Hints when stuck" from the casework (Senior off, Recruit on: owner decision, 24 Oct) and
+// the sheet says so under each mode; a loaded save keeps whatever the device has (casework_hints_default.cjs has the rest).
 //   node tools/harness/run.cjs tools/harness/scenarios/casework_newgame.cjs --html <build> [--w 390 --h 844 --touch 1] [--shots dir]
 module.exports = async h => {
   const tag = await h.ev(() => innerWidth < 600 ? 'phone' : 'desk');
@@ -18,6 +20,7 @@ module.exports = async h => {
   h.assert(sheet, 'NEW INVESTIGATION opens the new-game sheet');
   h.assert(sheet.senior === 'true' && sheet.recruit === 'false', 'Senior Agent is preselected');
   h.assert(/RECRUIT/.test(sheet.text) && /SENIOR AGENT/.test(sheet.text) && /hints on/i.test(sheet.text) && /No deduction hints/.test(sheet.text), 'both modes with one-line explanations');
+  h.assert(/Hints when stuck: on\./.test(sheet.text) && /Hints when stuck: off\. Change it in Settings\./.test(sheet.text), 'each mode says what it does to Hints when stuck');
   h.assert(sheet.alert && /saved investigation/.test(sheet.text), 'a note when a save exists');
   h.assert(/NATIONAL ANTI-CORRUPTION & ECONOMIC CRIMES AGENCY/.test(sheet.text), 'full agency name on the sheet');
   h.assert(!sheet.emoji, 'no emoji glyphs on the sheet');
@@ -29,9 +32,10 @@ module.exports = async h => {
   await h.step(80);
   await h.ev(() => document.querySelector('#screen-newgame [data-act="go"]').click());
   await h.step(900);
-  let st = await h.ev(() => ({ d:S.game.difficulty, rec:isRecruit(), g:gameDifficulty(), cls:[...document.body.classList].filter(c => /^cw-/.test(c)), m:S.game.currentMission, acc:JSON.stringify(S.game.accusations) }));
+  let st = await h.ev(() => ({ d:S.game.difficulty, rec:isRecruit(), g:gameDifficulty(), cls:[...document.body.classList].filter(c => /^cw-/.test(c)), m:S.game.currentMission, acc:JSON.stringify(S.game.accusations), hints:SETTINGS.hints }));
   h.log('recruit start', st);
   h.assert(st.d === 'recruit' && st.rec === true && st.g === 'recruit', 'Recruit sets S.game.difficulty');
+  h.assert(st.hints === 'on', 'a Recruit start sets Hints when stuck on');
   h.assert(st.cls.includes('cw-recruit') && !st.cls.includes('cw-senior'), 'body has cw-recruit');
   h.assert(st.m === 'm0', 'the cold open starts as before');
   h.assert(st.acc === '{}', 'a new game starts with no accusations');
@@ -41,8 +45,9 @@ module.exports = async h => {
   await h.step(200);
   await h.ev(() => document.querySelector('#screen-newgame [data-act="go"]').click());
   await h.step(900);
-  st = await h.ev(() => ({ d:S.game.difficulty, cls:[...document.body.classList].filter(c => /^cw-/.test(c)) }));
+  st = await h.ev(() => ({ d:S.game.difficulty, cls:[...document.body.classList].filter(c => /^cw-/.test(c)), hints:SETTINGS.hints }));
   h.assert(st.d === 'senior' && st.cls.includes('cw-senior') && !st.cls.includes('cw-recruit'), 'default BEGIN is Senior Agent, body cw-senior');
+  h.assert(st.hints === 'off', 'a Senior Agent start sets Hints when stuck off');
 
   // BACK returns to the title without starting anything
   await h.ev(() => { showOverlay('screen-title'); document.getElementById('btn-newgame').click(); });
@@ -67,8 +72,9 @@ module.exports = async h => {
     localStorage.setItem(SAVE_KEY, JSON.stringify(s));
     S = defaultState(); syncDifficultyClass();
     showOverlay('screen-title'); document.getElementById('btn-continue').disabled = false; document.getElementById('btn-continue').click();
-    return { d:S.game.difficulty, cls:document.body.classList.contains('cw-recruit') };
+    return { d:S.game.difficulty, cls:document.body.classList.contains('cw-recruit'), hints:SETTINGS.hints };
   });
   h.assert(st.d === 'recruit' && st.cls, 'CONTINUE restores Recruit and the body class');
+  h.assert(st.hints === 'off', 'CONTINUE leaves Hints when stuck as the device has it (off since the Senior start)');
   h.log('PASS casework_newgame', tag);
 };

@@ -131,21 +131,23 @@ module.exports = async h => {
   h.assert(after.player && after.player.label === 'P2' && after.player.dev === np.dev && after.save && after.settings, 'CLEAR keeps naceca_pt_player, the save and the settings');
   h.assert(/^Playtest log0 events/.test(after.note.replace(/\s+/g, '')) || /0 events/.test(after.note), 'the log row reads 0 events after CLEAR: ' + after.note);
 
-  // the facilitator's short-session start: START AT M2 (two taps) → a fresh Senior save with M0 and M1 done, at M2
+  // the facilitator's short-session start: START AT M2 (two taps) → a fresh Senior save with M0 and M1 done, at M2,
+  // and "Hints when stuck" off (a Senior start sets it, as the new-investigation sheet does)
   await P.openSettings(h, 'screen-title');
   const m2a = await h.ev(() => { const b = document.getElementById('pt-m2'); b.click(); return { t:b.textContent, m:S.game.currentMission }; });
   h.assert(m2a.t === 'TAP AGAIN · START AT M2', 'START AT M2 arms on the first tap');
   {
     const t0 = await P.mark(h);
-    await h.ev(() => { S.game.currentMission = 'm1'; S.game.completedMissions = ['m0']; document.getElementById('pt-m2').click(); });
+    await h.ev(() => { S.game.currentMission = 'm1'; S.game.completedMissions = ['m0']; SETTINGS.hints = 'on'; document.getElementById('pt-m2').click(); });
     await h.step(1200);
-    const st = await h.ev(() => ({ m:S.game.currentMission, done:S.game.completedMissions.slice(), d:S.game.difficulty, shown:[...document.querySelectorAll('.overlay.show')].map(o => o.id) }));
+    const st = await h.ev(() => ({ m:S.game.currentMission, done:S.game.completedMissions.slice(), d:S.game.difficulty, hints:SETTINGS.hints, shown:[...document.querySelectorAll('.overlay.show')].map(o => o.id) }));
     ev = await P.all(h);
     const ng = P.of(ev, 'new_game', t0);
     h.log('start at M2', JSON.stringify(st), JSON.stringify(ng.map(e => e.d)));
     h.assert(st.m === 'm2' && JSON.stringify(st.done) === '["m0","m1"]' && st.d === 'senior' && !st.shown.includes('screen-settings'), 'the second tap starts M2 on a fresh Senior save with M0 and M1 done');
+    h.assert(st.hints === 'off', 'a Senior start: Hints when stuck off');
     h.assert(await h.ev(() => V12.hasEv('co_madam')), 'and the cold open\'s "Tell Madam it\'s clean" phone, as after a full start');
-    h.assert(ng.length === 1 && ng[0].d.d === 'senior' && ng[0].d.p === 'P2', 'it logs new_game {d:senior} for the player');
+    h.assert(ng.length === 1 && ng[0].d.d === 'senior' && ng[0].d.hints === 'off' && ng[0].d.p === 'P2', 'it logs new_game {d:senior, hints:off} for the player');
   }
   // the label and the device id survive a reload; the session event names the player
   const psBefore = await h.ev(() => V12.ptKit.ps());

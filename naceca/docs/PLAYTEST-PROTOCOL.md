@@ -28,10 +28,11 @@ gives the device a 4-character id, for example **B7QX**, which stays on the devi
 1. Go to **Settings › PLAYTEST**. If *Playtest log* shows events from someone else, tap **EXPORT** (or Summary › VIEW ›
    **SEND LOG**) and **check the file has arrived** in the session folder. Only then tap **CLEAR**, twice (the first tap
    reads `TAP AGAIN · CLEAR`). Never CLEAR a log you haven't seen arrive.
-2. Leave every setting at its default: Action pace Standard, Hints when stuck On, Objective marker On. Write down any
-   change you make. **Write down "Hints when stuck" for every player:** its 60 s "Try this next" toast tells Senior players
-   what to do, and whether Senior should default it Off is an open product question (DESIGN-tactics.md §11.8). Leave it at
-   the default until that is answered.
+2. Leave every setting at its default: Action pace Standard, Objective marker On. "Hints when stuck" is set by the start
+   itself (decided 24 Oct, DESIGN-tactics.md §11.8): a new **Senior Agent** investigation (NEW INVESTIGATION or START AT M2)
+   turns it **Off**, a **Recruit** one turns it **On**; the sheet says so under each mode, and the Settings row still
+   changes it. Write down any change you make, and **still write down "Hints when stuck" for every player**: its 60 s
+   "Try this next" toast names the next step, so a Senior player who turned it back On played a different game.
 3. Tap **NEW PLAYER** twice (the first tap reads `TAP AGAIN · START P3`). The row now reads, for example,
    *B7QX·P3 · 1 event since 14:02*. Write **the device id and the label together** on your sheet, exactly as the row prints
    them: **B7QX·P3**. The Summary sheet and the report print players the same way.

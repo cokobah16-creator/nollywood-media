@@ -18,7 +18,7 @@ const SETTINGS_DEFAULT = {
   subSize: 'M', subBg: 'on',
   gfx: 'auto',                 // auto | low | medium | high
   touchSize: 'M', hand: 'right',
-  marker: 'on', hints: 'on',
+  marker: 'on', hints: 'on',    // hints: a NEW investigation sets it per casework (beta/casework.js): Senior off, Recruit on
   reduceMotion: 'off', colourBlind: 'off', haptics: 'on',
   lang: 'mixed',               // mixed (Pidgin where characters speak it) | english
 };
@@ -147,7 +147,8 @@ const SETTINGS_UI = [
   { key:'timed', label:'Timed sequences', opts:[['normal','Normal'],['extended','Extended'],['off','No timers']],
     note:'Wipe, smoke and trace clocks. Chases still run.' },
   { key:'marker', label:'Objective marker', opts:[['on','On'],['off','Off']] },
-  { key:'hints',  label:'Hints when stuck', opts:[['on','On'],['off','Off']] },
+  { key:'hints',  label:'Hints when stuck', opts:[['on','On'],['off','Off']],
+    note:'A new investigation sets it: off for Senior Agent, on for Recruit.' },
   { key:'lang',   label:'Dialogue', opts:[['mixed','Pidgin + English'],['english','English only']] },
   { group:'DISPLAY' },
   { key:'subSize', label:'Subtitle size', opts:[['S','S'],['M','M'],['L','L'],['XL','XL']] },

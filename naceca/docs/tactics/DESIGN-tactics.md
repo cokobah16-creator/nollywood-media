@@ -862,7 +862,8 @@ The harness stubs three.js, so these can't be settled there.
   - **Time box:** the 75-minute budget covers M0 → M3. Add the facilitator start at M2 (a fresh Senior save with m0 and m1
     done, the state `h.start('m2', {completed:['m0','m1']})` uses) for sessions under 60 minutes, and record which start
     was used.
-  - **Hints when stuck:** record the setting per player. Leave it at the default until the PO answers §11.8.
+  - **Hints when stuck:** record the setting per player. A Senior Agent start (full or M2) sets it Off, a Recruit start
+    On (§11.8, decided 24 Oct); the Settings row still changes it.
   - **Summary access:** the Summary rows appear only after NEW PLAYER (or `?pt=1`).
   - **CLI:** `node tools/pt_report.cjs <folder> [--player B7QX·P3] [--around 2026-10-17T14:32] [--md report.md]`.
 
@@ -882,8 +883,13 @@ The design ships the bold default, so nothing blocks on these.
    stays true.
 7. **PLAYTEST rows.** Player and Summary are visible only with a label or `?pt=1`; the existing log rows stay as today.
    Confirm.
-8. **"Hints when stuck" defaults On, also on Senior Agent.** Its 60 s "Try this next" toast tells the player what to do,
-   which conflicts with the Senior rule. Should Senior default it Off? This is outside this layer; it's a settings default.
+8. **"Hints when stuck" on Senior Agent — DECIDED (24 Oct).** Its 60 s "Try this next" toast tells the player what to do,
+   which conflicts with the Senior rule. Decision: a NEW investigation sets the device setting from its casework — **Off
+   for Senior Agent, On for Recruit** — at the new-investigation sheet's BEGIN and at START AT M2 (`CW.hintsForNewGame`,
+   src/beta/casework.js; the sheet says so under each mode and the Settings row's note says the default). Nothing else
+   moves it: a loaded save keeps whatever the device has, a Casework change in Settings leaves it alone, and the row
+   still changes it at any time. The `new_game` event carries `hints` next to `d`. The facilitator still writes it down
+   per player (PLAYTEST-PROTOCOL.md).
 9. **Hold-to-crouch on touch** ships opt-in. Auto stays toggle. Confirm.
 10. **Achievements on Uche's catch.** As written, "Faster Than Computer Village" and "Not One Bystander" unlock only on
     Kelechi's own catch (a tackle or cut-off). Confirm.
