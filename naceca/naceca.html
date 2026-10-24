@@ -5640,7 +5640,17 @@ function progressSig(){
     (S.game.objectives||[]).map(o=>o.done?1:0),
     (S.game._opEv||[]).length,
     S.game.flags, S.game.moralChoices,
+    // a link that holds on the operations table is progress too (pencils and strikes are not)
+    ((S.game.ops && S.game.ops.inked) || []).length,
   ]);
+}
+
+/* time at the operations table on its open objective (M2's o4_table) counts as play: v12_ops reports it
+   here once a second while the table is up. hinted: the table just gave its own stuck help, so the 60 s
+   starts again from now. */
+function guideTableTime(ms, hinted){
+  GUIDE.tableMs = (GUIDE.tableMs || 0) + Math.max(0, +ms || 0);
+  if(hinted){ const t = performance.now(); GUIDE.lastProgress = t; GUIDE._lastRun = t; GUIDE.tableMs = 0; }
 }
 
 /* ---------- interaction hook (called by tryInteract) ---------- */
@@ -5709,9 +5719,12 @@ function updateGuidance(dt){
       }
     }
   }
-  // hints after 60 s with no progress (updateGuidance only runs while playing: time in menus doesn't count)
+  // hints after 60 s with no progress (updateGuidance only runs while playing: time in menus doesn't count,
+  // except time at the operations table on its objective, which guideTableTime has counted)
   const tnow = performance.now();
-  if(GUIDE._lastRun && tnow - GUIDE._lastRun > 500 && GUIDE.lastProgress) GUIDE.lastProgress += tnow - GUIDE._lastRun;
+  const gap = GUIDE._lastRun ? tnow - GUIDE._lastRun : 0, tbl = GUIDE.tableMs || 0;
+  GUIDE.tableMs = 0;
+  if(GUIDE.lastProgress && (gap > 500 || tbl > gap)) GUIDE.lastProgress += gap - tbl;
   GUIDE._lastRun = tnow;
   const sig = progressSig();
   if(sig !== GUIDE.lastSig){ GUIDE.lastSig = sig; GUIDE.lastProgress = performance.now(); }
@@ -5725,7 +5738,7 @@ function updateGuidance(dt){
     }
   }
 }
-function resetGuidance(){ GUIDE.lastProgress = performance.now(); GUIDE.lastSig = ''; }
+function resetGuidance(){ GUIDE.lastProgress = performance.now(); GUIDE.lastSig = ''; GUIDE.tableMs = 0; }
 
 /* ---------- feel: characters face each other while talking ---------- */
 function faceEachOtherLegacy(it){
@@ -14750,7 +14763,7 @@ function hqFixCaseBoard(){
 
 
 </script>
-<script>window.NACECA_BUILD = { src:'4f564b2826' };</script>
+<script>window.NACECA_BUILD = { src:'8219190d6e' };</script>
 <style id="v12">
 /* =========================================================================
    NACECA · v12 styles — operations table, documents, raid plan, accusation,
@@ -14967,6 +14980,21 @@ body:has(#eye-ind.show) .hud-topleft-controls{visibility:hidden}
 .ops-foot b{color:var(--ink,#1C1C1A);font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-weight:700}
 .ops-foot .f.ok b{color:var(--manila,#E9DCC0);background:var(--green,#0B6E4F);padding:0 5px;border-radius:2px}
 .ops-foot .ops-b{margin-left:auto}
+/* the line above FILE: the card you're holding, or what the M2 van is waiting for */
+.ops-status{order:-2;flex:1 1 100%;margin:0;min-width:0;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:11.5px;letter-spacing:0;line-height:1.4;color:var(--ink,#1C1C1A)}
+.ops-status.goal{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.18em}
+.ops-status b{color:var(--ink,#1C1C1A)}
+.ops-status.sel b{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:600;letter-spacing:.03em}
+.bd-file .bd-file-c{text-transform:none;letter-spacing:.03em;font-weight:500}
+/* help at the table: Senior Agent's is the process only (no card); Recruit's Sgt. Uche goes first in the panel */
+.ops-help{display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;padding:8px 10px;border:1px solid var(--ink,#1C1C1A);border-left-width:3px;border-radius:2px;background:transparent;font-size:12px;line-height:1.45;color:var(--ink,#1C1C1A)}
+.ops-help .ico{flex:0 0 auto;font-size:15px;margin-top:2px}
+.ops-side > .ops-hint:first-child{margin-top:0;margin-bottom:10px}
+.ops-hint b.u-card{display:inline;font-family:inherit;font-size:inherit;letter-spacing:0;color:var(--ink,#1C1C1A);font-weight:700}
+/* the ruling: what the third strike costs */
+.bd-stakes{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;padding:8px 10px;border:1px solid var(--red,#B3261E);border-radius:2px;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:11.5px;line-height:1.45;color:var(--ink,#1C1C1A)}
+.bd-stakes .ico{flex:0 0 auto;font-size:16px;margin-top:1px;color:var(--red,#B3261E)}
+.bd-stakes b{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);letter-spacing:.14em}
 .ops-stamp{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) rotate(-8deg);font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:64px;letter-spacing:.2em;color:var(--red,#B3261E);border:4px solid var(--red,#B3261E);border-radius:4px;background:rgba(233,220,192,.85);padding:4px 26px;z-index:30;pointer-events:none;animation:opsStamp 1.3s ease forwards}
 @keyframes opsStamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-8deg) scale(1.8)}20%{opacity:1;transform:translate(-50%,-50%) rotate(-8deg) scale(1)}80%{opacity:1}100%{opacity:0}}
 .ops-modal{position:absolute;inset:0;background:rgba(20,20,18,.78);display:none;align-items:center;justify-content:center;z-index:40;padding:14px}
@@ -15761,6 +15789,12 @@ V12.m2TableCheck = function(){
   }catch(e){}
 };
 // M2: the van waits until the table has three links that hold, or three strikes (fail forward, at a cost)
+// the refusal says how far the table is: progress only, never which cards (Senior Agent's rule holds here too)
+V12.vanTableLine = inked => {
+  const n = Math.max(0, Math.min(3, inked | 0)), left = 3 - n;
+  return `${n} of 3 links inked. ` + (left === 1 ? 'Pencil one more pair and FILE it.'
+    : left === 2 ? 'Pencil two more pairs and FILE them.' : 'Open the CASE FILE, pencil three pairs and FILE them.');
+};
 V12.wrap('buildSceneMarket', orig => function(){
   const r = orig.apply(this, arguments);
   const van = ENGINE.interactables.find(i => /^Board NACECA van/.test(i.label || ''));
@@ -15771,7 +15805,10 @@ V12.wrap('buildSceneMarket', orig => function(){
       const inked = (ops.inked || []).length;
       const strikes = typeof V12.caseStrikes === 'function' ? V12.caseStrikes('lagos') : 0;
       if(S.game._marketScanned && S.game.moralChoices.market_runner && inked < 3 && strikes < 3){
-        toast('THE TABLE FIRST', 'File three links that hold on the operations table before Lekki — open the CASE FILE', 2600);
+        // remembered with the table, so Recruit's Uche can point at a pair once the van has said no
+        if(ops && typeof ops === 'object') ops.vanNo = (ops.vanNo || 0) + 1;
+        V12.log('van_refused', { inked, strikes });
+        toast('THE TABLE FIRST', V12.vanTableLine(inked), 3200);
         if(typeof showHint === 'function') showHint('table_m2', 'Open the <b>CASE FILE</b> (TAB), pencil what you found, then <b>FILE</b> the links you are sure of', 'Tap <b>CASE FILE</b>, pencil what you found, then <b>FILE</b> the links you are sure of');
         return;
       }
@@ -16555,6 +16592,9 @@ V12.openOps = function(group, sel){
   showOverlay('screen-ops');
   render();
   requestAnimationFrame(drawLinks);
+  tableClock();
+  // the van's THE TABLE FIRST toast says what the goal line in the foot now says: it would only cover the cards
+  if(tableObj()){ const t = document.getElementById('toast'); if(t && t.classList.contains('show') && /THE TABLE FIRST/.test(t.textContent || '')) t.classList.remove('show'); }
   V12.log('ops_open', { m:S.game.currentMission });
 };
 V12.closeOps = function(){
@@ -16770,6 +16810,7 @@ function inkLinks(keys, opt){
   }
   const after = V12.intelTier();
   if(after > before){ const x = V12.INTEL_TIERS[after - 1]; setTimeout(()=>toast(x.name, x.text, 3000), late ? 400 : 6200); }
+  tableInked();
   if(o.inked.length >= 3 && typeof completeObjective === 'function') completeObjective('o4_table');
   // a new link that holds is new evidence for a refused warrant
   CASES.forEach(c => refreshRefusal(c, !!opt.ruling));
@@ -16784,6 +16825,19 @@ function stamp(word, cls){
 }
 
 const nm = id => NODE[id] ? NODE[id].name : id;
+// why a link was struck, in the same words for every wrong link: the magistrate's standard, never what the
+// file holds (two cards can share a dossier line and still not be a link in the crime), never which link would hold
+const STRUCK_WHY = 'The magistrate won\'t take these two as a direct link in the crime.';
+// what three strikes cost (the ruling and HOW IT WORKS): the raid goes without the warrant only while the
+// case's raid is still ahead (LAGOS m3, THE ROUTE m6, THE VOICE m8)
+const RAID_OF = { lagos:'m3', route:'m6', voice:'m8' };
+const raidAhead = c => {
+  let r = RAID_OF[c];
+  try{ if(window.CW && CW.CASES && CW.CASES[c] && CW.CASES[c].raid) r = CW.CASES[c].raid; }catch(e){}
+  return !!r && !((S.game.completedMissions || []).includes(r));
+};
+const strikeStakes = c => raidAhead(c) ? 'At three strikes the warrant is refused and the raid goes without it'
+  : 'At three strikes the warrant is refused until you bring new evidence';
 function rulingModal(res, refusedNow, lifted){
   const m = document.getElementById('ops-modal'); if(!m || !res || !res.length) return;
   const rows = res.map(r => {
@@ -16793,15 +16847,19 @@ function rulingModal(res, refusedNow, lifted){
     const why = r.again ? 'Already struck off. No further cost.'
       : r.forgiven ? 'Follow the Money: forgiven. No strike, no Integrity cost.'
       : `${CASE_NAME[r.c]} strike ${strikeOf(r.strike)} · Integrity −${INTEGRITY_COST}`;
-    return `<li class="bad">${ic('cross')}<div><b>STRUCK OFF</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span>${why}</span></div></li>`;
+    return `<li class="bad">${ic('cross')}<div><b>STRUCK OFF</b><em>${esc(nm(a))} — ${esc(nm(b))}</em><span class="bd-why">${STRUCK_WHY}</span><span>${why}</span></div></li>`;
   }).join('');
   const cases = [...new Set(res.map(r => r.c || caseForPair(...r.k.split('|'))))];
   const wr = cases.map(c => { const w = V12.warrantFor(c); return `<div class="bd-rw"><span class="bd-rw-n">${CASE_NAME[c]}</span>${stampHTML(w, true)}<span class="bd-rw-s">STRENGTH <b>${w.strength}</b> · ${esc(w.need)}</span></div>`; }).join('');
   const lift = (lifted || []).map(c => `<p class="bd-lifted">${ic('unlock')}<span><b>WARRANT REVIEW.</b> New evidence: the magistrate will look at the ${CASE_NAME[c]} warrant again.</span></p>`).join('');
-  const ref = (refusedNow || []).map(c => `<p class="bd-refused">${ic('warning')}<span><b>THREE STRIKES.</b> The magistrate refuses the ${CASE_NAME[c]} warrant until you bring new evidence: a new lead, or a new link that holds.</span></p>`).join('');
+  const ref = (refusedNow || []).map(c => `<p class="bd-refused">${ic('warning')}<span><b>THREE STRIKES.</b> The magistrate refuses the ${CASE_NAME[c]} warrant until you bring new evidence: a new lead, or a new link that holds.${raidAhead(c) ? ' Until then the raid goes without it.' : ''}</span></p>`).join('');
+  // a strike that doesn't refuse the warrant yet: say what the third one costs
+  const o = V12.ops();
+  const hit = [...new Set(res.filter(r => r.strike).map(r => r.c))].filter(c => !(refusedNow || []).includes(c) && o.cases[c] && !o.cases[c].refused);
+  const stakes = hit.map(c => `<p class="bd-stakes">${ic('warning')}<span><b>${CASE_NAME[c]} STRIKES ${Math.min(o.cases[c].strikes, MAX_STRIKES)}/${MAX_STRIKES}.</b> ${strikeStakes(c)}.</span></p>`).join('');
   m.innerHTML = `<div class="ops-mbox bd-ruling" role="dialog" aria-label="The magistrate's ruling">
     <div class="ops-h">THE MAGISTRATE'S RULING</div>
-    <ul class="bd-rul">${rows}</ul>${lift}${ref}<div class="bd-rws">${wr}</div>
+    <ul class="bd-rul">${rows}</ul>${lift}${ref}${stakes}<div class="bd-rws">${wr}</div>
     <div class="ops-mact"><button class="bd-btn" id="bd-rul-ok">BACK TO THE TABLE</button></div></div>`;
   m.classList.add('show');
   m.querySelector('#bd-rul-ok').onclick = ()=>{ m.classList.remove('show'); requestAnimationFrame(drawLinks); };
@@ -16860,6 +16918,11 @@ function side(){
   if(UI.view === 'notes'){ el.innerHTML = `<div class="ops-h">CASE NOTES</div><p class="ops-p">Your personnel file, the case background, every piece of evidence and the calls you made. Tap NOTES again to go back to the table.</p>`; return; }
   if(UI.sel){
     const n = NODE[UI.sel];
+    // the M2 table's help, once it is up (90 s stuck, or Recruit's pointer after the van said no), stays on top
+    // while a card is held: reading dossiers is how a stuck player spends the time
+    ttSync();
+    const live = !!tableObj() && (TT.helped || (recruit() && (o.vanNo || 0) > 0));
+    const top = live ? hintHTML() + helpHTML() : '';
     const other = k => k.split('|').find(x => x !== n.id);
     const mine = o.inked.filter(k => k.split('|').includes(n.id)).map(k => `<li class="ink"><b>${esc(nm(other(k)))}</b><span>${(LINK[k] || {}).hint || ''}</span></li>`).join('');
     const struck = o.struck.filter(k => k.split('|').includes(n.id)).map(k => `<li class="bd-struck"><span class="bd-tag-x">${ic('cross')}STRUCK</span><span>${esc(nm(other(k)))}</span></li>`).join('');
@@ -16867,7 +16930,7 @@ function side(){
     const pens = o.pencils.filter(k => k.split('|').includes(n.id)).map(k => `<li class="pen">pencilled to ${esc(nm(other(k)))} <button class="ops-erase" data-k="${k}">erase</button></li>`).join('');
     const weak = V12.evQ(evIdOf(n)) === 'weak';
     const note = recruit() && n.note ? `<div class="bd-note"><b>${ic('search')} ANALYST'S NOTE</b><span>${n.note}</span></div>` : '';
-    el.innerHTML = `<div class="ops-kind k-${n.kind}">${tagOf(n)}</div><div class="ops-name">${n.name}</div><p class="ops-p bd-facts">${dossierOf(n)}</p>${note}
+    el.innerHTML = `${top}<div class="ops-kind k-${n.kind}">${tagOf(n)}</div><div class="ops-name">${n.name}</div><p class="ops-p bd-facts">${dossierOf(n)}</p>${note}
       ${weak ? '<p class="ops-weak">CONTESTED — the defence will attack how this was obtained.</p>' : ''}
       <div class="ops-h">LINKS</div><ul class="ops-ul">${mine}${struck}${noted}${pens}${!mine && !struck && !noted && !pens ? '<li class="none">Nothing yet.</li>' : ''}</ul>
       <p class="ops-tip">Tap another card to pencil a link from <b>${n.name}</b>. Tap this card again to put it down.</p>`;
@@ -16879,39 +16942,139 @@ function side(){
   const th = T.filter(t => o.theories[t.id] || (rec && t.links.every(([a, b]) => visible(NODE[a]) && visible(NODE[b]))));
   const objs = (S.game.objectives || []);
   const mid = S.game.currentMission, mname = (MISSIONS.find(m => m.id === mid) || {}).name;
-  el.innerHTML = `
+  // the help, when there is any, goes first: at the bottom of the panel nobody scrolls to it
+  el.innerHTML = `${hintHTML()}${helpHTML()}
     <div class="ops-h">THEORIES</div>
     ${th.length ? th.map(t => o.theories[t.id]
       ? `<div class="ops-th done"><b>${ic('check')} ${t.name}</b><span>${t.effect}</span></div>`
       : `<div class="ops-th"><b>${t.q}</b><span>Unconfirmed</span></div>`).join('') : `<p class="ops-p">${rec ? 'No theories yet. Link what you\'ve found.' : 'No theories proven yet. Inked chains of links become theories.'}</p>`}
     <div class="ops-h">HOW IT WORKS</div>
     <p class="ops-p">Tap two cards to pencil a link. Pencils are free: erase and redraw as you like, up to six at a time.</p>
-    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. One that is true but says nothing about the crime is set aside, at no cost. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. Three strikes and the warrant is refused until you bring new evidence.</p>
+    <p class="ops-p">When you're sure, <b>FILE</b> them. A filed link tells the magistrate the two are connected in the crime, not just that they know each other. A link that holds is inked. One that is true but says nothing about the crime is set aside, at no cost. A wrong one is struck off: a strike on the case and <b>Integrity −${INTEGRITY_COST}</b>${V12.has('money') ? ' (Follow the Money forgives your first wrong money link on each case)' : ''}. ${raidAhead(caseForView()) ? `${strikeStakes(caseForView())}, unless you bring new evidence first.` : 'Three strikes and the warrant is refused until you bring new evidence.'}</p>
     <p class="ops-p">Not every lead on this table belongs to the ring.</p>
     ${mid && objs.length ? `<div class="ops-h">${(mname || 'OPERATION').toUpperCase()}</div><div id="ops-objs"><div>${objs.map(x => `<div class="so ${x.done ? 'done' : ''}">${x.text}</div>`).join('')}</div></div>` : ''}
     <div class="ops-h">REPUTATION</div>${V12.repBars()}
-    <button class="ops-b gold wide" id="ops-caps">CAPABILITIES · ${S.player.skillPoints || 0} PT${(S.player.skillPoints || 0) === 1 ? '' : 'S'}</button>
-    ${hintHTML()}`;
+    <button class="ops-b gold wide" id="ops-caps">CAPABILITIES · ${S.player.skillPoints || 0} PT${(S.player.skillPoints || 0) === 1 ? '' : 'S'}</button>`;
   const objHost = el.querySelector('#ops-objs'); if(objHost && typeof sideCaseFile === 'function') try{ sideCaseFile(objHost); }catch(e){}
   el.querySelector('#ops-caps').addEventListener('click', ()=>{ V12._returnOps = true; openSkillTree(); });
 }
+/* ---------- the table that gates a mission: M2's o4_table (three inked links, or three strikes) ----------
+   Time at the table on that objective counts as play: for "Hints when stuck" (guidance.js) and the stuck
+   log (v12_pt.js). Every 90 s there with no new ink is logged (table_stuck); the first time, with hints on,
+   the help comes up: Senior Agent gets the process only, never a card; Recruit gets Sgt. Uche's nudge.
+   Once the van has said no, Recruit's Uche names one true pair that is still open: one pair, once (vanPair). */
+const TABLE_NEED = 3, STUCK_MS = 90000;
+const tableObj = () => { try{ return S.game.currentMission === 'm2' ? ((S.game.objectives || []).find(x => x.id === 'o4_table' && !x.done) || null) : null; }catch(e){ return null; } };
+// the table is the only screen up (a pause menu or the desk on top of it is not time at the table)
+const tableUp = () => { const ov = [...document.querySelectorAll('.overlay.show')]; return ov.length > 0 && ov.every(e => e.id === 'screen-ops'); };
+V12.atTable = () => tableUp() && !!tableObj();
+const TT = { idle:0, helped:false, g:null, op:null, m:null, sig:null, iv:null, last:0 };
+function tableInked(){ TT.idle = 0; TT.helped = false; }
+const sigNow = () => { try{ return typeof progressSig === 'function' ? progressSig() : ''; }catch(e){ return ''; } };
+// the count belongs to one run of one operation: a new game, a load or a restart begins it again, and so does
+// progress (an objective done, new evidence, a new ink: guidance.js's progressSig): new cards are a new table
+function ttSync(){
+  const g = (typeof S !== 'undefined' && S && S.game) || null;
+  if(!g) return;
+  const sig = sigNow();
+  if(TT.g !== g || TT.op !== g._opStart || TT.m !== g.currentMission){ TT.g = g; TT.op = g._opStart; TT.m = g.currentMission; TT.sig = sig; tableInked(); }
+  else if(sig !== TT.sig){ TT.sig = sig; tableInked(); }
+}
+// the process only, in HOW IT WORKS's own terms ("not just in the same place" would steer a player off the
+// true links that have a place on one side)
+const tableHelpLine = () => `Link two cards that are connected in the crime, not just known to each other. ${Math.min(V12.ops().inked.length, TABLE_NEED)} of ${TABLE_NEED} inked.`;
+function tableTick(ms){
+  ms = Math.max(0, +ms || 0);
+  if(!ms || !V12.atTable()) return false;
+  ttSync();
+  try{ if(typeof guideTableTime === 'function') guideTableTime(ms); }catch(e){}
+  try{ if(typeof V12.ptTableTime === 'function') V12.ptTableTime(ms); }catch(e){}
+  const before = TT.idle; TT.idle += ms;
+  const o = V12.ops();
+  if(Math.floor(TT.idle / STUCK_MS) > Math.floor(before / STUCK_MS))
+    V12.log('table_stuck', { secs:Math.round(TT.idle / 1000), inked:o.inked.length, pencils:o.pencils.length });
+  const modal = document.querySelector('#ops-modal.show');   // never a toast over the magistrate's ruling
+  if(!TT.helped && TT.idle >= STUCK_MS && typeof SETTINGS !== 'undefined' && SETTINGS.hints === 'on' && !modal){
+    TT.helped = true;
+    toast('HINT', recruit() ? 'Sgt. Uche has left you a note on the table.' : tableHelpLine(), 3600);
+    try{ if(typeof guideTableTime === 'function') guideTableTime(0, true); }catch(e){}   // this was the hint: the field's 60 s starts again
+    render();
+  }
+  return true;
+}
+V12.opsTableTick = tableTick;   // the 1 s clock below calls it; tests call it with the time they want to pass
+V12._tableState = TT;           // for tests
+function tableClock(){
+  if(TT.iv) return;
+  TT.last = performance.now();
+  TT.iv = setInterval(()=>{
+    const now = performance.now(), dt = Math.min(1500, Math.max(0, now - TT.last)); TT.last = now;
+    if(!document.getElementById('screen-ops') || !document.getElementById('screen-ops').classList.contains('show')){ clearInterval(TT.iv); TT.iv = null; return; }
+    if(document.hidden) return;
+    tableTick(dt);
+  }, 1000);
+}
+// Senior Agent's help at the table: how to link, and how far along. No card, no pair.
+function helpHTML(){
+  ttSync();
+  if(recruit() || !TT.helped || !tableObj()) return '';
+  return `<div class="ops-help" data-help="table" role="note">${ic('link')}<span>${tableHelpLine()}</span></div>`;
+}
+// a true link still open between two cards on the table: the first in the case's own order
+function openPair(c){
+  const o = V12.ops();
+  return L.find(l => { const k = key(l.a, l.b); return !o.inked.includes(k) && linkIn(k, c) && visible(NODE[l.a]) && visible(NODE[l.b]); }) || null;
+}
+// Recruit's pointer names ONE pair, ever: the first one he names is kept with the table (o.vanPair) and he points
+// at it until it is inked; after that he is back to his nudge, and the other two links are the player's.
+// Returns the link to name, 'done' once that pair is inked, or null when there is nothing to name yet.
+function vanPair(c){
+  const o = V12.ops();
+  if(o.vanPair){
+    const l = LINK[o.vanPair];
+    if(!l || o.inked.includes(o.vanPair)) return 'done';
+    return visible(NODE[l.a]) && visible(NODE[l.b]) ? l : null;
+  }
+  return openPair(c);
+}
+const cap1 = s => { s = String(s || ''); const i = s.search(/[a-z]/i); return i < 0 ? s : s.slice(0, i) + s[i].toUpperCase() + s.slice(i + 1); };
 // Sgt. Uche's nudge is a Recruit crutch
 function hintHTML(){
   if(!recruit()) return '';
-  const o = V12.ops(), cs = o.cases[caseForView()] || {};
-  if((o.sinceInk || 0) < 5 && !(cs.strikes > 0)) return '';
-  const m = S.game.currentMission;
-  const h = m === 'm2' ? 'Start with what you found today. Whose name is on KC\'s SIMs — and where do her SIMs sleep at night?'
+  ttSync();
+  const o = V12.ops(), m = S.game.currentMission, c = V12.caseOf(m) || caseForView(), cs = o.cases[caseForView()] || {};
+  // the M2 van has refused at least once (and the player has not turned "Hints when stuck" off: a named pair
+  // is the strongest hint there is)
+  const vanNo = !!tableObj() && (o.vanNo || 0) > 0 && (typeof SETTINGS === 'undefined' || SETTINGS.hints === 'on');
+  if((o.sinceInk || 0) < 5 && !(cs.strikes > 0) && !(TT.helped && tableObj()) && !vanNo) return '';
+  let h = m === 'm2' ? 'Start with what you found today. Whose name is on KC\'s SIMs — and where do her SIMs sleep at night?'
     : m === 'm3n' ? 'Put Obi\'s notebook next to the courier\'s phone. Same night?'
     : ['m4','m5','m6'].includes(m) ? 'Follow the paper: where did each ledger say to go next?'
     : ['m7','t7','m8'].includes(m) ? 'Every call pinged one tower. Where does the handset sleep?'
     : 'Pick one suspect and ask three things: where was he, what did he carry, who paid him?';
-  return `<div class="ops-hint" data-hint="uche"><img src="${V12.art('uche_neutral')}" alt=""><div><b>SGT. UCHE</b>${h}</div></div>`;
+  let p = vanNo ? vanPair(c) : null;
+  if(p === 'done') p = null;
+  else if(p && UI.group !== c && UI.group !== 'all'){
+    // the pair's cards are not on this tab: send the player to the tab rather than name cards they can't see
+    h = `Tap the ${CASE_NAME[c]} tab, sir. There is a pair there I would start with.`;
+    p = null;
+  } else if(p){
+    o.vanPair = key(p.a, p.b);   // named once: this is the only pair he names
+    const A = `<b class="u-card">${esc(nm(p.a))}</b>`, B = `<b class="u-card">${esc(nm(p.b))}</b>`, why = esc(cap1(p.hint)) + '.';
+    h = o.pencils.includes(key(p.a, p.b)) ? `You have ${A} and ${B} pencilled, sir. ${why} FILE it.`
+      : o.pencils.length >= 6 ? `Put ${A} with ${B}, sir. ${why} Erase a pencil first, then start there.`
+      : `Put ${A} with ${B}, sir. ${why} Start there.`;
+  }
+  return `<div class="ops-hint" data-hint="uche"${p ? ` data-a="${p.a}" data-b="${p.b}"` : ''}><img src="${V12.art('uche_neutral')}" alt=""><div><b>SGT. UCHE</b>${h}</div></div>`;
 }
 function foot(){
   const el = document.getElementById('ops-foot'), o = V12.ops(), tier = V12.intelTier();
   const next = V12.INTEL_TIERS[tier], n = o.pencils.length;
-  el.innerHTML = `<button class="bd-file" id="ops-file" ${n ? '' : 'disabled'}>${ic('stamp')}<span>${n ? `FILE ${n} LINK${n > 1 ? 'S' : ''}` : 'FILE LINKS'}</span></button>
+  // one line above FILE: the card you're holding, or (M2) what the van is waiting for
+  const held = UI.view === 'board' && UI.sel && NODE[UI.sel] ? NODE[UI.sel] : null, goal = tableObj();
+  const status = held ? `<p class="ops-status sel" id="ops-status" aria-live="polite"><b>${esc(held.name)}</b> selected — ${n >= 6 ? 'six pencils down: FILE or erase one first.' : 'tap a second card to link it, or tap it again to put it down.'}</p>`
+    : goal ? `<p class="ops-status goal" id="ops-status" aria-live="polite">LEKKI NEEDS <b>${TABLE_NEED}</b> INKED · <b>${Math.min(o.inked.length, TABLE_NEED)}</b> SO FAR</p>` : '';
+  el.innerHTML = `${status}<button class="bd-file" id="ops-file" ${n ? '' : 'disabled'}>${ic('stamp')}<span>${n ? `FILE ${n} LINK${n > 1 ? 'S' : ''}` : '<span class="bd-file-c">Tap two cards to pencil a link</span>'}</span></button>
     <span class="f"><b>${n}</b>/6 PENCILLED</span><span class="f"><b>${o.inked.length}</b> INKED</span>
     <span class="f">INTEL <b>${S.game.intelScore || 0}</b>${next ? ` · next: ${next.name} at ${next.at}` : ''}</span>
     <button class="ops-b" id="ops-erase-all" ${n ? '' : 'disabled'}>ERASE PENCILS</button>`;
@@ -20912,6 +21075,20 @@ setInterval(()=>{
     }
   }catch(e){}
 }, 1000);
+// time at the operations table on its open objective (M2's o4_table) is play time too, so a player stuck
+// there logs stuck like anyone else (v12_ops calls this once a second while the table is up; the sampler
+// above skips every screen, and the guidance tick that counts play doesn't run under one)
+V12.ptTableTime = function(ms){
+  try{
+    ms = Math.max(0, +ms || 0); if(!ms) return;
+    PT.play += ms;
+    const id = curObj();
+    const sg = sigNow(); if(sg !== PT.sig){ PT.sig = sg; PT.lastProg = PT.play; PT.stuckAt = 0; }
+    const idle = PT.play - PT.lastProg;
+    if(idle >= 90000 && idle - PT.stuckAt >= 90000){ PT.stuckAt = idle;
+      V12.log('stuck', { obj:id, secs:Math.round(idle / 1000), dist:null, moved:PT.o && PT.o.id === id ? Math.round(PT.o.walked) : 0, guide:null, arrowPct:null, at:'table' }); }
+  }catch(e){}
+};
 
 /* the two questions, asked once per save at the end of the slice, and any time from Settings */
 V12.PT_SLICE_END = V12.PT_SLICE_END || (new URLSearchParams(location.search).get('slice')) || 'm3';
@@ -27790,7 +27967,7 @@ R.matchPlayer = (pl, q) => {
 R.lost = function(ev, ctx){
   const by = new Map(), inv = new Map();
   const get = (m, obj) => { const k = m + '|' + obj; if(!by.has(k)) by.set(k, { kind:'obj', m, obj, txt:null, secs:null, stuck:0, hints:0, away:0, eff:null, walked:null, direct:null, quit:false, nothing:0, done:false, want:null }); return by.get(k); };
-  const iget = (m, id) => { const k = m + '|' + id; if(!inv.has(k)) inv.set(k, { kind:'inv', m, id, name:screenOf(id), open:0, opens:0, strikes:0, files:0, struck:0, docFailed:0, refused:0, pending:0, verdicts:0 }); return inv.get(k); };
+  const iget = (m, id) => { const k = m + '|' + id; if(!inv.has(k)) inv.set(k, { kind:'inv', m, id, name:screenOf(id), open:0, opens:0, strikes:0, files:0, struck:0, docFailed:0, refused:0, pending:0, verdicts:0, vanNo:0, tableStuck:0 }); return inv.get(k); };
   let prev = null;
   for(const e of ev){
     const d = dOf(e), m = e.m || '?';
@@ -27811,6 +27988,8 @@ R.lost = function(ev, ctx){
       case 'desk_open': iget(m, 'screen-desk'); break;
       case 'strike': iget(m, 'screen-ops').strikes++; break;
       case 'file': { const a = iget(m, 'screen-ops'); a.files++; a.struck += +d.struck || 0; break; }
+      case 'van_refused': iget(m, 'screen-ops').vanNo++; break;          // the M2 van said THE TABLE FIRST
+      case 'table_stuck': iget(m, 'screen-ops').tableStuck++; break;     // 90 s at the table with no new ink
       case 'doc_failed': iget(m, 'screen-puzzle').docFailed++; break;
       case 'warrant': if(d.w === 'refused') iget(m, 'warrant').refused++; else if(d.w === 'pending') iget(m, 'warrant').pending++; break;
       case 'v13_warrant': if(d.status === 'refused') iget(m, 'screen-desk').refused++; else if(d.status === 'pending') iget(m, 'screen-desk').pending++; break;
@@ -27828,7 +28007,7 @@ R.lost = function(ev, ctx){
   for(const a of inv.values()){
     a.score = I.strike * a.strikes + I.docFailed * a.docFailed + I.refused * a.refused + I.pending * a.pending + Math.floor(a.open / I.openPer);
     a.level = a.score >= I.lostAt ? 'lost' : a.score >= I.slowAt ? 'slow' : null;
-    if(a.level || a.open >= 60 || a.strikes || a.docFailed || a.refused || a.pending) rows.push(a);
+    if(a.level || a.open >= 60 || a.strikes || a.docFailed || a.refused || a.pending || a.vanNo || a.tableStuck) rows.push(a);
   }
   const rank = r => (r.level === 'lost' ? 2 : r.level === 'slow' ? 1 : 0);
   rows.sort((a, b) => rank(b) - rank(a) || b.score - a.score || ((b.secs || b.open || 0) - (a.secs || a.open || 0)));
@@ -27843,6 +28022,8 @@ R.lostLine = o => {
     if(o.opens > 1) bits.push(`opened ×${o.opens}`);
     if(o.strikes) bits.push(`${o.strikes} strike${o.strikes === 1 ? '' : 's'}`);
     if(o.struck) bits.push(`${o.struck} link${o.struck === 1 ? '' : 's'} struck`);
+    if(o.vanNo) bits.push(`van refused ×${o.vanNo}`);
+    if(o.tableStuck) bits.push(`stuck at the table ×${o.tableStuck}`);
     if(o.docFailed) bits.push(`${o.docFailed} document${o.docFailed === 1 ? '' : 's'} failed`);
     if(o.refused) bits.push(`warrant refused ×${o.refused}`);
     if(o.pending) bits.push(`warrant pending ×${o.pending}`);
@@ -34788,7 +34969,11 @@ V13.wrap('beginMissionCore', orig => function(id){
   S.game.currentRegion = C.region || 'Season 2'; S.game.currentSubregion = C.sub || ''; refreshHUD();
   if(ENGINE.player){ ENGINE.cameraYaw = ENGINE.player.rotation.y; ENGINE.playerYaw = ENGINE.player.rotation.y; }
   // (mission_start is logged once, by v12's beginMission wrap, for cases and offices alike)
-  if(C.start) setTimeout(()=>{ try{ C.start(); }catch(e){ console.error('[v13] start', id, e); } }, 700);
+  // The opening beat waits 700 ms. A QUIT or LOAD inside that window replaces the run (V13.rt) and the mission,
+  // and then the beat belongs to a case that is no longer on screen: it must not play over the title or the loaded game.
+  if(C.start){ const rt = V13.rt; setTimeout(()=>{
+    if(V13.rt !== rt || S.game.currentMission !== id) return;
+    try{ C.start(); }catch(e){ console.error('[v13] start', id, e); } }, 700); }
 });
 /* end of a case: XP, the aftermath screen */
 V13.finish = function(id, xp){
@@ -34904,7 +35089,9 @@ V13.wrap('togglePause', orig => function(){
 // QUIT and ERASE drop what the pause holds. LOAD does not: a load that finds no save ("NO SAVE") leaves the pause up,
 // and RESUME must still bring the conversation back; a load that works reaches togglePause from the #btn-load click
 // (viaLoad above: nothing is put back) and then loadMission, which clears the hold too.
-document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-erase')) V13._pz = null; }catch(err){} }, true);
+// They also end the run: a case's delayed opening beat (beginMissionCore, 700 ms) and its tick functions belong to the
+// run that was quit, never to the title screen; any way back into play rebuilds V13.rt in beginMissionCore.
+document.addEventListener('click', e => { try{ if(e.target && e.target.closest && e.target.closest('#btn-quit, #btn-erase')){ V13._pz = null; V13.rt = { tick:[] }; } }catch(err){} }, true);
 
 /* ---------- which choice was picked (for choices that carry no flag) ----------
    V13.picked('m10_karo_source') → index of the choice taken the last time that
