@@ -213,6 +213,21 @@ body:has(#eye-ind.show) .hud-topleft-controls{visibility:hidden}
 .ops-foot b{color:var(--ink,#1C1C1A);font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-weight:700}
 .ops-foot .f.ok b{color:var(--manila,#E9DCC0);background:var(--green,#0B6E4F);padding:0 5px;border-radius:2px}
 .ops-foot .ops-b{margin-left:auto}
+/* the line above FILE: the card you're holding, or what the M2 van is waiting for */
+.ops-status{order:-2;flex:1 1 100%;margin:0;min-width:0;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:11.5px;letter-spacing:0;line-height:1.4;color:var(--ink,#1C1C1A)}
+.ops-status.goal{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:11px;letter-spacing:.18em}
+.ops-status b{color:var(--ink,#1C1C1A)}
+.ops-status.sel b{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-weight:600;letter-spacing:.03em}
+.bd-file .bd-file-c{text-transform:none;letter-spacing:.03em;font-weight:500}
+/* help at the table: Senior Agent's is the process only (no card); Recruit's Sgt. Uche goes first in the panel */
+.ops-help{display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;padding:8px 10px;border:1px solid var(--ink,#1C1C1A);border-left-width:3px;border-radius:2px;background:transparent;font-size:12px;line-height:1.45;color:var(--ink,#1C1C1A)}
+.ops-help .ico{flex:0 0 auto;font-size:15px;margin-top:2px}
+.ops-side > .ops-hint:first-child{margin-top:0;margin-bottom:10px}
+.ops-hint b.u-card{display:inline;font-family:inherit;font-size:inherit;letter-spacing:0;color:var(--ink,#1C1C1A);font-weight:700}
+/* the ruling: what the third strike costs */
+.bd-stakes{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;padding:8px 10px;border:1px solid var(--red,#B3261E);border-radius:2px;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:11.5px;line-height:1.45;color:var(--ink,#1C1C1A)}
+.bd-stakes .ico{flex:0 0 auto;font-size:16px;margin-top:1px;color:var(--red,#B3261E)}
+.bd-stakes b{font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);letter-spacing:.14em}
 .ops-stamp{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) rotate(-8deg);font-family:var(--font-head,'Oswald','Arial Narrow',sans-serif);font-size:64px;letter-spacing:.2em;color:var(--red,#B3261E);border:4px solid var(--red,#B3261E);border-radius:4px;background:rgba(233,220,192,.85);padding:4px 26px;z-index:30;pointer-events:none;animation:opsStamp 1.3s ease forwards}
 @keyframes opsStamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-8deg) scale(1.8)}20%{opacity:1;transform:translate(-50%,-50%) rotate(-8deg) scale(1)}80%{opacity:1}100%{opacity:0}}
 .ops-modal{position:absolute;inset:0;background:rgba(20,20,18,.78);display:none;align-items:center;justify-content:center;z-index:40;padding:14px}

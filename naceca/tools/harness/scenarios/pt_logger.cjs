@@ -5,7 +5,7 @@ const read = h => h.ev(() => { try{ return JSON.parse(localStorage.getItem('nace
 const flush = h => h.ev(() => { V12.log('_flush', {}); for(let i = 0; i < 12; i++) V12.log('_pad', {}); });
 module.exports = async h => {
   await h.ev(() => { try{ localStorage.removeItem('naceca_pt_v1'); }catch(e){} });
-  const { SET0, VER0 } = await h.ev(() => ({ SET0:{ marker:SETTINGS.marker }, VER0:V12.version }));
+  const { SET0, VER0 } = await h.ev(() => ({ SET0:{ marker:SETTINGS.marker, hints:SETTINGS.hints }, VER0:V12.version }));
   await h.start('m2', { completed:['m0', 'm1'] });
   const touch = await h.ev(() => document.body.classList.contains('touch-active'));
 
@@ -119,7 +119,8 @@ module.exports = async h => {
   const sheet = ev.filter(e => e.type === 'interact_result').find(e => e.d.label === 'Test sheet');
   h.assert(sheet && sheet.d.outcome === 'opened', 'a newly shown screen counts as opened ' + JSON.stringify(sheet && sheet.d));
   const ss2 = ev.find(e => e.type === 'session');
-  h.assert(ss2 && ss2.d.settings && ss2.d.settings.marker === SET0.marker && ss2.d.build && ss2.d.build.ver === VER0, 'the session event carries the loaded settings and the final version ' + JSON.stringify(ss2 && ss2.d));
+  h.assert(ss2 && ss2.d.settings && ss2.d.settings.marker === SET0.marker && ss2.d.settings.hints === SET0.hints && ss2.d.build && ss2.d.build.ver === VER0,
+    'the session event carries the loaded settings (marker and hints as the device had them at load) and the final version ' + JSON.stringify(ss2 && ss2.d));
   // a teleport is not walking: jump 30 m, then finish an objective
   const tp = await h.ev(() => { V12._ptState.o = null; return true; });
   await h.step(1200);

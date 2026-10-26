@@ -247,6 +247,20 @@ setInterval(()=>{
     }
   }catch(e){}
 }, 1000);
+// time at the operations table on its open objective (M2's o4_table) is play time too, so a player stuck
+// there logs stuck like anyone else (v12_ops calls this once a second while the table is up; the sampler
+// above skips every screen, and the guidance tick that counts play doesn't run under one)
+V12.ptTableTime = function(ms){
+  try{
+    ms = Math.max(0, +ms || 0); if(!ms) return;
+    PT.play += ms;
+    const id = curObj();
+    const sg = sigNow(); if(sg !== PT.sig){ PT.sig = sg; PT.lastProg = PT.play; PT.stuckAt = 0; }
+    const idle = PT.play - PT.lastProg;
+    if(idle >= 90000 && idle - PT.stuckAt >= 90000){ PT.stuckAt = idle;
+      V12.log('stuck', { obj:id, secs:Math.round(idle / 1000), dist:null, moved:PT.o && PT.o.id === id ? Math.round(PT.o.walked) : 0, guide:null, arrowPct:null, at:'table' }); }
+  }catch(e){}
+};
 
 /* the two questions, asked once per save at the end of the slice, and any time from Settings */
 V12.PT_SLICE_END = V12.PT_SLICE_END || (new URLSearchParams(location.search).get('slice')) || 'm3';
@@ -267,12 +281,14 @@ V12.ptSurvey = function(where){
   ov.querySelector('#pt-a1').value = ''; ov.querySelector('#pt-a2').value = '';
   const done = ()=>{ try{ const k = String(where || '').replace(/^slice:/, ''); S.game._ptAsked = S.game._ptAsked || {}; S.game._ptAsked[k] = Date.now(); }catch(e){} PT.pendingSurvey = null; };
   PT.surveyOpen = where;
-  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); done(); write(); close(); };
+  // opened from Settings › Two questions › ANSWER: the row behind it ("n answers saved in the log") is redrawn on return
+  const refresh = ()=>{ try{ if(where === 'settings' && typeof renderSettings === 'function' && document.querySelector('#screen-settings.show')) renderSettings(); }catch(e){} };
+  ov.querySelector('#pt-skip').onclick = ()=>{ V12.log('survey', { where, skipped:true }); done(); write(); close(); refresh(); };
   ov.querySelector('#pt-save').onclick = ()=>{
     const a1 = ov.querySelector('#pt-a1').value.trim(), a2 = ov.querySelector('#pt-a2').value.trim();
     V12.log('survey', { where, satisfying:a1, unfair:a2, diff:(typeof gameDifficulty === 'function' ? gameDifficulty() : null),
       secsPlayed:Math.round(PT.play / 1000), missions:((S.game && S.game.completedMissions) || []).slice(), misses:PT.totals.misses, refusals:PT.totals.refusals, hints:PT.totals.hints, build:(window.NACECA_BUILD || {}).src || null });
-    done(); write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close();
+    done(); write(); if(typeof toast === 'function') toast('THANK YOU', 'Saved in the playtest log', 1600); close(); refresh();
   };
   ov.classList.add('show');
   try{ const t = document.getElementById('toast'); if(t) t.classList.remove('show'); }catch(e){}   // a save toast would sit on the first answer

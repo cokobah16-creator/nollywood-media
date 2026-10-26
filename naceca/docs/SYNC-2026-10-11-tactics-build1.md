@@ -80,7 +80,8 @@ render checks need cdnjs.cloudflare.com, fonts.googleapis.com and fonts.gstatic.
 
 ## For the product owner
 - **"Hints when stuck"** defaults to On even on Senior Agent; its 60 s "Try this next" toast names the next objective.
-  Should Senior default it Off? (Outside this layer; one settings default.)
+  Should Senior default it Off? (Outside this layer; one settings default.) Decided 24 Oct: a Senior Agent start sets it
+  Off, a Recruit start On (DESIGN-tactics.md §11.8).
 - Defaults taken: the warrant leak stays off (v13 removed leak timers); the sofa and cash table don't hide a crouched
   player (measured), so the armchair, doors, walls and east flank are the cover; +2 Public Trust per clean catch; the
   cut ribbon ships off until it passes the balance gate; hold-to-crouch on touch is opt-in.

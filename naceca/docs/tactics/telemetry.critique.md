@@ -272,7 +272,8 @@ it.
     `h.start('m2', {completed:['m0','m1']})` uses.
 - **"Hints when stuck: On" for Senior Agent sessions.** It keeps the 60 s "Try this next: …" toast (guidance.js:98-104), which
   tells the player what to do. That conflicts with the product owner's Senior rule. Raise it with the product owner and record
-  `settings.hints` per player.
+  `settings.hints` per player. *(Decided 24 Oct: a Senior Agent start sets it Off, a Recruit start On — DESIGN-tactics.md
+  §11.8.)*
 
 ### 19. §2.8's wrap-order list omits two wraps
 - v13_desk's `toast` wrap (v13_desk.js:61-73).

@@ -38,7 +38,8 @@ module.exports = async h => {
   await h.step(300);
   s = await snap(h);
   h.assert(s.hud === 'Speak with informant Tunde' && s.label === 'Speak with Informant Tunde' && s.sameMesh, 'M2 o1 ' + JSON.stringify(s));
-  // the 60 s stuck hint names what the HUD names
+  // the 60 s stuck hint names what the HUD names (hints is set on here on purpose: a Senior start turns it off, and
+  // h.start bypasses the sheet, so the device default is not relied on)
   const hint = await h.ev(() => { SETTINGS.hints = 'on'; GUIDE.lastSig = progressSig(); GUIDE.lastProgress = performance.now() - 61000; GUIDE._lastRun = performance.now(); updateGuidance(0.016); return document.getElementById('toast').textContent; });
   h.assert(/Try this next: Speak with informant Tunde\. Follow the arrow\./.test(hint) && !/gold/.test(hint), 'stuck hint matches the HUD text: ' + hint);
   // a failed interaction (toast only) used to leave the old target stuck; the resolver follows the objective list

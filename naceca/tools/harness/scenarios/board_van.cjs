@@ -9,7 +9,7 @@ module.exports = async h => {
     S.game._marketScanned = true; S.game.moralChoices.market_runner = 'caught';
     const van = ENGINE.interactables.find(i => /^Board NACECA van/.test(i.label || ''));
     van.onInteract();
-    return { toast:document.getElementById('toast').textContent, cur:S.game.currentMission, done:S.game.completedMissions.includes('m2') };
+    return { toast:document.getElementById('toast').textContent, small:((document.querySelector('#toast .small') || {}).textContent || ''), cur:S.game.currentMission, done:S.game.completedMissions.includes('m2') };
   });
 
   // nothing on the table, and a pile of free tries: still blocked
@@ -17,6 +17,7 @@ module.exports = async h => {
   await h.ev(() => { const o = V12.ops(); o.tries = 40; });
   const b0 = await board();
   h.assert(/THE TABLE FIRST/.test(b0.toast) && b0.cur === 'm2' && !b0.done, 'no ink, many tries: the van waits');
+  h.assert(/^0 of 3 links inked\./.test(b0.small), 'the refusal says how far the table is: ' + b0.small);
 
   // two inks and two strikes: still blocked
   await h.ev(() => {
@@ -26,6 +27,7 @@ module.exports = async h => {
   const b1 = await board();
   h.assert(await h.ev(() => V12.ops().inked.length === 2 && V12.caseStrikes('lagos') === 2), 'set-up: 2 inked, 2 strikes');
   h.assert(/THE TABLE FIRST/.test(b1.toast) && !b1.done, '2 inked + 2 strikes: the van waits');
+  h.assert(/^2 of 3 links inked\. Pencil one more pair and FILE it\.$/.test(b1.small), 'strikes are not inks: 2 of 3 ' + b1.small);
 
   // a third link that holds: go
   await h.ev(() => { V12.pencil('e_kcsims', 's_mama'); V12.fileLinks(); V12.closeOps(); });

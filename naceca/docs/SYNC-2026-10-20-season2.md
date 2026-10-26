@@ -74,3 +74,19 @@ device (below).
 - **Real rendering / devices:** the 3D scenes, lighting and painted textures; Tobi's Season 2 model against Season 1's;
   the shield texture (still the vendor's painted crest); frame rate and memory with a 20.9 MB page on mid-range phones;
   whether an environment load can hang on hardware (the timeout path is tested).
+
+## Also in this PR: the Case 02 operations table is legible (21 Oct)
+The product owner got stuck at the market van with 2 of 3 links inked and nothing telling them so. Same bar (three
+inked links, or three strikes), clearer table (src/v12/v12_ops.js, v12_core.js, guidance.js, v12_pt.js):
+- the van's THE TABLE FIRST says "n of 3 links inked" and what to do next;
+- in M2 the table's foot reads "LEKKI NEEDS 3 INKED · n SO FAR"; a greyed FILE says "Tap two cards to pencil a
+  link"; a held card says how to link it or put it down (reading no longer pencils by surprise);
+- a struck link says "The magistrate won't take these two as a direct link in the crime."; the stakes of three
+  strikes are stated while that case's raid is still ahead;
+- time at the table counts for "Hints when stuck": after 90 s with no new ink, Senior gets a process line with no
+  card names ("Link two cards that are connected in the crime, not just known to each other. n of 3 inked."),
+  Recruit gets Uche's note, and after a van refusal Uche names one true un-inked pair, once (off when hints are off);
+  (24 Oct: a Senior Agent start now sets "Hints when stuck" Off; the Senior process line comes either way, its HINT
+  toast and Recruit's note and pair only with it On — DESIGN-tactics.md §11.8);
+- the playtest log adds `van_refused {inked, strikes}` and `table_stuck {secs, inked, pencils}`.
+Test: `board_m2_help` (both casework modes, 390x844 / 844x390 touch, 1280x800).

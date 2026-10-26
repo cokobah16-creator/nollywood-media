@@ -4203,7 +4203,7 @@ const SETTINGS_DEFAULT = {
   subSize: 'M', subBg: 'on',
   gfx: 'auto',                 // auto | low | medium | high
   touchSize: 'M', hand: 'right',
-  marker: 'on', hints: 'on',
+  marker: 'on', hints: 'on',    // hints: a NEW investigation sets it per casework (beta/casework.js): Senior off, Recruit on
   reduceMotion: 'off', colourBlind: 'off', haptics: 'on',
   lang: 'mixed',               // mixed (Pidgin where characters speak it) | english
 };
@@ -4332,7 +4332,8 @@ const SETTINGS_UI = [
   { key:'timed', label:'Timed sequences', opts:[['normal','Normal'],['extended','Extended'],['off','No timers']],
     note:'Wipe, smoke and trace clocks. Chases still run.' },
   { key:'marker', label:'Objective marker', opts:[['on','On'],['off','Off']] },
-  { key:'hints',  label:'Hints when stuck', opts:[['on','On'],['off','Off']] },
+  { key:'hints',  label:'Hints when stuck', opts:[['on','On'],['off','Off']],
+    note:'A new investigation sets it: off for Senior Agent, on for Recruit.' },
   { key:'lang',   label:'Dialogue', opts:[['mixed','Pidgin + English'],['english','English only']] },
   { group:'DISPLAY' },
   { key:'subSize', label:'Subtitle size', opts:[['S','S'],['M','M'],['L','L'],['XL','XL']] },
@@ -4357,8 +4358,13 @@ function ensureSettingsScreen(){
     </div>`;
   document.getElementById('game-root').appendChild(ov);
   document.getElementById('btn-settings-close').addEventListener('click', closeSettings);
-  document.getElementById('btn-settings-reset').addEventListener('click', ()=>{ SETTINGS = Object.assign({}, SETTINGS_DEFAULT); saveSettings(); _gfxActive = null; applySettings(); renderSettings(); });
+  document.getElementById('btn-settings-reset').addEventListener('click', ()=>{ resetSettings(); renderSettings(); });
 }
+/* RESET TO DEFAULTS. beta/casework.js wraps this: during an investigation "Hints when stuck" goes back to the casework's
+   default (Senior Agent off, Recruit on), not the table's 'on'. */
+function resetSettings(){ SETTINGS = Object.assign({}, SETTINGS_DEFAULT); saveSettings(); _gfxActive = null; applySettings(); }
+// the playtest log (V12.log, when the v12 layer is present): a "Hints when stuck" change is what the facilitator writes down
+function logSettingChange(k, v, src){ if(typeof V12 !== 'undefined' && V12 && typeof V12.log === 'function') V12.log('settings', { k, v, src }); }
 function renderSettings(){
   const body = document.getElementById('settings-body'); body.innerHTML = '';
   SETTINGS_UI.forEach((row, ri)=>{
@@ -4388,6 +4394,7 @@ function renderSettings(){
         SETTINGS[btn.dataset.k] = btn.dataset.v;
         if(btn.dataset.k === 'gfx') _gfxActive = null;
         saveSettings(); applySettings();
+        if(btn.dataset.k === 'hints') logSettingChange('hints', btn.dataset.v, 'row');
       }
       btn.parentElement.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on', b===btn); b.setAttribute('aria-pressed', b===btn); });
       if(typeof sfxClick === 'function') sfxClick();
@@ -4426,7 +4433,17 @@ function progressSig(){
     (S.game.objectives||[]).map(o=>o.done?1:0),
     (S.game._opEv||[]).length,
     S.game.flags, S.game.moralChoices,
+    // a link that holds on the operations table is progress too (pencils and strikes are not)
+    ((S.game.ops && S.game.ops.inked) || []).length,
   ]);
+}
+
+/* time at the operations table on its open objective (M2's o4_table) counts as play: v12_ops reports it
+   here once a second while the table is up. hinted: the table just gave its own stuck help, so the 60 s
+   starts again from now. */
+function guideTableTime(ms, hinted){
+  GUIDE.tableMs = (GUIDE.tableMs || 0) + Math.max(0, +ms || 0);
+  if(hinted){ const t = performance.now(); GUIDE.lastProgress = t; GUIDE._lastRun = t; GUIDE.tableMs = 0; }
 }
 
 /* ---------- interaction hook (called by tryInteract) ---------- */
@@ -4495,9 +4512,12 @@ function updateGuidance(dt){
       }
     }
   }
-  // hints after 60 s with no progress (updateGuidance only runs while playing: time in menus doesn't count)
+  // hints after 60 s with no progress (updateGuidance only runs while playing: time in menus doesn't count,
+  // except time at the operations table on its objective, which guideTableTime has counted)
   const tnow = performance.now();
-  if(GUIDE._lastRun && tnow - GUIDE._lastRun > 500 && GUIDE.lastProgress) GUIDE.lastProgress += tnow - GUIDE._lastRun;
+  const gap = GUIDE._lastRun ? tnow - GUIDE._lastRun : 0, tbl = GUIDE.tableMs || 0;
+  GUIDE.tableMs = 0;
+  if(GUIDE.lastProgress && (gap > 500 || tbl > gap)) GUIDE.lastProgress += gap - tbl;
   GUIDE._lastRun = tnow;
   const sig = progressSig();
   if(sig !== GUIDE.lastSig){ GUIDE.lastSig = sig; GUIDE.lastProgress = performance.now(); }
@@ -4511,7 +4531,7 @@ function updateGuidance(dt){
     }
   }
 }
-function resetGuidance(){ GUIDE.lastProgress = performance.now(); GUIDE.lastSig = ''; }
+function resetGuidance(){ GUIDE.lastProgress = performance.now(); GUIDE.lastSig = ''; GUIDE.tableMs = 0; }
 
 /* ---------- feel: characters face each other while talking ---------- */
 function faceEachOtherLegacy(it){
